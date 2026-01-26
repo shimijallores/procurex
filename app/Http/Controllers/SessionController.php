@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class SessionController extends Controller
@@ -12,14 +13,22 @@ class SessionController extends Controller
         return Inertia::render('Login');
     }
 
-    public function authenticate(Request $request)
+    public function login(Request $request)
     {
-        return $request;
-        Auth::login($request->user);
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
+        ]);
 
-        request()->session()->regenerate();
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
 
-        return to_route('dashboard.index');
+            return redirect()->intended('dashboard.index');
+        }
+
+        return back()->withErrors([
+            'content' => 'The provided credentials do not match our records.',
+        ]);
     }
 
     public function logout(Request $request)
