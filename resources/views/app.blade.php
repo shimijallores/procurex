@@ -2,7 +2,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>VILT Starter Kit</title>
+    <title>Procurex</title>
     @routes
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @inertiaHead

@@ -1,3 +1,3 @@
-# VILT Starter Kit
+# Procurex
 
-This is a starter kit for Vue 3 + JS, Inertia 2.0, Laravel 12, and Tailwind 4
+Procurex is a browser based procurement management system built for the General Services Office of the Province of Batangas 
