@@ -5,7 +5,7 @@ use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function (): \Inertia\Response|\Inertia\ResponseFactory {
-    return redirect('login.index');
+    return redirect('login');
 });
 
 Route::get('/login', [SessionController::class, 'index'])->name('login')->middleware('guest');
