@@ -12,7 +12,7 @@ Route::get('/login', [SessionController::class, 'index'])->name('login')->middle
 Route::post('/login', [SessionController::class, 'login'])->name('login.login')->middleware('guest');
 
 Route::middleware(['auth'])->group(function () {
-    Route::post('/logout', [SessionController::class, 'logout'])->name('logout');
+    Route::get('/logout', [SessionController::class, 'logout'])->name('logout');
         
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');    
 });

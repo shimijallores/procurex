@@ -23,7 +23,7 @@ class SessionController extends Controller
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
-            return redirect()->intended('dashboard.index');
+            return redirect()->intended(route('dashboard.index'));
         }
 
         return back()->withErrors([
