@@ -7,7 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-it('has many users', function () {
+it('has many users', function (): void {
     $role = Role::factory()->superAdmin()->create();
     User::factory()->count(3)->create(['role_id' => $role->id]);
 
@@ -15,7 +15,7 @@ it('has many users', function () {
     expect($role->users)->toHaveCount(3);
 });
 
-it('can create a super admin role using factory', function () {
+it('can create a super admin role using factory', function (): void {
     $role = Role::factory()->superAdmin()->create();
 
     expect($role->name)->toBe('SuperAdmin');

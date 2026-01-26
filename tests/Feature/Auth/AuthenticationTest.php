@@ -5,14 +5,14 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-it('displays the login page for guests', function () {
+it('displays the login page for guests', function (): void {
     $response = $this->get(route('login'));
 
     $response->assertStatus(200);
     $response->assertInertia(fn ($page) => $page->component('Login'));
 });
 
-it('allows a user to login with valid credentials', function () {
+it('allows a user to login with valid credentials', function (): void {
     $user = User::factory()->create([
         'email' => 'test@example.com',
         'password' => 'password123',
@@ -27,7 +27,7 @@ it('allows a user to login with valid credentials', function () {
     $this->assertAuthenticatedAs($user);
 });
 
-it('prevents login with invalid credentials', function () {
+it('prevents login with invalid credentials', function (): void {
     $user = User::factory()->create([
         'email' => 'test@example.com',
         'password' => 'correct-password',
@@ -42,7 +42,7 @@ it('prevents login with invalid credentials', function () {
     $this->assertGuest();
 });
 
-it('allows an authenticated user to logout', function () {
+it('allows an authenticated user to logout', function (): void {
     $user = User::factory()->create();
 
     $response = $this->actingAs($user)->get(route('logout'));
@@ -51,7 +51,7 @@ it('allows an authenticated user to logout', function () {
     $this->assertGuest();
 });
 
-it('redirects authenticated users away from login page', function () {
+it('redirects authenticated users away from login page', function (): void {
     $user = User::factory()->create();
 
     $response = $this->actingAs($user)->get(route('login'));
@@ -59,13 +59,13 @@ it('redirects authenticated users away from login page', function () {
     $response->assertRedirect(route('dashboard.index'));
 });
 
-it('requires email and password for login', function () {
+it('requires email and password for login', function (): void {
     $response = $this->post(route('login.login'), []);
 
     $response->assertSessionHasErrors(['email', 'password']);
 });
 
-it('requires a valid email format for login', function () {
+it('requires a valid email format for login', function (): void {
     $response = $this->post(route('login.login'), [
         'email' => 'not-an-email',
         'password' => 'password123',
