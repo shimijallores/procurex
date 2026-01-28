@@ -11,7 +11,7 @@ class Office extends Model
     /** @use HasFactory<\Database\Factories\OfficeFactory> */
     use HasFactory;
 
-    protected $fillablle = [
+    protected $fillable = [
         'name',
     ];
 

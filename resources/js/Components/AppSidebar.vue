@@ -39,15 +39,15 @@ const mainNavItems = [
         isActive: route().current('dashboard.*'),
     },
     {
-        title: 'Procurement',
-        url: '#',
-        icon: 'lucide:shopping-cart',
-        isActive: false,
+        title: 'Offices',
+        url: route('offices.index'),
+        icon: 'lucide:users',
+        isActive: route().current('offices.*'),
     },
     {
         title: 'Offices ',
         url: '#',
-        icon: 'lucide:users',
+        icon: 'lucide:shopping-cart',
         isActive: false,
     },
     {
