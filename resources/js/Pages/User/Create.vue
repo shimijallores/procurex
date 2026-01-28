@@ -1,0 +1,199 @@
+<script setup>
+import { Link, Form } from '@inertiajs/vue3'
+import { Icon } from '@iconify/vue'
+import Layout from '@/Layout/Layout.vue'
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+
+defineOptions({
+    layout: (h, page) => h(Layout, { breadcrumbs: [
+        { label: 'Users', href: route('users.index') },
+        { label: 'Create' }
+    ] }, () => page),
+})
+
+const props = defineProps({
+    roles: Array,
+    offices: Array,
+})
+</script>
+
+<template>
+    <div class="space-y-6">
+        <!-- Header -->
+        <div class="flex items-center gap-4">
+            <Link :href="route('users.index')">
+                <Button variant="ghost" size="sm">
+                    <Icon icon="lucide:arrow-left" class="mr-2 h-4 w-4" />
+                    Back
+                </Button>
+            </Link>
+            <div class="space-y-1">
+                <h1 class="text-2xl font-bold tracking-tight md:text-3xl">
+                    Create User
+                </h1>
+                <p class="text-muted-foreground">
+                    Add a new user to the system
+                </p>
+            </div>
+        </div>
+
+        <!-- Form Card -->
+        <Card class="max-w-2xl">
+            <CardHeader>
+                <CardTitle>User Details</CardTitle>
+                <CardDescription>
+                    Enter the information for the new user
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Form
+                    :action="route('users.store')"
+                    method="post"
+                    class="space-y-6"
+                    #default="{ errors, processing }"
+                >
+                    <div class="space-y-2">
+                        <Label for="name">Name</Label>
+                        <input
+                            id="name"
+                            name="name"
+                            type="text"
+                            placeholder="Enter user name"
+                            :class="[
+                                'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
+                                'ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium',
+                                'placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2',
+                                'focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+                                errors.name ? 'border-destructive' : ''
+                            ]"
+                        />
+                        <p v-if="errors.name" class="text-sm text-destructive">
+                            {{ errors.name }}
+                        </p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <Label for="email">Email</Label>
+                        <input
+                            id="email"
+                            name="email"
+                            type="email"
+                            placeholder="Enter email address"
+                            :class="[
+                                'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
+                                'ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium',
+                                'placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2',
+                                'focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+                                errors.email ? 'border-destructive' : ''
+                            ]"
+                        />
+                        <p v-if="errors.email" class="text-sm text-destructive">
+                            {{ errors.email }}
+                        </p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <Label for="role_id">Role</Label>
+                        <select
+                            id="role_id"
+                            name="role_id"
+                            :class="[
+                                'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
+                                'ring-offset-background focus-visible:outline-none focus-visible:ring-2',
+                                'focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+                                errors.role_id ? 'border-destructive' : ''
+                            ]"
+                        >
+                            <option value="">Select a role</option>
+                            <option v-for="role in roles" :key="role.id" :value="role.id">
+                                {{ role.name }}
+                            </option>
+                        </select>
+                        <p v-if="errors.role_id" class="text-sm text-destructive">
+                            {{ errors.role_id }}
+                        </p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <Label for="office_id">Office</Label>
+                        <select
+                            id="office_id"
+                            name="office_id"
+                            :class="[
+                                'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
+                                'ring-offset-background focus-visible:outline-none focus-visible:ring-2',
+                                'focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+                                errors.office_id ? 'border-destructive' : ''
+                            ]"
+                        >
+                            <option value="">Select an office</option>
+                            <option v-for="office in offices" :key="office.id" :value="office.id">
+                                {{ office.name }}
+                            </option>
+                        </select>
+                        <p v-if="errors.office_id" class="text-sm text-destructive">
+                            {{ errors.office_id }}
+                        </p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <Label for="password">Password</Label>
+                        <input
+                            id="password"
+                            name="password"
+                            type="password"
+                            placeholder="Enter password"
+                            :class="[
+                                'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
+                                'ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium',
+                                'placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2',
+                                'focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+                                errors.password ? 'border-destructive' : ''
+                            ]"
+                        />
+                        <p v-if="errors.password" class="text-sm text-destructive">
+                            {{ errors.password }}
+                        </p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <Label for="password_confirmation">Confirm Password</Label>
+                        <input
+                            id="password_confirmation"
+                            name="password_confirmation"
+                            type="password"
+                            placeholder="Confirm password"
+                            :class="[
+                                'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
+                                'ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium',
+                                'placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2',
+                                'focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+                            ]"
+                        />
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <Button type="submit" :disabled="processing">
+                            <Icon v-if="processing" icon="lucide:loader-2" class="mr-2 h-4 w-4 animate-spin" />
+                            <Icon v-else icon="lucide:plus" class="mr-2 h-4 w-4" />
+                            Create User
+                        </Button>
+                        <Link :href="route('users.index')">
+                            <Button type="button" variant="outline">
+                                Cancel
+                            </Button>
+                        </Link>
+                    </div>
+                </Form>
+            </CardContent>
+        </Card>
+    </div>
+</template>

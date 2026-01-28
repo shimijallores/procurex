@@ -1,6 +1,7 @@
 <script setup>
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
+import { Link } from '@inertiajs/vue3'
 import AppSidebar from '@/components/AppSidebar.vue'
 import DarkModeButton from '@/components/DarkModeButton.vue'
 
@@ -31,11 +32,19 @@ defineProps({
                         <template v-if="breadcrumbs.length > 0">
                             <template v-for="(crumb, index) in breadcrumbs" :key="index">
                                 <span v-if="index > 0" class="text-muted-foreground">/</span>
+                                <Link 
+                                    v-if="crumb.href && index !== breadcrumbs.length - 1"
+                                    :href="crumb.href"
+                                    class="text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                    {{ crumb.label }}
+                                </Link>
                                 <span 
+                                    v-else
                                     :class="[
                                         index === breadcrumbs.length - 1 
                                             ? 'font-medium text-foreground' 
-                                            : 'text-muted-foreground hover:text-foreground cursor-pointer'
+                                            : 'text-muted-foreground'
                                     ]"
                                 >
                                     {{ crumb.label }}

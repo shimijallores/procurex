@@ -13,7 +13,10 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 
 defineOptions({
-    layout: Layout,
+    layout: (h, page) => h(Layout, { breadcrumbs: [
+        { label: 'Offices', href: route('offices.index') },
+        { label: 'Create' }
+    ] }, () => page),
 })
 </script>
 

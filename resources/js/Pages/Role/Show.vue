@@ -15,13 +15,13 @@ import DeleteModal from '@/components/DeleteModal.vue'
 
 defineOptions({
     layout: (h, page) => h(Layout, { breadcrumbs: [
-        { label: 'Offices', href: route('offices.index') },
+        { label: 'Roles', href: route('roles.index') },
         { label: 'Details' }
     ] }, () => page),
 })
 
 const props = defineProps({
-    office: Object,
+    role: Object,
 })
 
 const formatDate = (date) => {
@@ -42,7 +42,7 @@ const showDeleteModal = ref(false)
         <!-- Header -->
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <Link :href="route('offices.index')">
+                <Link :href="route('roles.index')">
                     <Button variant="ghost" size="sm">
                         <Icon icon="lucide:arrow-left" class="mr-2 h-4 w-4" />
                         Back
@@ -50,15 +50,15 @@ const showDeleteModal = ref(false)
                 </Link>
                 <div class="space-y-1">
                     <h1 class="text-2xl font-bold tracking-tight md:text-3xl">
-                        {{ office.name }}
+                        {{ role.name }}
                     </h1>
                     <p class="text-muted-foreground">
-                        Office details and assigned users
+                        Role details and assigned users
                     </p>
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <Link :href="route('offices.edit', office.id)">
+                <Link :href="route('roles.edit', role.id)">
                     <Button variant="outline">
                         <Icon icon="lucide:pencil" class="mr-2 h-4 w-4" />
                         Edit
@@ -71,35 +71,35 @@ const showDeleteModal = ref(false)
             </div>
         </div>
 
-        <!-- Office Info Cards -->
+        <!-- Role Info Cards -->
         <div class="grid gap-6 md:grid-cols-2">
             <!-- Details Card -->
             <Card>
                 <CardHeader>
                     <CardTitle class="flex items-center gap-2">
-                        <Icon icon="lucide:building-2" class="h-5 w-5" />
-                        Office Information
+                        <Icon icon="lucide:shield" class="h-5 w-5" />
+                        Role Information
                     </CardTitle>
                     <CardDescription>
-                        Basic information about this office
+                        Basic information about this role
                     </CardDescription>
                 </CardHeader>
                 <CardContent class="space-y-4">
                     <div class="grid gap-1">
-                        <p class="text-sm font-medium text-muted-foreground">Office ID</p>
-                        <p class="font-medium">{{ office.id }}</p>
+                        <p class="text-sm font-medium text-muted-foreground">Role ID</p>
+                        <p class="font-medium">{{ role.id }}</p>
                     </div>
                     <div class="grid gap-1">
-                        <p class="text-sm font-medium text-muted-foreground">Office Name</p>
-                        <p class="font-medium">{{ office.name }}</p>
+                        <p class="text-sm font-medium text-muted-foreground">Role Name</p>
+                        <p class="font-medium">{{ role.name }}</p>
                     </div>
                     <div class="grid gap-1">
                         <p class="text-sm font-medium text-muted-foreground">Created At</p>
-                        <p class="font-medium">{{ formatDate(office.created_at) }}</p>
+                        <p class="font-medium">{{ formatDate(role.created_at) }}</p>
                     </div>
                     <div class="grid gap-1">
                         <p class="text-sm font-medium text-muted-foreground">Last Updated</p>
-                        <p class="font-medium">{{ formatDate(office.updated_at) }}</p>
+                        <p class="font-medium">{{ formatDate(role.updated_at) }}</p>
                     </div>
                 </CardContent>
             </Card>
@@ -112,7 +112,7 @@ const showDeleteModal = ref(false)
                         Statistics
                     </CardTitle>
                     <CardDescription>
-                        Office statistics and metrics
+                        Role statistics and metrics
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -121,9 +121,9 @@ const showDeleteModal = ref(false)
                             <Icon icon="lucide:users" class="h-6 w-6 text-primary" />
                         </div>
                         <div>
-                            <p class="text-2xl font-bold">{{ office.users_count }}</p>
+                            <p class="text-2xl font-bold">{{ role.users_count }}</p>
                             <p class="text-sm text-muted-foreground">
-                                {{ office.users_count === 1 ? 'User' : 'Users' }} assigned
+                                {{ role.users_count === 1 ? 'User' : 'Users' }} assigned
                             </p>
                         </div>
                     </div>
@@ -136,7 +136,7 @@ const showDeleteModal = ref(false)
             <CardHeader>
                 <CardTitle>Assigned Users</CardTitle>
                 <CardDescription>
-                    Users that belong to this office
+                    Users that have this role
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -154,7 +154,7 @@ const showDeleteModal = ref(false)
                         </thead>
                         <tbody class="[&_tr:last-child]:border-0">
                             <tr 
-                                v-for="user in office.users" 
+                                v-for="user in role.users" 
                                 :key="user.id"
                                 class="border-b transition-colors hover:bg-muted/50"
                             >
@@ -170,11 +170,11 @@ const showDeleteModal = ref(false)
                                     {{ user.email }}
                                 </td>
                             </tr>
-                            <tr v-if="office.users.length === 0">
+                            <tr v-if="role.users.length === 0">
                                 <td colspan="2" class="p-8 text-center">
                                     <div class="flex flex-col items-center gap-2">
                                         <Icon icon="lucide:users" class="h-12 w-12 text-muted-foreground/50" />
-                                        <p class="text-muted-foreground">No users assigned to this office</p>
+                                        <p class="text-muted-foreground">No users assigned to this role</p>
                                     </div>
                                 </td>
                             </tr>
@@ -187,9 +187,9 @@ const showDeleteModal = ref(false)
         <!-- Delete Confirmation Modal -->
         <DeleteModal
             v-model:open="showDeleteModal"
-            title="Delete Office"
-            :description="`Are you sure you want to delete '${office.name}'? This action cannot be undone.`"
-            :delete-url="route('offices.destroy', office.id)"
+            title="Delete Role"
+            :description="`Are you sure you want to delete '${role.name}'? This action cannot be undone.`"
+            :delete-url="route('roles.destroy', role.id)"
         />
     </div>
 </template>

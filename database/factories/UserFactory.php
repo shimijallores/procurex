@@ -26,8 +26,8 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'role_id' => Role::factory()->superAdmin(),
-            'office_id' => Office::factory()->provincialVeterinaryOffice(),
+            'role_id' => fn () => Role::firstOrCreate(['name' => 'SuperAdmin'])->id,
+            'office_id' => fn () => Office::firstOrCreate(['name' => 'Governing Office'])->id,
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),

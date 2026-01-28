@@ -14,13 +14,13 @@ import { Label } from '@/components/ui/label'
 
 defineOptions({
     layout: (h, page) => h(Layout, { breadcrumbs: [
-        { label: 'Offices', href: route('offices.index') },
+        { label: 'Roles', href: route('roles.index') },
         { label: 'Edit' }
     ] }, () => page),
 })
 
 const props = defineProps({
-    office: Object,
+    role: Object,
 })
 </script>
 
@@ -28,7 +28,7 @@ const props = defineProps({
     <div class="space-y-6">
         <!-- Header -->
         <div class="flex items-center gap-4">
-            <Link :href="route('offices.index')">
+            <Link :href="route('roles.index')">
                 <Button variant="ghost" size="sm">
                     <Icon icon="lucide:arrow-left" class="mr-2 h-4 w-4" />
                     Back
@@ -36,10 +36,10 @@ const props = defineProps({
             </Link>
             <div class="space-y-1">
                 <h1 class="text-2xl font-bold tracking-tight md:text-3xl">
-                    Edit Office
+                    Edit Role
                 </h1>
                 <p class="text-muted-foreground">
-                    Update office information
+                    Update role information
                 </p>
             </div>
         </div>
@@ -47,26 +47,26 @@ const props = defineProps({
         <!-- Form Card -->
         <Card class="max-w-2xl">
             <CardHeader>
-                <CardTitle>Office Details</CardTitle>
+                <CardTitle>Role Details</CardTitle>
                 <CardDescription>
-                    Modify the office information below
+                    Modify the role information below
                 </CardDescription>
             </CardHeader>
             <CardContent>
                 <Form
-                    :action="route('offices.update', office.id)"
+                    :action="route('roles.update', role.id)"
                     method="put"
                     class="space-y-6"
                     #default="{ errors, processing }"
                 >
                     <div class="space-y-2">
-                        <Label for="name">Office Name</Label>
+                        <Label for="name">Role Name</Label>
                         <input
                             id="name"
                             name="name"
                             type="text"
-                            :defaultValue="office.name"
-                            placeholder="Enter office name"
+                            :defaultValue="role.name"
+                            placeholder="Enter role name"
                             :class="[
                                 'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
                                 'ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium',
@@ -86,7 +86,7 @@ const props = defineProps({
                             <Icon v-else icon="lucide:save" class="mr-2 h-4 w-4" />
                             Save Changes
                         </Button>
-                        <Link :href="route('offices.index')">
+                        <Link :href="route('roles.index')">
                             <Button type="button" variant="outline">
                                 Cancel
                             </Button>

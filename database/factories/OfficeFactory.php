@@ -30,4 +30,11 @@ class OfficeFactory extends Factory
             'name' => 'Provincial Veterinary Office',
         ]);
     }
+
+      public function governingOffice(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'name' => 'Governing Office',
+        ]);
+    }
 }

@@ -12,16 +12,22 @@ use Inertia\Response;
 
 class OfficeController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $offices = Office::with('users')
             ->withCount('users')
+            ->when($request->search, function ($query, $search) {
+                $query->where('name', 'like', "%{$search}%");
+            })
             ->latest()
             ->paginate(10)
             ->withQueryString();
 
         return Inertia::render('Office/Index', [
             'offices' => $offices,
+            'filters' => [
+                'search' => $request->search,
+            ],
         ]);
     }
 
