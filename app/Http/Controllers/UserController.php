@@ -19,11 +19,11 @@ class UserController extends Controller
 {
     public function index(Request $request): Response
     {
-        $users = User::with(['role', 'office'])
-            ->when($request->search, function ($query, $search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%");
+        $lengthAwarePaginator = User::with(['role', 'office'])
+            ->when($request->search, function ($query, $search): void {
+                $query->where(function ($q) use ($search): void {
+                    $q->where('name', 'like', sprintf('%%%s%%', $search))
+                        ->orWhere('email', 'like', sprintf('%%%s%%', $search));
                 });
             })
             ->latest()
@@ -31,7 +31,7 @@ class UserController extends Controller
             ->withQueryString();
 
         return Inertia::render('User/Index', [
-            'users' => $users,
+            'users' => $lengthAwarePaginator,
             'filters' => [
                 'search' => $request->search,
             ],
@@ -46,9 +46,9 @@ class UserController extends Controller
         ]);
     }
 
-    public function store(StoreUserRequest $request): RedirectResponse
+    public function store(StoreUserRequest $storeUserRequest): RedirectResponse
     {
-        $validated = $request->validated();
+        $validated = $storeUserRequest->validated();
         $validated['password'] = Hash::make($validated['password']);
 
         User::create($validated);
@@ -75,11 +75,11 @@ class UserController extends Controller
         ]);
     }
 
-    public function update(UpdateUserRequest $request, User $user): RedirectResponse
+    public function update(UpdateUserRequest $updateUserRequest, User $user): RedirectResponse
     {
-        $validated = $request->validated();
+        $validated = $updateUserRequest->validated();
 
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
         } else {
             unset($validated['password']);

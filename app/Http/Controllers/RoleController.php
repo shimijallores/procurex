@@ -14,17 +14,17 @@ class RoleController extends Controller
 {
     public function index(Request $request): Response
     {
-        $roles = Role::with('users')
+        $lengthAwarePaginator = Role::with('users')
             ->withCount('users')
-            ->when($request->search, function ($query, $search) {
-                $query->where('name', 'like', "%{$search}%");
+            ->when($request->search, function ($query, string $search): void {
+                $query->where('name', 'like', sprintf('%%%s%%', $search));
             })
             ->latest()
             ->paginate(10)
             ->withQueryString();
 
         return Inertia::render('Role/Index', [
-            'roles' => $roles,
+            'roles' => $lengthAwarePaginator,
             'filters' => [
                 'search' => $request->search,
             ],
@@ -68,7 +68,7 @@ class RoleController extends Controller
     public function update(Request $request, Role $role): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:roles,name,' . $role->id],
+            'name' => ['required', 'string', 'max:255', 'unique:roles,name,'.$role->id],
         ]);
 
         $role->update($validated);

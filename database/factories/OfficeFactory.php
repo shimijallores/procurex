@@ -31,7 +31,7 @@ class OfficeFactory extends Factory
         ]);
     }
 
-      public function governingOffice(): static
+    public function governingOffice(): static
     {
         return $this->state(fn (array $attributes) => [
             'name' => 'Governing Office',
