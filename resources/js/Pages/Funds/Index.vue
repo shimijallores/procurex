@@ -15,18 +15,18 @@ import { Button } from '@/components/ui/button'
 import DeleteModal from '@/components/DeleteModal.vue'
 
 defineOptions({
-    layout: (h, page) => h(Layout, { breadcrumbs: [{ label: 'Offices' }] }, () => page),
+    layout: (h, page) => h(Layout, { breadcrumbs: [{ label: 'Funds' }] }, () => page),
 })
 
 const props = defineProps({
-    offices: Object,
+    funds: Object,
     filters: Object,
 })
 
-const search = ref(props.filters?.search ?? '')
+const search = ref(funds.filters?.search ?? '')
 
 const debouncedSearch = useDebounceFn(() => {
-    router.get(route('offices.index'), { search: search.value }, {
+    router.get(route('funds.index'), { search: search.value }, {
         preserveState: true,
         preserveScroll: true,
         replace: true,
@@ -64,16 +64,16 @@ const openDeleteModal = (office) => {
         <div class="flex items-center justify-between">
             <div class="space-y-1">
                 <h1 class="text-2xl font-bold tracking-tight md:text-3xl">
-                    Offices
+                    Funds
                 </h1>
                 <p class="text-muted-foreground">
-                    Manage all offices and their assigned users
+                    Manage all funds and their assigned users
                 </p>
             </div>
-            <Link :href="route('offices.create')">
+            <Link :href="route('funds.create')">
                 <Button>
                     <Icon icon="lucide:plus" class="mr-2 h-4 w-4" />
-                    Add Office
+                    Add Funds
                 </Button>
             </Link>
         </div>
@@ -86,7 +86,7 @@ const openDeleteModal = (office) => {
                     <Icon icon="lucide:building-2" class="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div class="text-2xl font-bold">{{ offices.total }}</div>
+                    <div class="text-2xl font-bold">{{ funds.total }}</div>
                     <p class="text-xs text-muted-foreground">
                         Across all departments
                     </p>
@@ -100,25 +100,25 @@ const openDeleteModal = (office) => {
                 </CardHeader>
                 <CardContent>
                     <div class="text-2xl font-bold">
-                        {{ offices.data.reduce((sum, office) => sum + office.users_count, 0) }}
+                        {{ funds.data.reduce((sum, office) => sum + office.users_count, 0) }}
                     </div>
                     <p class="text-xs text-muted-foreground">
-                        Assigned to offices
+                        Assigned to funds
                     </p>
                 </CardContent>
             </Card>
 
             <Card>
                 <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle class="text-sm font-medium">Total Funds</CardTitle>
-                    <Icon icon="lucide:wallet" class="h-4 w-4 text-muted-foreground" />
+                    <CardTitle class="text-sm font-medium">Average Users</CardTitle>
+                    <Icon icon="lucide:user-check" class="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                     <div class="text-2xl font-bold">
-                        {{ offices.data.reduce((sum, office) => sum + office.funds_count, 0) }}
+                        {{ funds.total > 0 ? Math.round(funds.data.reduce((sum, office) => sum + office.users_count, 0) / funds.total) : 0 }}
                     </div>
                     <p class="text-xs text-muted-foreground">
-                        Assigned to offices
+                        Per office
                     </p>
                 </CardContent>
             </Card>
@@ -131,7 +131,7 @@ const openDeleteModal = (office) => {
                     <div>
                         <CardTitle>All Offices</CardTitle>
                         <CardDescription>
-                            A list of all offices in the system
+                            A list of all funds in the system
                         </CardDescription>
                     </div>
                     <div class="relative w-64">
@@ -139,7 +139,7 @@ const openDeleteModal = (office) => {
                         <input
                             v-model="search"
                             type="text"
-                            placeholder="Search offices..."
+                            placeholder="Search funds..."
                             class="flex h-10 w-full rounded-md border border-input bg-background pl-9 pr-9 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         />
                         <button
@@ -164,9 +164,6 @@ const openDeleteModal = (office) => {
                                     Users
                                 </th>
                                 <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                                    Funds
-                                </th>
-                                <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
                                     Created
                                 </th>
                                 <th class="h-12 px-4 text-right align-middle font-medium text-muted-foreground">
@@ -175,8 +172,8 @@ const openDeleteModal = (office) => {
                             </tr>
                         </thead>
                         <tbody class="[&_tr:last-child]:border-0">
-                            <tr 
-                                v-for="office in offices.data" 
+                            <tr
+                                v-for="office in funds.data"
                                 :key="office.id"
                                 class="border-b transition-colors hover:bg-muted/50"
                             >
@@ -198,24 +195,17 @@ const openDeleteModal = (office) => {
                                         <span class="text-muted-foreground">{{ office.users_count === 1 ? 'user' : 'users' }}</span>
                                     </div>
                                 </td>
-                                <td class="p-4 align-middle">
-                                    <div class="flex items-center gap-2">
-                                        <Icon icon="lucide:wallet" class="h-4 w-4 text-muted-foreground" />
-                                        <span class="font-medium">{{ office.funds_count }}</span>
-                                        <span class="text-muted-foreground">{{ office.funds_count === 1 ? 'fund' : 'funds' }}</span>
-                                    </div>
-                                </td>
                                 <td class="p-4 align-middle text-muted-foreground">
                                     {{ formatDate(office.created_at) }}
                                 </td>
                                 <td class="p-4 align-middle text-right">
                                     <div class="flex items-center justify-end gap-2">
-                                        <Link :href="route('offices.show', office.id)">
+                                        <Link :href="route('funds.show', office.id)">
                                             <Button variant="ghost" size="sm">
                                                 <Icon icon="lucide:eye" class="h-4 w-4" />
                                             </Button>
                                         </Link>
-                                        <Link :href="route('offices.edit', office.id)">
+                                        <Link :href="route('funds.edit', office.id)">
                                             <Button variant="ghost" size="sm">
                                                 <Icon icon="lucide:pencil" class="h-4 w-4" />
                                             </Button>
@@ -226,11 +216,11 @@ const openDeleteModal = (office) => {
                                     </div>
                                 </td>
                             </tr>
-                            <tr v-if="offices.data.length === 0">
-                                <td colspan="5" class="p-8 text-center">
+                            <tr v-if="funds.data.length === 0">
+                                <td colspan="4" class="p-8 text-center">
                                     <div class="flex flex-col items-center gap-2">
                                         <Icon icon="lucide:inbox" class="h-12 w-12 text-muted-foreground/50" />
-                                        <p class="text-muted-foreground">No offices found</p>
+                                        <p class="text-muted-foreground">No funds found</p>
                                     </div>
                                 </td>
                             </tr>
@@ -239,12 +229,12 @@ const openDeleteModal = (office) => {
                 </div>
 
                 <!-- Pagination -->
-                <div v-if="offices.last_page > 1" class="mt-4 flex items-center justify-between border-t pt-4">
+                <div v-if="funds.last_page > 1" class="mt-4 flex items-center justify-between border-t pt-4">
                     <div class="text-sm text-muted-foreground">
-                        Showing {{ offices.from }} to {{ offices.to }} of {{ offices.total }} offices
+                        Showing {{ funds.from }} to {{ funds.to }} of {{ funds.total }} funds
                     </div>
                     <div class="flex items-center gap-1">
-                        <template v-for="(link, index) in offices.links" :key="index">
+                        <template v-for="(link, index) in funds.links" :key="index">
                             <Link
                                 v-if="link.url"
                                 :href="link.url"
@@ -279,7 +269,7 @@ const openDeleteModal = (office) => {
             v-model:open="showDeleteModal"
             title="Delete Office"
             :description="`Are you sure you want to delete '${officeToDelete?.name}'? This action cannot be undone.`"
-            :delete-url="officeToDelete ? route('offices.destroy', officeToDelete.id) : ''"
+            :delete-url="officeToDelete ? route('funds.destroy', officeToDelete.id) : ''"
         />
     </div>
 </template>

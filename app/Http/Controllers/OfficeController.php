@@ -14,8 +14,8 @@ class OfficeController extends Controller
 {
     public function index(Request $request): Response
     {
-        $lengthAwarePaginator = Office::with('users')
-            ->withCount('users')
+        $lengthAwarePaginator = Office::with(['users', 'funds'])
+            ->withCount(['users', 'funds'])
             ->when($request->search, function ($query, string $search): void {
                 $query->where('name', 'like', sprintf('%%%s%%', $search));
             })
@@ -50,8 +50,8 @@ class OfficeController extends Controller
 
     public function show(Office $office): Response
     {
-        $office->load('users');
-        $office->loadCount('users');
+        $office->load(['users', 'funds']);
+        $office->loadCount(['users', 'funds']);
 
         return Inertia::render('Office/Show', [
             'office' => $office,

@@ -19,7 +19,7 @@ class FundsFactory extends Factory
     {
         return [
             'office_id' => fn () => Office::firstOrCreate(['name' => 'Provincial Veterinary Office'])->id,
-            'code' => fake()->unique()->randomNumber(5),
+            'code' => fake()->unique()->randomNumber(5, true),
             'type' => fake()->randomElement(['general', 'project']),
             'fiscal_year' => 2026,
             'allocated_amount' => 1298025.00,

@@ -115,7 +115,7 @@ const showDeleteModal = ref(false)
                         Office statistics and metrics
                     </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent class="space-y-4">
                     <div class="flex items-center gap-4 rounded-lg border p-4">
                         <div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
                             <Icon icon="lucide:users" class="h-6 w-6 text-primary" />
@@ -124,6 +124,17 @@ const showDeleteModal = ref(false)
                             <p class="text-2xl font-bold">{{ office.users_count }}</p>
                             <p class="text-sm text-muted-foreground">
                                 {{ office.users_count === 1 ? 'User' : 'Users' }} assigned
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4 rounded-lg border p-4">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-green-500/10">
+                            <Icon icon="lucide:wallet" class="h-6 w-6 text-green-500" />
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold">{{ office.funds_count }}</p>
+                            <p class="text-sm text-muted-foreground">
+                                {{ office.funds_count === 1 ? 'Fund' : 'Funds' }} assigned
                             </p>
                         </div>
                     </div>
@@ -175,6 +186,59 @@ const showDeleteModal = ref(false)
                                     <div class="flex flex-col items-center gap-2">
                                         <Icon icon="lucide:users" class="h-12 w-12 text-muted-foreground/50" />
                                         <p class="text-muted-foreground">No users assigned to this office</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </CardContent>
+        </Card>
+
+        <!-- Funds Table -->
+        <Card>
+            <CardHeader>
+                <CardTitle>Assigned Funds</CardTitle>
+                <CardDescription>
+                    Funds that belong to this office
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div class="relative w-full overflow-auto">
+                    <table class="w-full caption-bottom text-sm">
+                        <thead class="border-b">
+                            <tr class="border-b transition-colors hover:bg-muted/50">
+                                <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                                    Fund Name
+                                </th>
+                                <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                                    Created
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="[&_tr:last-child]:border-0">
+                            <tr 
+                                v-for="fund in office.funds" 
+                                :key="fund.id"
+                                class="border-b transition-colors hover:bg-muted/50"
+                            >
+                                <td class="p-4 align-middle">
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex h-8 w-8 items-center justify-center rounded-full bg-green-500/10">
+                                            <Icon icon="lucide:wallet" class="h-4 w-4 text-green-500" />
+                                        </div>
+                                        <span class="font-medium">{{ fund.name }}</span>
+                                    </div>
+                                </td>
+                                <td class="p-4 align-middle text-muted-foreground">
+                                    {{ formatDate(fund.created_at) }}
+                                </td>
+                            </tr>
+                            <tr v-if="office.funds.length === 0">
+                                <td colspan="2" class="p-8 text-center">
+                                    <div class="flex flex-col items-center gap-2">
+                                        <Icon icon="lucide:wallet" class="h-12 w-12 text-muted-foreground/50" />
+                                        <p class="text-muted-foreground">No funds assigned to this office</p>
                                     </div>
                                 </td>
                             </tr>

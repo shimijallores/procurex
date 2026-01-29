@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FundController;
 use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SessionController;
@@ -22,4 +23,5 @@ Route::middleware(['auth'])->group(function (): void {
     Route::resource('offices', OfficeController::class);
     Route::resource('roles', RoleController::class);
     Route::resource('users', UserController::class);
+    Route::resource('funds', FundController::class);
 });
