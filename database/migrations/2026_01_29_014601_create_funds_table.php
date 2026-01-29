@@ -16,8 +16,8 @@ return new class extends Migration
             $table->foreignId('office_id')->constrained()->cascadeOnDelete();
             //$table->foreignId('project_id')->nullable()->constrained()->cascadeOnDelete();
             $table->string('code')->unique();
-            $table->unsignedSmallInteger('fiscal_year');
             $table->enum('type', ['general', 'project']);
+            $table->unsignedSmallInteger('fiscal_year');
             $table->decimal('allocated_amount');
             $table->string('name');
             $table->string('remarks')->nullable();
