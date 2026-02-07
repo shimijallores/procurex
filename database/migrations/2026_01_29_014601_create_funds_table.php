@@ -19,6 +19,9 @@ return new class extends Migration {
             $table->unsignedSmallInteger("fiscal_year");
             $table->string("remarks")->nullable();
             $table->timestamps();
+
+            $table->index("code");
+            $table->index(['office_id', 'fiscal_year']);
         });
     }
 

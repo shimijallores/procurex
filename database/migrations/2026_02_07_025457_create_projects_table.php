@@ -16,6 +16,8 @@ return new class extends Migration
             $table->foreignId('fund_id')->constrained()->cascadeOnDelete();
             $table->text('remarks')->nullable();
             $table->timestamps();
+
+            $table->index('fund_id');
         });
 
         Schema::create('work_programs', function (Blueprint $table) {
@@ -23,6 +25,8 @@ return new class extends Migration
             $table->foreignId('project_id')->constrained()->cascadeOnDelete();
             $table->string('file_url');
             $table->timestamps();
+
+            $table->index('project_id');
         });
 
         Schema::create('project_briefs', function (Blueprint $table) {
@@ -30,6 +34,8 @@ return new class extends Migration
             $table->foreignId('project_id')->constrained()->cascadeOnDelete();
             $table->string('file_url');
             $table->timestamps();
+
+            $table->index('project_id');
         });
 
         Schema::create('project_proposals', function (Blueprint $table) {
@@ -37,6 +43,8 @@ return new class extends Migration
             $table->foreignId('project_id')->constrained()->cascadeOnDelete();
             $table->string('file_url');
             $table->timestamps();
+
+            $table->index('project_id');
         });
     }
 
