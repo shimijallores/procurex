@@ -13,16 +13,14 @@ return new class extends Migration {
         Schema::create("funds", function (Blueprint $table) {
             $table->id();
             $table->foreignId("office_id")->constrained()->cascadeOnDelete();
-            //$table->foreignId('project_id')->nullable()->constrained()->cascadeOnDelete();
             $table->string("code")->unique();
+            $table->string("name");
             $table->enum("type", ["general", "project"]);
             $table->unsignedSmallInteger("fiscal_year");
-            $table->decimal("allocated_amount");
-            $table->string("name");
             $table->string("remarks")->nullable();
             $table->timestamps();
         });
-    }
+}
 
     /**
      * Reverse the migrations.
