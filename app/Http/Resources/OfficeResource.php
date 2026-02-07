@@ -19,6 +19,7 @@ class OfficeResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'code' => $this->code,
             'users_count' => $this->whenCounted('users'),
             'users' => UserResource::collection($this->whenLoaded('users')),
             'created_at' => $this->created_at,

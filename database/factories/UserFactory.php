@@ -27,7 +27,10 @@ class UserFactory extends Factory
     {
         return [
             'role_id' => fn () => Role::firstOrCreate(['name' => 'SuperAdmin'])->id,
-            'office_id' => fn () => Office::firstOrCreate(['name' => 'Governing Office'])->id,
+            'office_id' => fn () => Office::firstOrCreate(
+                ['name' => 'Governing Office'],
+                ['code' => 'GOV-001']
+            )->id,
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),

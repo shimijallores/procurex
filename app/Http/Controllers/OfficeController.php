@@ -40,6 +40,7 @@ class OfficeController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:offices,name'],
+            'code' => ['required', 'string', 'max:255', 'unique:offices,code'],
         ]);
 
         Office::create($validated);
@@ -69,6 +70,7 @@ class OfficeController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:offices,name,'.$office->id],
+            'code' => ['required', 'string', 'max:255', 'unique:offices,code,'.$office->id],
         ]);
 
         $office->update($validated);

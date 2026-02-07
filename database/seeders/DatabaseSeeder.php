@@ -24,7 +24,10 @@ class DatabaseSeeder extends Seeder
 
         User::factory()->create([
             'name' => 'Veterenary Admin',
-            'office_id' => Office::firstOrCreate(['name' => 'Provincial Veterinary Office'])->id,
+            'office_id' => Office::firstOrCreate(
+                ['name' => 'Provincial Veterinary Office'],
+                ['code' => 'PVO-001']
+            )->id,
             'email' => 'veterenaryadmin@procurex.com',
         ]);
 

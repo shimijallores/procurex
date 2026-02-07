@@ -18,6 +18,7 @@ class OfficeFactory extends Factory
     {
         return [
             'name' => fake()->unique()->company(),
+            'code' => fake()->unique()->bothify('???-###'),
         ];
     }
 
@@ -28,6 +29,7 @@ class OfficeFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'name' => 'Provincial Veterinary Office',
+            'code' => 'PVO-001',
         ]);
     }
 
@@ -35,6 +37,7 @@ class OfficeFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'name' => 'Governing Office',
+            'code' => 'GOV-001',
         ]);
     }
 }

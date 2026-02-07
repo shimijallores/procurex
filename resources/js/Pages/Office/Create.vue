@@ -1,23 +1,30 @@
 <script setup>
-import { Link, Form } from '@inertiajs/vue3'
-import { Icon } from '@iconify/vue'
-import Layout from '@/Layout/Layout.vue'
+import { Link, Form } from "@inertiajs/vue3";
+import { Icon } from "@iconify/vue";
+import Layout from "@/Layout/Layout.vue";
 import {
     Card,
     CardContent,
     CardDescription,
     CardHeader,
     CardTitle,
-} from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 
 defineOptions({
-    layout: (h, page) => h(Layout, { breadcrumbs: [
-        { label: 'Offices', href: route('offices.index') },
-        { label: 'Create' }
-    ] }, () => page),
-})
+    layout: (h, page) =>
+        h(
+            Layout,
+            {
+                breadcrumbs: [
+                    { label: "Offices", href: route("offices.index") },
+                    { label: "Create" },
+                ],
+            },
+            () => page,
+        ),
+});
 </script>
 
 <template>
@@ -67,7 +74,7 @@ defineOptions({
                                 'ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium',
                                 'placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2',
                                 'focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-                                errors.name ? 'border-destructive' : ''
+                                errors.name ? 'border-destructive' : '',
                             ]"
                         />
                         <p v-if="errors.name" class="text-sm text-destructive">
@@ -75,10 +82,38 @@ defineOptions({
                         </p>
                     </div>
 
+                    <div class="space-y-2">
+                        <Label for="code">Office Code</Label>
+                        <input
+                            id="code"
+                            name="code"
+                            type="text"
+                            placeholder="Enter office code"
+                            :class="[
+                                'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
+                                'ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium',
+                                'placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2',
+                                'focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+                                errors.code ? 'border-destructive' : '',
+                            ]"
+                        />
+                        <p v-if="errors.code" class="text-sm text-destructive">
+                            {{ errors.code }}
+                        </p>
+                    </div>
+
                     <div class="flex items-center gap-4">
                         <Button type="submit" :disabled="processing">
-                            <Icon v-if="processing" icon="lucide:loader-2" class="mr-2 h-4 w-4 animate-spin" />
-                            <Icon v-else icon="lucide:plus" class="mr-2 h-4 w-4" />
+                            <Icon
+                                v-if="processing"
+                                icon="lucide:loader-2"
+                                class="mr-2 h-4 w-4 animate-spin"
+                            />
+                            <Icon
+                                v-else
+                                icon="lucide:plus"
+                                class="mr-2 h-4 w-4"
+                            />
                             Create Office
                         </Button>
                         <Link :href="route('offices.index')">
