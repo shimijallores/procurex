@@ -66,6 +66,12 @@ const mainNavItems = computed(() => {
             icon: "lucide:wallet",
             isActive: route().current("funds.*"),
         },
+        {
+            title: "APPs",
+            url: route("apps.index"),
+            icon: "lucide:file-text",
+            isActive: route().current("apps.*"),
+        },
     ];
 });
 

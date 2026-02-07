@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\APPController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FundController;
 use App\Http\Controllers\OfficeController;
@@ -24,4 +25,7 @@ Route::middleware(['auth'])->group(function (): void {
     Route::resource('roles', RoleController::class);
     Route::resource('users', UserController::class);
     Route::resource('funds', FundController::class);
+    Route::resource('apps', APPController::class);
+    Route::post('apps/{app}/import', [APPController::class, 'import'])->name('apps.import');
+    Route::get('apps/{app}/download', [APPController::class, 'download'])->name('apps.download');
 });
