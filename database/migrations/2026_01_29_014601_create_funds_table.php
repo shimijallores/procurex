@@ -20,7 +20,7 @@ return new class extends Migration {
             $table->string("remarks")->nullable();
             $table->timestamps();
         });
-}
+    }
 
     /**
      * Reverse the migrations.

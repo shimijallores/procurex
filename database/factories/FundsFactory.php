@@ -20,12 +20,11 @@ class FundsFactory extends Factory
     public function definition(): array
     {
         return [
-            'office_id' => fn () => Office::firstOrCreate(['name' => 'Provincial Veterinary Office'])->id,
+            'office_id' => fn() => Office::firstOrCreate(['name' => 'Provincial Veterinary Office'])->id,
             'code' => fake()->unique()->randomNumber(5, true),
+            'name' => 'Livestock and Poultry Development Program of the Provincial Veterinary Office',
             'type' => 'project',
             'fiscal_year' => 2026,
-            'allocated_amount' => 1298025.00,
-            'name' => 'Livestock and Poultry Development Program of the Provincial Veterinary Office',
         ];
     }
 }

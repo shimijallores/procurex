@@ -14,6 +14,10 @@ class Funds extends Model
 
     protected $fillable = [
         'name',
+        'code',
+        'type',
+        'fiscal_year',
+        'remarks',
     ];
 
     public function office(): BelongsTo
