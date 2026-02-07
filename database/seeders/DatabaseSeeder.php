@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Funds;
+use App\Models\Fund;
 use App\Models\Office;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -31,6 +31,6 @@ class DatabaseSeeder extends Seeder
             'email' => 'veterenaryadmin@procurex.com',
         ]);
 
-        Funds::factory()->create();
+        Fund::factory()->create();
     }
 }

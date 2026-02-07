@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,12 +15,13 @@ class Project extends Model
     use HasFactory;
 
     protected $fillable = [
+        'fund_id',
         'remarks'
     ];
 
-    public function funds(): BelongsTo
+    public function fund(): BelongsTo
     {
-        return $this->belongsTo(Funds::class);
+        return $this->belongsTo(Fund::class);
     }
 
     public function workProgram(): HasOne

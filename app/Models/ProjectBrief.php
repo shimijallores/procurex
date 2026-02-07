@@ -12,6 +12,7 @@ class ProjectBrief extends Model
     use HasFactory;
 
     protected $fillable = [
+        'project_id',
         'file_url',
     ];
 

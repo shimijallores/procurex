@@ -6,9 +6,9 @@ use App\Models\Office;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Funds>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Fund>
  */
-class FundsFactory extends Factory
+class FundFactory extends Factory
 {
     /**
      * Define the model's default state.

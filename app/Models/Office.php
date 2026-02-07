@@ -25,6 +25,6 @@ class Office extends Model
 
     public function funds(): HasMany
     {
-        return $this->hasMany(Funds::class);
+        return $this->hasMany(Fund::class);
     }
 }
