@@ -5,10 +5,10 @@ import { Icon } from "@iconify/vue";
 import { useDebounceFn } from "@vueuse/core";
 import Layout from "@/Layout/Layout.vue";
 import DeleteModal from "@/components/DeleteModal.vue";
-import PPMPIndexHeader from "@/components/ppmps/PPMPIndexHeader.vue";
-import PPMPIndexStats from "@/components/ppmps/PPMPIndexStats.vue";
-import PPMPIndexTable from "@/components/ppmps/PPMPIndexTable.vue";
-import PPMPIndexPagination from "@/components/ppmps/PPMPIndexPagination.vue";
+import PPMPIndexHeader from "@/components/ppmps/index/PPMPIndexHeader.vue";
+import PPMPIndexStats from "@/components/ppmps/index/PPMPIndexStats.vue";
+import PPMPIndexTable from "@/components/ppmps/index/PPMPIndexTable.vue";
+import PPMPIndexPagination from "@/components/ppmps/index/PPMPIndexPagination.vue";
 
 defineOptions({
     layout: (h, page) =>

@@ -63,11 +63,6 @@ const formatDate = (date) => {
                                 Status
                             </th>
                             <th
-                                class="h-12 px-4 text-center align-middle font-medium text-muted-foreground"
-                            >
-                                Version
-                            </th>
-                            <th
                                 class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
                             >
                                 Created
@@ -158,13 +153,6 @@ const formatDate = (date) => {
                                     </span>
                                 </div>
                             </td>
-                            <td class="p-4 align-middle text-center">
-                                <span
-                                    class="font-mono text-sm bg-muted px-2 py-1 rounded"
-                                >
-                                    v{{ ppmp.version }}
-                                </span>
-                            </td>
                             <td class="p-4 align-middle">
                                 <div class="flex items-center gap-2">
                                     <Icon
@@ -180,9 +168,7 @@ const formatDate = (date) => {
                                 <div
                                     class="flex items-center justify-end gap-2"
                                 >
-                                    <Link
-                                        :href="route('ppmps.show', ppmp.id)"
-                                    >
+                                    <Link :href="route('ppmps.show', ppmp.id)">
                                         <Button variant="ghost" size="sm">
                                             <Icon
                                                 icon="lucide:eye"
@@ -192,9 +178,7 @@ const formatDate = (date) => {
                                     </Link>
                                     <Link
                                         v-if="!ppmp.is_approved"
-                                        :href="
-                                            route('ppmps.edit', ppmp.id)
-                                        "
+                                        :href="route('ppmps.edit', ppmp.id)"
                                     >
                                         <Button variant="ghost" size="sm">
                                             <Icon
@@ -237,10 +221,7 @@ const formatDate = (date) => {
                             : "Get started by creating a new PPMP"
                     }}
                 </p>
-                <Link
-                    v-if="!search"
-                    :href="route('ppmps.create')"
-                >
+                <Link v-if="!search" :href="route('ppmps.create')">
                     <Button>
                         <Icon icon="lucide:plus" class="mr-2 h-4 w-4" />
                         Create PPMP

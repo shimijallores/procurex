@@ -3,14 +3,14 @@ import { ref, computed } from "vue";
 import { useForm } from "@inertiajs/vue3";
 import Layout from "@/Layout/Layout.vue";
 import DeleteModal from "@/components/DeleteModal.vue";
-import PPMPShowHeader from "@/components/ppmps/PPMPShowHeader.vue";
-import PPMPBudgetValidationAlert from "@/components/ppmps/PPMPBudgetValidationAlert.vue";
-import PPMPRejectionAlert from "@/components/ppmps/PPMPRejectionAlert.vue";
-import PPMPShowSummaryCards from "@/components/ppmps/PPMPShowSummaryCards.vue";
-import PPMPCategoriesTable from "@/components/ppmps/PPMPCategoriesTable.vue";
-import PPMPImportModal from "@/components/ppmps/PPMPImportModal.vue";
-import PPMPRejectModal from "@/components/ppmps/PPMPRejectModal.vue";
-import PPMPApproveModal from "@/components/ppmps/PPMPApproveModal.vue";
+import PPMPShowHeader from "@/components/ppmps/show/PPMPShowHeader.vue";
+import PPMPBudgetValidationAlert from "@/components/ppmps/show/PPMPBudgetValidationAlert.vue";
+import PPMPRejectionAlert from "@/components/ppmps/show/PPMPRejectionAlert.vue";
+import PPMPShowSummaryCards from "@/components/ppmps/show/PPMPShowSummaryCards.vue";
+import PPMPCategoriesTable from "@/components/ppmps/show/PPMPCategoriesTable.vue";
+import PPMPImportModal from "@/components/ppmps/show/PPMPImportModal.vue";
+import PPMPRejectModal from "@/components/ppmps/show/PPMPRejectModal.vue";
+import PPMPApproveModal from "@/components/ppmps/show/PPMPApproveModal.vue";
 
 defineOptions({
     layout: (h, page) =>
