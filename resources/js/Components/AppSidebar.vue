@@ -77,6 +77,12 @@ const mainNavItems = computed(() => {
 
 const secondaryNavItems = [
     {
+        title: "Calendar",
+        url: route("calendars.index"),
+        icon: "lucide:calendar",
+        isActive: route().current("calendars.*"),
+    },
+    {
         title: "Reports",
         url: "#",
         icon: "lucide:bar-chart-3",

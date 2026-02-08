@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\APPController;
+use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FundController;
 use App\Http\Controllers\OfficeController;
@@ -28,4 +29,7 @@ Route::middleware(['auth'])->group(function (): void {
     Route::resource('apps', APPController::class);
     Route::post('apps/{app}/import', [APPController::class, 'import'])->name('apps.import');
     Route::get('apps/{app}/download', [APPController::class, 'download'])->name('apps.download');
+
+    Route::resource('calendars', CalendarController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::post('calendars/check-date', [CalendarController::class, 'checkDate'])->name('calendars.check-date');
 });

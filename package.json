@@ -22,12 +22,14 @@
     },
     "dependencies": {
         "@inertiajs/vue3": "^2.3.10",
-        "@vueuse/core": "^14.1.0",
+        "@internationalized/date": "^3.11.0",
+        "@vueuse/core": "^14.2.0",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "lucide-vue-next": "^0.563.0",
-        "reka-ui": "^2.7.0",
+        "reka-ui": "^2.8.0",
         "tailwind-merge": "^3.4.0",
+        "vue-sonner": "^2.0.9",
         "ziggy-js": "^2.6.0"
     }
 }
