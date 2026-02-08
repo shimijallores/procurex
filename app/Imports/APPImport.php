@@ -52,7 +52,7 @@ class APPImport implements ToCollection, WithCustomCsvSettings, WithStartRow
             $rowData = $row->toArray();
 
             // Skip completely empty rows
-            if (array_filter($rowData, fn($val): bool => ! empty($val)) === []) {
+            if (array_filter($rowData, fn ($val): bool => ! empty($val)) === []) {
                 continue;
             }
 

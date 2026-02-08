@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Imports;
 
+use App\Models\APPCategory;
 use App\Models\PPMP;
 use App\Models\PPMPCategory;
 use App\Models\PPMPItem;
 use App\Models\PPMPItemMonth;
-use App\Models\APPCategory;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithCustomCsvSettings;
@@ -56,7 +56,7 @@ class PPMPImport implements ToCollection, WithCustomCsvSettings, WithStartRow
             $rowData = $row->toArray();
 
             // Skip completely empty rows
-            if (array_filter($rowData, fn($val): bool => ! empty($val)) === []) {
+            if (array_filter($rowData, fn ($val): bool => ! empty($val)) === []) {
                 continue;
             }
 
@@ -70,7 +70,7 @@ class PPMPImport implements ToCollection, WithCustomCsvSettings, WithStartRow
 
             // Month columns (indices 6-17 for Jan-Dec)
             $monthQuantities = [];
-            for ($i = 6; $i <= 17; $i++) {
+            for ($i = 6; $i <= 17; ++$i) {
                 $monthValue = trim((string) ($rowData[$i] ?? ''));
                 $monthQuantities[] = $monthValue !== '' ? (int) $monthValue : null;
             }
@@ -140,6 +140,7 @@ class PPMPImport implements ToCollection, WithCustomCsvSettings, WithStartRow
 
         // Check if it matches pattern like "5-02-02-010" or "1-07-07-010"
         $pattern = '/^\d+-\d+-\d+-\d+$/';
+
         return preg_match($pattern, str_replace(' ', '', $code)) === 1;
     }
 
@@ -152,7 +153,7 @@ class PPMPImport implements ToCollection, WithCustomCsvSettings, WithStartRow
 
         // Find matching APP category by pap_code for the same office and fiscal year
         $appCategory = APPCategory::where('pap_code', $normalizedCode)
-            ->whereHas('APP', function ($query) {
+            ->whereHas('APP', function ($query): void {
                 $query->where('office_id', $this->ppmp->office_id)
                     ->where('fiscal_year', $this->ppmp->fiscal_year);
             })
@@ -213,6 +214,7 @@ class PPMPImport implements ToCollection, WithCustomCsvSettings, WithStartRow
     private function parseQuantity(string $quantity): int
     {
         $cleaned = preg_replace('/[^0-9]/', '', $quantity);
+
         return $cleaned !== '' ? (int) $cleaned : 0;
     }
 
@@ -234,12 +236,15 @@ class PPMPImport implements ToCollection, WithCustomCsvSettings, WithStartRow
         if (str_contains($mode, 'bidding')) {
             return 'bidding';
         }
+
         if (str_contains($mode, 'small')) {
             return 'small value';
         }
+
         if (str_contains($mode, 'direct contracting')) {
             return 'direct_contracting';
         }
+
         if (str_contains($mode, 'direct')) {
             return 'direct';
         }

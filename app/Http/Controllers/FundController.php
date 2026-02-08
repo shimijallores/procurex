@@ -148,6 +148,7 @@ class FundController extends Controller
                     $project->update(['name' => $validated['project_name']]);
                 }
             }
+
             // Handle work program upload
             if ($updateFundRequest->hasFile('work_program') && $updateFundRequest->file('work_program')->isValid()) {
                 // Delete old file if exists
@@ -163,6 +164,7 @@ class FundController extends Controller
                     'file_url' => $workProgramPath,
                 ]);
             }
+
             // Handle project brief upload
             if ($updateFundRequest->hasFile('project_brief') && $updateFundRequest->file('project_brief')->isValid()) {
                 // Delete old file if exists
@@ -178,6 +180,7 @@ class FundController extends Controller
                     'file_url' => $projectBriefPath,
                 ]);
             }
+
             // Handle project proposal upload
             if ($updateFundRequest->hasFile('project_proposal') && $updateFundRequest->file('project_proposal')->isValid()) {
                 // Delete old file if exists

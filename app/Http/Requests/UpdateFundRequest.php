@@ -28,7 +28,7 @@ class UpdateFundRequest extends FormRequest
 
         $rules = [
             'office_id' => ['required', 'exists:offices,id'],
-            'code' => ['required', 'string', 'max:255', 'unique:funds,code,' . $fundId],
+            'code' => ['required', 'string', 'max:255', 'unique:funds,code,'.$fundId],
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', 'in:general,project'],
             'fiscal_year' => ['required', 'integer', 'min:2000', 'max:2100'],
