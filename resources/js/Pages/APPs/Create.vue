@@ -216,16 +216,8 @@ const submit = () => {
                                         class="list-disc list-inside space-y-1 text-xs"
                                     >
                                         <li>
-                                            Categories must have a PAP code in
-                                            the first column
-                                        </li>
-                                        <li>
-                                            Items have no PAP code but must have
-                                            a name
-                                        </li>
-                                        <li>
-                                            The first 9 rows are header rows and
-                                            will be skipped
+                                            Make sure to use the provided APP
+                                            template
                                         </li>
                                     </ul>
                                 </div>

@@ -72,6 +72,12 @@ const mainNavItems = computed(() => {
             icon: "lucide:file-text",
             isActive: route().current("apps.*"),
         },
+        {
+            title: "PPMPs",
+            url: route("ppmps.index"),
+            icon: "lucide:clipboard-list",
+            isActive: route().current("ppmps.*"),
+        },
     ];
 });
 

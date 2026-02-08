@@ -39,6 +39,7 @@ const form = useForm({
     type: props.fund.type,
     fiscal_year: props.fund.fiscal_year,
     remarks: props.fund.remarks,
+    project_name: props.fund.project?.name || "",
     work_program: null,
     project_brief: null,
     project_proposal: null,
@@ -226,6 +227,30 @@ const submit = () => {
                             class="text-sm text-destructive"
                         >
                             {{ form.errors.type }}
+                        </p>
+                    </div>
+
+                    <div v-if="showProjectFields" class="space-y-2">
+                        <Label for="project_name">Project Name</Label>
+                        <input
+                            id="project_name"
+                            v-model="form.project_name"
+                            type="text"
+                            placeholder="Enter project name (defaults to fund name if empty)"
+                            :class="[
+                                'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
+                                'ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2',
+                                'focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+                                form.errors.project_name
+                                    ? 'border-destructive'
+                                    : '',
+                            ]"
+                        />
+                        <p
+                            v-if="form.errors.project_name"
+                            class="text-sm text-destructive"
+                        >
+                            {{ form.errors.project_name }}
                         </p>
                     </div>
 

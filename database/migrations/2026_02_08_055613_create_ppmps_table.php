@@ -21,9 +21,15 @@ return new class extends Migration
             $table->unsignedSmallInteger('fiscal_year');
             $table->boolean('is_addendum')->default(false);
             $table->string('remarks')->nullable();
+            $table->string('csv_path')->nullable();
+            $table->json('budget_notices')->nullable();
+            $table->boolean('is_approved')->default(false);
+            $table->timestamp('approved_at')->nullable();
+            $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->text('rejection_reason')->nullable();
+
             $table->timestamps();
 
-            $table->unique(['office_id', 'project_id', 'fiscal_year', 'is_addendum'], 'unique_ppmp');
             $table->index(['office_id', 'project_id', 'fiscal_year'], 'idx_ppmp');
         });
     }

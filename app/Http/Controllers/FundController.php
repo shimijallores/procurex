@@ -64,6 +64,7 @@ class FundController extends Controller
             // Create project record
             $project = Project::create([
                 'fund_id' => $fund->id,
+                'name' => $validated['project_name'] ?? $fund->name, // Use project_name if provided, otherwise fund name
                 'remarks' => $fund->remarks,
             ]);
 
@@ -137,10 +138,15 @@ class FundController extends Controller
             if (! $fund->project) {
                 $project = Project::create([
                     'fund_id' => $fund->id,
+                    'name' => $validated['project_name'] ?? $fund->name, // Use project_name if provided, otherwise fund name
                     'remarks' => $fund->remarks,
                 ]);
             } else {
                 $project = $fund->project;
+                // Update project name if provided
+                if (isset($validated['project_name'])) {
+                    $project->update(['name' => $validated['project_name']]);
+                }
             }
             // Handle work program upload
             if ($updateFundRequest->hasFile('work_program') && $updateFundRequest->file('work_program')->isValid()) {
@@ -192,15 +198,15 @@ class FundController extends Controller
             if ($fund->project->workProgram) {
                 Storage::disk('public')->delete($fund->project->workProgram->file_url);
             }
-            
+
             if ($fund->project->projectBrief) {
                 Storage::disk('public')->delete($fund->project->projectBrief->file_url);
             }
-            
+
             if ($fund->project->projectProposal) {
                 Storage::disk('public')->delete($fund->project->projectProposal->file_url);
             }
-            
+
             $fund->project->delete();
         }
 

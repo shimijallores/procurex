@@ -28,11 +28,12 @@ class UpdateFundRequest extends FormRequest
 
         $rules = [
             'office_id' => ['required', 'exists:offices,id'],
-            'code' => ['required', 'string', 'max:255', 'unique:funds,code,'.$fundId],
+            'code' => ['required', 'string', 'max:255', 'unique:funds,code,' . $fundId],
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', 'in:general,project'],
             'fiscal_year' => ['required', 'integer', 'min:2000', 'max:2100'],
             'remarks' => ['nullable', 'string', 'max:1000'],
+            'project_name' => ['nullable', 'string', 'max:255'],
         ];
 
         // Only validate file fields when they are present and not null

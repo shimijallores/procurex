@@ -26,6 +26,8 @@ class PPMPItem extends Model
         'updated_at' => 'datetime',
     ];
 
+    protected $appends = ['months'];
+
     public function category(): BelongsTo
     {
         return $this->belongsTo(PPMPCategory::class, 'ppmp_category_id');
@@ -34,5 +36,10 @@ class PPMPItem extends Model
     public function months(): HasMany
     {
         return $this->hasMany(PPMPItemMonth::class, 'ppmp_item_id');
+    }
+
+    public function getMonthsAttribute()
+    {
+        return $this->months()->get();
     }
 }

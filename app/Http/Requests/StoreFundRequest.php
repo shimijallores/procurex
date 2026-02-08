@@ -30,6 +30,7 @@ class StoreFundRequest extends FormRequest
             'type' => ['required', 'in:general,project'],
             'fiscal_year' => ['required', 'integer', 'min:2000', 'max:2100'],
             'remarks' => ['nullable', 'string', 'max:1000'],
+            'project_name' => ['nullable', 'string', 'max:255'],
         ];
 
         // Only validate file format when files are actually uploaded

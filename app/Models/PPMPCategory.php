@@ -23,13 +23,20 @@ class PPMPCategory extends Model
         'updated_at' => 'datetime',
     ];
 
+    protected $appends = ['items'];
+
     public function ppmp(): BelongsTo
     {
-        return $this->belongsTo(PPMP::class);
+        return $this->belongsTo(PPMP::class, 'ppmp_id');
     }
 
     public function items(): HasMany
     {
         return $this->hasMany(PPMPItem::class, 'ppmp_category_id');
+    }
+
+    public function getItemsAttribute()
+    {
+        return $this->items()->with('months')->get();
     }
 }
