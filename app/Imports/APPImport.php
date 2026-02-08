@@ -52,7 +52,7 @@ class APPImport implements ToCollection, WithCustomCsvSettings, WithStartRow
             $rowData = $row->toArray();
 
             // Skip completely empty rows
-            if (array_filter($rowData, fn ($val): bool => ! empty($val)) === []) {
+            if (array_filter($rowData, fn($val): bool => ! empty($val)) === []) {
                 continue;
             }
 
@@ -86,7 +86,7 @@ class APPImport implements ToCollection, WithCustomCsvSettings, WithStartRow
                 // Create category
                 $this->currentCategory = APPCategory::create([
                     'app_id' => $this->app->id,
-                    'pap_code' => $papCode,
+                    'pap_code' => $this->normalizePapCode($papCode),
                     'name' => $name,
                     'early_procurement' => strtoupper($earlyProcurement) === 'YES',
                     'mode_of_procurement' => $modeOfProcurement,
@@ -123,6 +123,22 @@ class APPImport implements ToCollection, WithCustomCsvSettings, WithStartRow
         $cleaned = preg_replace('/[^0-9.]/', '', $amount);
 
         return $cleaned !== '' ? (float) $cleaned : 0.0;
+    }
+
+    /**
+     * Normalize PAP code by converting spaces to dashes
+     * e.g., "5- 02- 03- 010" becomes "5-02-03-010"
+     */
+    private function normalizePapCode(string $papCode): string
+    {
+        // Remove all dashes first
+        $normalized = str_replace('-', '', $papCode);
+        // Remove extra spaces and normalize to single spaces between parts
+        $normalized = preg_replace('/\s+/', ' ', $normalized);
+        // Replace spaces with dashes
+        $normalized = str_replace(' ', '-', trim($normalized));
+
+        return $normalized;
     }
 
     /**
