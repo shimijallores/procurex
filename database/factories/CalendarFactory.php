@@ -39,7 +39,7 @@ class CalendarFactory extends Factory
      */
     public function holiday(): static
     {
-        return $this->state(fn(array $attributes): array => [
+        return $this->state(fn (array $attributes): array => [
             'type' => 'holiday',
             'is_working_day' => false,
         ]);
@@ -50,7 +50,7 @@ class CalendarFactory extends Factory
      */
     public function suspended(): static
     {
-        return $this->state(fn(array $attributes): array => [
+        return $this->state(fn (array $attributes): array => [
             'type' => 'suspended',
             'is_working_day' => false,
         ]);
@@ -61,7 +61,7 @@ class CalendarFactory extends Factory
      */
     public function specialWorkday(): static
     {
-        return $this->state(fn(array $attributes): array => [
+        return $this->state(fn (array $attributes): array => [
             'type' => 'special_workday',
             'is_working_day' => true,
         ]);
@@ -72,7 +72,7 @@ class CalendarFactory extends Factory
      */
     public function blackout(): static
     {
-        return $this->state(fn(array $attributes): array => [
+        return $this->state(fn (array $attributes): array => [
             'type' => 'blackout',
             'is_working_day' => false,
         ]);

@@ -36,9 +36,11 @@ class StoreFundRequest extends FormRequest
         if ($this->hasFile('work_program')) {
             $rules['work_program'] = ['file', 'mimes:pdf', 'max:10240'];
         }
+
         if ($this->hasFile('project_brief')) {
             $rules['project_brief'] = ['file', 'mimes:pdf', 'max:10240'];
         }
+
         if ($this->hasFile('project_proposal')) {
             $rules['project_proposal'] = ['file', 'mimes:pdf', 'max:10240'];
         }
@@ -50,20 +52,21 @@ class StoreFundRequest extends FormRequest
      * Configure the validator instance.
      *
      * @param  \Illuminate\Validation\Validator  $validator
-     * @return void
      */
     public function withValidator($validator): void
     {
-        $validator->after(function ($validator) {
+        $validator->after(function ($validator): void {
             // Require files for project type funds
             if ($this->input('type') === 'project') {
-                if (!$this->hasFile('work_program')) {
+                if (! $this->hasFile('work_program')) {
                     $validator->errors()->add('work_program', 'Work program is required for project type funds.');
                 }
-                if (!$this->hasFile('project_brief')) {
+
+                if (! $this->hasFile('project_brief')) {
                     $validator->errors()->add('project_brief', 'Project brief is required for project type funds.');
                 }
-                if (!$this->hasFile('project_proposal')) {
+
+                if (! $this->hasFile('project_proposal')) {
                     $validator->errors()->add('project_proposal', 'Project proposal is required for project type funds.');
                 }
             }

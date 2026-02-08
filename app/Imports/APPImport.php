@@ -9,14 +9,17 @@ use App\Models\APPCategory;
 use App\Models\APPItem;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
-use Maatwebsite\Excel\Concerns\WithStartRow;
 use Maatwebsite\Excel\Concerns\WithCustomCsvSettings;
+use Maatwebsite\Excel\Concerns\WithStartRow;
 
-class APPImport implements ToCollection, WithStartRow, WithCustomCsvSettings
+class APPImport implements ToCollection, WithCustomCsvSettings, WithStartRow
 {
     protected APP $app;
+
     protected ?APPCategory $currentCategory = null;
+
     protected int $categoriesCreated = 0;
+
     protected int $itemsCreated = 0;
 
     public function __construct(APP $app)
@@ -44,12 +47,12 @@ class APPImport implements ToCollection, WithStartRow, WithCustomCsvSettings
 
     public function collection(Collection $rows): void
     {
-        foreach ($rows as $index => $row) {
+        foreach ($rows as $row) {
             // Convert row to array for easier access
             $rowData = $row->toArray();
 
             // Skip completely empty rows
-            if (empty(array_filter($rowData, fn($val) => !empty($val)))) {
+            if (array_filter($rowData, fn ($val): bool => ! empty($val)) === []) {
                 continue;
             }
 
@@ -72,8 +75,8 @@ class APPImport implements ToCollection, WithStartRow, WithCustomCsvSettings
             // Check if this is a category row
             // Categories have proper PAP codes (more than 3 characters or contains dashes/spaces)
             // Items might have simple numbers like "1", "2", "3"
-            $isSimpleNumber = !empty($papCode) && is_numeric($papCode) && strlen($papCode) <= 3;
-            $isCategory = !empty($papCode) && !empty($name) && !$isSimpleNumber;
+            $isSimpleNumber = $papCode !== '' && $papCode !== '0' && is_numeric($papCode) && strlen($papCode) <= 3;
+            $isCategory = $papCode !== '' && $papCode !== '0' && ($name !== '' && $name !== '0') && ! $isSimpleNumber;
 
             if ($isCategory) {
                 // Extract schedule months
@@ -95,8 +98,8 @@ class APPImport implements ToCollection, WithStartRow, WithCustomCsvSettings
                     'co_amount' => $coAmount,
                     'remarks' => $remarks,
                 ]);
-                $this->categoriesCreated++;
-            } elseif (!empty($name) && $this->currentCategory) {
+                ++$this->categoriesCreated;
+            } elseif ($name !== '' && $name !== '0' && $this->currentCategory) {
                 // This is an item row (no PAP code or simple number, but has name)
                 APPItem::create([
                     'app_category_id' => $this->currentCategory->id,
@@ -106,7 +109,7 @@ class APPImport implements ToCollection, WithStartRow, WithCustomCsvSettings
                     'co_amount' => $coAmount,
                     'remarks' => $remarks,
                 ]);
-                $this->itemsCreated++;
+                ++$this->itemsCreated;
             }
         }
     }
@@ -118,6 +121,7 @@ class APPImport implements ToCollection, WithStartRow, WithCustomCsvSettings
     {
         // Remove commas, spaces, and currency symbols
         $cleaned = preg_replace('/[^0-9.]/', '', $amount);
+
         return $cleaned !== '' ? (float) $cleaned : 0.0;
     }
 
@@ -127,7 +131,7 @@ class APPImport implements ToCollection, WithStartRow, WithCustomCsvSettings
      */
     private function extractMonthNumber(?string $schedule): ?int
     {
-        if (empty($schedule)) {
+        if (in_array($schedule, [null, '', '0'], true)) {
             return null;
         }
 

@@ -48,9 +48,9 @@ class APPController extends Controller
         ]);
     }
 
-    public function store(StoreAPPRequest $request): RedirectResponse
+    public function store(StoreAPPRequest $storeAPPRequest): RedirectResponse
     {
-        $validated = $request->validated();
+        $validated = $storeAPPRequest->validated();
 
         DB::beginTransaction();
         try {
@@ -61,21 +61,22 @@ class APPController extends Controller
             ]);
 
             // Handle CSV import if file is uploaded
-            if ($request->hasFile('csv_file') && $request->file('csv_file')->isValid()) {
+            if ($storeAPPRequest->hasFile('csv_file') && $storeAPPRequest->file('csv_file')->isValid()) {
                 // Store the uploaded file
-                $filePath = $request->file('csv_file')->store('apps', 'public');
+                $filePath = $storeAPPRequest->file('csv_file')->store('apps', 'public');
                 $app->update(['uploaded_file' => $filePath]);
 
-                Excel::import(new APPImport($app), $request->file('csv_file'));
+                Excel::import(new APPImport($app), $storeAPPRequest->file('csv_file'));
             }
 
             DB::commit();
 
             return redirect()->route('apps.index')
                 ->with('success', 'Annual Procurement Plan created successfully.');
-        } catch (\Exception $e) {
+        } catch (\Exception $exception) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Failed to create APP: ' . $e->getMessage()]);
+
+            return back()->withErrors(['error' => 'Failed to create APP: '.$exception->getMessage()]);
         }
     }
 
@@ -98,9 +99,9 @@ class APPController extends Controller
         ]);
     }
 
-    public function update(UpdateAPPRequest $request, APP $app): RedirectResponse
+    public function update(UpdateAPPRequest $updateAPPRequest, APP $app): RedirectResponse
     {
-        $validated = $request->validated();
+        $validated = $updateAPPRequest->validated();
 
         DB::beginTransaction();
         try {
@@ -113,9 +114,10 @@ class APPController extends Controller
 
             return redirect()->route('apps.index')
                 ->with('success', 'Annual Procurement Plan updated successfully.');
-        } catch (\Exception $e) {
+        } catch (\Exception $exception) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Failed to update APP: ' . $e->getMessage()]);
+
+            return back()->withErrors(['error' => 'Failed to update APP: '.$exception->getMessage()]);
         }
     }
 
@@ -128,9 +130,10 @@ class APPController extends Controller
 
             return redirect()->route('apps.index')
                 ->with('success', 'Annual Procurement Plan deleted successfully.');
-        } catch (\Exception $e) {
+        } catch (\Exception $exception) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Failed to delete APP: ' . $e->getMessage()]);
+
+            return back()->withErrors(['error' => 'Failed to delete APP: '.$exception->getMessage()]);
         }
     }
 
@@ -167,9 +170,10 @@ class APPController extends Controller
 
             return redirect()->route('apps.show', $app)
                 ->with('success', 'CSV data imported successfully.');
-        } catch (\Exception $e) {
+        } catch (\Exception $exception) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Failed to import CSV: ' . $e->getMessage()]);
+
+            return back()->withErrors(['error' => 'Failed to import CSV: '.$exception->getMessage()]);
         }
     }
 
@@ -178,7 +182,7 @@ class APPController extends Controller
      */
     public function download(APP $app): BinaryFileResponse|RedirectResponse
     {
-        if (!$app->uploaded_file || !Storage::disk('public')->exists($app->uploaded_file)) {
+        if (! $app->uploaded_file || ! Storage::disk('public')->exists($app->uploaded_file)) {
             return back()->withErrors(['error' => 'No file available for download.']);
         }
 

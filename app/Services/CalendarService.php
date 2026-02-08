@@ -9,7 +9,7 @@ use Carbon\Carbon;
 
 /**
  * Calendar Service for managing government working days.
- * 
+ *
  * Note: Weekends (Saturday and Sunday) are automatically considered non-working days
  * for government operations, even if not explicitly marked in the calendar.
  */
@@ -32,7 +32,7 @@ class CalendarService
         $calendarEntry = Calendar::where('date', $dateString)->first();
 
         // If no entry exists, assume it's a working day (except weekends already handled above)
-        return !$calendarEntry;
+        return ! $calendarEntry;
     }
 
     /**
@@ -61,9 +61,10 @@ class CalendarService
 
         // Iterate through all dates in range
         while ($currentDate->lte($end)) {
-            if (!$this->isDateAvailable($currentDate)) {
+            if (! $this->isDateAvailable($currentDate)) {
                 $unavailableDates[] = $currentDate->toDateString();
             }
+
             $currentDate->addDay();
         }
 
@@ -78,7 +79,7 @@ class CalendarService
     {
         $currentDate = $date instanceof Carbon ? $date->copy() : Carbon::parse($date);
 
-        for ($i = 0; $i < $maxDaysToCheck; $i++) {
+        for ($i = 0; $i < $maxDaysToCheck; ++$i) {
             $currentDate->addDay();
 
             if ($this->isDateAvailable($currentDate)) {
@@ -103,8 +104,9 @@ class CalendarService
 
         while ($currentDate->lte($end)) {
             if ($this->isDateAvailable($currentDate)) {
-                $workingDays++;
+                ++$workingDays;
             }
+
             $currentDate->addDay();
         }
 
@@ -124,7 +126,7 @@ class CalendarService
             $currentDate->addDay();
 
             if ($this->isDateAvailable($currentDate)) {
-                $daysAdded++;
+                ++$daysAdded;
             }
         }
 

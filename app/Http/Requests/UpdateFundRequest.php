@@ -28,7 +28,7 @@ class UpdateFundRequest extends FormRequest
 
         $rules = [
             'office_id' => ['required', 'exists:offices,id'],
-            'code' => ['required', 'string', 'max:255', 'unique:funds,code,' . $fundId],
+            'code' => ['required', 'string', 'max:255', 'unique:funds,code,'.$fundId],
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', 'in:general,project'],
             'fiscal_year' => ['required', 'integer', 'min:2000', 'max:2100'],
@@ -39,9 +39,11 @@ class UpdateFundRequest extends FormRequest
         if ($this->file('work_program')) {
             $rules['work_program'] = ['file', 'mimes:pdf', 'max:10240'];
         }
+
         if ($this->file('project_brief')) {
             $rules['project_brief'] = ['file', 'mimes:pdf', 'max:10240'];
         }
+
         if ($this->file('project_proposal')) {
             $rules['project_proposal'] = ['file', 'mimes:pdf', 'max:10240'];
         }

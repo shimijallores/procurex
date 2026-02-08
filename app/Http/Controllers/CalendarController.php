@@ -48,9 +48,9 @@ class CalendarController extends Controller
         ]);
     }
 
-    public function store(StoreCalendarRequest $request): RedirectResponse
+    public function store(StoreCalendarRequest $storeCalendarRequest): RedirectResponse
     {
-        $validated = $request->validated();
+        $validated = $storeCalendarRequest->validated();
 
         Calendar::create($validated);
 
@@ -58,9 +58,9 @@ class CalendarController extends Controller
             ->with('success', 'Calendar entry created successfully.');
     }
 
-    public function update(UpdateCalendarRequest $request, Calendar $calendar): RedirectResponse
+    public function update(UpdateCalendarRequest $updateCalendarRequest, Calendar $calendar): RedirectResponse
     {
-        $validated = $request->validated();
+        $validated = $updateCalendarRequest->validated();
 
         $calendar->update($validated);
 
@@ -87,7 +87,7 @@ class CalendarController extends Controller
 
         $calendarEntry = Calendar::where('date', $request->date)->first();
 
-        if (!$calendarEntry) {
+        if (! $calendarEntry) {
             // If no entry exists, assume it's a working day
             return response()->json([
                 'is_available' => true,

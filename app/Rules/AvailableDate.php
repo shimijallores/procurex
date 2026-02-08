@@ -17,7 +17,7 @@ class AvailableDate implements ValidationRule
     {
         $calendarService = app(CalendarService::class);
 
-        if (!$calendarService->isDateAvailable($value)) {
+        if (! $calendarService->isDateAvailable($value)) {
             $entry = $calendarService->getEntry($value);
 
             $message = 'The selected date is not available.';

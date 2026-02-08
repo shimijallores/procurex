@@ -16,7 +16,7 @@ class Project extends Model
 
     protected $fillable = [
         'fund_id',
-        'remarks'
+        'remarks',
     ];
 
     public function fund(): BelongsTo
