@@ -13,6 +13,8 @@ class PPMP extends Model
     protected $fillable = [
         'office_id',
         'project_id',
+        'account_code',
+        'project_code',
         'fiscal_year',
         'is_addendum',
         'remarks',

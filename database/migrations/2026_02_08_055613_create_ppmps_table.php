@@ -15,6 +15,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('office_id')->constrained()->cascadeOnDelete();
             $table->foreignId('project_id')->constrained()->cascadeOnDelete();
+            // These codes will be provided by the accounting office.
+            $table->string('account_code')->nullable();
+            $table->string('project_code')->nullable();
             $table->unsignedSmallInteger('fiscal_year');
             $table->boolean('is_addendum')->default(false);
             $table->string('remarks')->nullable();
