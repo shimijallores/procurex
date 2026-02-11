@@ -7,7 +7,6 @@ import DeleteModal from "@/components/DeleteModal.vue";
 import AppIndexHeader from "@/components/apps/index/AppIndexHeader.vue";
 import AppIndexStats from "@/components/apps/index/AppIndexStats.vue";
 import AppIndexTable from "@/components/apps/index/AppIndexTable.vue";
-import AppIndexPagination from "@/components/apps/index/AppIndexPagination.vue";
 
 defineOptions({
     layout: (h, page) =>
@@ -75,9 +74,6 @@ const openDeleteModal = (app) => {
             @update:search="search = $event"
             @delete="openDeleteModal"
         />
-
-        <!-- Pagination -->
-        <AppIndexPagination :apps="apps" />
 
         <!-- Delete Confirmation Modal -->
         <DeleteModal

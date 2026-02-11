@@ -49,11 +49,21 @@ const ppmpApproved = computed(() => {
     return props.emanating.ppmp?.is_approved || false;
 });
 
-// Check if items match PPMP - verify based on comparison data
+// Check if items match PPMP - use comparison status and verify all PPMP items are matched
 const itemsMatch = computed(() => {
-    const totalItems = props.comparison?.total_emanating_items || 0;
-    const matchedItems = props.comparison?.total_matched_items || 0;
-    return totalItems > 0 && totalItems === matchedItems;
+    if (!props.comparison) return false;
+
+    // Use the comparison status from the controller
+    const allMatch = props.comparison.status === "all_matched";
+
+    // Also verify counts match (total PPMP items should equal matched items)
+    const totalPPMPItems = props.comparison.total_ppmp_items || 0;
+    const matchedItems = props.comparison.total_matched_items || 0;
+    const unmatchedPPMPItems = props.comparison.unmatched_ppmp_items || 0;
+
+    return (
+        allMatch && totalPPMPItems === matchedItems && unmatchedPPMPItems === 0
+    );
 });
 
 // Form handlers

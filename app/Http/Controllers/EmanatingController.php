@@ -448,27 +448,84 @@ class EmanatingController extends Controller
 
         $comparisonItems = [];
         $allMatched = true;
+        $matchedPPMPItemIds = [];
+        $processedPPMPItemIds = []; // Track ppmpItems we've seen (even if mismatched)
 
+        // Step 1: Check each emanating item references a valid PPMP item and validate quantity/unit
         foreach ($emanatingItems as $emanatingItem) {
-            $matched = $emanatingItem->ppmp_item_id !== null;
-            $allMatched = $allMatched && $matched;
+            $ppmpItem = $emanatingItem->ppmpItem;
+            $matched = false;
+            $mismatchReason = null;
+
+            if ($ppmpItem === null) {
+                $mismatchReason = 'No matching PPMP item found';
+            } else {
+                // Track that we've seen this ppmpItem
+                $processedPPMPItemIds[] = $ppmpItem->id;
+
+                // PPMP item exists, now validate quantity and unit match
+                if ($emanatingItem->quantity != $ppmpItem->quantity) {
+                    $mismatchReason = "Quantity mismatch: Emanating has {$emanatingItem->quantity}, PPMP has {$ppmpItem->quantity}";
+                } elseif (strcasecmp($emanatingItem->unit, $ppmpItem->unit) !== 0) {
+                    $mismatchReason = "Unit mismatch: Emanating has '{$emanatingItem->unit}', PPMP has '{$ppmpItem->unit}'";
+                } else {
+                    // All checks passed
+                    $matched = true;
+                    $matchedPPMPItemIds[] = $ppmpItem->id;
+                }
+            }
+
+            if (!$matched) {
+                $allMatched = false;
+            }
 
             $comparisonItems[] = [
                 'emanating_item' => $emanatingItem,
-                'ppmp_item' => $emanatingItem->ppmpItem,
+                'ppmp_item' => $ppmpItem,
                 'matched' => $matched,
+                'mismatch_reason' => $mismatchReason,
             ];
+        }
+
+        // Step 2: Check if all PPMP items are accounted for in emanating request
+        $unmatchedPPMPItems = $ppmpItems->whereNotIn('id', $processedPPMPItemIds);
+
+        if ($unmatchedPPMPItems->isNotEmpty()) {
+            $allMatched = false;
+
+            // Add unmatched PPMP items to comparison
+            foreach ($unmatchedPPMPItems as $unmatchedItem) {
+                $comparisonItems[] = [
+                    'emanating_item' => null,
+                    'ppmp_item' => $unmatchedItem,
+                    'matched' => false,
+                    'mismatch_reason' => 'PPMP item not found in Emanating request',
+                    'is_missing_from_emanating' => true,
+                ];
+            }
+        }
+
+        // Step 3: Verify counts match
+        if (count($emanatingItems) !== $ppmpItems->count()) {
+            $allMatched = false;
+        }
+
+        // Update the emanating record's items_match_ppmp flag if it differs
+        if ($emanating->items_match_ppmp !== $allMatched) {
+            $emanating->update(['items_match_ppmp' => $allMatched]);
         }
 
         return [
             'status' => $allMatched ? 'all_matched' : 'partial_match',
             'message' => $allMatched
-                ? 'All emanating items match PPMP items.'
-                : 'Some emanating items do not match PPMP items.',
+                ? 'All items match the PPMP.'
+                : 'Some items do not match or are missing.',
             'items' => $comparisonItems,
             'ppmp_items' => $ppmpItems,
             'total_emanating_items' => count($emanatingItems),
-            'total_matched_items' => collect($comparisonItems)->where('matched', true)->count(),
+            'total_ppmp_items' => $ppmpItems->count(),
+            'total_matched_items' => collect($comparisonItems)->where('matched', true)->where('is_missing_from_emanating', '!=', true)->count(),
+            'unmatched_ppmp_items' => $unmatchedPPMPItems->count(),
         ];
     }
 }

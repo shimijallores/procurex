@@ -196,8 +196,9 @@ class EmanatingImport implements ToCollection, WithCustomCsvSettings
     private function parseItems(array $rows, Emanating $emanating): array
     {
         $items = [];
+        $emanatingItemsData = [];
 
-        // Items start at row 15 (0-indexed), skip header at row 14
+        // Step 1: Parse all emanating items from CSV
         for ($i = 15; $i < count($rows); ++$i) {
             $row = $rows[$i];
 
@@ -219,36 +220,89 @@ class EmanatingImport implements ToCollection, WithCustomCsvSettings
             $quantity = isset($matches[1]) ? (int) $matches[1] : 0;
             $unit = isset($matches[2]) ? trim($matches[2]) : 'pcs';
 
-            // Try to find matching PPMP item
-            $ppmpItem = $this->findMatchingPPMPItem($description, $quantity, $unit);
+            $emanatingItemsData[] = [
+                'description' => $description,
+                'quantity' => $quantity,
+                'unit' => $unit,
+                'price' => $estimatedPrice,
+            ];
+        }
+
+        // Step 2: Get all PPMP items for this category
+        $ppmpItems = $this->ppmpCategory
+            ? PPMPItem::where('ppmp_category_id', $this->ppmpCategory->id)->get()
+            : collect();
+
+        // Step 3: Perform bidirectional matching
+        $matchedPPMPItemIds = [];
+
+        foreach ($emanatingItemsData as $emanatingData) {
+            $ppmpItem = $this->findMatchingPPMPItem(
+                $emanatingData['description'],
+                $emanatingData['quantity'],
+                $emanatingData['unit']
+            );
 
             if (! $ppmpItem) {
                 $this->itemsMatchPPMP = false;
                 $this->matchingResults[] = [
-                    'description' => $description,
+                    'description' => $emanatingData['description'],
+                    'quantity' => $emanatingData['quantity'],
+                    'unit' => $emanatingData['unit'],
                     'matched' => false,
                     'message' => 'No matching PPMP item found',
                 ];
-                // Skip creating item if no match found
                 continue;
             }
 
+            // PPMP item found - create the emanating item regardless of quantity/unit
+            // The comparison logic will validate and report mismatches
+            $matchedPPMPItemIds[] = $ppmpItem->id;
+
             $this->matchingResults[] = [
-                'description' => $description,
+                'description' => $emanatingData['description'],
+                'quantity' => $emanatingData['quantity'],
+                'unit' => $emanatingData['unit'],
                 'matched' => true,
                 'ppmp_item_id' => $ppmpItem->id,
                 'ppmp_item_name' => $ppmpItem->name,
             ];
 
-            // Create emanating item only if match found
+            // Create emanating item
             $emanatingItem = EmanatingItem::create([
                 'emanating_id' => $emanating->id,
                 'ppmp_item_id' => $ppmpItem->id,
-                'total_price' => $estimatedPrice,
+                'quantity' => $emanatingData['quantity'],
+                'unit' => $emanatingData['unit'],
+                'total_price' => $emanatingData['price'],
             ]);
 
             $items[] = $emanatingItem;
             ++$this->itemsCreated;
+        }
+
+        // Step 4: Verify all PPMP items are accounted for in emanating request
+        $unmatchedPPMPItems = $ppmpItems->whereNotIn('id', $matchedPPMPItemIds);
+
+        if ($unmatchedPPMPItems->isNotEmpty()) {
+            $this->itemsMatchPPMP = false;
+
+            foreach ($unmatchedPPMPItems as $unmatchedItem) {
+                $this->matchingResults[] = [
+                    'description' => $unmatchedItem->name,
+                    'quantity' => $unmatchedItem->quantity,
+                    'unit' => $unmatchedItem->unit,
+                    'matched' => false,
+                    'message' => 'PPMP item not found in Emanating request',
+                    'ppmp_item_id' => $unmatchedItem->id,
+                    'is_missing_from_emanating' => true,
+                ];
+            }
+        }
+
+        // Step 5: Final validation - counts must match
+        if (count($emanatingItemsData) !== $ppmpItems->count() || $unmatchedPPMPItems->isNotEmpty()) {
+            $this->itemsMatchPPMP = false;
         }
 
         return $items;

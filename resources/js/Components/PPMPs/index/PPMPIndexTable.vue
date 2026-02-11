@@ -205,6 +205,43 @@ const formatDate = (date) => {
                 </table>
             </div>
 
+            <!-- Pagination -->
+            <div class="mt-4 flex items-center justify-between border-t pt-4">
+                <div class="text-sm text-muted-foreground">
+                    Showing {{ ppmps.from }} to {{ ppmps.to }} of
+                    {{ ppmps.total }} entries
+                </div>
+                <div class="flex items-center gap-1">
+                    <template v-for="(link, index) in ppmps.links" :key="index">
+                        <Link
+                            v-if="link.url"
+                            :href="link.url"
+                            :class="[
+                                'inline-flex h-9 items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors',
+                                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                                link.label.includes('Previous') || link.label.includes('Next')
+                                    ? 'px-3'
+                                    : 'w-9',
+                                link.active
+                                    ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                                    : 'hover:bg-accent hover:text-accent-foreground',
+                            ]"
+                            preserve-state
+                            v-html="link.label"
+                        />
+                        <span
+                            v-else
+                            :class="[
+                                'inline-flex h-9 items-center justify-center rounded-md text-sm font-medium',
+                                link.label.includes('Previous') || link.label.includes('Next') ? 'px-3' : 'w-9',
+                                'pointer-events-none opacity-50',
+                            ]"
+                            v-html="link.label"
+                        />
+                    </template>
+                </div>
+            </div>
+
             <div
                 v-if="ppmps.data.length === 0"
                 class="flex flex-col items-center justify-center py-12"

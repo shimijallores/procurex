@@ -14,6 +14,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('emanating_id')->constrained('emanatings')->onDelete('cascade');
             $table->foreignId('ppmp_item_id')->constrained('ppmp_items')->onDelete('cascade');
+            $table->integer('quantity')->nullable();
+            $table->string('unit', 50)->nullable();
             $table->decimal('total_price', 15, 2)->nullable();
             $table->timestamps();
         });

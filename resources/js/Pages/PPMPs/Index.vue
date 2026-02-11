@@ -8,7 +8,6 @@ import DeleteModal from "@/components/DeleteModal.vue";
 import PPMPIndexHeader from "@/components/ppmps/index/PPMPIndexHeader.vue";
 import PPMPIndexStats from "@/components/ppmps/index/PPMPIndexStats.vue";
 import PPMPIndexTable from "@/components/ppmps/index/PPMPIndexTable.vue";
-import PPMPIndexPagination from "@/components/ppmps/index/PPMPIndexPagination.vue";
 
 defineOptions({
     layout: (h, page) =>
@@ -107,9 +106,6 @@ const openDeleteModal = (ppmp) => {
                 </div>
             </template>
         </PPMPIndexTable>
-
-        <!-- Pagination -->
-        <PPMPIndexPagination :ppmps="ppmps" />
 
         <!-- Delete Modal -->
         <DeleteModal

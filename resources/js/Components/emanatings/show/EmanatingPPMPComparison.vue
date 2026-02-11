@@ -41,7 +41,7 @@ const formatCurrency = (amount) => {
                     "
                 >
                     {{ comparison.total_matched_items }}/{{
-                        comparison.total_emanating_items
+                        comparison.total_ppmp_items
                     }}
                     Items Matched
                 </Badge>
@@ -74,6 +74,8 @@ const formatCurrency = (amount) => {
                                 <TableRow>
                                     <TableHead>#</TableHead>
                                     <TableHead>Description</TableHead>
+                                    <TableHead>Quantity</TableHead>
+                                    <TableHead>Unit</TableHead>
                                     <TableHead>Total Price</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead>PPMP Match</TableHead>
@@ -92,15 +94,38 @@ const formatCurrency = (amount) => {
                                     <TableCell>{{ index + 1 }}</TableCell>
                                     <TableCell class="font-medium">
                                         {{
-                                            item.emanating_item.ppmp_item
-                                                ?.name || "Not matched"
+                                            item.is_missing_from_emanating
+                                                ? item.ppmp_item?.name
+                                                : item.emanating_item?.ppmp_item
+                                                      ?.name || "Not matched"
                                         }}
                                     </TableCell>
                                     <TableCell>{{
-                                        formatCurrency(
-                                            item.emanating_item.total_price,
-                                        )
+                                        item.is_missing_from_emanating
+                                            ? item.ppmp_item?.quantity
+                                            : item.emanating_item?.quantity ||
+                                              "-"
                                     }}</TableCell>
+                                    <TableCell>{{
+                                        item.is_missing_from_emanating
+                                            ? item.ppmp_item?.unit
+                                            : item.emanating_item?.unit || "-"
+                                    }}</TableCell>
+                                    <TableCell>
+                                        <span
+                                            v-if="
+                                                item.is_missing_from_emanating
+                                            "
+                                            class="text-muted-foreground italic"
+                                            >Missing</span
+                                        >
+                                        <span v-else>{{
+                                            formatCurrency(
+                                                item.emanating_item
+                                                    ?.total_price,
+                                            )
+                                        }}</span>
+                                    </TableCell>
                                     <TableCell>
                                         <Badge
                                             :class="
@@ -120,7 +145,9 @@ const formatCurrency = (amount) => {
                                             {{
                                                 item.matched
                                                     ? "Matched"
-                                                    : "Not Matched"
+                                                    : item.is_missing_from_emanating
+                                                      ? "Missing"
+                                                      : "Not Matched"
                                             }}
                                         </Badge>
                                     </TableCell>
@@ -128,6 +155,7 @@ const formatCurrency = (amount) => {
                                         class="text-sm text-muted-foreground"
                                     >
                                         {{
+                                            item.mismatch_reason ||
                                             item.ppmp_item?.name ||
                                             "No match found"
                                         }}
@@ -140,7 +168,7 @@ const formatCurrency = (amount) => {
                                     "
                                 >
                                     <TableCell
-                                        colspan="5"
+                                        colspan="7"
                                         class="text-center text-muted-foreground py-8"
                                     >
                                         No emanating items found

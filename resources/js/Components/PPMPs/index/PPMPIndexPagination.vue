@@ -1,51 +1,52 @@
 <script setup>
-import { Icon } from "@iconify/vue";
 import { Link } from "@inertiajs/vue3";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 
 defineProps({
     ppmps: Object,
 });
-
-const emit = defineEmits(["paginate"]);
 </script>
 
 <template>
-    <Card v-if="ppmps?.data?.length > 0">
+    <Card>
         <CardContent class="pt-6">
             <div class="flex items-center justify-between">
                 <div class="text-sm text-muted-foreground">
                     Showing {{ ppmps.from }} to {{ ppmps.to }} of
                     {{ ppmps.total }} entries
                 </div>
-                <div class="flex items-center gap-2">
-                    <Link
-                        v-if="ppmps.prev_page_url"
-                        :href="ppmps.prev_page_url"
-                        preserve-state
-                    >
-                        <Button variant="outline" size="sm">
-                            <Icon
-                                icon="lucide:chevron-left"
-                                class="h-4 w-4"
-                            />
-                            Previous
-                        </Button>
-                    </Link>
-                    <Link
-                        v-if="ppmps.next_page_url"
-                        :href="ppmps.next_page_url"
-                        preserve-state
-                    >
-                        <Button variant="outline" size="sm">
-                            Next
-                            <Icon
-                                icon="lucide:chevron-right"
-                                class="ml-2 h-4 w-4"
-                            />
-                        </Button>
-                    </Link>
+                <div class="flex items-center gap-1">
+                    <template v-for="(link, index) in ppmps.links" :key="index">
+                        <Link
+                            v-if="link.url"
+                            :href="link.url"
+                            :class="[
+                                'inline-flex h-9 items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors',
+                                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                                link.label.includes('Previous') ||
+                                link.label.includes('Next')
+                                    ? 'px-3'
+                                    : 'w-9',
+                                link.active
+                                    ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                                    : 'hover:bg-accent hover:text-accent-foreground',
+                            ]"
+                            preserve-state
+                            v-html="link.label"
+                        />
+                        <span
+                            v-else
+                            :class="[
+                                'inline-flex h-9 items-center justify-center rounded-md text-sm font-medium',
+                                link.label.includes('Previous') ||
+                                link.label.includes('Next')
+                                    ? 'px-3'
+                                    : 'w-9',
+                                'pointer-events-none opacity-50',
+                            ]"
+                            v-html="link.label"
+                        />
+                    </template>
                 </div>
             </div>
         </CardContent>

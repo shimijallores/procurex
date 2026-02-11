@@ -14,10 +14,13 @@ class EmanatingItem extends Model
     protected $fillable = [
         'emanating_id',
         'ppmp_item_id',
+        'quantity',
+        'unit',
         'total_price',
     ];
 
     protected $casts = [
+        'quantity' => 'integer',
         'total_price' => 'decimal:2',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',

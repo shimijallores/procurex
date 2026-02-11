@@ -8,7 +8,6 @@ import DeleteModal from "@/components/DeleteModal.vue";
 import EmanatingIndexHeader from "@/components/emanatings/index/EmanatingIndexHeader.vue";
 import EmanatingIndexStats from "@/components/emanatings/index/EmanatingIndexStats.vue";
 import EmanatingIndexTable from "@/components/emanatings/index/EmanatingIndexTable.vue";
-import EmanatingIndexPagination from "@/components/emanatings/index/EmanatingIndexPagination.vue";
 
 defineOptions({
     layout: (h, page) =>
@@ -107,9 +106,6 @@ const openDeleteModal = (emanating) => {
                 </div>
             </template>
         </EmanatingIndexTable>
-
-        <!-- Pagination -->
-        <EmanatingIndexPagination :emanatings="emanatings" />
 
         <!-- Delete Modal -->
         <DeleteModal

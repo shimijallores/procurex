@@ -7,7 +7,6 @@ import DeleteModal from "@/components/DeleteModal.vue";
 import FundIndexHeader from "@/components/funds/index/FundIndexHeader.vue";
 import FundIndexStats from "@/components/funds/index/FundIndexStats.vue";
 import FundIndexTable from "@/components/funds/index/FundIndexTable.vue";
-import FundIndexPagination from "@/components/funds/index/FundIndexPagination.vue";
 
 defineOptions({
     layout: (h, page) =>
@@ -61,7 +60,6 @@ const openDeleteModal = (fund) => {
             @clear="clearSearch"
             @delete="openDeleteModal"
         />
-        <FundIndexPagination :funds="funds" />
 
         <!-- Delete Confirmation Modal -->
         <DeleteModal
