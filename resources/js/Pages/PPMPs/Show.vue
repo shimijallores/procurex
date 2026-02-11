@@ -8,7 +8,6 @@ import PPMPBudgetValidationAlert from "@/components/ppmps/show/PPMPBudgetValidat
 import PPMPRejectionAlert from "@/components/ppmps/show/PPMPRejectionAlert.vue";
 import PPMPShowSummaryCards from "@/components/ppmps/show/PPMPShowSummaryCards.vue";
 import PPMPCategoriesTable from "@/components/ppmps/show/PPMPCategoriesTable.vue";
-import PPMPImportModal from "@/components/ppmps/show/PPMPImportModal.vue";
 import PPMPRejectModal from "@/components/ppmps/show/PPMPRejectModal.vue";
 import PPMPApproveModal from "@/components/ppmps/show/PPMPApproveModal.vue";
 
@@ -34,16 +33,11 @@ const props = defineProps({
 });
 
 const showDeleteModal = ref(false);
-const showImportModal = ref(false);
 const showRejectModal = ref(false);
 const showApproveModal = ref(false);
 const searchQuery = ref("");
 
 // Forms
-const importForm = useForm({
-    csv_file: null,
-});
-
 const rejectForm = useForm({
     rejection_reason: "",
 });
@@ -107,16 +101,6 @@ const rejectPpmp = () => {
         },
     });
 };
-
-const submitImport = (file) => {
-    importForm.csv_file = file;
-    importForm.post(route("ppmps.import", props.ppmp.id), {
-        onSuccess: () => {
-            showImportModal.value = false;
-            importForm.reset();
-        },
-    });
-};
 </script>
 
 <template>
@@ -128,7 +112,6 @@ const submitImport = (file) => {
             :approve-processing="approveForm.processing"
             @approve="showApproveModal = true"
             @reject="showRejectModal = true"
-            @import="showImportModal = true"
             @delete="showDeleteModal = true"
         />
 
@@ -150,28 +133,6 @@ const submitImport = (file) => {
             :categories="ppmp.categories"
             :filtered-categories="filteredCategories"
             :budget-notices="ppmp.budget_notices"
-            @import="showImportModal = true"
-        />
-
-        <!-- Import CSV Modal -->
-        <PPMPImportModal
-            :open="showImportModal"
-            :ppmp-id="ppmp.id"
-            :processing="importForm.processing"
-            :errors="importForm.errors"
-            @update:open="showImportModal = $event"
-            @submit="submitImport"
-        />
-
-        <!-- Reject Modal -->
-        <PPMPRejectModal
-            :open="showRejectModal"
-            :processing="rejectForm.processing"
-            :errors="rejectForm.errors"
-            :model-value="rejectForm.rejection_reason"
-            @update:open="showRejectModal = $event"
-            @update:model-value="rejectForm.rejection_reason = $event"
-            @submit="rejectPpmp"
         />
 
         <!-- Approve Modal -->

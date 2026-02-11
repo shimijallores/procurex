@@ -62,6 +62,19 @@ class PPMPController extends Controller
 
         DB::beginTransaction();
         try {
+            // Check if an existing PPMP exists with same project_code + account_code
+            $existingPPMP = PPMP::where('project_code', $validated['project_code'] ?? null)
+                ->where('account_code', $validated['account_code'] ?? null)
+                ->first();
+
+            // If existing one found, automatically set as addendum
+            $isAddendum = $validated['is_addendum'] ?? false;
+            if ($existingPPMP) {
+                $isAddendum = true;
+                // Delete the old one
+                $existingPPMP->delete();
+            }
+
             // Create PPMP
             $ppmp = PPMP::create([
                 'office_id' => $validated['office_id'],
@@ -69,7 +82,7 @@ class PPMPController extends Controller
                 'account_code' => $validated['account_code'] ?? null,
                 'project_code' => $validated['project_code'] ?? null,
                 'fiscal_year' => $validated['fiscal_year'],
-                'is_addendum' => $validated['is_addendum'] ?? false,
+                'is_addendum' => $isAddendum,
                 'remarks' => $validated['remarks'] ?? null,
             ]);
 
@@ -101,7 +114,7 @@ class PPMPController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to create PPMP: '.$exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to create PPMP: ' . $exception->getMessage()]);
         }
     }
 
@@ -148,7 +161,7 @@ class PPMPController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to update PPMP: '.$exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to update PPMP: ' . $exception->getMessage()]);
         }
     }
 
@@ -164,7 +177,7 @@ class PPMPController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to delete PPMP: '.$exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to delete PPMP: ' . $exception->getMessage()]);
         }
     }
 
@@ -210,7 +223,7 @@ class PPMPController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to import CSV: '.$exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to import CSV: ' . $exception->getMessage()]);
         }
     }
 
@@ -253,7 +266,7 @@ class PPMPController extends Controller
         ]);
 
         $budgetValidationPassed = collect($ppmp->budget_notices)->every(
-            fn ($notice): bool => $notice['status'] === 'within_budget'
+            fn($notice): bool => $notice['status'] === 'within_budget'
         );
 
         Log::debug('[PPMP Approve] Budget validation result', [
@@ -298,7 +311,7 @@ class PPMPController extends Controller
 
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to approve PPMP: '.$exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to approve PPMP: ' . $exception->getMessage()]);
         }
     }
 
@@ -360,7 +373,7 @@ class PPMPController extends Controller
 
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to reject PPMP: '.$exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to reject PPMP: ' . $exception->getMessage()]);
         }
     }
 }

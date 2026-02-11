@@ -54,6 +54,11 @@ class APPController extends Controller
 
         DB::beginTransaction();
         try {
+            // Delete existing APP with same office_id + fiscal_year
+            APP::where('office_id', $validated['office_id'])
+                ->where('fiscal_year', $validated['fiscal_year'])
+                ->delete();
+
             // Create APP
             $app = APP::create([
                 'office_id' => $validated['office_id'],
@@ -76,7 +81,7 @@ class APPController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to create APP: '.$exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to create APP: ' . $exception->getMessage()]);
         }
     }
 
@@ -117,7 +122,7 @@ class APPController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to update APP: '.$exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to update APP: ' . $exception->getMessage()]);
         }
     }
 
@@ -133,7 +138,7 @@ class APPController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to delete APP: '.$exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to delete APP: ' . $exception->getMessage()]);
         }
     }
 
@@ -173,7 +178,7 @@ class APPController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to import CSV: '.$exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to import CSV: ' . $exception->getMessage()]);
         }
     }
 

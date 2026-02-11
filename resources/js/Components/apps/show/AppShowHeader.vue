@@ -7,7 +7,7 @@ defineProps({
     app: Object,
 });
 
-defineEmits(["import", "delete"]);
+defineEmits(["delete"]);
 </script>
 
 <template>
@@ -37,13 +37,10 @@ defineEmits(["import", "delete"]);
             >
                 <Button variant="outline">
                     <Icon icon="lucide:download" class="mr-2 h-4 w-4" />
-                    Download File
+                    Download APP
                 </Button>
             </a>
-            <Button variant="outline" @click="$emit('import')">
-                <Icon icon="lucide:upload" class="mr-2 h-4 w-4" />
-                Import CSV
-            </Button>
+
             <Link :href="route('apps.edit', app.id)">
                 <Button variant="outline">
                     <Icon icon="lucide:pencil" class="mr-2 h-4 w-4" />

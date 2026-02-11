@@ -69,7 +69,7 @@ const mainNavItems = computed(() => {
         {
             title: "APPs",
             url: route("apps.index"),
-            icon: "lucide:file-text",
+            icon: "lucide:clipboard-check",
             isActive: route().current("apps.*"),
         },
         {
@@ -77,6 +77,12 @@ const mainNavItems = computed(() => {
             url: route("ppmps.index"),
             icon: "lucide:clipboard-list",
             isActive: route().current("ppmps.*"),
+        },
+        {
+            title: "Emanatings",
+            url: route("emanatings.index"),
+            icon: "lucide:clipboard-minus",
+            isActive: route().current("emanatings.*"),
         },
     ];
 });

@@ -7,15 +7,25 @@ const page = usePage();
 const messages = ref([]);
 let nextId = 0;
 
+// Track the previous flash state to avoid duplicate messages
+let previousFlash = { success: null, error: null };
+
 // Watch for flash messages
 watch(
     () => page.props.flash,
     (flash) => {
-        if (flash?.success) {
+        // Only add message if the flash content actually changed
+        if (flash?.success && flash.success !== previousFlash.success) {
             addMessage("success", flash.success);
+            previousFlash.success = flash.success;
         }
-        if (flash?.error) {
+        if (flash?.error && flash.error !== previousFlash.error) {
             addMessage("error", flash.error);
+            previousFlash.error = flash.error;
+        }
+        // Clear flash when it becomes empty
+        if (!flash?.success && !flash?.error) {
+            previousFlash = { success: null, error: null };
         }
     },
     { deep: true },

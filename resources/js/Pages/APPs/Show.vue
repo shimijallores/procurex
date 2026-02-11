@@ -9,7 +9,6 @@ import DeleteModal from "@/components/DeleteModal.vue";
 import AppShowHeader from "@/components/apps/show/AppShowHeader.vue";
 import AppShowSummaryCards from "@/components/apps/show/AppShowSummaryCards.vue";
 import AppCategoriesTable from "@/components/apps/show/AppCategoriesTable.vue";
-import AppImportModal from "@/components/apps/show/AppImportModal.vue";
 
 defineOptions({
     layout: (h, page) =>
@@ -33,12 +32,7 @@ const props = defineProps({
 });
 
 const showDeleteModal = ref(false);
-const showImportModal = ref(false);
 const searchQuery = ref("");
-
-const importForm = useForm({
-    csv_file: null,
-});
 
 // Filtered categories based on search
 const filteredCategories = computed(() => {
@@ -78,26 +72,12 @@ const totalBudget = computed(() => {
         return total + categoryBudget + itemsTotal;
     }, 0);
 });
-
-const submitImport = (file) => {
-    importForm.csv_file = file;
-    importForm.post(route("apps.import", props.app.id), {
-        onSuccess: () => {
-            showImportModal.value = false;
-            importForm.reset();
-        },
-    });
-};
 </script>
 
 <template>
     <div class="space-y-6">
         <!-- Header -->
-        <AppShowHeader
-            :app="app"
-            @import="showImportModal = true"
-            @delete="showDeleteModal = true"
-        />
+        <AppShowHeader :app="app" @delete="showDeleteModal = true" />
 
         <!-- Summary Cards -->
         <AppShowSummaryCards :app="app" :total-budget="totalBudget" />
@@ -127,23 +107,13 @@ const submitImport = (file) => {
                             procurement data
                         </p>
                     </div>
-                    <Button @click="showImportModal = true">
-                        <Icon icon="lucide:upload" class="mr-2 h-4 w-4" />
-                        Import CSV
+                    <Button @click="searchQuery = ''">
+                        <Icon icon="lucide:search" class="mr-2 h-4 w-4" />
+                        Clear
                     </Button>
                 </div>
             </CardContent>
         </Card>
-
-        <!-- Import CSV Modal -->
-        <AppImportModal
-            :open="showImportModal"
-            :app-id="app.id"
-            :processing="importForm.processing"
-            :errors="importForm.errors"
-            @update:open="showImportModal = $event"
-            @submit="submitImport"
-        />
 
         <!-- Delete Confirmation Modal -->
         <DeleteModal

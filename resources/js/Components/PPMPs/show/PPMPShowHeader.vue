@@ -8,7 +8,6 @@ defineProps({
     budgetValidationPassed: Boolean,
     onApprove: Function,
     onReject: Function,
-    onImport: Function,
     onEdit: Function,
     onDelete: Function,
     approveProcessing: Boolean,
@@ -40,10 +39,7 @@ defineProps({
                         v-if="ppmp.is_approved"
                         class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
                     >
-                        <Icon
-                            icon="lucide:check-circle"
-                            class="mr-1 h-3 w-3"
-                        />
+                        <Icon icon="lucide:check-circle" class="mr-1 h-3 w-3" />
                         Approved
                     </span>
                 </div>
@@ -77,17 +73,9 @@ defineProps({
             >
                 <Button variant="outline">
                     <Icon icon="lucide:download" class="mr-2 h-4 w-4" />
-                    Download CSV
+                    Download PPMP
                 </Button>
             </a>
-            <Button
-                v-if="!ppmp.is_approved"
-                variant="outline"
-                @click="onImport"
-            >
-                <Icon icon="lucide:upload" class="mr-2 h-4 w-4" />
-                Import CSV
-            </Button>
 
             <Link v-if="!ppmp.is_approved" :href="route('ppmps.edit', ppmp.id)">
                 <Button variant="outline">

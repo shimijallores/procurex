@@ -3,6 +3,7 @@
 use App\Http\Controllers\APPController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EmanatingController;
 use App\Http\Controllers\FundController;
 use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\PPMPController;
@@ -15,7 +16,7 @@ Route::get('/', function (): \Illuminate\Http\RedirectResponse {
     return redirect(route('login'));
 });
 
-// Authentication Routes
+// Authentication
 Route::get('/login', [SessionController::class, 'index'])->name('login')->middleware('guest');
 Route::post('/login', [SessionController::class, 'login'])->name('login.login')->middleware('guest');
 
@@ -29,19 +30,26 @@ Route::middleware(['auth'])->group(function (): void {
     Route::resource('users', UserController::class);
     Route::resource('funds', FundController::class);
 
-    // APP Stuff
+    // APP
     Route::resource('apps', APPController::class);
     Route::post('apps/{app}/import', [APPController::class, 'import'])->name('apps.import');
     Route::get('apps/{app}/download', [APPController::class, 'download'])->name('apps.download');
 
-    // PPMP Stuff
+    // PPMP
     Route::resource('ppmps', PPMPController::class);
     Route::post('ppmps/{ppmp}/import', [PPMPController::class, 'import'])->name('ppmps.import');
     Route::get('ppmps/{ppmp}/download-csv', [PPMPController::class, 'downloadCsv'])->name('ppmps.download-csv');
     Route::post('ppmps/{ppmp}/approve', [PPMPController::class, 'approve'])->name('ppmps.approve');
     Route::post('ppmps/{ppmp}/reject', [PPMPController::class, 'reject'])->name('ppmps.reject');
 
-    // Calendar Stuff
+    // Emanating
+    Route::resource('emanatings', EmanatingController::class);
+    Route::post('emanatings/{emanating}/import', [EmanatingController::class, 'import'])->name('emanatings.import');
+    Route::get('emanatings/{emanating}/download-csv', [EmanatingController::class, 'downloadCsv'])->name('emanatings.download-csv');
+    Route::post('emanatings/{emanating}/approve', [EmanatingController::class, 'approve'])->name('emanatings.approve');
+    Route::post('emanatings/{emanating}/reject', [EmanatingController::class, 'reject'])->name('emanatings.reject');
+
+    // Calendar
     Route::resource('calendars', CalendarController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::post('calendars/check-date', [CalendarController::class, 'checkDate'])->name('calendars.check-date');
 });
