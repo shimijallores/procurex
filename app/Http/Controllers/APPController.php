@@ -81,7 +81,7 @@ class APPController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to create APP: ' . $exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to create APP: '.$exception->getMessage()]);
         }
     }
 
@@ -122,7 +122,7 @@ class APPController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to update APP: ' . $exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to update APP: '.$exception->getMessage()]);
         }
     }
 
@@ -138,7 +138,7 @@ class APPController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to delete APP: ' . $exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to delete APP: '.$exception->getMessage()]);
         }
     }
 
@@ -178,7 +178,7 @@ class APPController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to import CSV: ' . $exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to import CSV: '.$exception->getMessage()]);
         }
     }
 

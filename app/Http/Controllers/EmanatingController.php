@@ -8,7 +8,6 @@ use App\Http\Requests\StoreEmanatingRequest;
 use App\Http\Requests\UpdateEmanatingRequest;
 use App\Imports\EmanatingImport;
 use App\Models\Emanating;
-use App\Models\Office;
 use App\Models\PPMP;
 use App\Models\PPMPCategory;
 use App\Models\Project;
@@ -43,9 +42,9 @@ class EmanatingController extends Controller
             ->withQueryString();
 
         // Calculate statistics across all emanatings (not just current page)
-        $baseQuery = Emanating::query();
+        $builder = Emanating::query();
         if ($request->search) {
-            $baseQuery->where(function ($query) use ($request): void {
+            $builder->where(function ($query) use ($request): void {
                 $query->where('fiscal_year', 'like', sprintf('%%%s%%', $request->search))
                     ->orWhere('pr_no', 'like', sprintf('%%%s%%', $request->search))
                     ->orWhere('charged_to_code', 'like', sprintf('%%%s%%', $request->search))
@@ -59,10 +58,10 @@ class EmanatingController extends Controller
         }
 
         $stats = [
-            'total' => $baseQuery->count(),
-            'approved' => (clone $baseQuery)->where('is_approved', true)->count(),
-            'pending' => (clone $baseQuery)->where('is_approved', false)->whereNull('rejection_reason')->count(),
-            'rejected' => (clone $baseQuery)->whereNotNull('rejection_reason')->count(),
+            'total' => $builder->count(),
+            'approved' => (clone $builder)->where('is_approved', true)->count(),
+            'pending' => (clone $builder)->where('is_approved', false)->whereNull('rejection_reason')->count(),
+            'rejected' => (clone $builder)->whereNotNull('rejection_reason')->count(),
         ];
 
         return Inertia::render('Emanatings/Index', [
@@ -102,7 +101,7 @@ class EmanatingController extends Controller
             $csvPath = $storeEmanatingRequest->file('csv_file')->store('emanatings', 'public');
 
             // Import CSV - this creates the Emanating record and items
-            $emanatingImport = new EmanatingImport($ppmp->project, $ppmp, (int)$validated['ppmp_category_id']);
+            $emanatingImport = new EmanatingImport($ppmp->project, $ppmp, (int) $validated['ppmp_category_id']);
             Excel::import($emanatingImport, $storeEmanatingRequest->file('csv_file'));
 
             // Get the created emanating record (we need to find it)
@@ -144,9 +143,9 @@ class EmanatingController extends Controller
                 ->with('success', 'Emanating Request created successfully from CSV.');
         } catch (\Exception $exception) {
             DB::rollBack();
-            Log::error('[Emanating Store] Failed to create: ' . $exception->getMessage());
+            Log::error('[Emanating Store] Failed to create: '.$exception->getMessage());
 
-            return back()->withErrors(['error' => 'Failed to create Emanating Request: ' . $exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to create Emanating Request: '.$exception->getMessage()]);
         }
     }
 
@@ -208,9 +207,9 @@ class EmanatingController extends Controller
                 ->with('success', 'Emanating Request updated successfully.');
         } catch (\Exception $exception) {
             DB::rollBack();
-            Log::error('[Emanating Update] Failed to update: ' . $exception->getMessage());
+            Log::error('[Emanating Update] Failed to update: '.$exception->getMessage());
 
-            return back()->withErrors(['error' => 'Failed to update Emanating Request: ' . $exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to update Emanating Request: '.$exception->getMessage()]);
         }
     }
 
@@ -225,9 +224,9 @@ class EmanatingController extends Controller
                 ->with('success', 'Emanating Request deleted successfully.');
         } catch (\Exception $exception) {
             DB::rollBack();
-            Log::error('[Emanating Destroy] Failed to delete: ' . $exception->getMessage());
+            Log::error('[Emanating Destroy] Failed to delete: '.$exception->getMessage());
 
-            return back()->withErrors(['error' => 'Failed to delete Emanating Request: ' . $exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to delete Emanating Request: '.$exception->getMessage()]);
         }
     }
 
@@ -273,9 +272,9 @@ class EmanatingController extends Controller
                 ->with('success', 'CSV data imported successfully.');
         } catch (\Exception $exception) {
             DB::rollBack();
-            Log::error('[Emanating Import] Failed to import: ' . $exception->getMessage());
+            Log::error('[Emanating Import] Failed to import: '.$exception->getMessage());
 
-            return back()->withErrors(['error' => 'Failed to import CSV: ' . $exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to import CSV: '.$exception->getMessage()]);
         }
     }
 
@@ -364,7 +363,7 @@ class EmanatingController extends Controller
 
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to approve Emanating Request: ' . $exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to approve Emanating Request: '.$exception->getMessage()]);
         }
     }
 
@@ -426,7 +425,7 @@ class EmanatingController extends Controller
 
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to reject Emanating Request: ' . $exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to reject Emanating Request: '.$exception->getMessage()]);
         }
     }
 
@@ -465,9 +464,9 @@ class EmanatingController extends Controller
 
                 // PPMP item exists, now validate quantity and unit match
                 if ($emanatingItem->quantity != $ppmpItem->quantity) {
-                    $mismatchReason = "Quantity mismatch: Emanating has {$emanatingItem->quantity}, PPMP has {$ppmpItem->quantity}";
+                    $mismatchReason = sprintf('Quantity mismatch: Emanating has %s, PPMP has %s', $emanatingItem->quantity, $ppmpItem->quantity);
                 } elseif (strcasecmp($emanatingItem->unit, $ppmpItem->unit) !== 0) {
-                    $mismatchReason = "Unit mismatch: Emanating has '{$emanatingItem->unit}', PPMP has '{$ppmpItem->unit}'";
+                    $mismatchReason = sprintf("Unit mismatch: Emanating has '%s', PPMP has '%s'", $emanatingItem->unit, $ppmpItem->unit);
                 } else {
                     // All checks passed
                     $matched = true;
@@ -475,7 +474,7 @@ class EmanatingController extends Controller
                 }
             }
 
-            if (!$matched) {
+            if (! $matched) {
                 $allMatched = false;
             }
 
@@ -494,10 +493,10 @@ class EmanatingController extends Controller
             $allMatched = false;
 
             // Add unmatched PPMP items to comparison
-            foreach ($unmatchedPPMPItems as $unmatchedItem) {
+            foreach ($unmatchedPPMPItems as $unmatchedPPMPItem) {
                 $comparisonItems[] = [
                     'emanating_item' => null,
-                    'ppmp_item' => $unmatchedItem,
+                    'ppmp_item' => $unmatchedPPMPItem,
                     'matched' => false,
                     'mismatch_reason' => 'PPMP item not found in Emanating request',
                     'is_missing_from_emanating' => true,

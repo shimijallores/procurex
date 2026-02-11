@@ -85,7 +85,7 @@ class EmanatingImport implements ToCollection, WithCustomCsvSettings
         ]);
 
         // Parse and create items
-        $items = $this->parseItems($rowArray, $emanating);
+        $this->parseItems($rowArray, $emanating);
 
         // Update items_match_ppmp flag
         $emanating->update([
@@ -197,9 +197,10 @@ class EmanatingImport implements ToCollection, WithCustomCsvSettings
     {
         $items = [];
         $emanatingItemsData = [];
+        $counter = count($rows);
 
         // Step 1: Parse all emanating items from CSV
-        for ($i = 15; $i < count($rows); ++$i) {
+        for ($i = 15; $i < $counter; ++$i) {
             $row = $rows[$i];
 
             // Stop when we reach empty rows or metadata section
@@ -229,29 +230,28 @@ class EmanatingImport implements ToCollection, WithCustomCsvSettings
         }
 
         // Step 2: Get all PPMP items for this category
-        $ppmpItems = $this->ppmpCategory
+        $ppmpItems = $this->ppmpCategory instanceof \App\Models\PPMPCategory
             ? PPMPItem::where('ppmp_category_id', $this->ppmpCategory->id)->get()
             : collect();
 
         // Step 3: Perform bidirectional matching
         $matchedPPMPItemIds = [];
 
-        foreach ($emanatingItemsData as $emanatingData) {
+        foreach ($emanatingItemsData as $emanatingItemData) {
             $ppmpItem = $this->findMatchingPPMPItem(
-                $emanatingData['description'],
-                $emanatingData['quantity'],
-                $emanatingData['unit']
+                $emanatingItemData['description']
             );
 
-            if (! $ppmpItem) {
+            if (!$ppmpItem instanceof \App\Models\PPMPItem) {
                 $this->itemsMatchPPMP = false;
                 $this->matchingResults[] = [
-                    'description' => $emanatingData['description'],
-                    'quantity' => $emanatingData['quantity'],
-                    'unit' => $emanatingData['unit'],
+                    'description' => $emanatingItemData['description'],
+                    'quantity' => $emanatingItemData['quantity'],
+                    'unit' => $emanatingItemData['unit'],
                     'matched' => false,
                     'message' => 'No matching PPMP item found',
                 ];
+
                 continue;
             }
 
@@ -260,9 +260,9 @@ class EmanatingImport implements ToCollection, WithCustomCsvSettings
             $matchedPPMPItemIds[] = $ppmpItem->id;
 
             $this->matchingResults[] = [
-                'description' => $emanatingData['description'],
-                'quantity' => $emanatingData['quantity'],
-                'unit' => $emanatingData['unit'],
+                'description' => $emanatingItemData['description'],
+                'quantity' => $emanatingItemData['quantity'],
+                'unit' => $emanatingItemData['unit'],
                 'matched' => true,
                 'ppmp_item_id' => $ppmpItem->id,
                 'ppmp_item_name' => $ppmpItem->name,
@@ -272,9 +272,9 @@ class EmanatingImport implements ToCollection, WithCustomCsvSettings
             $emanatingItem = EmanatingItem::create([
                 'emanating_id' => $emanating->id,
                 'ppmp_item_id' => $ppmpItem->id,
-                'quantity' => $emanatingData['quantity'],
-                'unit' => $emanatingData['unit'],
-                'total_price' => $emanatingData['price'],
+                'quantity' => $emanatingItemData['quantity'],
+                'unit' => $emanatingItemData['unit'],
+                'total_price' => $emanatingItemData['price'],
             ]);
 
             $items[] = $emanatingItem;
@@ -287,14 +287,14 @@ class EmanatingImport implements ToCollection, WithCustomCsvSettings
         if ($unmatchedPPMPItems->isNotEmpty()) {
             $this->itemsMatchPPMP = false;
 
-            foreach ($unmatchedPPMPItems as $unmatchedItem) {
+            foreach ($unmatchedPPMPItems as $unmatchedPPMPItem) {
                 $this->matchingResults[] = [
-                    'description' => $unmatchedItem->name,
-                    'quantity' => $unmatchedItem->quantity,
-                    'unit' => $unmatchedItem->unit,
+                    'description' => $unmatchedPPMPItem->name,
+                    'quantity' => $unmatchedPPMPItem->quantity,
+                    'unit' => $unmatchedPPMPItem->unit,
                     'matched' => false,
                     'message' => 'PPMP item not found in Emanating request',
-                    'ppmp_item_id' => $unmatchedItem->id,
+                    'ppmp_item_id' => $unmatchedPPMPItem->id,
                     'is_missing_from_emanating' => true,
                 ];
             }
@@ -311,9 +311,9 @@ class EmanatingImport implements ToCollection, WithCustomCsvSettings
     /**
      * Find matching PPMP item by description and quantity
      */
-    private function findMatchingPPMPItem(string $description, int $quantity, string $unit): ?PPMPItem
+    private function findMatchingPPMPItem(string $description): ?PPMPItem
     {
-        if (! $this->ppmpCategory) {
+        if (!$this->ppmpCategory instanceof \App\Models\PPMPCategory) {
             return null;
         }
 
@@ -328,7 +328,7 @@ class EmanatingImport implements ToCollection, WithCustomCsvSettings
 
         // Try fuzzy match (contains)
         $item = PPMPItem::where('ppmp_category_id', $this->ppmpCategory->id)
-            ->where('name', 'like', '%' . $description . '%')
+            ->where('name', 'like', '%'.$description.'%')
             ->first();
 
         if ($item) {
@@ -337,7 +337,7 @@ class EmanatingImport implements ToCollection, WithCustomCsvSettings
 
         // Try reverse fuzzy match (description contains item name)
         $item = PPMPItem::where('ppmp_category_id', $this->ppmpCategory->id)
-            ->whereRaw('? like (\'%\' || name || \'%\')', [$description])
+            ->whereRaw("? like ('%' || name || '%')", [$description])
             ->first();
 
         return $item;
@@ -358,14 +358,15 @@ class EmanatingImport implements ToCollection, WithCustomCsvSettings
 
         // Find project by matching office through fund relationship
         $this->project = Project::whereHas('fund.office', function ($query) use ($officeName): void {
-            $query->where('name', 'like', '%' . $officeName . '%')
+            $query->where('name', 'like', '%'.$officeName.'%')
                 ->orWhere('name', $officeName);
         })
             ->with('fund.office')
             ->first();
 
-        if (! $this->project) {
+        if (!$this->project instanceof \App\Models\Project) {
             Log::warning('[EmanatingImport] Project not found for office', ['office_name' => $officeName]);
+
             return;
         }
 
@@ -377,7 +378,7 @@ class EmanatingImport implements ToCollection, WithCustomCsvSettings
             ->with('ppmp')
             ->first();
 
-        if ($this->ppmpCategory) {
+        if ($this->ppmpCategory instanceof \App\Models\PPMPCategory) {
             $this->ppmp = $this->ppmpCategory->ppmp;
         } else {
             Log::warning('[EmanatingImport] PPMP category not found', [

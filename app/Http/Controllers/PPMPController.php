@@ -114,7 +114,7 @@ class PPMPController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to create PPMP: ' . $exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to create PPMP: '.$exception->getMessage()]);
         }
     }
 
@@ -161,7 +161,7 @@ class PPMPController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to update PPMP: ' . $exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to update PPMP: '.$exception->getMessage()]);
         }
     }
 
@@ -177,7 +177,7 @@ class PPMPController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to delete PPMP: ' . $exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to delete PPMP: '.$exception->getMessage()]);
         }
     }
 
@@ -223,7 +223,7 @@ class PPMPController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to import CSV: ' . $exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to import CSV: '.$exception->getMessage()]);
         }
     }
 
@@ -266,7 +266,7 @@ class PPMPController extends Controller
         ]);
 
         $budgetValidationPassed = collect($ppmp->budget_notices)->every(
-            fn($notice): bool => $notice['status'] === 'within_budget'
+            fn ($notice): bool => $notice['status'] === 'within_budget'
         );
 
         Log::debug('[PPMP Approve] Budget validation result', [
@@ -311,7 +311,7 @@ class PPMPController extends Controller
 
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to approve PPMP: ' . $exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to approve PPMP: '.$exception->getMessage()]);
         }
     }
 
@@ -373,7 +373,7 @@ class PPMPController extends Controller
 
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to reject PPMP: ' . $exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to reject PPMP: '.$exception->getMessage()]);
         }
     }
 }
