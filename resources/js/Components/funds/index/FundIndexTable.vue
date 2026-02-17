@@ -213,7 +213,8 @@ const getFundTypeBadgeClass = (type) => {
                             :class="[
                                 'inline-flex h-9 items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors',
                                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                                link.label.includes('Previous') || link.label.includes('Next')
+                                link.label.includes('Previous') ||
+                                link.label.includes('Next')
                                     ? 'px-3'
                                     : 'w-9',
                                 link.active
@@ -227,7 +228,10 @@ const getFundTypeBadgeClass = (type) => {
                             v-else
                             :class="[
                                 'inline-flex h-9 items-center justify-center rounded-md text-sm font-medium',
-                                link.label.includes('Previous') || link.label.includes('Next') ? 'px-3' : 'w-9',
+                                link.label.includes('Previous') ||
+                                link.label.includes('Next')
+                                    ? 'px-3'
+                                    : 'w-9',
                                 'pointer-events-none opacity-50',
                             ]"
                             v-html="link.label"
