@@ -10,6 +10,7 @@ use App\Http\Controllers\MasterListCategoryController;
 use App\Http\Controllers\MasterListItemController;
 use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\PPMPController;
+use App\Http\Controllers\PurchaseRequestController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\SupplierController;
@@ -61,4 +62,11 @@ Route::middleware(['auth'])->group(function (): void {
     Route::post('canvasses/{canvas}/items/{canvas_item}/selections', [CanvasController::class, 'saveItemSelections'])->middleware($canvassingRoles)->name('canvasses.items.selections');
     Route::post('canvasses/{canvas}/complete', [CanvasController::class, 'complete'])->middleware($canvassingRoles)->name('canvasses.complete');
     Route::post('canvasses/{canvas}/return', [CanvasController::class, 'return'])->middleware($canvassingRoles)->name('canvasses.return');
+
+    // Purchase Request module
+    $prRoles = 'role:Superadmin,PR Admin';
+    Route::resource('purchase-requests', PurchaseRequestController::class)->middleware($prRoles);
+    Route::post('purchase-requests/{purchase_request}/approve', [PurchaseRequestController::class, 'approve'])->middleware($prRoles)->name('purchase-requests.approve');
+    Route::post('purchase-requests/{purchase_request}/return', [PurchaseRequestController::class, 'returnToOffice'])->middleware($prRoles)->name('purchase-requests.return');
+    Route::get('purchase-requests/{purchase_request}/pdf', [PurchaseRequestController::class, 'printPdf'])->middleware($prRoles)->name('purchase-requests.pdf');
 });

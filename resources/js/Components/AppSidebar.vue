@@ -36,6 +36,7 @@ const SYSTEM_ROLES = [
     "BAC Reso Admin",
     "Budgeting Admin",
     "Canvassing Admin",
+    "PR Admin",
 ];
 
 const userRole = computed(() => user.value?.role?.name || "");
@@ -58,6 +59,10 @@ const isCanvassingAdminOrAbove = computed(
     () =>
         userRole.value === "Superadmin" ||
         userRole.value === "Canvassing Admin",
+);
+
+const isPRAdminOrAbove = computed(
+    () => userRole.value === "Superadmin" || userRole.value === "PR Admin",
 );
 
 // Navigation items
@@ -145,6 +150,13 @@ const mainNavItems = computed(() => {
                 route().current("master-list-categories.*"),
             roles: ["Superadmin", "Canvassing Admin"],
         },
+        {
+            title: "Purchase Requests",
+            url: route("purchase-requests.index"),
+            icon: "lucide:file-plus-2",
+            isActive: route().current("purchase-requests.*"),
+            roles: ["Superadmin", "PR Admin"],
+        },
     ];
 
     // Filter items based on user role
@@ -193,6 +205,12 @@ const submissionItems = computed(() => {
 const canvassingItems = computed(() => {
     return mainNavItems.value.filter((item) =>
         ["Canvassing", "Suppliers", "Master List"].includes(item.title),
+    );
+});
+
+const purchaseRequestItems = computed(() => {
+    return mainNavItems.value.filter((item) =>
+        ["Purchase Requests"].includes(item.title),
     );
 });
 
@@ -291,6 +309,29 @@ const userInitials = computed(() => {
                     <SidebarMenu>
                         <SidebarMenuItem
                             v-for="item in canvassingItems"
+                            :key="item.title"
+                        >
+                            <SidebarMenuButton
+                                as-child
+                                :is-active="item.isActive"
+                            >
+                                <Link :href="item.url">
+                                    <Icon :icon="item.icon" class="size-4" />
+                                    <span>{{ item.title }}</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarGroupContent>
+            </SidebarGroup>
+
+            <!-- Purchase Request Group -->
+            <SidebarGroup v-if="purchaseRequestItems.length > 0">
+                <SidebarGroupLabel>Purchase Request</SidebarGroupLabel>
+                <SidebarGroupContent>
+                    <SidebarMenu>
+                        <SidebarMenuItem
+                            v-for="item in purchaseRequestItems"
                             :key="item.title"
                         >
                             <SidebarMenuButton

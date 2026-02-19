@@ -27,6 +27,7 @@ class Emanating extends Model
         'reimbursement',
         'csv_path',
         'items_match_ppmp',
+        'is_canvassed',
         'is_approved',
         'approved_at',
         'approved_by',
@@ -41,6 +42,7 @@ class Emanating extends Model
         'is_addendum' => 'boolean',
         'reimbursement' => 'boolean',
         'items_match_ppmp' => 'boolean',
+        'is_canvassed' => 'boolean',
         'is_approved' => 'boolean',
         'approved_at' => 'datetime',
         'created_at' => 'datetime',
@@ -75,6 +77,11 @@ class Emanating extends Model
     public function emanatingItems(): HasMany
     {
         return $this->hasMany(EmanatingItem::class);
+    }
+
+    public function purchaseRequest(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(PurchaseRequest::class);
     }
 
     public function approvedBy(): BelongsTo

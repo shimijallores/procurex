@@ -85,10 +85,26 @@ class CalendarController extends Controller
             'date' => ['required', 'date'],
         ]);
 
+        $date = \Carbon\Carbon::parse($request->date);
         $calendarEntry = Calendar::where('date', $request->date)->first();
 
+        // Check if it's a weekend (Saturday = 6, Sunday = 0)
+        $isWeekend = $date->dayOfWeek == 0 || $date->dayOfWeek == 6;
+
         if (! $calendarEntry) {
-            // If no entry exists, assume it's a working day
+            // If no entry exists, check if it's a weekend
+            if ($isWeekend) {
+                $dayName = $date->format('l');
+                return response()->json([
+                    'is_available' => false,
+                    'is_working_day' => false,
+                    'type' => 'weekend',
+                    'name' => $dayName,
+                    'message' => sprintf('%s is not a working day', $dayName),
+                ]);
+            }
+
+            // Otherwise assume it's a working day
             return response()->json([
                 'is_available' => true,
                 'is_working_day' => true,

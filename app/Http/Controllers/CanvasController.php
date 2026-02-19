@@ -180,7 +180,7 @@ class CanvasController extends Controller
             DB::commit();
         } catch (\Throwable $throwable) {
             DB::rollBack();
-            Log::error('Canvas item selection save failed: '.$throwable->getMessage());
+            Log::error('Canvas item selection save failed: ' . $throwable->getMessage());
 
             return redirect()->back()
                 ->with('error', 'Failed to save selections.');
@@ -215,7 +215,10 @@ class CanvasController extends Controller
 
             // Flag reimbursement if total < 10,000
             $emanating = $canvas->emanating;
-            $emanating->update(['reimbursement' => $totalAmount < 10000]);
+            $emanating->update([
+                'reimbursement' => $totalAmount < 10000,
+                'is_canvassed'  => true,
+            ]);
 
             $canvas->update([
                 'status' => 'completed',
@@ -226,7 +229,7 @@ class CanvasController extends Controller
             DB::commit();
         } catch (\Throwable $throwable) {
             DB::rollBack();
-            Log::error('Canvas completion failed: '.$throwable->getMessage());
+            Log::error('Canvas completion failed: ' . $throwable->getMessage());
 
             return redirect()->back()
                 ->with('error', 'Failed to complete canvas.');
@@ -259,7 +262,7 @@ class CanvasController extends Controller
             DB::commit();
         } catch (\Throwable $throwable) {
             DB::rollBack();
-            Log::error('Canvas return failed: '.$throwable->getMessage());
+            Log::error('Canvas return failed: ' . $throwable->getMessage());
 
             return redirect()->back()
                 ->with('error', 'Failed to return canvas.');

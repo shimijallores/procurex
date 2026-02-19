@@ -28,6 +28,7 @@
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "lucide-vue-next": "^0.563.0",
+        "puppeteer": "^24.37.4",
         "reka-ui": "^2.8.0",
         "tailwind-merge": "^3.4.0",
         "vue-sonner": "^2.0.9",

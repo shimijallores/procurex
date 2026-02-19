@@ -10,6 +10,7 @@ enum RoleType: string
     case BAC_RESO_ADMIN = 'BAC Reso Admin';
     case BUDGETING_ADMIN = 'Budgeting Admin';
     case CANVASSING_ADMIN = 'Canvassing Admin';
+    case PR_ADMIN = 'PR Admin';
 
     public static function isSystemRole(string $roleName): bool
     {

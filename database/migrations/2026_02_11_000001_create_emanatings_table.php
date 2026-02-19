@@ -26,6 +26,7 @@ return new class extends Migration
             $table->boolean('reimbursement')->default(false);
             $table->string('csv_path')->nullable();
             $table->boolean('items_match_ppmp')->default(false);
+            $table->boolean('is_canvassed')->default(false)->after('items_match_ppmp');
             $table->string('status')->default('pending')->after('is_approved');
             $table->boolean('is_approved')->default(false);
             $table->timestamp('approved_at')->nullable();

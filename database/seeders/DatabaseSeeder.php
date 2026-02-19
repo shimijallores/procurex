@@ -46,6 +46,11 @@ class DatabaseSeeder extends Seeder
             ['is_system_role' => true, 'office_id' => null]
         );
 
+        $prAdminRole = Role::firstOrCreate(
+            ['name' => RoleType::PR_ADMIN->value],
+            ['is_system_role' => true, 'office_id' => null]
+        );
+
         // Create system users
         User::factory()->create([
             'name' => 'Super Admin',
@@ -72,6 +77,13 @@ class DatabaseSeeder extends Seeder
             'name' => 'Canvassing Admin',
             'email' => 'canvassing@procurex.com',
             'role_id' => $canvassingAdminRole->id,
+            'office_id' => null,
+        ]);
+
+        User::factory()->create([
+            'name' => 'PR Admin',
+            'email' => 'pradmin@procurex.com',
+            'role_id' => $prAdminRole->id,
             'office_id' => null,
         ]);
 
