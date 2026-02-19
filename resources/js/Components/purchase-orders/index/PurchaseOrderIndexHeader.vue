@@ -8,17 +8,17 @@ import { Button } from "@/components/ui/button";
     <div class="flex items-start justify-between">
         <div>
             <h1 class="text-2xl font-semibold tracking-tight">
-                Notice of Award
+                Purchase Order
             </h1>
             <p class="text-sm text-muted-foreground mt-1">
-                Manage generated Notice of Award documents.
+                Manage generated Purchase Order documents.
             </p>
         </div>
 
-        <Link :href="route('noas.create')">
+        <Link :href="route('purchase-orders.create')">
             <Button>
                 <Icon icon="lucide:plus" class="mr-2 h-4 w-4" />
-                New Notice of Award
+                New Purchase Order
             </Button>
         </Link>
     </div>

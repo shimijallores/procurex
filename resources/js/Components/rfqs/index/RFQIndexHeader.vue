@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
         <Link :href="route('rfqs.create')">
             <Button>
                 <Icon icon="lucide:plus" class="mr-2 h-4 w-4" />
-                New RFQ
+                New Request for Quotation
             </Button>
         </Link>
     </div>

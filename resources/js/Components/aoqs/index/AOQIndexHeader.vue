@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
         <Link :href="route('aoqs.create')">
             <Button>
                 <Icon icon="lucide:plus" class="mr-2 h-4 w-4" />
-                New AOQ
+                New Abstract of Quotation
             </Button>
         </Link>
     </div>

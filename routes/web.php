@@ -14,6 +14,7 @@ use App\Http\Controllers\MasterListItemController;
 use App\Http\Controllers\NOAController;
 use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\PPMPController;
+use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\PurchaseRequestController;
 use App\Http\Controllers\RFQController;
 use App\Http\Controllers\RoleController;
@@ -101,4 +102,9 @@ Route::middleware(['auth'])->group(function (): void {
     $documentRoles = 'role:Superadmin,Document Admin';
     Route::resource('noas', NOAController::class)->only(['index', 'create', 'store', 'show', 'destroy'])->middleware($documentRoles);
     Route::get('noas/{noa}/pdf', [NOAController::class, 'printPdf'])->middleware($documentRoles)->name('noas.pdf');
+
+    // Purchase Order module
+    Route::resource('purchase-orders', PurchaseOrderController::class)->only(['index', 'create', 'store', 'show', 'destroy'])->middleware($documentRoles);
+    Route::post('purchase-orders/suggest-po-no', [PurchaseOrderController::class, 'suggestPoNo'])->middleware($documentRoles)->name('purchase-orders.suggest-po-no');
+    Route::get('purchase-orders/{purchase_order}/pdf', [PurchaseOrderController::class, 'printPdf'])->middleware($documentRoles)->name('purchase-orders.pdf');
 });

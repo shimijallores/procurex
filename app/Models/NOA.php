@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class NOA extends Model
 {
@@ -26,5 +27,10 @@ class NOA extends Model
     public function bacResolution(): BelongsTo
     {
         return $this->belongsTo(BACResolution::class, 'bac_resolution_id');
+    }
+
+    public function purchaseOrder(): HasOne
+    {
+        return $this->hasOne(PurchaseOrder::class, 'noa_id');
     }
 }

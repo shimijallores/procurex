@@ -32,8 +32,6 @@ const onPurposeBlur = () => {
     );
 };
 
-const today = new Date().toISOString().split("T")[0];
-
 // Calendar check
 const { checkDate, isChecking } = useCalendarCheck();
 const prDateCheck = ref(null);
@@ -258,7 +256,7 @@ const prNoPlaceholder = computed(() => {
                         </p>
                     </div>
 
-                    <!-- PR Date (anti-dated, ≤ today) -->
+                    <!-- PR Date -->
                     <div class="space-y-2">
                         <Label for="pr_date">
                             PR Date
@@ -273,11 +271,11 @@ const prNoPlaceholder = computed(() => {
                             id="pr_date"
                             v-model="form.pr_date"
                             type="date"
-                            :max="today"
                             class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         />
                         <p class="text-xs text-muted-foreground">
-                            Must not be later than today (anti-dated).
+                            Date availability is checked against calendar events
+                            and holidays.
                         </p>
                         <p
                             v-if="form.errors?.pr_date"
@@ -290,8 +288,12 @@ const prNoPlaceholder = computed(() => {
                             v-if="prDateCheck && !prDateCheck.is_available"
                             class="mt-1 text-xs text-red-600"
                         >
-                            Non-working day — <strong>{{ prDateCheck.type }}:</strong>
-                            {{ prDateCheck.name }}<span v-if="prDateCheck.message"> ({{ prDateCheck.message }})</span>
+                            Non-working day —
+                            <strong>{{ prDateCheck.type }}:</strong>
+                            {{ prDateCheck.name
+                            }}<span v-if="prDateCheck.message">
+                                ({{ prDateCheck.message }})</span
+                            >
                         </p>
                     </div>
 
@@ -327,7 +329,6 @@ const prNoPlaceholder = computed(() => {
                             id="sai_date"
                             v-model="form.sai_date"
                             type="date"
-                            :max="today"
                             class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         />
                         <p
@@ -341,8 +342,12 @@ const prNoPlaceholder = computed(() => {
                             v-if="saiDateCheck && !saiDateCheck.is_available"
                             class="mt-1 text-xs text-red-600"
                         >
-                            Non-working day — <strong>{{ saiDateCheck.type }}:</strong>
-                            {{ saiDateCheck.name }}<span v-if="saiDateCheck.message"> ({{ saiDateCheck.message }})</span>
+                            Non-working day —
+                            <strong>{{ saiDateCheck.type }}:</strong>
+                            {{ saiDateCheck.name
+                            }}<span v-if="saiDateCheck.message">
+                                ({{ saiDateCheck.message }})</span
+                            >
                         </p>
                     </div>
                 </div>
@@ -573,11 +578,7 @@ const prNoPlaceholder = computed(() => {
             </Button>
             <Button
                 type="submit"
-                :disabled="
-                    form.processing ||
-                    isChecking ||
-                    !form.emanating_id
-                "
+                :disabled="form.processing || isChecking || !form.emanating_id"
             >
                 <Icon icon="lucide:save" class="mr-1.5 h-4 w-4" />
                 {{

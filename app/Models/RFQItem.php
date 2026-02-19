@@ -31,4 +31,9 @@ class RFQItem extends Model
     {
         return $this->hasMany(RFQSupplierItem::class, 'rfq_item_id');
     }
+
+    public function purchaseOrderItems(): HasMany
+    {
+        return $this->hasMany(PurchaseOrderItem::class, 'rfq_item_id');
+    }
 }

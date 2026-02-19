@@ -194,6 +194,13 @@ const mainNavItems = computed(() => {
             isActive: route().current("noas.*"),
             roles: ["Superadmin", "Document Admin"],
         },
+        {
+            title: "Purchase Order",
+            url: route("purchase-orders.index"),
+            icon: "lucide:file-signature",
+            isActive: route().current("purchase-orders.*"),
+            roles: ["Superadmin", "Document Admin"],
+        },
     ];
 
     // Filter items based on user role
@@ -259,7 +266,9 @@ const quotationItems = computed(() => {
 
 const documentItems = computed(() => {
     return mainNavItems.value.filter((item) =>
-        ["BAC Resolutions", "Notice of Award"].includes(item.title),
+        ["BAC Resolutions", "Notice of Award", "Purchase Order"].includes(
+            item.title,
+        ),
     );
 });
 
