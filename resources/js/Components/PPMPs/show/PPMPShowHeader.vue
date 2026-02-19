@@ -12,6 +12,14 @@ defineProps({
     onDelete: Function,
     approveProcessing: Boolean,
 });
+
+const canReject = (ppmp) => {
+    return !ppmp.is_approved;
+};
+
+const canReturn = (ppmp) => {
+    return ppmp.is_approved;
+};
 </script>
 
 <template>
@@ -58,13 +66,13 @@ defineProps({
                 <Icon icon="lucide:check-circle" class="mr-2 h-4 w-4" />
                 Approve PPMP
             </Button>
-            <Button
-                v-if="!ppmp.is_approved"
-                variant="outline"
-                @click="onReject"
-            >
+            <Button v-if="canReject(ppmp)" variant="outline" @click="onReject">
                 <Icon icon="lucide:x-circle" class="mr-2 h-4 w-4" />
                 Reject PPMP
+            </Button>
+            <Button v-if="canReturn(ppmp)" variant="outline" @click="onReject">
+                <Icon icon="lucide:undo-2" class="mr-2 h-4 w-4" />
+                Return
             </Button>
             <a
                 v-if="ppmp.csv_path"

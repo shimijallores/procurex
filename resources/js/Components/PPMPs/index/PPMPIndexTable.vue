@@ -177,7 +177,7 @@ const formatDate = (date) => {
                                     class="flex items-center justify-center gap-2"
                                 >
                                     <span
-                                        v-if="ppmp.status === 'approved'"
+                                        v-if="ppmp.is_approved"
                                         class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
                                     >
                                         <Icon
@@ -187,7 +187,7 @@ const formatDate = (date) => {
                                         Approved
                                     </span>
                                     <span
-                                        v-else-if="ppmp.status === 'rejected'"
+                                        v-else-if="ppmp.rejection_reason"
                                         class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
                                     >
                                         <Icon

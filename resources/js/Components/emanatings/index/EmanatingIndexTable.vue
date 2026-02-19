@@ -35,13 +35,14 @@ const formatDate = (date) => {
 };
 
 const getStatusBadge = (emanating) => {
-    if (emanating.status === 'approved') {
+    // Match the show page header logic exactly
+    if (emanating.is_approved) {
         return {
             text: "Approved",
             color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
             icon: "lucide:check-circle",
         };
-    } else if (emanating.status === 'rejected') {
+    } else if (emanating.rejection_reason) {
         return {
             text: "Rejected",
             color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",

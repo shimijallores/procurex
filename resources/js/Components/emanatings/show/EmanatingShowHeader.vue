@@ -21,6 +21,10 @@ const canReject = (emanating) => {
     return !emanating.is_approved;
 };
 
+const canReturn = (emanating) => {
+    return emanating.is_approved;
+};
+
 const downloadCSV = () => {
     window.location.href = route("emanatings.download-csv", props.emanating.id);
 };
@@ -91,6 +95,14 @@ const downloadCSV = () => {
             >
                 <Icon icon="lucide:x-circle" class="mr-2 h-4 w-4" />
                 Reject
+            </Button>
+            <Button
+                v-if="canReturn(emanating)"
+                variant="outline"
+                @click="$emit('reject')"
+            >
+                <Icon icon="lucide:undo-2" class="mr-2 h-4 w-4" />
+                Return
             </Button>
             <Button variant="outline" @click="downloadCSV">
                 <Icon icon="lucide:download" class="mr-2 h-4 w-4" />
