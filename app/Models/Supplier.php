@@ -30,4 +30,9 @@ class Supplier extends Model
     {
         return $this->hasMany(MasterListItem::class);
     }
+
+    public function rfqSuppliers(): HasMany
+    {
+        return $this->hasMany(RFQSupplier::class, 'supplier_id');
+    }
 }

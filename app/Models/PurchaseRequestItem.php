@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PurchaseRequestItem extends Model
 {
@@ -45,6 +46,11 @@ class PurchaseRequestItem extends Model
     public function emanatingItem(): BelongsTo
     {
         return $this->belongsTo(EmanatingItem::class);
+    }
+
+    public function rfqItems(): HasMany
+    {
+        return $this->hasMany(RFQItem::class, 'pr_item_id');
     }
 
     /**

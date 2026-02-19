@@ -59,4 +59,9 @@ class PurchaseRequest extends Model
     {
         return $this->hasOne(Earmark::class);
     }
+
+    public function rfq(): HasOne
+    {
+        return $this->hasOne(RFQ::class, 'pr_id');
+    }
 }

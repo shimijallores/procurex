@@ -37,6 +37,7 @@ const SYSTEM_ROLES = [
     "Budgeting Admin",
     "Canvassing Admin",
     "PR Admin",
+    "Quotation Admin",
 ];
 
 const userRole = computed(() => user.value?.role?.name || "");
@@ -164,6 +165,13 @@ const mainNavItems = computed(() => {
             isActive: route().current("earmarks.*"),
             roles: ["Superadmin", "Budgeting Admin"],
         },
+        {
+            title: "Request for Quotation",
+            url: route("rfqs.index"),
+            icon: "lucide:file-text",
+            isActive: route().current("rfqs.*"),
+            roles: ["Superadmin", "Quotation Admin"],
+        },
     ];
 
     // Filter items based on user role
@@ -224,6 +232,12 @@ const purchaseRequestItems = computed(() => {
 const budgetingItems = computed(() => {
     return mainNavItems.value.filter((item) =>
         ["Budgeting"].includes(item.title),
+    );
+});
+
+const quotationItems = computed(() => {
+    return mainNavItems.value.filter((item) =>
+        ["Request for Quotation"].includes(item.title),
     );
 });
 
@@ -368,6 +382,29 @@ const userInitials = computed(() => {
                     <SidebarMenu>
                         <SidebarMenuItem
                             v-for="item in budgetingItems"
+                            :key="item.title"
+                        >
+                            <SidebarMenuButton
+                                as-child
+                                :is-active="item.isActive"
+                            >
+                                <Link :href="item.url">
+                                    <Icon :icon="item.icon" class="size-4" />
+                                    <span>{{ item.title }}</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarGroupContent>
+            </SidebarGroup>
+
+            <!-- RFQ Group -->
+            <SidebarGroup v-if="quotationItems.length > 0">
+                <SidebarGroupLabel>Quotations</SidebarGroupLabel>
+                <SidebarGroupContent>
+                    <SidebarMenu>
+                        <SidebarMenuItem
+                            v-for="item in quotationItems"
                             :key="item.title"
                         >
                             <SidebarMenuButton

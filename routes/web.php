@@ -12,6 +12,7 @@ use App\Http\Controllers\MasterListItemController;
 use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\PPMPController;
 use App\Http\Controllers\PurchaseRequestController;
+use App\Http\Controllers\RFQController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\SupplierController;
@@ -76,4 +77,10 @@ Route::middleware(['auth'])->group(function (): void {
     Route::resource('earmarks', EarmarkController::class)->middleware($budgetingRoles);
     Route::get('earmarks/{earmark}/pdf', [EarmarkController::class, 'printPdf'])->middleware($budgetingRoles)->name('earmarks.pdf');
     Route::post('purchase-requests/{purchase_request}/budget-return', [EarmarkController::class, 'budgetReturn'])->middleware($budgetingRoles)->name('purchase-requests.budget-return');
+
+    // RFQ module
+    $rfqRoles = 'role:Superadmin,Quotation Admin';
+    Route::resource('rfqs', RFQController::class)->only(['index', 'create', 'store', 'show', 'destroy'])->middleware($rfqRoles);
+    Route::post('rfqs/{rfq}/suppliers/{rfq_supplier}/submit', [RFQController::class, 'submitSupplier'])->middleware($rfqRoles)->name('rfqs.suppliers.submit');
+    Route::get('rfqs/{rfq}/pdf', [RFQController::class, 'printPdf'])->middleware($rfqRoles)->name('rfqs.pdf');
 });

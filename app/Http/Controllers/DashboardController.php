@@ -10,6 +10,7 @@ use App\Models\Canvas;
 use App\Models\Emanating;
 use App\Models\MasterListItem;
 use App\Models\PPMP;
+use App\Models\RFQ;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -42,6 +43,11 @@ class DashboardController extends Controller
                 $data['completedCanvasses'] = Canvas::where('status', 'completed')->count();
                 $data['totalMasterListItems'] = MasterListItem::count();
                 $data['recentCanvasses'] = Canvas::with('emanating.project')->latest()->limit(5)->get();
+            } elseif ($role->name === RoleType::QUOTATION_ADMIN->value) {
+                $data['totalRfqs'] = RFQ::count();
+                $data['dueThisWeek'] = RFQ::whereBetween('submission_deadline', [now()->toDateString(), now()->addWeek()->toDateString()])->count();
+                $data['lateSupplierSubmissions'] = \App\Models\RFQSupplier::where('is_late', true)->count();
+                $data['recentRfqs'] = RFQ::with('purchaseRequest.office')->latest('rfq_date')->limit(5)->get();
             }
         } else {
             // Office roles see only their office's data
