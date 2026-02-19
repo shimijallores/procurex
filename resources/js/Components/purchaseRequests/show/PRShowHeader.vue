@@ -12,8 +12,8 @@ defineEmits(["approve", "return", "delete"]);
 
 const openPdf = () => {
     window.open(
-        route('purchase-requests.pdf', props.purchaseRequest.id),
-        '_blank'
+        route("purchase-requests.pdf", props.purchaseRequest.id),
+        "_blank",
     );
 };
 
@@ -23,6 +23,11 @@ const getStatusBadge = (status) => {
             text: "Draft",
             color: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
             icon: "lucide:file-edit",
+        },
+        for_budget_review: {
+            text: "For Budget Review",
+            color: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300",
+            icon: "lucide:clock",
         },
         approved: {
             text: "Approved",
@@ -102,14 +107,14 @@ const getStatusBadge = (status) => {
                     </Button>
                 </Link>
 
-                <!-- Approve -->
+                <!-- Approve / Submit for Budget Review -->
                 <Button
                     v-if="purchaseRequest.status === 'draft'"
                     :disabled="approveProcessing"
                     @click="$emit('approve')"
                 >
-                    <Icon icon="lucide:check-circle" class="mr-2 h-4 w-4" />
-                    Approve PR
+                    <Icon icon="lucide:send" class="mr-2 h-4 w-4" />
+                    Submit for Budget Review
                 </Button>
 
                 <!-- Return -->
@@ -123,10 +128,7 @@ const getStatusBadge = (status) => {
                 </Button>
 
                 <!-- Print (always visible) -->
-                <Button
-                    variant="outline"
-                    @click="openPdf"
-                >
+                <Button variant="outline" @click="openPdf">
                     <Icon icon="lucide:printer" class="mr-2 h-4 w-4" />
                     Print
                 </Button>

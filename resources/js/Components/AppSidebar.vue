@@ -157,6 +157,13 @@ const mainNavItems = computed(() => {
             isActive: route().current("purchase-requests.*"),
             roles: ["Superadmin", "PR Admin"],
         },
+        {
+            title: "Budgeting",
+            url: route("earmarks.index"),
+            icon: "lucide:stamp",
+            isActive: route().current("earmarks.*"),
+            roles: ["Superadmin", "Budgeting Admin"],
+        },
     ];
 
     // Filter items based on user role
@@ -211,6 +218,12 @@ const canvassingItems = computed(() => {
 const purchaseRequestItems = computed(() => {
     return mainNavItems.value.filter((item) =>
         ["Purchase Requests"].includes(item.title),
+    );
+});
+
+const budgetingItems = computed(() => {
+    return mainNavItems.value.filter((item) =>
+        ["Budgeting"].includes(item.title),
     );
 });
 
@@ -332,6 +345,29 @@ const userInitials = computed(() => {
                     <SidebarMenu>
                         <SidebarMenuItem
                             v-for="item in purchaseRequestItems"
+                            :key="item.title"
+                        >
+                            <SidebarMenuButton
+                                as-child
+                                :is-active="item.isActive"
+                            >
+                                <Link :href="item.url">
+                                    <Icon :icon="item.icon" class="size-4" />
+                                    <span>{{ item.title }}</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarGroupContent>
+            </SidebarGroup>
+
+            <!-- Budgeting Group -->
+            <SidebarGroup v-if="budgetingItems.length > 0">
+                <SidebarGroupLabel>Budgeting</SidebarGroupLabel>
+                <SidebarGroupContent>
+                    <SidebarMenu>
+                        <SidebarMenuItem
+                            v-for="item in budgetingItems"
                             :key="item.title"
                         >
                             <SidebarMenuButton

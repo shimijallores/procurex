@@ -11,20 +11,18 @@ import {
 import { Button } from "@/components/ui/button";
 
 defineProps({
-    purchaseRequests: Object,
+    earmarks: Object,
     search: String,
     offices: Array,
     fiscalYears: Object,
     selectedOffice: String,
     selectedFiscalYear: String,
-    selectedStatus: String,
 });
 
 defineEmits([
     "update:search",
     "update:selected-office",
     "update:selected-fiscal-year",
-    "update:selected-status",
     "delete-click",
 ]);
 
@@ -43,46 +41,6 @@ const formatCurrency = (value) => {
         currency: "PHP",
     }).format(value || 0);
 };
-
-const getStatusBadge = (status) => {
-    const map = {
-        draft: {
-            text: "Draft",
-            color: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
-            icon: "lucide:file-edit",
-        },
-        for_budget_review: {
-            text: "For Budget Review",
-            color: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300",
-            icon: "lucide:clock",
-        },
-        approved: {
-            text: "Approved",
-            color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-            icon: "lucide:check-circle",
-        },
-        returned: {
-            text: "Returned",
-            color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
-            icon: "lucide:undo-2",
-        },
-        cancelled: {
-            text: "Cancelled",
-            color: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
-            icon: "lucide:x-circle",
-        },
-    };
-    return map[status] || map.draft;
-};
-
-const statusOptions = [
-    { value: "", label: "All Statuses" },
-    { value: "draft", label: "Draft" },
-    { value: "for_budget_review", label: "For Budget Review" },
-    { value: "approved", label: "Approved" },
-    { value: "returned", label: "Returned" },
-    { value: "cancelled", label: "Cancelled" },
-];
 </script>
 
 <template>
@@ -92,9 +50,9 @@ const statusOptions = [
                 class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
             >
                 <div>
-                    <CardTitle>All Purchase Requests</CardTitle>
+                    <CardTitle>Issued Earmarks</CardTitle>
                     <CardDescription>
-                        A list of all purchase requests filtered by office
+                        All certifications of availability of funds
                     </CardDescription>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
@@ -113,23 +71,6 @@ const statusOptions = [
                             :value="office.id"
                         >
                             {{ office.name }}
-                        </option>
-                    </select>
-
-                    <!-- Status filter -->
-                    <select
-                        :value="selectedStatus"
-                        @change="
-                            $emit('update:selected-status', $event.target.value)
-                        "
-                        class="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    >
-                        <option
-                            v-for="opt in statusOptions"
-                            :key="opt.value"
-                            :value="opt.value"
-                        >
-                            {{ opt.label }}
                         </option>
                     </select>
 
@@ -168,27 +109,22 @@ const statusOptions = [
                             <th
                                 class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
                             >
-                                PR No. / Office
+                                Earmark No.
                             </th>
                             <th
                                 class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
                             >
-                                Purpose
+                                Office / PR No.
                             </th>
                             <th
                                 class="h-12 px-4 text-center align-middle font-medium text-muted-foreground"
                             >
-                                PR Date
+                                Date
                             </th>
                             <th
                                 class="h-12 px-4 text-right align-middle font-medium text-muted-foreground"
                             >
-                                Total Amount
-                            </th>
-                            <th
-                                class="h-12 px-4 text-center align-middle font-medium text-muted-foreground"
-                            >
-                                Status
+                                Certified Amount
                             </th>
                             <th
                                 class="h-12 px-4 text-right align-middle font-medium text-muted-foreground"
@@ -198,92 +134,73 @@ const statusOptions = [
                         </tr>
                     </thead>
                     <tbody class="[&_tr:last-child]:border-0">
-                        <tr v-if="!purchaseRequests?.data?.length">
+                        <tr v-if="!earmarks?.data?.length">
                             <td
-                                colspan="6"
+                                colspan="5"
                                 class="p-8 text-center text-muted-foreground"
                             >
                                 <Icon
-                                    icon="lucide:file-plus-2"
-                                    class="mx-auto mb-2 h-8 w-8 opacity-50"
+                                    icon="lucide:inbox"
+                                    class="mx-auto mb-2 h-8 w-8 opacity-40"
                                 />
-                                No purchase requests found.
+                                <p>No earmarks found.</p>
                             </td>
                         </tr>
+
                         <tr
-                            v-for="pr in purchaseRequests?.data"
-                            :key="pr.id"
+                            v-for="earmark in earmarks?.data"
+                            :key="earmark.id"
                             class="border-b transition-colors hover:bg-muted/50"
                         >
-                            <td class="p-4 align-middle">
-                                <div class="flex items-center gap-3">
-                                    <div
-                                        class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10"
+                            <td class="px-4 py-3">
+                                <Link
+                                    :href="route('earmarks.show', earmark.id)"
+                                    class="font-semibold text-primary hover:underline"
+                                >
+                                    {{ earmark.earmark_no }}
+                                </Link>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="font-medium">
+                                    {{
+                                        earmark.purchase_request?.office
+                                            ?.name || "—"
+                                    }}
+                                </div>
+                                <div class="text-xs text-muted-foreground">
+                                    PR #{{
+                                        earmark.purchase_request?.pr_no ||
+                                        earmark.purchase_request?.id
+                                    }}
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                {{ formatDate(earmark.earmark_date) }}
+                            </td>
+                            <td class="px-4 py-3 text-right font-semibold">
+                                {{ formatCurrency(earmark.certified_amount) }}
+                            </td>
+                            <td class="px-4 py-3 text-right">
+                                <div
+                                    class="flex items-center justify-end gap-1"
+                                >
+                                    <a
+                                        :href="
+                                            route('earmarks.pdf', earmark.id)
+                                        "
+                                        target="_blank"
+                                        title="Print Certification"
                                     >
-                                        <Icon
-                                            icon="lucide:file-plus-2"
-                                            class="h-5 w-5 text-primary"
-                                        />
-                                    </div>
-                                    <div>
-                                        <div class="font-medium">
-                                            {{ pr.pr_no || "— (No PR No.)" }}
-                                        </div>
-                                        <div
-                                            class="text-xs text-muted-foreground"
-                                        >
-                                            {{
-                                                pr.office?.name ||
-                                                "Unknown Office"
-                                            }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="p-4 align-middle max-w-xs">
-                                <p
-                                    class="truncate text-sm text-muted-foreground"
-                                    :title="pr.purpose"
-                                >
-                                    {{ pr.purpose || "—" }}
-                                </p>
-                            </td>
-                            <td class="p-4 align-middle text-center">
-                                <div
-                                    class="flex items-center justify-center gap-1"
-                                >
-                                    <Icon
-                                        icon="lucide:calendar"
-                                        class="h-3.5 w-3.5 text-muted-foreground"
-                                    />
-                                    <span>{{ formatDate(pr.pr_date) }}</span>
-                                </div>
-                            </td>
-                            <td class="p-4 align-middle text-right font-medium">
-                                {{ formatCurrency(pr.total_amount) }}
-                            </td>
-                            <td class="p-4 align-middle text-center">
-                                <span
-                                    :class="getStatusBadge(pr.status).color"
-                                    class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold"
-                                >
-                                    <Icon
-                                        :icon="getStatusBadge(pr.status).icon"
-                                        class="h-3 w-3"
-                                    />
-                                    {{ getStatusBadge(pr.status).text }}
-                                </span>
-                            </td>
-                            <td class="p-4 align-middle text-right">
-                                <div
-                                    class="flex items-center justify-end gap-2"
-                                >
+                                        <Button variant="ghost" size="sm">
+                                            <Icon
+                                                icon="lucide:printer"
+                                                class="h-4 w-4"
+                                            />
+                                        </Button>
+                                    </a>
                                     <Link
                                         :href="
-                                            route(
-                                                'purchase-requests.show',
-                                                pr.id,
-                                            )
+                                            route('earmarks.show', earmark.id)
                                         "
                                     >
                                         <Button variant="ghost" size="sm">
@@ -293,27 +210,11 @@ const statusOptions = [
                                             />
                                         </Button>
                                     </Link>
-                                    <Link
-                                        v-if="pr.status === 'draft'"
-                                        :href="
-                                            route(
-                                                'purchase-requests.edit',
-                                                pr.id,
-                                            )
-                                        "
-                                    >
-                                        <Button variant="ghost" size="sm">
-                                            <Icon
-                                                icon="lucide:pencil"
-                                                class="h-4 w-4"
-                                            />
-                                        </Button>
-                                    </Link>
                                     <Button
                                         variant="ghost"
                                         size="sm"
                                         class="text-destructive hover:text-destructive"
-                                        @click="$emit('delete-click', pr)"
+                                        @click="$emit('delete-click', earmark)"
                                     >
                                         <Icon
                                             icon="lucide:trash-2"
@@ -330,13 +231,12 @@ const statusOptions = [
             <!-- Pagination -->
             <div class="mt-4 flex items-center justify-between border-t pt-4">
                 <div class="text-sm text-muted-foreground">
-                    Showing {{ purchaseRequests.from }} to
-                    {{ purchaseRequests.to }} of
-                    {{ purchaseRequests.total }} entries
+                    Showing {{ earmarks.from }} to {{ earmarks.to }} of
+                    {{ earmarks.total }} entries
                 </div>
                 <div class="flex items-center gap-1">
                     <template
-                        v-for="(link, index) in purchaseRequests.links"
+                        v-for="(link, index) in earmarks.links"
                         :key="index"
                     >
                         <Link
@@ -354,6 +254,7 @@ const statusOptions = [
                                     : 'hover:bg-accent hover:text-accent-foreground',
                             ]"
                             preserve-state
+                            preserve-scroll
                             v-html="link.label"
                         />
                         <span

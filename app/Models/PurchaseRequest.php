@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class PurchaseRequest extends Model
 {
@@ -52,5 +53,10 @@ class PurchaseRequest extends Model
     public function items(): HasMany
     {
         return $this->hasMany(PurchaseRequestItem::class);
+    }
+
+    public function earmark(): HasOne
+    {
+        return $this->hasOne(Earmark::class);
     }
 }

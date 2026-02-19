@@ -4,6 +4,7 @@ use App\Http\Controllers\APPController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CanvasController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EarmarkController;
 use App\Http\Controllers\EmanatingController;
 use App\Http\Controllers\FundController;
 use App\Http\Controllers\MasterListCategoryController;
@@ -69,4 +70,10 @@ Route::middleware(['auth'])->group(function (): void {
     Route::post('purchase-requests/{purchase_request}/approve', [PurchaseRequestController::class, 'approve'])->middleware($prRoles)->name('purchase-requests.approve');
     Route::post('purchase-requests/{purchase_request}/return', [PurchaseRequestController::class, 'returnToOffice'])->middleware($prRoles)->name('purchase-requests.return');
     Route::get('purchase-requests/{purchase_request}/pdf', [PurchaseRequestController::class, 'printPdf'])->middleware($prRoles)->name('purchase-requests.pdf');
+
+    // Budgeting module
+    $budgetingRoles = 'role:Superadmin,Budgeting Admin';
+    Route::resource('earmarks', EarmarkController::class)->middleware($budgetingRoles);
+    Route::get('earmarks/{earmark}/pdf', [EarmarkController::class, 'printPdf'])->middleware($budgetingRoles)->name('earmarks.pdf');
+    Route::post('purchase-requests/{purchase_request}/budget-return', [EarmarkController::class, 'budgetReturn'])->middleware($budgetingRoles)->name('purchase-requests.budget-return');
 });

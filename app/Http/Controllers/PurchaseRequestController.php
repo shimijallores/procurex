@@ -77,10 +77,11 @@ class PurchaseRequestController extends Controller
             ->withQueryString();
 
         $stats = [
-            'total'    => (clone $query)->count(),
-            'draft'    => (clone $query)->where('status', 'draft')->count(),
-            'approved' => (clone $query)->where('status', 'approved')->count(),
-            'returned' => (clone $query)->where('status', 'returned')->count(),
+            'total'             => (clone $query)->count(),
+            'draft'             => (clone $query)->where('status', 'draft')->count(),
+            'for_budget_review' => (clone $query)->where('status', 'for_budget_review')->count(),
+            'approved'          => (clone $query)->where('status', 'approved')->count(),
+            'returned'          => (clone $query)->where('status', 'returned')->count(),
         ];
 
         $offices = Office::orderBy('name')->get(['id', 'name']);
@@ -287,19 +288,19 @@ class PurchaseRequestController extends Controller
     }
 
     /**
-     * Approve the purchase request (mark as approved, subject for printing).
+     * Submit the purchase request for budget review (draft → for_budget_review).
      */
     public function approve(PurchaseRequest $purchaseRequest): RedirectResponse
     {
         if ($purchaseRequest->status !== 'draft') {
             return redirect()->back()
-                ->with('error', 'Only draft PRs can be approved.');
+                ->with('error', 'Only draft PRs can be submitted for budget review.');
         }
 
-        $purchaseRequest->update(['status' => 'approved']);
+        $purchaseRequest->update(['status' => 'for_budget_review']);
 
         return redirect()->route('purchase-requests.show', $purchaseRequest)
-            ->with('success', 'Purchase Request approved and ready for printing.');
+            ->with('success', 'Purchase Request submitted for budget review.');
     }
 
     /**
@@ -312,9 +313,9 @@ class PurchaseRequestController extends Controller
             'reason' => ['required', 'string', 'max:500'],
         ]);
 
-        if ($purchaseRequest->status !== 'draft') {
+        if (! in_array($purchaseRequest->status, ['draft', 'for_budget_review'], true)) {
             return redirect()->back()
-                ->with('error', 'Only draft PRs can be returned.');
+                ->with('error', 'Only draft or budget-review PRs can be returned.');
         }
 
         DB::beginTransaction();
