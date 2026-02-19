@@ -1,29 +1,51 @@
 <script setup>
-import { Link, Form } from '@inertiajs/vue3'
-import { Icon } from '@iconify/vue'
-import Layout from '@/Layout/Layout.vue'
+import { Link, Form } from "@inertiajs/vue3";
+import { Icon } from "@iconify/vue";
+import { computed, ref } from "vue";
+import Layout from "@/Layout/Layout.vue";
 import {
     Card,
     CardContent,
     CardDescription,
     CardHeader,
     CardTitle,
-} from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 
 defineOptions({
-    layout: (h, page) => h(Layout, { breadcrumbs: [
-        { label: 'Users', href: route('users.index') },
-        { label: 'Edit' }
-    ] }, () => page),
-})
+    layout: (h, page) =>
+        h(
+            Layout,
+            {
+                breadcrumbs: [
+                    { label: "Users", href: route("users.index") },
+                    { label: "Edit" },
+                ],
+            },
+            () => page,
+        ),
+});
 
 const props = defineProps({
     user: Object,
     roles: Array,
     offices: Array,
-})
+    systemRoles: Array,
+});
+
+const selectedRoleId = ref(props.user.role_id);
+
+const selectedRole = computed(() => {
+    return props.roles?.find((role) => role.id == selectedRoleId.value);
+});
+
+const isSystemRole = computed(() => {
+    return (
+        selectedRole.value &&
+        props.systemRoles?.includes(selectedRole.value.name)
+    );
+});
 </script>
 
 <template>
@@ -40,9 +62,7 @@ const props = defineProps({
                 <h1 class="text-2xl font-bold tracking-tight md:text-3xl">
                     Edit User
                 </h1>
-                <p class="text-muted-foreground">
-                    Update user information
-                </p>
+                <p class="text-muted-foreground">Update user information</p>
             </div>
         </div>
 
@@ -74,7 +94,7 @@ const props = defineProps({
                                 'ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium',
                                 'placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2',
                                 'focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-                                errors.name ? 'border-destructive' : ''
+                                errors.name ? 'border-destructive' : '',
                             ]"
                         />
                         <p v-if="errors.name" class="text-sm text-destructive">
@@ -95,7 +115,7 @@ const props = defineProps({
                                 'ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium',
                                 'placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2',
                                 'focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-                                errors.email ? 'border-destructive' : ''
+                                errors.email ? 'border-destructive' : '',
                             ]"
                         />
                         <p v-if="errors.email" class="text-sm text-destructive">
@@ -108,29 +128,33 @@ const props = defineProps({
                         <select
                             id="role_id"
                             name="role_id"
+                            @change="(e) => (selectedRoleId = e.target.value)"
                             :class="[
                                 'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
                                 'ring-offset-background focus-visible:outline-none focus-visible:ring-2',
                                 'focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-                                errors.role_id ? 'border-destructive' : ''
+                                errors.role_id ? 'border-destructive' : '',
                             ]"
                         >
                             <option value="">Select a role</option>
-                            <option 
-                                v-for="role in roles" 
-                                :key="role.id" 
+                            <option
+                                v-for="role in roles"
+                                :key="role.id"
                                 :value="role.id"
                                 :selected="user.role_id === role.id"
                             >
                                 {{ role.name }}
                             </option>
                         </select>
-                        <p v-if="errors.role_id" class="text-sm text-destructive">
+                        <p
+                            v-if="errors.role_id"
+                            class="text-sm text-destructive"
+                        >
                             {{ errors.role_id }}
                         </p>
                     </div>
 
-                    <div class="space-y-2">
+                    <div v-if="!isSystemRole" class="space-y-2">
                         <Label for="office_id">Office</Label>
                         <select
                             id="office_id"
@@ -139,26 +163,31 @@ const props = defineProps({
                                 'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
                                 'ring-offset-background focus-visible:outline-none focus-visible:ring-2',
                                 'focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-                                errors.office_id ? 'border-destructive' : ''
+                                errors.office_id ? 'border-destructive' : '',
                             ]"
                         >
                             <option value="">Select an office</option>
-                            <option 
-                                v-for="office in offices" 
-                                :key="office.id" 
+                            <option
+                                v-for="office in offices"
+                                :key="office.id"
                                 :value="office.id"
                                 :selected="user.office_id === office.id"
                             >
                                 {{ office.name }}
                             </option>
                         </select>
-                        <p v-if="errors.office_id" class="text-sm text-destructive">
+                        <p
+                            v-if="errors.office_id"
+                            class="text-sm text-destructive"
+                        >
                             {{ errors.office_id }}
                         </p>
                     </div>
 
                     <div class="space-y-2">
-                        <Label for="password">Password (Leave blank to keep current)</Label>
+                        <Label for="password"
+                            >Password (Leave blank to keep current)</Label
+                        >
                         <input
                             id="password"
                             name="password"
@@ -169,16 +198,21 @@ const props = defineProps({
                                 'ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium',
                                 'placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2',
                                 'focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-                                errors.password ? 'border-destructive' : ''
+                                errors.password ? 'border-destructive' : '',
                             ]"
                         />
-                        <p v-if="errors.password" class="text-sm text-destructive">
+                        <p
+                            v-if="errors.password"
+                            class="text-sm text-destructive"
+                        >
                             {{ errors.password }}
                         </p>
                     </div>
 
                     <div class="space-y-2">
-                        <Label for="password_confirmation">Confirm Password</Label>
+                        <Label for="password_confirmation"
+                            >Confirm Password</Label
+                        >
                         <input
                             id="password_confirmation"
                             name="password_confirmation"
@@ -195,8 +229,16 @@ const props = defineProps({
 
                     <div class="flex items-center gap-4">
                         <Button type="submit" :disabled="processing">
-                            <Icon v-if="processing" icon="lucide:loader-2" class="mr-2 h-4 w-4 animate-spin" />
-                            <Icon v-else icon="lucide:save" class="mr-2 h-4 w-4" />
+                            <Icon
+                                v-if="processing"
+                                icon="lucide:loader-2"
+                                class="mr-2 h-4 w-4 animate-spin"
+                            />
+                            <Icon
+                                v-else
+                                icon="lucide:save"
+                                class="mr-2 h-4 w-4"
+                            />
                             Save Changes
                         </Button>
                         <Link :href="route('users.index')">

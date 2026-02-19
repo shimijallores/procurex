@@ -28,85 +28,133 @@ import {
 const { isMobile } = useSidebar();
 const page = usePage();
 
-const user = computed(() => page.props.auth?.user.data);
+const user = computed(() => page.props.auth?.user);
+
+// System role names
+const SYSTEM_ROLES = ["Superadmin", "BAC Reso Admin", "Budgeting Admin"];
+
+const userRole = computed(() => user.value?.role?.name || "");
+
+const isSystemRole = computed(() => SYSTEM_ROLES.includes(userRole.value));
+
+const isSuperadmin = computed(() => userRole.value === "Superadmin");
+
+const isBACSAdminOrAbove = computed(
+    () =>
+        userRole.value === "Superadmin" || userRole.value === "BAC Reso Admin",
+);
+
+const isBudgetingAdminOrAbove = computed(
+    () =>
+        userRole.value === "Superadmin" || userRole.value === "Budgeting Admin",
+);
 
 // Navigation items
 const mainNavItems = computed(() => {
     // Access page.url to make this reactive to route changes
     const currentUrl = page.url;
 
-    return [
+    const items = [
         {
             title: "Dashboard",
             url: route("dashboard.index"),
             icon: "lucide:layout-dashboard",
             isActive: route().current("dashboard.*"),
+            roles: ["all"], // Available to all
         },
         {
             title: "Users",
             url: route("users.index"),
             icon: "lucide:users",
             isActive: route().current("users.*"),
+            roles: ["all"], // Available to all
         },
         {
             title: "Roles",
             url: route("roles.index"),
             icon: "lucide:shield",
             isActive: route().current("roles.*"),
+            roles: ["Superadmin"], // Superadmin only
         },
         {
             title: "Offices",
             url: route("offices.index"),
             icon: "lucide:building-2",
             isActive: route().current("offices.*"),
+            roles: ["Superadmin"], // Superadmin only
         },
         {
             title: "Funds",
             url: route("funds.index"),
             icon: "lucide:wallet",
             isActive: route().current("funds.*"),
+            roles: ["Superadmin", "office"], // Superadmin + office roles
         },
         {
             title: "APPs",
             url: route("apps.index"),
             icon: "lucide:clipboard-check",
             isActive: route().current("apps.*"),
+            roles: ["Superadmin", "BAC Reso Admin", "office"], // BAC Reso + office
         },
         {
             title: "PPMPs",
             url: route("ppmps.index"),
             icon: "lucide:clipboard-list",
             isActive: route().current("ppmps.*"),
+            roles: ["Superadmin", "Budgeting Admin", "office"], // Budgeting + office
         },
         {
             title: "Emanatings",
             url: route("emanatings.index"),
             icon: "lucide:clipboard-minus",
             isActive: route().current("emanatings.*"),
+            roles: ["Superadmin", "Budgeting Admin", "office"], // Budgeting + office
         },
     ];
+
+    // Filter items based on user role
+    return items.filter((item) => {
+        if (item.roles.includes("all")) return true;
+        if (item.roles.includes("office") && !isSystemRole.value) return true;
+        if (item.roles.includes(userRole.value)) return true;
+        return false;
+    });
 });
 
-const secondaryNavItems = [
-    {
-        title: "Calendar",
-        url: route("calendars.index"),
-        icon: "lucide:calendar",
-        isActive: route().current("calendars.*"),
-    },
-    {
-        title: "Reports",
-        url: "#",
-        icon: "lucide:bar-chart-3",
-        isActive: false,
-    },
-    {
-        title: "Settings",
-        url: "#",
-        icon: "lucide:settings",
-        isActive: false,
-    },
-];
+const secondaryNavItems = computed(() => {
+    const items = [
+        {
+            title: "Calendar",
+            url: route("calendars.index"),
+            icon: "lucide:calendar",
+            isActive: route().current("calendars.*"),
+            roles: ["all"], // Available to all
+        },
+        {
+            title: "Reports",
+            url: "#",
+            icon: "lucide:bar-chart-3",
+            isActive: false,
+            roles: ["all"], // Available to all
+        },
+        {
+            title: "Settings",
+            url: "#",
+            icon: "lucide:settings",
+            isActive: false,
+            roles: ["all"], // Available to all
+        },
+    ];
+
+    // Filter items based on user role
+    return items.filter((item) => {
+        if (item.roles.includes("all")) return true;
+        if (item.roles.includes("office") && !isSystemRole.value) return true;
+        if (item.roles.includes(userRole.value)) return true;
+        return false;
+    });
+});
 
 // Get user initials for avatar fallback
 const userInitials = computed(() => {
@@ -215,11 +263,13 @@ const userInitials = computed(() => {
                                     class="grid flex-1 text-left text-sm leading-tight"
                                 >
                                     <span class="truncate font-semibold">{{
-                                        user?.name ?? "User"
+                                        $page.props.auth.user?.name ?? "User"
                                     }}</span>
                                     <span
                                         class="truncate text-xs text-muted-foreground"
-                                        >{{ user?.email ?? "" }}</span
+                                        >{{
+                                            $page.props.auth.user?.email ?? ""
+                                        }}</span
                                     >
                                 </div>
                                 <Icon
@@ -247,11 +297,15 @@ const userInitials = computed(() => {
                                         class="grid flex-1 text-left text-sm leading-tight"
                                     >
                                         <span class="truncate font-semibold">{{
-                                            user?.name ?? "User"
+                                            $page.props.auth.user?.name ??
+                                            "User"
                                         }}</span>
                                         <span
                                             class="truncate text-xs text-muted-foreground"
-                                            >{{ user?.email ?? "" }}</span
+                                            >{{
+                                                $page.props.auth.user?.email ??
+                                                ""
+                                            }}</span
                                         >
                                     </div>
                                 </div>

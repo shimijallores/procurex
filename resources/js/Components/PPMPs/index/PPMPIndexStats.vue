@@ -1,11 +1,6 @@
 <script setup>
 import { Icon } from "@iconify/vue";
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 defineProps({
     totalCount: Number,
@@ -22,9 +17,7 @@ defineProps({
             <CardHeader
                 class="flex flex-row items-center justify-between space-y-0 pb-2"
             >
-                <CardTitle class="text-sm font-medium">
-                    Total PPMPs
-                </CardTitle>
+                <CardTitle class="text-sm font-medium"> Total PPMPs </CardTitle>
                 <Icon
                     icon="lucide:file-text"
                     class="h-4 w-4 text-muted-foreground"

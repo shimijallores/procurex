@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Enums\RoleType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Password;
 
@@ -24,12 +25,15 @@ class UpdateUserRequest extends FormRequest
      */
     public function rules(): array
     {
+        $role = \App\Models\Role::find($this->input('role_id'));
+        $isSystemRole = $role && RoleType::isSystemRole($role->name);
+
         return [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.$this->user->id],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $this->user()->id],
             'password' => ['nullable', 'confirmed', Password::defaults()],
             'role_id' => ['required', 'exists:roles,id'],
-            'office_id' => ['required', 'exists:offices,id'],
+            'office_id' => $isSystemRole ? ['nullable'] : ['required', 'exists:offices,id'],
         ];
     }
 
@@ -46,7 +50,7 @@ class UpdateUserRequest extends FormRequest
             'email.unique' => 'This email address is already taken.',
             'role_id.required' => 'Please select a role.',
             'role_id.exists' => 'The selected role is invalid.',
-            'office_id.required' => 'Please select an office.',
+            'office_id.required' => 'Please select an office for office roles.',
             'office_id.exists' => 'The selected office is invalid.',
         ];
     }

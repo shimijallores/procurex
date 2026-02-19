@@ -13,9 +13,12 @@ return new class extends Migration
     {
         Schema::create('roles', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('office_id')->nullable()->constrained('offices')->cascadeOnDelete()->after('name');
+            $table->boolean('is_system_role')->default(false)->after('office_id');
             $table->string('name')->unique();
             $table->timestamps();
 
+            $table->index('is_system_role');
             $table->index('name');
         });
     }

@@ -286,6 +286,7 @@ const openDeleteModal = (role) => {
                                             </Button>
                                         </Link>
                                         <Link
+                                            v-if="!role.is_system_role"
                                             :href="route('roles.edit', role.id)"
                                         >
                                             <Button variant="ghost" size="sm">
@@ -296,6 +297,7 @@ const openDeleteModal = (role) => {
                                             </Button>
                                         </Link>
                                         <Button
+                                            v-if="!role.is_system_role"
                                             variant="ghost"
                                             size="sm"
                                             @click="openDeleteModal(role)"
@@ -305,6 +307,12 @@ const openDeleteModal = (role) => {
                                                 class="h-4 w-4 text-destructive"
                                             />
                                         </Button>
+                                        <span
+                                            v-if="role.is_system_role"
+                                            class="text-xs text-muted-foreground"
+                                        >
+                                            System Role
+                                        </span>
                                     </div>
                                 </td>
                             </tr>

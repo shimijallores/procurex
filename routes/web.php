@@ -23,33 +23,27 @@ Route::post('/login', [SessionController::class, 'login'])->name('login.login')-
 Route::middleware(['auth'])->group(function (): void {
     Route::get('/logout', [SessionController::class, 'logout'])->name('logout');
 
+    // Dashboard - accessible to all authenticated users
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
 
-    Route::resource('offices', OfficeController::class);
-    Route::resource('roles', RoleController::class);
+    // Define all resources once, authorization will be handled in controllers/policies
     Route::resource('users', UserController::class);
-    Route::resource('funds', FundController::class);
-
-    // APP
-    Route::resource('apps', APPController::class);
-    Route::post('apps/{app}/import', [APPController::class, 'import'])->name('apps.import');
-    Route::get('apps/{app}/download', [APPController::class, 'download'])->name('apps.download');
-
-    // PPMP
-    Route::resource('ppmps', PPMPController::class);
-    Route::post('ppmps/{ppmp}/import', [PPMPController::class, 'import'])->name('ppmps.import');
-    Route::get('ppmps/{ppmp}/download-csv', [PPMPController::class, 'downloadCsv'])->name('ppmps.download-csv');
-    Route::post('ppmps/{ppmp}/approve', [PPMPController::class, 'approve'])->name('ppmps.approve');
-    Route::post('ppmps/{ppmp}/reject', [PPMPController::class, 'reject'])->name('ppmps.reject');
-
-    // Emanating
-    Route::resource('emanatings', EmanatingController::class);
-    Route::post('emanatings/{emanating}/import', [EmanatingController::class, 'import'])->name('emanatings.import');
-    Route::get('emanatings/{emanating}/download-csv', [EmanatingController::class, 'downloadCsv'])->name('emanatings.download-csv');
-    Route::post('emanatings/{emanating}/approve', [EmanatingController::class, 'approve'])->name('emanatings.approve');
-    Route::post('emanatings/{emanating}/reject', [EmanatingController::class, 'reject'])->name('emanatings.reject');
-
-    // Calendar
-    Route::resource('calendars', CalendarController::class)->only(['index', 'store', 'update', 'destroy']);
-    Route::post('calendars/check-date', [CalendarController::class, 'checkDate'])->name('calendars.check-date');
+    Route::resource('roles', RoleController::class)->middleware('role:Superadmin');
+    Route::resource('offices', OfficeController::class)->middleware('role:Superadmin');
+    Route::resource('calendars', CalendarController::class)->only(['index', 'store', 'update', 'destroy'])->middleware('role:Superadmin,BAC Reso Admin,Budgeting Admin,office');
+    Route::post('calendars/check-date', [CalendarController::class, 'checkDate'])->middleware('auth')->name('calendars.check-date');
+    Route::resource('funds', FundController::class)->middleware('role:Superadmin,office');
+    Route::resource('apps', APPController::class)->middleware('role:Superadmin,BAC Reso Admin,office');
+    Route::post('apps/{app}/import', [APPController::class, 'import'])->middleware('role:Superadmin,BAC Reso Admin,office')->name('apps.import');
+    Route::get('apps/{app}/download', [APPController::class, 'download'])->middleware('role:Superadmin,BAC Reso Admin,office')->name('apps.download');
+    Route::resource('ppmps', PPMPController::class)->middleware('role:Superadmin,Budgeting Admin,office');
+    Route::post('ppmps/{ppmp}/import', [PPMPController::class, 'import'])->middleware('role:Superadmin,Budgeting Admin,office')->name('ppmps.import');
+    Route::get('ppmps/{ppmp}/download-csv', [PPMPController::class, 'downloadCsv'])->middleware('role:Superadmin,Budgeting Admin,office')->name('ppmps.download-csv');
+    Route::post('ppmps/{ppmp}/approve', [PPMPController::class, 'approve'])->middleware('role:Superadmin,Budgeting Admin,office')->name('ppmps.approve');
+    Route::post('ppmps/{ppmp}/reject', [PPMPController::class, 'reject'])->middleware('role:Superadmin,Budgeting Admin,office')->name('ppmps.reject');
+    Route::resource('emanatings', EmanatingController::class)->middleware('role:Superadmin,Budgeting Admin,office');
+    Route::post('emanatings/{emanating}/import', [EmanatingController::class, 'import'])->middleware('role:Superadmin,Budgeting Admin,office')->name('emanatings.import');
+    Route::get('emanatings/{emanating}/download-csv', [EmanatingController::class, 'downloadCsv'])->middleware('role:Superadmin,Budgeting Admin,office')->name('emanatings.download-csv');
+    Route::post('emanatings/{emanating}/approve', [EmanatingController::class, 'approve'])->middleware('role:Superadmin,Budgeting Admin,office')->name('emanatings.approve');
+    Route::post('emanatings/{emanating}/reject', [EmanatingController::class, 'reject'])->middleware('role:Superadmin,Budgeting Admin,office')->name('emanatings.reject');
 });

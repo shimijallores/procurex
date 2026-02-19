@@ -4,64 +4,48 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\RoleType;
+use App\Models\APP;
+use App\Models\Emanating;
+use App\Models\PPMP;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        return Inertia::render('Dashboard');
-    }
+        $user = $request->user();
+        $role = $user->role;
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(): void
-    {
-        //
-    }
+        $data = [];
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request): void
-    {
-        //
-    }
+        if ($role && RoleType::isSystemRole($role->name)) {
+            // System roles see all data
+            if ($role->name === RoleType::SUPERADMIN->value) {
+                $data['totalApps'] = APP::count();
+                $data['totalPpmps'] = PPMP::count();
+                $data['totalEmanating'] = Emanating::count();
+            } elseif ($role->name === RoleType::BAC_RESO_ADMIN->value) {
+                $data['totalApps'] = APP::count();
+                $data['recentApps'] = APP::latest()->limit(5)->get();
+            } elseif ($role->name === RoleType::BUDGETING_ADMIN->value) {
+                $data['totalPpmps'] = PPMP::count();
+                $data['totalEmanating'] = Emanating::count();
+                $data['recentPpmps'] = PPMP::latest()->limit(5)->get();
+                $data['recentEmanating'] = Emanating::latest()->limit(5)->get();
+            }
+        } else {
+            // Office roles see only their office's data
+            $officeId = $user->office_id;
+            $data['totalApps'] = APP::where('office_id', $officeId)->count();
+            $data['totalPpmps'] = PPMP::where('office_id', $officeId)->count();
+            $data['totalEmanating'] = Emanating::where('office_id', $officeId)->count();
+            $data['recentApps'] = APP::where('office_id', $officeId)->latest()->limit(5)->get();
+            $data['recentPpmps'] = PPMP::where('office_id', $officeId)->latest()->limit(5)->get();
+            $data['recentEmanating'] = Emanating::where('office_id', $officeId)->latest()->limit(5)->get();
+        }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id): void
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id): void
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id): void
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id): void
-    {
-        //
+        return Inertia::render('Dashboard', $data);
     }
 }

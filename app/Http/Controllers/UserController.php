@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\RoleType;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\Office;
@@ -19,7 +20,29 @@ class UserController extends Controller
 {
     public function index(Request $request): Response
     {
-        $lengthAwarePaginator = User::with(['role', 'office'])
+        $query = User::with(['role', 'office']);
+
+        // Filter based on current user's role
+        $currentUser = $request->user();
+
+        if ($currentUser && $currentUser->role) {
+            $currentUserRoleName = $currentUser->role->name;
+
+            // Superadmin can see all users
+            if (RoleType::isSystemRole($currentUserRoleName)) {
+                if ($currentUserRoleName !== RoleType::SUPERADMIN->value) {
+                    // BAC Reso Admin and Budgeting Admin see only users with their role
+                    $query->whereHas('role', function ($q) use ($currentUserRoleName) {
+                        $q->where('name', $currentUserRoleName);
+                    });
+                }
+            } else {
+                // Office role users see only their office's users
+                $query->where('office_id', $currentUser->role->office_id);
+            }
+        }
+
+        $lengthAwarePaginator = $query
             ->when($request->search, function ($query, $search): void {
                 $query->where(function ($q) use ($search): void {
                     $q->where('name', 'like', sprintf('%%%s%%', $search))
@@ -38,16 +61,29 @@ class UserController extends Controller
         ]);
     }
 
-    public function create(): Response
+    public function create(): Response | RedirectResponse
     {
+        $user = auth()->user();
+        if ($user && $user->role && !RoleType::isSystemRole($user->role->name)) {
+            return redirect()->route('users.index')
+                ->with('error', 'You do not have permission to create users.');
+        }
+
         return Inertia::render('User/Create', [
-            'roles' => Role::all(['id', 'name']),
+            'roles' => Role::all(['id', 'name', 'is_system_role', 'office_id']),
             'offices' => Office::all(['id', 'name']),
+            'systemRoles' => RoleType::systemRoles(),
         ]);
     }
 
     public function store(StoreUserRequest $storeUserRequest): RedirectResponse
     {
+        $user = auth()->user();
+        if ($user && $user->role && !RoleType::isSystemRole($user->role->name)) {
+            return redirect()->route('users.index')
+                ->with('error', 'You do not have permission to create users.');
+        }
+
         $validated = $storeUserRequest->validated();
         $validated['password'] = Hash::make($validated['password']);
 
@@ -66,20 +102,33 @@ class UserController extends Controller
         ]);
     }
 
-    public function edit(User $user): Response
+    public function edit(User $user): Response | RedirectResponse
     {
+        $authUser = auth()->user();
+        if ($authUser && $authUser->role && !RoleType::isSystemRole($authUser->role->name)) {
+            return redirect()->route('users.index')
+                ->with('error', 'You do not have permission to edit users.');
+        }
+
         return Inertia::render('User/Edit', [
             'user' => $user,
-            'roles' => Role::all(['id', 'name']),
+            'roles' => Role::all(['id', 'name', 'is_system_role', 'office_id']),
             'offices' => Office::all(['id', 'name']),
+            'systemRoles' => RoleType::systemRoles(),
         ]);
     }
 
     public function update(UpdateUserRequest $updateUserRequest, User $user): RedirectResponse
     {
+        $authUser = auth()->user();
+        if ($authUser && $authUser->role && !RoleType::isSystemRole($authUser->role->name)) {
+            return redirect()->route('users.index')
+                ->with('error', 'You do not have permission to edit users.');
+        }
+
         $validated = $updateUserRequest->validated();
 
-        if (! empty($validated['password'])) {
+        if (!empty($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
         } else {
             unset($validated['password']);
@@ -93,6 +142,12 @@ class UserController extends Controller
 
     public function destroy(User $user): RedirectResponse
     {
+        $authUser = auth()->user();
+        if ($authUser && $authUser->role && !RoleType::isSystemRole($authUser->role->name)) {
+            return redirect()->route('users.index')
+                ->with('error', 'You do not have permission to delete users.');
+        }
+
         $user->delete();
 
         return redirect()->route('users.index')
