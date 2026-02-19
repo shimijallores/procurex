@@ -22,7 +22,7 @@ class CanvasController extends Controller
 {
     public function index(Request $request): Response
     {
-        $canvasses = Canvas::with(['emanating.project.fund.office', 'createdBy'])
+        $lengthAwarePaginator = Canvas::with(['emanating.project.fund.office', 'createdBy'])
             ->when($request->search, function ($query, string $search): void {
                 $query->whereHas('emanating', function ($q) use ($search): void {
                     $q->where('pr_no', 'like', sprintf('%%%s%%', $search))
@@ -47,7 +47,7 @@ class CanvasController extends Controller
         ];
 
         return Inertia::render('Canvasses/Index', [
-            'canvasses' => $canvasses,
+            'canvasses' => $lengthAwarePaginator,
             'stats' => $stats,
             'filters' => [
                 'search' => $request->search,
@@ -72,9 +72,9 @@ class CanvasController extends Controller
         ]);
     }
 
-    public function store(StoreCanvasRequest $request): RedirectResponse
+    public function store(StoreCanvasRequest $storeCanvasRequest): RedirectResponse
     {
-        $validated = $request->validated();
+        $validated = $storeCanvasRequest->validated();
 
         DB::beginTransaction();
         try {
@@ -82,7 +82,7 @@ class CanvasController extends Controller
 
             $canvas = Canvas::create([
                 'emanating_id' => $emanating->id,
-                'created_by' => $request->user()->id,
+                'created_by' => $storeCanvasRequest->user()->id,
                 'status' => 'pending',
             ]);
 
@@ -96,9 +96,9 @@ class CanvasController extends Controller
             }
 
             DB::commit();
-        } catch (\Throwable $e) {
+        } catch (\Throwable $throwable) {
             DB::rollBack();
-            Log::error('Canvas creation failed', ['error' => $e->getMessage()]);
+            Log::error('Canvas creation failed', ['error' => $throwable->getMessage()]);
 
             return redirect()->back()
                 ->with('error', 'Failed to create canvas. Please try again.');
@@ -178,9 +178,9 @@ class CanvasController extends Controller
             $canvasItem->update(['computed_price' => $computedPrice]);
 
             DB::commit();
-        } catch (\Throwable $e) {
+        } catch (\Throwable $throwable) {
             DB::rollBack();
-            Log::error('Canvas item selection save failed: ' . $e->getMessage());
+            Log::error('Canvas item selection save failed: '.$throwable->getMessage());
 
             return redirect()->back()
                 ->with('error', 'Failed to save selections.');
@@ -224,9 +224,9 @@ class CanvasController extends Controller
             ]);
 
             DB::commit();
-        } catch (\Throwable $e) {
+        } catch (\Throwable $throwable) {
             DB::rollBack();
-            Log::error('Canvas completion failed: ' . $e->getMessage());
+            Log::error('Canvas completion failed: '.$throwable->getMessage());
 
             return redirect()->back()
                 ->with('error', 'Failed to complete canvas.');
@@ -239,7 +239,7 @@ class CanvasController extends Controller
     /**
      * Return the canvas with a reason.
      */
-    public function return(ReturnCanvasRequest $request, Canvas $canvas): RedirectResponse
+    public function return(ReturnCanvasRequest $returnCanvasRequest, Canvas $canvas): RedirectResponse
     {
         if ($canvas->status !== 'pending') {
             return redirect()->back()
@@ -250,16 +250,16 @@ class CanvasController extends Controller
         try {
             $canvas->update([
                 'status' => 'returned',
-                'return_reason' => $request->validated()['return_reason'],
+                'return_reason' => $returnCanvasRequest->validated()['return_reason'],
             ]);
 
             // Reset the associated emanating's is_approved status
             $canvas->emanating->update(['is_approved' => false]);
 
             DB::commit();
-        } catch (\Throwable $e) {
+        } catch (\Throwable $throwable) {
             DB::rollBack();
-            Log::error('Canvas return failed: ' . $e->getMessage());
+            Log::error('Canvas return failed: '.$throwable->getMessage());
 
             return redirect()->back()
                 ->with('error', 'Failed to return canvas.');

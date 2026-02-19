@@ -242,7 +242,7 @@ class EmanatingImport implements ToCollection, WithCustomCsvSettings
                 $emanatingItemData['description']
             );
 
-            if (!$ppmpItem instanceof \App\Models\PPMPItem) {
+            if (! $ppmpItem instanceof \App\Models\PPMPItem) {
                 $this->itemsMatchPPMP = false;
                 $this->matchingResults[] = [
                     'description' => $emanatingItemData['description'],
@@ -313,7 +313,7 @@ class EmanatingImport implements ToCollection, WithCustomCsvSettings
      */
     private function findMatchingPPMPItem(string $description): ?PPMPItem
     {
-        if (!$this->ppmpCategory instanceof \App\Models\PPMPCategory) {
+        if (! $this->ppmpCategory instanceof \App\Models\PPMPCategory) {
             return null;
         }
 
@@ -364,7 +364,7 @@ class EmanatingImport implements ToCollection, WithCustomCsvSettings
             ->with('fund.office')
             ->first();
 
-        if (!$this->project instanceof \App\Models\Project) {
+        if (! $this->project instanceof \App\Models\Project) {
             Log::warning('[EmanatingImport] Project not found for office', ['office_name' => $officeName]);
 
             return;

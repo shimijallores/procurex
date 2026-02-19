@@ -35,9 +35,9 @@ class MasterListCategoryController extends Controller
         return Inertia::render('MasterListCategories/Create');
     }
 
-    public function store(StoreMasterListCategoryRequest $request): RedirectResponse
+    public function store(StoreMasterListCategoryRequest $storeMasterListCategoryRequest): RedirectResponse
     {
-        MasterListCategory::create($request->validated());
+        MasterListCategory::create($storeMasterListCategoryRequest->validated());
 
         return redirect()->route('master-list-categories.index')
             ->with('success', 'Category created successfully.');
@@ -50,9 +50,9 @@ class MasterListCategoryController extends Controller
         ]);
     }
 
-    public function update(UpdateMasterListCategoryRequest $request, MasterListCategory $masterListCategory): RedirectResponse
+    public function update(UpdateMasterListCategoryRequest $updateMasterListCategoryRequest, MasterListCategory $masterListCategory): RedirectResponse
     {
-        $masterListCategory->update($request->validated());
+        $masterListCategory->update($updateMasterListCategoryRequest->validated());
 
         return redirect()->route('master-list-categories.index')
             ->with('success', 'Category updated successfully.');

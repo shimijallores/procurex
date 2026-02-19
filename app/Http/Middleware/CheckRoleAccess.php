@@ -20,32 +20,30 @@ class CheckRoleAccess
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login');
         }
 
         // Load role relationship if not already loaded
-        if (!$user->relationLoaded('role')) {
+        if (! $user->relationLoaded('role')) {
             $user->load('role');
         }
 
-        if (!$user->role) {
+        if (! $user->role) {
             return redirect()->route('login');
         }
 
         // Flatten comma-separated roles into array
         $roles = [];
-        foreach ($allowedRoles as $roleParam) {
-            $roles = array_merge($roles, array_map('trim', explode(',', $roleParam)));
+        foreach ($allowedRoles as $allowedRole) {
+            $roles = array_merge($roles, array_map('trim', explode(',', $allowedRole)));
         }
 
         $roleName = $user->role->name;
 
         // Special handling for 'office' role type
-        if (in_array('office', $roles, true)) {
-            if (isset($user->role->is_system_role) && $user->role->is_system_role === false && $user->role->office_id) {
-                return $next($request);
-            }
+        if (in_array('office', $roles, true) && (isset($user->role->is_system_role) && $user->role->is_system_role === false && $user->role->office_id)) {
+            return $next($request);
         }
 
         // Check if user's role is in the allowed roles

@@ -85,7 +85,7 @@ class RoleController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:roles,name,' . $role->id],
+            'name' => ['required', 'string', 'max:255', 'unique:roles,name,'.$role->id],
             'office_id' => ['required', 'exists:offices,id'],
         ]);
 

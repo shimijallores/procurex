@@ -21,7 +21,7 @@ class UpdateMasterListCategoryRequest extends FormRequest
         $categoryId = $this->route('master_list_category')?->id;
 
         return [
-            'name' => ['required', 'string', 'max:255', "unique:master_list_categories,name,{$categoryId}"],
+            'name' => ['required', 'string', 'max:255', 'unique:master_list_categories,name,' . $categoryId],
             'description' => ['nullable', 'string'],
             'is_active' => ['boolean'],
             'remarks' => ['nullable', 'string'],

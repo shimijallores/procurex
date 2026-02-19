@@ -16,7 +16,7 @@ class SupplierController extends Controller
 {
     public function index(Request $request): Response
     {
-        $suppliers = Supplier::query()
+        $lengthAwarePaginator = Supplier::query()
             ->when($request->search, function ($query, string $search): void {
                 $query->where('name', 'like', sprintf('%%%s%%', $search))
                     ->orWhere('contact_person', 'like', sprintf('%%%s%%', $search))
@@ -27,7 +27,7 @@ class SupplierController extends Controller
             ->withQueryString();
 
         return Inertia::render('Suppliers/Index', [
-            'suppliers' => $suppliers,
+            'suppliers' => $lengthAwarePaginator,
             'filters' => ['search' => $request->search],
         ]);
     }
@@ -37,9 +37,9 @@ class SupplierController extends Controller
         return Inertia::render('Suppliers/Create');
     }
 
-    public function store(StoreSupplierRequest $request): RedirectResponse
+    public function store(StoreSupplierRequest $storeSupplierRequest): RedirectResponse
     {
-        Supplier::create($request->validated());
+        Supplier::create($storeSupplierRequest->validated());
 
         return redirect()->route('suppliers.index')
             ->with('success', 'Supplier created successfully.');
@@ -59,9 +59,9 @@ class SupplierController extends Controller
         ]);
     }
 
-    public function update(UpdateSupplierRequest $request, Supplier $supplier): RedirectResponse
+    public function update(UpdateSupplierRequest $updateSupplierRequest, Supplier $supplier): RedirectResponse
     {
-        $supplier->update($request->validated());
+        $supplier->update($updateSupplierRequest->validated());
 
         return redirect()->route('suppliers.index')
             ->with('success', 'Supplier updated successfully.');

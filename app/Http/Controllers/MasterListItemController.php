@@ -18,7 +18,7 @@ class MasterListItemController extends Controller
 {
     public function index(Request $request): Response
     {
-        $items = MasterListItem::with(['masterListCategory', 'supplier'])
+        $lengthAwarePaginator = MasterListItem::with(['masterListCategory', 'supplier'])
             ->when($request->search, function ($query, string $search): void {
                 $query->where('item_name', 'like', sprintf('%%%s%%', $search))
                     ->orWhere('search_key', 'like', sprintf('%%%s%%', $search))
@@ -40,7 +40,7 @@ class MasterListItemController extends Controller
             ->withQueryString();
 
         return Inertia::render('MasterListItems/Index', [
-            'items' => $items,
+            'items' => $lengthAwarePaginator,
             'categories' => MasterListCategory::where('is_active', true)->get(['id', 'name']),
             'filters' => [
                 'search' => $request->search,
@@ -58,9 +58,9 @@ class MasterListItemController extends Controller
         ]);
     }
 
-    public function store(StoreMasterListItemRequest $request): RedirectResponse
+    public function store(StoreMasterListItemRequest $storeMasterListItemRequest): RedirectResponse
     {
-        MasterListItem::create($request->validated());
+        MasterListItem::create($storeMasterListItemRequest->validated());
 
         return redirect()->route('master-list-items.index')
             ->with('success', 'Item added to master list successfully.');
@@ -75,9 +75,9 @@ class MasterListItemController extends Controller
         ]);
     }
 
-    public function update(UpdateMasterListItemRequest $request, MasterListItem $masterListItem): RedirectResponse
+    public function update(UpdateMasterListItemRequest $updateMasterListItemRequest, MasterListItem $masterListItem): RedirectResponse
     {
-        $masterListItem->update($request->validated());
+        $masterListItem->update($updateMasterListItemRequest->validated());
 
         return redirect()->route('master-list-items.index')
             ->with('success', 'Master list item updated successfully.');
@@ -98,8 +98,8 @@ class MasterListItemController extends Controller
         ]);
 
         $masterListItem->update([
-            'is_phased_out' => !$masterListItem->is_phased_out,
-            'phased_out_reason' => !$masterListItem->is_phased_out ? $request->phased_out_reason : null,
+            'is_phased_out' => ! $masterListItem->is_phased_out,
+            'phased_out_reason' => $masterListItem->is_phased_out ? null : $request->phased_out_reason,
         ]);
 
         $message = $masterListItem->is_phased_out
