@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Models\Project;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StorePPMPRequest extends FormRequest
@@ -61,5 +62,42 @@ class StorePPMPRequest extends FormRequest
             'csv_file.mimes' => 'The file must be a CSV file.',
             'csv_file.max' => 'The file size must not exceed 10MB.',
         ];
+    }
+
+    /**
+     * Configure the validator instance.
+     *
+     * @param  \Illuminate\Validation\Validator  $validator
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator): void {
+            if ($this->project_id) {
+                $project = Project::with('fund')->find($this->project_id);
+
+                if ($project && $project->fund) {
+                    // Check if project's fund office matches the selected office
+                    if ((int)$project->fund->office_id !== (int)$this->office_id) {
+                        $validator->errors()->add(
+                            'project_id',
+                            'The selected project belongs to a fund from a different office.'
+                        );
+                    }
+
+                    // Check if project's fund fiscal year matches the selected fiscal year
+                    if ((int)$project->fund->fiscal_year !== (int)$this->fiscal_year) {
+                        $validator->errors()->add(
+                            'fiscal_year',
+                            'The fiscal year does not match the project\'s fund fiscal year.'
+                        );
+                    }
+                } elseif ($project && !$project->fund) {
+                    $validator->errors()->add(
+                        'project_id',
+                        'The selected project does not have an associated fund.'
+                    );
+                }
+            }
+        });
     }
 }

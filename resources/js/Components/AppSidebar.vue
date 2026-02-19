@@ -95,18 +95,18 @@ const mainNavItems = computed(() => {
             roles: ["Superadmin"], // Superadmin only
         },
         {
-            title: "Funds",
-            url: route("funds.index"),
-            icon: "lucide:wallet",
-            isActive: route().current("funds.*"),
-            roles: ["Superadmin", "office"], // Superadmin + office roles
-        },
-        {
             title: "APPs",
             url: route("apps.index"),
             icon: "lucide:clipboard-check",
             isActive: route().current("apps.*"),
             roles: ["Superadmin", "BAC Reso Admin", "office"], // BAC Reso + office
+        },
+        {
+            title: "Funds",
+            url: route("funds.index"),
+            icon: "lucide:wallet",
+            isActive: route().current("funds.*"),
+            roles: ["Superadmin", "office"], // Superadmin + office roles
         },
         {
             title: "PPMPs",
@@ -186,7 +186,7 @@ const navigationItems = computed(() => {
 
 const submissionItems = computed(() => {
     return mainNavItems.value.filter((item) =>
-        ["Funds", "APPs", "PPMPs", "Emanatings"].includes(item.title),
+        ["APPs", "Funds", "PPMPs", "Emanatings"].includes(item.title),
     );
 });
 

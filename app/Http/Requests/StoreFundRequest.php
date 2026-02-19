@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreFundRequest extends FormRequest
 {
@@ -25,7 +26,14 @@ class StoreFundRequest extends FormRequest
     {
         $rules = [
             'office_id' => ['required', 'exists:offices,id'],
-            'code' => ['required', 'string', 'max:255', 'unique:funds,code'],
+            'code' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('funds', 'code')
+                    ->where('office_id', $this->office_id)
+                    ->where('fiscal_year', $this->fiscal_year),
+            ],
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', 'in:general,project'],
             'fiscal_year' => ['required', 'integer', 'min:2000', 'max:2100'],
@@ -85,7 +93,7 @@ class StoreFundRequest extends FormRequest
             'office_id.required' => 'Please select an office.',
             'office_id.exists' => 'The selected office is invalid.',
             'code.required' => 'The fund code is required.',
-            'code.unique' => 'This fund code is already taken.',
+            'code.unique' => 'This fund code is already used for this office and fiscal year.',
             'name.required' => 'The fund name is required.',
             'type.required' => 'Please select a fund type.',
             'type.in' => 'The fund type must be either general or project.',

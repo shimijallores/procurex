@@ -1,6 +1,7 @@
 <script setup>
 import { Icon } from "@iconify/vue";
 import { Link } from "@inertiajs/vue3";
+import { computed } from "vue";
 import {
     Card,
     CardContent,
@@ -20,6 +21,25 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["submit", "file-change"]);
+
+// Filter projects based on selected office and fiscal year
+const filteredProjects = computed(() => {
+    if (!props.projects) return [];
+
+    return props.projects.filter((project) => {
+        // If no office or fiscal year selected, show no projects
+        if (!props.form.office_id || !props.form.fiscal_year) return false;
+
+        // Check if project's fund office and fiscal year match the selected values
+        return (
+            project.fund &&
+            parseInt(project.fund.office_id) ===
+                parseInt(props.form.office_id) &&
+            parseInt(project.fund.fiscal_year) ===
+                parseInt(props.form.fiscal_year)
+        );
+    });
+});
 
 const handleSubmit = () => {
     emit("submit");
@@ -80,10 +100,17 @@ const handleFileChange = (event) => {
                             'focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
                             form.errors.project_id ? 'border-destructive' : '',
                         ]"
+                        :disabled="!form.office_id || !form.fiscal_year"
                     >
-                        <option value="">Select a project</option>
+                        <option value="">
+                            {{
+                                !form.office_id || !form.fiscal_year
+                                    ? "Select office and fiscal year first"
+                                    : "Select a project"
+                            }}
+                        </option>
                         <option
-                            v-for="project in projects"
+                            v-for="project in filteredProjects"
                             :key="project.id"
                             :value="project.id"
                         >

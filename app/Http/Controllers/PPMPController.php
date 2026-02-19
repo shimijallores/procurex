@@ -77,7 +77,7 @@ class PPMPController extends Controller
     {
         return Inertia::render('PPMPs/Create', [
             'offices' => Office::all(['id', 'name']),
-            'projects' => Project::all(['id', 'name']),
+            'projects' => Project::with('fund:id,office_id,fiscal_year,name')->get(['id', 'fund_id', 'name']),
         ]);
     }
 
