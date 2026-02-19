@@ -83,7 +83,7 @@ const openRowEditor = (canvasItem) => {
         };
     });
     localSelections.value = initial;
-    localComputedPrice.value = canvasItem.computed_price;
+    localComputedPrice.value = parseFloat(canvasItem.computed_price) || null;
     itemSearch.value = "";
     categoryFilter.value = "";
 };
@@ -161,7 +161,9 @@ const itemsSubtotal = computed(() =>
 const savingRow = ref(false);
 
 const saveRowPrice = () => {
-    if (activeRowId.value === null || localComputedPrice.value === null) return;
+    const computedPrice = parseFloat(localComputedPrice.value);
+    if (activeRowId.value === null || !computedPrice || computedPrice === 0)
+        return;
     savingRow.value = true;
 
     const selections = Object.values(localSelections.value);
@@ -173,7 +175,7 @@ const saveRowPrice = () => {
         }),
         {
             selections,
-            computed_price: parseFloat(localComputedPrice.value),
+            computed_price: computedPrice,
         },
         {
             preserveScroll: true,
@@ -251,10 +253,9 @@ const submitReturn = () => {
         />
 
         <!-- Main Layout: Items + Master List Sidebar -->
-        <div class="grid gap-6 lg:grid-cols-3 w-full">
-            <!-- Emanating Items (left: 2 cols) -->
+        <div class="grid gap-6 lg:grid-cols-2 w-full">
+            <!-- Emanating Items (left) -->
             <CanvasItemsTable
-                class="lg:col-span-2"
                 :canvas="canvas"
                 :is-pending="isPending"
                 :active-row-id="activeRowId"
@@ -265,6 +266,7 @@ const submitReturn = () => {
             <!-- Master List Sidebar (right: 1 col) -->
             <CanvasMasterListSidebar
                 :active-row-id="activeRowId"
+                :canvas="canvas"
                 :master-list-categories="masterListCategories"
                 :item-search="itemSearch"
                 :category-filter="categoryFilter"

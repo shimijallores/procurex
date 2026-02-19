@@ -1,6 +1,6 @@
 <script setup>
 import { Icon } from "@iconify/vue";
-import { watch } from "vue";
+import { watch, computed } from "vue";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -13,12 +13,13 @@ import {
 
 const props = defineProps({
     activeRowId: Number,
+    canvas: Object,
     filteredCategories: Array,
     masterListCategories: Array,
     itemSearch: String,
     categoryFilter: String,
     localSelections: Object,
-    localComputedPrice: [Number, null],
+    localComputedPrice: [Number, String, null],
     itemsSubtotal: Number,
     savingRow: Boolean,
     formatCurrency: Function,
@@ -38,10 +39,28 @@ const isItemSelected = (itemId) => {
     return props.localSelections && props.localSelections[itemId];
 };
 
-// Auto-update localComputedPrice when itemsSubtotal changes
+// Get the current canvas item being edited
+const currentCanvasItem = computed(() => {
+    if (!props.activeRowId || !props.canvas?.canvas_items) return null;
+    return props.canvas.canvas_items.find((ci) => ci.id === props.activeRowId);
+});
+
+// Get expected price for the current row
+const currentExpectedPrice = computed(() => {
+    return currentCanvasItem.value?.emanating_item?.total_price ?? 0;
+});
+
+// Check if computed price exceeds expected
+const exceedsExpectedPrice = computed(() => {
+    const computed = parseFloat(props.localComputedPrice) || 0;
+    return computed > 0 && computed > currentExpectedPrice.value;
+});
+
+// Auto-update localComputedPrice when itemsSubtotal changes (always override)
 watch(
     () => props.itemsSubtotal,
     (newSubtotal) => {
+        // Always update with the current subtotal
         if (newSubtotal > 0) {
             emit("update:local-computed-price", newSubtotal);
         }
@@ -221,7 +240,12 @@ watch(
                         min="0"
                         step="0.01"
                         placeholder="Enter total price"
-                        class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm font-mono text-right focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        :class="[
+                            'h-9 w-full rounded-md border px-3 text-sm font-mono text-right focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
+                            exceedsExpectedPrice
+                                ? 'border-destructive bg-destructive/5'
+                                : 'border-input bg-background',
+                        ]"
                         @input="
                             emit(
                                 'update:local-computed-price',
@@ -229,6 +253,22 @@ watch(
                             )
                         "
                     />
+                    <div
+                        v-if="exceedsExpectedPrice"
+                        class="flex gap-2 p-2 rounded bg-destructive/5 border border-destructive/20"
+                    >
+                        <Icon
+                            icon="lucide:alert-circle"
+                            class="h-4 w-4 text-destructive shrink-0 mt-0.5"
+                        />
+                        <div class="text-xs text-destructive">
+                            <p class="font-semibold">Exceeds Expected Price</p>
+                            <p class="text-destructive/80">
+                                Expected:
+                                {{ formatCurrency(currentExpectedPrice) }}
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </CardContent>
 
@@ -237,8 +277,8 @@ watch(
                     class="w-full"
                     size="sm"
                     :disabled="
-                        localComputedPrice === null ||
-                        localComputedPrice === '' ||
+                        !localComputedPrice ||
+                        parseFloat(localComputedPrice) === 0 ||
                         savingRow
                     "
                     @click="emit('save-row-price')"
