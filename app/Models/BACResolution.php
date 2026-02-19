@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class BACResolution extends Model
 {
@@ -40,6 +41,11 @@ class BACResolution extends Model
     public function aoq(): BelongsTo
     {
         return $this->belongsTo(AOQ::class, 'aoq_id');
+    }
+
+    public function noa(): HasOne
+    {
+        return $this->hasOne(NOA::class, 'bac_resolution_id');
     }
 
     public function isFinalized(): bool

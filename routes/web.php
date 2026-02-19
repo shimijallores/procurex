@@ -11,6 +11,7 @@ use App\Http\Controllers\EmanatingController;
 use App\Http\Controllers\FundController;
 use App\Http\Controllers\MasterListCategoryController;
 use App\Http\Controllers\MasterListItemController;
+use App\Http\Controllers\NOAController;
 use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\PPMPController;
 use App\Http\Controllers\PurchaseRequestController;
@@ -95,4 +96,9 @@ Route::middleware(['auth'])->group(function (): void {
     Route::resource('bac-resolutions', BACResolutionController::class)->only(['index', 'create', 'store', 'show', 'update', 'destroy'])->middleware($bacResolutionRoles);
     Route::post('bac-resolutions/{bac_resolution}/finalize', [BACResolutionController::class, 'finalize'])->middleware($bacResolutionRoles)->name('bac-resolutions.finalize');
     Route::get('bac-resolutions/{bac_resolution}/pdf', [BACResolutionController::class, 'printPdf'])->middleware($bacResolutionRoles)->name('bac-resolutions.pdf');
+
+    // Notice of Award module
+    $documentRoles = 'role:Superadmin,Document Admin';
+    Route::resource('noas', NOAController::class)->only(['index', 'create', 'store', 'show', 'destroy'])->middleware($documentRoles);
+    Route::get('noas/{noa}/pdf', [NOAController::class, 'printPdf'])->middleware($documentRoles)->name('noas.pdf');
 });

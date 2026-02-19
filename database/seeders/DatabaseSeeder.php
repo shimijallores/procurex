@@ -46,6 +46,11 @@ class DatabaseSeeder extends Seeder
             ['is_system_role' => true, 'office_id' => null]
         );
 
+        $documentAdminRole = Role::firstOrCreate(
+            ['name' => RoleType::DOCUMENT_ADMIN->value],
+            ['is_system_role' => true, 'office_id' => null]
+        );
+
         $prAdminRole = Role::firstOrCreate(
             ['name' => RoleType::PR_ADMIN->value],
             ['is_system_role' => true, 'office_id' => null]
@@ -82,6 +87,13 @@ class DatabaseSeeder extends Seeder
             'name' => 'Canvassing Admin',
             'email' => 'canvassing@procurex.com',
             'role_id' => $canvassingAdminRole->id,
+            'office_id' => null,
+        ]);
+
+        User::factory()->create([
+            'name' => 'Document Admin',
+            'email' => 'document@procurex.com',
+            'role_id' => $documentAdminRole->id,
             'office_id' => null,
         ]);
 

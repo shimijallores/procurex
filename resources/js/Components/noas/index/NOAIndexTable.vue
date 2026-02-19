@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 defineProps({
-    resolutions: Object,
+    noas: Object,
     offices: Array,
     fiscalYears: Object,
     selectedOffice: String,
@@ -41,9 +41,9 @@ const formatDate = (date) => {
                 class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
             >
                 <div>
-                    <CardTitle>All BAC Resolutions</CardTitle>
+                    <CardTitle>All Notices of Award</CardTitle>
                     <CardDescription>
-                        Resolution records generated from AOQ documents
+                        Generated NOA documents from BAC Resolutions
                     </CardDescription>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
@@ -99,27 +99,22 @@ const formatDate = (date) => {
                             <th
                                 class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
                             >
-                                Resolution No.
+                                NOA No.
                             </th>
                             <th
                                 class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
                             >
-                                Project / AOQ
+                                Resolution / Project
                             </th>
                             <th
                                 class="h-12 px-4 text-center align-middle font-medium text-muted-foreground"
                             >
-                                Resolution Date
+                                NOA Date
                             </th>
                             <th
                                 class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
                             >
-                                Winner
-                            </th>
-                            <th
-                                class="h-12 px-4 text-center align-middle font-medium text-muted-foreground"
-                            >
-                                Status
+                                Office
                             </th>
                             <th
                                 class="h-12 px-4 text-right align-middle font-medium text-muted-foreground"
@@ -129,100 +124,76 @@ const formatDate = (date) => {
                         </tr>
                     </thead>
                     <tbody class="[&_tr:last-child]:border-0">
-                        <tr v-if="!resolutions?.data?.length">
+                        <tr v-if="!noas?.data?.length">
                             <td
-                                colspan="6"
+                                colspan="5"
                                 class="p-8 text-center text-muted-foreground"
                             >
                                 <Icon
                                     icon="lucide:file-x-2"
                                     class="mx-auto mb-2 h-8 w-8 opacity-50"
                                 />
-                                No BAC Resolutions found.
+                                No NOAs found.
                             </td>
                         </tr>
                         <tr
-                            v-for="resolution in resolutions.data"
-                            :key="resolution.id"
+                            v-for="noa in noas.data"
+                            :key="noa.id"
                             class="border-b transition-colors hover:bg-muted/50"
                         >
                             <td class="p-4 align-middle font-medium">
-                                {{ resolution.resolution_no }}
+                                {{ noa.noa_no }}
                             </td>
                             <td class="p-4 align-middle">
+                                <div class="font-medium">
+                                    {{
+                                        noa.bac_resolution?.resolution_no || "—"
+                                    }}
+                                </div>
                                 <div
-                                    class="font-medium truncate max-w-[320px]"
-                                    :title="resolution.project_name"
+                                    class="text-xs text-muted-foreground truncate max-w-[320px]"
+                                    :title="noa.bac_resolution?.project_name"
                                 >
-                                    {{ resolution.project_name }}
-                                </div>
-                                <div class="text-xs text-muted-foreground">
-                                    {{ resolution.aoq?.rfq?.svp_no || "—" }}
+                                    {{
+                                        noa.bac_resolution?.project_name || "—"
+                                    }}
                                 </div>
                             </td>
                             <td class="p-4 align-middle text-center">
-                                {{ formatDate(resolution.resolution_date) }}
+                                {{ formatDate(noa.noa_date) }}
                             </td>
                             <td class="p-4 align-middle">
-                                {{ resolution.winner_supplier_name || "—" }}
-                            </td>
-                            <td class="p-4 align-middle text-center">
-                                <span
-                                    v-if="resolution.finalized_at"
-                                    class="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300"
-                                >
-                                    Finalized
-                                </span>
-                                <span
-                                    v-else
-                                    class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900 dark:text-amber-300"
-                                >
-                                    Draft
-                                </span>
+                                {{
+                                    noa.bac_resolution?.aoq?.rfq
+                                        ?.purchase_request?.office?.name || "—"
+                                }}
                             </td>
                             <td class="p-4 align-middle text-right">
                                 <div
                                     class="flex items-center justify-end gap-2"
                                 >
                                     <a
-                                        :href="
-                                            route(
-                                                'bac-resolutions.pdf',
-                                                resolution.id,
-                                            )
-                                        "
+                                        :href="route('noas.pdf', noa.id)"
                                         target="_blank"
                                     >
-                                        <Button variant="ghost" size="sm">
-                                            <Icon
+                                        <Button variant="ghost" size="sm"
+                                            ><Icon
                                                 icon="lucide:printer"
                                                 class="h-4 w-4"
-                                            />
-                                        </Button>
+                                        /></Button>
                                     </a>
-                                    <Link
-                                        :href="
-                                            route(
-                                                'bac-resolutions.show',
-                                                resolution.id,
-                                            )
-                                        "
-                                    >
-                                        <Button variant="ghost" size="sm">
-                                            <Icon
+                                    <Link :href="route('noas.show', noa.id)">
+                                        <Button variant="ghost" size="sm"
+                                            ><Icon
                                                 icon="lucide:eye"
                                                 class="h-4 w-4"
-                                            />
-                                        </Button>
+                                        /></Button>
                                     </Link>
-
                                     <Button
                                         variant="ghost"
                                         size="sm"
                                         class="text-destructive hover:text-destructive"
-                                        @click="
-                                            $emit('delete-click', resolution)
-                                        "
+                                        @click="$emit('delete-click', noa)"
                                     >
                                         <Icon
                                             icon="lucide:trash-2"
@@ -238,14 +209,11 @@ const formatDate = (date) => {
 
             <div class="mt-4 flex items-center justify-between border-t pt-4">
                 <div class="text-sm text-muted-foreground">
-                    Showing {{ resolutions.from }} to {{ resolutions.to }} of
-                    {{ resolutions.total }} entries
+                    Showing {{ noas.from }} to {{ noas.to }} of
+                    {{ noas.total }} entries
                 </div>
                 <div class="flex items-center gap-1">
-                    <template
-                        v-for="(link, index) in resolutions.links"
-                        :key="index"
-                    >
+                    <template v-for="(link, index) in noas.links" :key="index">
                         <Link
                             v-if="link.url"
                             :href="link.url"

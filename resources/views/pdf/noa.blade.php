@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NOA - {{ $noa->noa_no }}</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11pt;
+            color: #000;
+        }
+
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 12mm 14mm;
+        }
+
+        .header {
+            display: table;
+            width: 100%;
+            margin-bottom: 12px;
+        }
+
+        .header-cell {
+            display: table-cell;
+            vertical-align: middle;
+        }
+
+        .header-left {
+            width: 18%;
+            text-align: left;
+        }
+
+        .header-mid {
+            width: 64%;
+            text-align: center;
+        }
+
+        .header-right {
+            width: 18%;
+            text-align: right;
+        }
+
+        .logo-mark {
+            width: 76px;
+            height: 76px;
+            border: 2px solid #000;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 7pt;
+            font-weight: bold;
+        }
+
+        .bagong-mark {
+            width: 76px;
+            height: 76px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8pt;
+            font-weight: bold;
+        }
+
+        .gov-line {
+            text-transform: uppercase;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+
+        .gov-sub {
+            font-size: 10.5pt;
+        }
+
+        .gov-office {
+            margin-top: 4px;
+            font-size: 15pt;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .divider {
+            border-top: 3px solid #000;
+            margin-top: 8px;
+        }
+
+        .noa-number {
+            margin-top: 24px;
+            font-weight: 700;
+        }
+
+        .title {
+            margin-top: 18px;
+            text-align: center;
+            font-size: 15pt;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .block {
+            margin-top: 22px;
+            line-height: 1.45;
+        }
+
+        .recipient {
+            margin-top: 16px;
+            line-height: 1.35;
+        }
+
+        .body {
+            margin-top: 18px;
+            text-align: justify;
+            line-height: 1.5;
+        }
+
+        .body b {
+            font-weight: 700;
+        }
+
+        .table-wrap {
+            margin-top: 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid #000;
+            padding: 6px 8px;
+            vertical-align: top;
+        }
+
+        th {
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .closing {
+            margin-top: 14px;
+            text-align: justify;
+            line-height: 1.5;
+        }
+
+        .signature {
+            margin-top: 26px;
+            line-height: 1.35;
+        }
+
+        .governor {
+            margin-top: 36px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .conforme {
+            margin-top: 46px;
+        }
+
+        .underline {
+            text-decoration: underline;
+            font-weight: 700;
+        }
+    </style>
+</head>
+
+<body>
+    @php
+    $recipientName = strtoupper((string) ($winnerSupplier?->contact_person ?? 'AUTHORIZED REPRESENTATIVE'));
+    $supplierName = strtoupper((string) ($winnerSupplier?->name ?? $resolution->winner_supplier_name ?? 'SUPPLIER'));
+    $recipientAddress = $winnerSupplier?->address ?? 'Batangas';
+
+    $amount = (float) ($resolution->winner_amount ?? 0);
+    $amountFmt = number_format($amount, 2);
+
+    $whole = (int) floor($amount);
+    $fraction = (int) round(($amount - $whole) * 100);
+    if (class_exists(\NumberFormatter::class)) {
+    $formatter = new \NumberFormatter('en', \NumberFormatter::SPELLOUT);
+    $wholeWords = ucfirst((string) $formatter->format($whole));
+    $amountWords = $wholeWords . ' Pesos';
+    if ($fraction > 0) {
+    $amountWords .= ' and ' . ucfirst((string) $formatter->format($fraction)) . ' Centavos';
+    }
+    } else {
+    $amountWords = 'Amount in words';
+    }
+    @endphp
+
+    <div class="page">
+        <div class="header">
+            <div class="header-cell header-left">
+                <div class="logo-mark">BATANGAS<br>SEAL</div>
+            </div>
+            <div class="header-cell header-mid">
+                <div class="gov-line">Republic of the Philippines</div>
+                <div class="gov-line">Province of Batangas</div>
+                <div class="gov-office">Office of the Provincial Governor</div>
+                <div class="gov-sub">Capitol Building, Batangas City 4200</div>
+            </div>
+            <div class="header-cell header-right">
+                <div class="bagong-mark">BAGONG PILIPINAS</div>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="noa-number">NOA No. {{ $noa->noa_no }}</div>
+
+        <div class="title">Notice of Award</div>
+
+        <div class="block">{{ optional($noa->noa_date)->format('F d, Y') }}</div>
+
+        <div class="recipient">
+            <div style="font-weight:700; text-transform: uppercase;">{{ $supplierName }}</div>
+            <div style="font-weight:700; text-transform: uppercase;">{{ $recipientName }}</div>
+            <div>Authorized Representative</div>
+            <div>{{ $recipientAddress }}</div>
+        </div>
+
+        <div class="body">
+            Dear {{ explode(' ', $recipientName)[0] ?? 'Sir/Madam' }},<br><br>
+            We would like to inform you that your company was declared as the supplier with Lowest Calculated and Responsive Quotation, through BAC Resolution No. <b>{{ $resolution->resolution_no }}</b>, after passing all the terms, conditions and/or specifications needed by the Procuring Entity as stipulated in the Request for Quotation, dated <b>{{ optional($rfq?->rfq_date)->format('F d, Y') }}</b>. Thus, you are hereby AWARDED of the project, as follows:
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 62%;">Name of Project</th>
+                        <th style="width: 38%;">Contract Price in Words in Figures</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            {{ $resolution->project_name }}
+                            @if($rfq?->purchaseRequest?->office?->name)
+                            for use in {{ $rfq->purchaseRequest->office->name }}.
+                            @endif
+                        </td>
+                        <td>
+                            <span class="underline">{{ $amountWords }}</span>
+                            (Php {{ $amountFmt }})
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="closing">
+            In this regard, you are required to formally enter into the Purchase Order for the above project, within a period of seven (7) days, from the receipt of this Notice of Award. Failure to comply with this agreement shall be sufficient ground for cancellation of this award.
+        </div>
+
+        <div class="signature">
+            Very truly yours,
+            <div class="governor">VILMA SANTOS-RECTO</div>
+            <div>Governor</div>
+        </div>
+
+        <div class="conforme">
+            <div style="font-weight:700;">CONFORME:</div>
+            <div style="margin-top: 28px;" class="underline">{{ $recipientName }}</div>
+            <div style="font-weight:700; text-transform:uppercase;">{{ $supplierName }}</div>
+            <div>Date: __________________</div>
+        </div>
+    </div>
+</body>
+
+</html>

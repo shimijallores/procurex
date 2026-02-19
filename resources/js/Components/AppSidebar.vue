@@ -36,6 +36,7 @@ const SYSTEM_ROLES = [
     "BAC Reso Admin",
     "Budgeting Admin",
     "Canvassing Admin",
+    "Document Admin",
     "PR Admin",
     "Quotation Admin",
 ];
@@ -186,6 +187,13 @@ const mainNavItems = computed(() => {
             isActive: route().current("bac-resolutions.*"),
             roles: ["Superadmin", "BAC Reso Admin"],
         },
+        {
+            title: "Notice of Award",
+            url: route("noas.index"),
+            icon: "lucide:file-badge",
+            isActive: route().current("noas.*"),
+            roles: ["Superadmin", "Document Admin"],
+        },
     ];
 
     // Filter items based on user role
@@ -251,7 +259,7 @@ const quotationItems = computed(() => {
 
 const documentItems = computed(() => {
     return mainNavItems.value.filter((item) =>
-        ["BAC Resolutions"].includes(item.title),
+        ["BAC Resolutions", "Notice of Award"].includes(item.title),
     );
 });
 

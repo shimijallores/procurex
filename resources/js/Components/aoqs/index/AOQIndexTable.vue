@@ -190,6 +190,17 @@ const formatDate = (date) => {
                                 <div
                                     class="flex items-center justify-end gap-2"
                                 >
+                                    <a
+                                        :href="route('aoqs.pdf', aoq.id)"
+                                        target="_blank"
+                                    >
+                                        <Button variant="ghost" size="sm">
+                                            <Icon
+                                                icon="lucide:printer"
+                                                class="h-4 w-4"
+                                            />
+                                        </Button>
+                                    </a>
                                     <Link :href="route('aoqs.show', aoq.id)">
                                         <Button variant="ghost" size="sm">
                                             <Icon
