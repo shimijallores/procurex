@@ -6,7 +6,9 @@ namespace App\Http\Controllers;
 
 use App\Enums\RoleType;
 use App\Models\APP;
+use App\Models\Canvas;
 use App\Models\Emanating;
+use App\Models\MasterListItem;
 use App\Models\PPMP;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -34,6 +36,12 @@ class DashboardController extends Controller
                 $data['totalEmanating'] = Emanating::count();
                 $data['recentPpmps'] = PPMP::latest()->limit(5)->get();
                 $data['recentEmanating'] = Emanating::latest()->limit(5)->get();
+            } elseif ($role->name === RoleType::CANVASSING_ADMIN->value) {
+                $data['totalCanvasses'] = Canvas::count();
+                $data['pendingCanvasses'] = Canvas::where('status', 'pending')->count();
+                $data['completedCanvasses'] = Canvas::where('status', 'completed')->count();
+                $data['totalMasterListItems'] = MasterListItem::count();
+                $data['recentCanvasses'] = Canvas::with('emanating.project')->latest()->limit(5)->get();
             }
         } else {
             // Office roles see only their office's data

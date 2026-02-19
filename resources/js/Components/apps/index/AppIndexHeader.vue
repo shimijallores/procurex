@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
         <Link :href="route('apps.create')">
             <Button>
                 <Icon icon="lucide:plus" class="mr-2 h-4 w-4" />
-                Create APP
+                New APP
             </Button>
         </Link>
     </div>

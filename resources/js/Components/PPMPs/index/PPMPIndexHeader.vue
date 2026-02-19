@@ -21,7 +21,7 @@ defineProps({
         <Link :href="route('ppmps.create')">
             <Button>
                 <Icon icon="lucide:plus" class="mr-2 h-4 w-4" />
-                Create PPMP
+                New PPMP
             </Button>
         </Link>
     </div>

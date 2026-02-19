@@ -31,7 +31,12 @@ const page = usePage();
 const user = computed(() => page.props.auth?.user);
 
 // System role names
-const SYSTEM_ROLES = ["Superadmin", "BAC Reso Admin", "Budgeting Admin"];
+const SYSTEM_ROLES = [
+    "Superadmin",
+    "BAC Reso Admin",
+    "Budgeting Admin",
+    "Canvassing Admin",
+];
 
 const userRole = computed(() => user.value?.role?.name || "");
 
@@ -47,6 +52,12 @@ const isBACSAdminOrAbove = computed(
 const isBudgetingAdminOrAbove = computed(
     () =>
         userRole.value === "Superadmin" || userRole.value === "Budgeting Admin",
+);
+
+const isCanvassingAdminOrAbove = computed(
+    () =>
+        userRole.value === "Superadmin" ||
+        userRole.value === "Canvassing Admin",
 );
 
 // Navigation items
@@ -111,6 +122,29 @@ const mainNavItems = computed(() => {
             isActive: route().current("emanatings.*"),
             roles: ["Superadmin", "Budgeting Admin", "office"], // Budgeting + office
         },
+        {
+            title: "Canvassing",
+            url: route("canvasses.index"),
+            icon: "lucide:shopping-cart",
+            isActive: route().current("canvasses.*"),
+            roles: ["Superadmin", "Canvassing Admin"],
+        },
+        {
+            title: "Suppliers",
+            url: route("suppliers.index"),
+            icon: "lucide:truck",
+            isActive: route().current("suppliers.*"),
+            roles: ["Superadmin", "Canvassing Admin"],
+        },
+        {
+            title: "Master List",
+            url: route("master-list-items.index"),
+            icon: "lucide:list-checks",
+            isActive:
+                route().current("master-list-items.*") ||
+                route().current("master-list-categories.*"),
+            roles: ["Superadmin", "Canvassing Admin"],
+        },
     ];
 
     // Filter items based on user role
@@ -129,20 +163,6 @@ const secondaryNavItems = computed(() => {
             url: route("calendars.index"),
             icon: "lucide:calendar",
             isActive: route().current("calendars.*"),
-            roles: ["all"], // Available to all
-        },
-        {
-            title: "Reports",
-            url: "#",
-            icon: "lucide:bar-chart-3",
-            isActive: false,
-            roles: ["all"], // Available to all
-        },
-        {
-            title: "Settings",
-            url: "#",
-            icon: "lucide:settings",
-            isActive: false,
             roles: ["all"], // Available to all
         },
     ];

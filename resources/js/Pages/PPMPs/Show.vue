@@ -135,6 +135,17 @@ const rejectPpmp = () => {
             :budget-notices="ppmp.budget_notices"
         />
 
+        <!-- Reject Modal -->
+        <PPMPRejectModal
+            :open="showRejectModal"
+            :processing="rejectForm.processing"
+            :errors="rejectForm.errors"
+            :model-value="rejectForm.rejection_reason"
+            @update:open="showRejectModal = $event"
+            @update:model-value="rejectForm.rejection_reason = $event"
+            @submit="rejectPpmp"
+        />
+
         <!-- Approve Modal -->
         <PPMPApproveModal
             :open="showApproveModal"

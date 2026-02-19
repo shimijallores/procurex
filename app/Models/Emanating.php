@@ -80,4 +80,9 @@ class Emanating extends Model
     {
         return $this->belongsTo(User::class, 'approved_by');
     }
+
+    public function canvasses(): HasMany
+    {
+        return $this->hasMany(Canvas::class);
+    }
 }

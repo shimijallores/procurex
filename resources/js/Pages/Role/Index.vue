@@ -78,7 +78,7 @@ const openDeleteModal = (role) => {
             <Link :href="route('roles.create')">
                 <Button>
                     <Icon icon="lucide:plus" class="mr-2 h-4 w-4" />
-                    Add Role
+                    New Role
                 </Button>
             </Link>
         </div>

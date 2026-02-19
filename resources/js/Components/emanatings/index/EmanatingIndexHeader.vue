@@ -17,7 +17,7 @@ import { Icon } from "@iconify/vue";
         <Link :href="route('emanatings.create')">
             <Button>
                 <Icon icon="lucide:plus" class="mr-2 h-4 w-4" />
-                Create Emanating
+                New Emanating
             </Button>
         </Link>
     </div>

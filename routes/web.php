@@ -2,13 +2,17 @@
 
 use App\Http\Controllers\APPController;
 use App\Http\Controllers\CalendarController;
+use App\Http\Controllers\CanvasController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmanatingController;
 use App\Http\Controllers\FundController;
+use App\Http\Controllers\MasterListCategoryController;
+use App\Http\Controllers\MasterListItemController;
 use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\PPMPController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SessionController;
+use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -46,4 +50,15 @@ Route::middleware(['auth'])->group(function (): void {
     Route::get('emanatings/{emanating}/download-csv', [EmanatingController::class, 'downloadCsv'])->middleware('role:Superadmin,Budgeting Admin,office')->name('emanatings.download-csv');
     Route::post('emanatings/{emanating}/approve', [EmanatingController::class, 'approve'])->middleware('role:Superadmin,Budgeting Admin,office')->name('emanatings.approve');
     Route::post('emanatings/{emanating}/reject', [EmanatingController::class, 'reject'])->middleware('role:Superadmin,Budgeting Admin,office')->name('emanatings.reject');
+
+    // Canvassing module
+    $canvassingRoles = 'role:Superadmin,Canvassing Admin';
+    Route::resource('suppliers', SupplierController::class)->middleware($canvassingRoles);
+    Route::resource('master-list-categories', MasterListCategoryController::class)->except(['show'])->middleware($canvassingRoles);
+    Route::resource('master-list-items', MasterListItemController::class)->except(['show'])->middleware($canvassingRoles);
+    Route::post('master-list-items/{master_list_item}/toggle-phase-out', [MasterListItemController::class, 'togglePhaseOut'])->middleware($canvassingRoles)->name('master-list-items.toggle-phase-out');
+    Route::resource('canvasses', CanvasController::class)->except(['edit', 'update'])->middleware($canvassingRoles);
+    Route::post('canvasses/{canvas}/items/{canvas_item}/selections', [CanvasController::class, 'saveItemSelections'])->middleware($canvassingRoles)->name('canvasses.items.selections');
+    Route::post('canvasses/{canvas}/complete', [CanvasController::class, 'complete'])->middleware($canvassingRoles)->name('canvasses.complete');
+    Route::post('canvasses/{canvas}/return', [CanvasController::class, 'return'])->middleware($canvassingRoles)->name('canvasses.return');
 });

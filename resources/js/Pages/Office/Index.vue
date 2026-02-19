@@ -78,7 +78,7 @@ const openDeleteModal = (office) => {
             <Link :href="route('offices.create')">
                 <Button>
                     <Icon icon="lucide:plus" class="mr-2 h-4 w-4" />
-                    Add Office
+                    New Office
                 </Button>
             </Link>
         </div>
