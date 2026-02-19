@@ -14,6 +14,7 @@ use App\Http\Controllers\MasterListItemController;
 use App\Http\Controllers\NOAController;
 use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\PPMPController;
+use App\Http\Controllers\POTransmittalController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\PurchaseRequestController;
 use App\Http\Controllers\RFQController;
@@ -107,4 +108,8 @@ Route::middleware(['auth'])->group(function (): void {
     Route::resource('purchase-orders', PurchaseOrderController::class)->only(['index', 'create', 'store', 'show', 'destroy'])->middleware($documentRoles);
     Route::post('purchase-orders/suggest-po-no', [PurchaseOrderController::class, 'suggestPoNo'])->middleware($documentRoles)->name('purchase-orders.suggest-po-no');
     Route::get('purchase-orders/{purchase_order}/pdf', [PurchaseOrderController::class, 'printPdf'])->middleware($documentRoles)->name('purchase-orders.pdf');
+
+    // PO Transmittal module
+    Route::resource('po-transmittals', POTransmittalController::class)->only(['index', 'create', 'store', 'show', 'update', 'destroy'])->middleware($documentRoles);
+    Route::get('po-transmittals/{po_transmittal}/pdf', [POTransmittalController::class, 'printPdf'])->middleware($documentRoles)->name('po-transmittals.pdf');
 });

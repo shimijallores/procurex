@@ -42,4 +42,9 @@ class PurchaseOrder extends Model
     {
         return $this->hasMany(PurchaseOrderItem::class, 'purchase_order_id');
     }
+
+    public function poTransmittals(): HasMany
+    {
+        return $this->hasMany(POTransmittal::class, 'purchase_order_id');
+    }
 }
