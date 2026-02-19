@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('remarks')->nullable();
             $table->string('csv_path')->nullable();
             $table->json('budget_notices')->nullable();
+            $table->string('status')->default('pending')->after('is_approved');
             $table->boolean('is_approved')->default(false);
             $table->timestamp('approved_at')->nullable();
             $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();

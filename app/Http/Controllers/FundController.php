@@ -27,14 +27,39 @@ class FundController extends Controller
                 $query->where('name', 'like', sprintf('%%%s%%', $search))
                     ->orWhere('code', 'like', sprintf('%%%s%%', $search));
             })
+            ->when($request->office_id, function ($query, string $officeId): void {
+                $query->where('office_id', $officeId);
+            })
+            ->when($request->fiscal_year, function ($query, string $fiscalYear): void {
+                $query->where('fiscal_year', $fiscalYear);
+            })
             ->latest()
             ->paginate(10)
             ->withQueryString();
 
+        // Get unique offices for filter
+        $offices = Fund::distinct()
+            ->pluck('office_id')
+            ->mapWithKeys(function ($officeId) {
+                $office = Office::find($officeId);
+                return [$officeId => $office?->name];
+            })
+            ->filter()
+            ->sort();
+
+        $currentYear = now()->year;
+        $fiscalYears = collect(range($currentYear - 4, $currentYear))
+            ->mapWithKeys(fn($year) => [$year => $year])
+            ->reverse();
+
         return Inertia::render('Funds/Index', [
             'funds' => $lengthAwarePaginator,
+            'offices' => $offices,
+            'fiscalYears' => $fiscalYears,
             'filters' => [
                 'search' => $request->search,
+                'office_id' => $request->office_id,
+                'fiscal_year' => $request->fiscal_year,
             ],
         ]);
     }

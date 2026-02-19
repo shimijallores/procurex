@@ -87,8 +87,8 @@ const formatCurrency = (amount) => {
                                     :key="index"
                                     :class="
                                         item.matched
-                                            ? 'bg-green-50'
-                                            : 'bg-orange-50'
+                                            ? 'bg-green-50 dark:bg-green-950/30'
+                                            : 'bg-orange-50 dark:bg-orange-950/30'
                                     "
                                 >
                                     <TableCell>{{ index + 1 }}</TableCell>
@@ -130,8 +130,8 @@ const formatCurrency = (amount) => {
                                         <Badge
                                             :class="
                                                 item.matched
-                                                    ? 'bg-green-500/10 text-green-700'
-                                                    : 'bg-orange-500/10 text-orange-700'
+                                                    ? 'bg-green-500/10 text-green-700 dark:bg-green-500/20 dark:text-green-400'
+                                                    : 'bg-orange-500/10 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400'
                                             "
                                         >
                                             <Icon

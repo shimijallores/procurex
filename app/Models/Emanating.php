@@ -31,6 +31,7 @@ class Emanating extends Model
         'approved_at',
         'approved_by',
         'rejection_reason',
+        'status',
     ];
 
     protected $casts = [

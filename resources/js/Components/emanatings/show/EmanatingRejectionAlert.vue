@@ -10,7 +10,7 @@ defineProps({
 <template>
     <Alert
         v-if="rejectionReason"
-        class="border-l-4 border-l-red-500 bg-red-50 text-red-800"
+        class="border-l-4 border-l-red-500 bg-red-50 text-red-800 dark:bg-red-950/30 dark:text-red-400 dark:border-l-red-400"
     >
         <Icon icon="lucide:x-circle" class="h-5 w-5" />
         <AlertDescription class="ml-2">

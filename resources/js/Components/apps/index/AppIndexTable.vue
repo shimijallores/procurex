@@ -13,9 +13,18 @@ import { Button } from "@/components/ui/button";
 defineProps({
     apps: Object,
     search: String,
+    offices: Object,
+    fiscalYears: Object,
+    selectedOffice: String,
+    selectedFiscalYear: String,
 });
 
-defineEmits(["update:search", "delete"]);
+defineEmits([
+    "update:search",
+    "update:selected-office",
+    "update:selected-fiscal-year",
+    "delete",
+]);
 
 const formatDate = (date) => {
     return new Date(date).toLocaleDateString("en-US", {
@@ -29,32 +38,74 @@ const formatDate = (date) => {
 <template>
     <Card>
         <CardHeader>
-            <div class="flex items-center justify-between">
+            <div
+                class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+            >
                 <div>
                     <CardTitle>All Procurement Plans</CardTitle>
                     <CardDescription>
                         A list of all annual procurement plans
                     </CardDescription>
                 </div>
-                <div class="relative w-64">
-                    <Icon
-                        icon="lucide:search"
-                        class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                    />
-                    <input
-                        :model-value="search"
-                        @input="$emit('update:search', $event.target.value)"
-                        type="text"
-                        placeholder="Search APPs..."
-                        class="flex h-10 w-full rounded-md border border-input bg-background pl-9 pr-9 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    />
-                    <button
-                        v-if="search"
-                        @click="$emit('update:search', '')"
-                        class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                <div class="flex flex-wrap items-center gap-2">
+                    <!-- Office filter -->
+                    <select
+                        :value="selectedOffice"
+                        @change="
+                            $emit('update:selected-office', $event.target.value)
+                        "
+                        class="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
-                        <Icon icon="lucide:x" class="h-4 w-4" />
-                    </button>
+                        <option value="">All Offices</option>
+                        <option
+                            v-for="(office, id) in offices"
+                            :key="id"
+                            :value="id"
+                        >
+                            {{ office }}
+                        </option>
+                    </select>
+                    <!-- Fiscal Year filter -->
+                    <select
+                        :value="selectedFiscalYear"
+                        @change="
+                            $emit(
+                                'update:selected-fiscal-year',
+                                $event.target.value,
+                            )
+                        "
+                        class="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                        <option value="">All Years</option>
+                        <option
+                            v-for="(year, id) in fiscalYears"
+                            :key="id"
+                            :value="id"
+                        >
+                            {{ year }}
+                        </option>
+                    </select>
+                    <!-- Search -->
+                    <div class="relative w-64">
+                        <Icon
+                            icon="lucide:search"
+                            class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                        />
+                        <input
+                            :model-value="search"
+                            @input="$emit('update:search', $event.target.value)"
+                            type="text"
+                            placeholder="Search APPs..."
+                            class="flex h-10 w-full rounded-md border border-input bg-background pl-9 pr-9 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        />
+                        <button
+                            v-if="search"
+                            @click="$emit('update:search', '')"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        >
+                            <Icon icon="lucide:x" class="h-4 w-4" />
+                        </button>
+                    </div>
                 </div>
             </div>
         </CardHeader>
@@ -201,7 +252,8 @@ const formatDate = (date) => {
                             :class="[
                                 'inline-flex h-9 items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors',
                                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                                link.label.includes('Previous') || link.label.includes('Next')
+                                link.label.includes('Previous') ||
+                                link.label.includes('Next')
                                     ? 'px-3'
                                     : 'w-9',
                                 link.active
@@ -215,7 +267,10 @@ const formatDate = (date) => {
                             v-else
                             :class="[
                                 'inline-flex h-9 items-center justify-center rounded-md text-sm font-medium',
-                                link.label.includes('Previous') || link.label.includes('Next') ? 'px-3' : 'w-9',
+                                link.label.includes('Previous') ||
+                                link.label.includes('Next')
+                                    ? 'px-3'
+                                    : 'w-9',
                                 'pointer-events-none opacity-50',
                             ]"
                             v-html="link.label"

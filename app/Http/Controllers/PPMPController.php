@@ -36,14 +36,39 @@ class PPMPController extends Controller
                         $q->where('name', 'like', sprintf('%%%s%%', $search));
                     });
             })
+            ->when($request->office_id, function ($query, string $officeId): void {
+                $query->where('office_id', $officeId);
+            })
+            ->when($request->fiscal_year, function ($query, string $fiscalYear): void {
+                $query->where('fiscal_year', $fiscalYear);
+            })
             ->latest()
             ->paginate(10)
             ->withQueryString();
 
+        // Get unique offices and fiscal years for filters
+        $offices = PPMP::distinct()
+            ->pluck('office_id')
+            ->mapWithKeys(function ($officeId) {
+                $office = Office::find($officeId);
+                return [$officeId => $office?->name];
+            })
+            ->filter()
+            ->sort();
+
+        $currentYear = now()->year;
+        $fiscalYears = collect(range($currentYear - 4, $currentYear))
+            ->mapWithKeys(fn($year) => [$year => $year])
+            ->reverse();
+
         return Inertia::render('PPMPs/Index', [
             'ppmps' => $lengthAwarePaginator,
+            'offices' => $offices,
+            'fiscalYears' => $fiscalYears,
             'filters' => [
                 'search' => $request->search,
+                'office_id' => $request->office_id,
+                'fiscal_year' => $request->fiscal_year,
             ],
         ]);
     }
@@ -114,7 +139,7 @@ class PPMPController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to create PPMP: '.$exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to create PPMP: ' . $exception->getMessage()]);
         }
     }
 
@@ -161,7 +186,7 @@ class PPMPController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to update PPMP: '.$exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to update PPMP: ' . $exception->getMessage()]);
         }
     }
 
@@ -177,7 +202,7 @@ class PPMPController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to delete PPMP: '.$exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to delete PPMP: ' . $exception->getMessage()]);
         }
     }
 
@@ -223,7 +248,7 @@ class PPMPController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to import CSV: '.$exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to import CSV: ' . $exception->getMessage()]);
         }
     }
 
@@ -266,7 +291,7 @@ class PPMPController extends Controller
         ]);
 
         $budgetValidationPassed = collect($ppmp->budget_notices)->every(
-            fn ($notice): bool => $notice['status'] === 'within_budget'
+            fn($notice): bool => $notice['status'] === 'within_budget'
         );
 
         Log::debug('[PPMP Approve] Budget validation result', [
@@ -289,6 +314,7 @@ class PPMPController extends Controller
                 'approved_at' => now(),
                 'approved_by' => auth()->id(),
                 'rejection_reason' => null,
+                'status' => 'approved',
             ]);
 
             Log::info('[PPMP Approve] Database update successful', [
@@ -311,7 +337,7 @@ class PPMPController extends Controller
 
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to approve PPMP: '.$exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to approve PPMP: ' . $exception->getMessage()]);
         }
     }
 
@@ -351,6 +377,7 @@ class PPMPController extends Controller
                 'approved_at' => null,
                 'approved_by' => null,
                 'rejection_reason' => $request->rejection_reason,
+                'status' => 'rejected',
             ]);
 
             Log::info('[PPMP Reject] Database update successful', [
@@ -373,7 +400,7 @@ class PPMPController extends Controller
 
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to reject PPMP: '.$exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to reject PPMP: ' . $exception->getMessage()]);
         }
     }
 }

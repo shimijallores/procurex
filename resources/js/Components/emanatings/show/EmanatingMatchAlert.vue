@@ -79,14 +79,14 @@ const alertClass = computed(() => {
 
     // Always show green/success when items match perfectly
     if (itemsMatchCheck || props.isApproved) {
-        return `${baseClasses} border-l-green-500 bg-green-50 text-green-700`;
+        return `${baseClasses} border-l-green-500 bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400 dark:border-l-green-400`;
     }
     // Show warning if PPMP not approved
     if (!props.ppmpApproved) {
-        return `${baseClasses} border-l-yellow-500 bg-yellow-50 text-yellow-700`;
+        return `${baseClasses} border-l-yellow-500 bg-yellow-50 text-yellow-700 dark:bg-yellow-950/30 dark:text-yellow-400 dark:border-l-yellow-400`;
     }
     // Show error if items don't match
-    return `${baseClasses} border-l-red-500 bg-red-50 text-red-700`;
+    return `${baseClasses} border-l-red-500 bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400 dark:border-l-red-400`;
 });
 </script>
 

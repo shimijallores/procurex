@@ -19,26 +19,28 @@ defineOptions({
 
 const props = defineProps({
     apps: Object,
+    offices: Object,
+    fiscalYears: Object,
     filters: Object,
 });
 
 const search = ref(props.filters?.search ?? "");
+const selectedOffice = ref(props.filters?.office_id ?? "");
+const selectedFiscalYear = ref(props.filters?.fiscal_year ?? "");
 
-const debouncedSearch = useDebounceFn(() => {
+const applyFilters = useDebounceFn(() => {
     router.get(
         route("apps.index"),
-        { search: search.value },
         {
-            preserveState: true,
-            preserveScroll: true,
-            replace: true,
+            search: search.value,
+            office_id: selectedOffice.value,
+            fiscal_year: selectedFiscalYear.value,
         },
+        { preserveState: true, preserveScroll: true, replace: true },
     );
 }, 300);
 
-watch(search, () => {
-    debouncedSearch();
-});
+watch([search, selectedOffice, selectedFiscalYear], () => applyFilters());
 
 const showDeleteModal = ref(false);
 const appToDelete = ref(null);
@@ -70,19 +72,14 @@ const openDeleteModal = (app) => {
         <!-- APPs Table -->
         <AppIndexTable
             :apps="apps"
+            :offices="offices"
+            :fiscal-years="fiscalYears"
             :search="search"
+            :selected-office="selectedOffice"
+            :selected-fiscal-year="selectedFiscalYear"
             @update:search="search = $event"
-            @delete="openDeleteModal"
-        />
-
-        <!-- Delete Confirmation Modal -->
-        <DeleteModal
-            v-model:open="showDeleteModal"
-            title="Delete Procurement Plan"
-            :description="`Are you sure you want to delete this APP for ${appToDelete?.office?.name}? This will also delete all categories and items.`"
-            :delete-url="
-                appToDelete ? route('apps.destroy', appToDelete.id) : ''
-            "
+            @update:selected-office="selectedOffice = $event"
+            @update:selected-fiscal-year="selectedFiscalYear = $event"
         />
     </div>
 </template>

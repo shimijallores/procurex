@@ -15,26 +15,28 @@ defineOptions({
 
 const props = defineProps({
     funds: Object,
+    offices: Object,
+    fiscalYears: Object,
     filters: Object,
 });
 
 const search = ref(props.filters?.search ?? "");
+const selectedOffice = ref(props.filters?.office_id ?? "");
+const selectedFiscalYear = ref(props.filters?.fiscal_year ?? "");
 
-const debouncedSearch = useDebounceFn(() => {
+const applyFilters = useDebounceFn(() => {
     router.get(
         route("funds.index"),
-        { search: search.value },
         {
-            preserveState: true,
-            preserveScroll: true,
-            replace: true,
+            search: search.value,
+            office_id: selectedOffice.value,
+            fiscal_year: selectedFiscalYear.value,
         },
+        { preserveState: true, preserveScroll: true, replace: true },
     );
 }, 300);
 
-watch(search, () => {
-    debouncedSearch();
-});
+watch([search, selectedOffice, selectedFiscalYear], () => applyFilters());
 
 const clearSearch = () => {
     search.value = "";
@@ -55,8 +57,16 @@ const openDeleteModal = (fund) => {
         <FundIndexStats :funds="funds" />
         <FundIndexTable
             :funds="funds"
+            :offices="offices"
+            :fiscal-years="fiscalYears"
             :search="search"
+            :selected-office="selectedOffice"
+            :selected-fiscal-year="selectedFiscalYear"
             @update:search="(value) => (search = value)"
+            @update:selected-office="(value) => (selectedOffice = value)"
+            @update:selected-fiscal-year="
+                (value) => (selectedFiscalYear = value)
+            "
             @clear="clearSearch"
             @delete="openDeleteModal"
         />

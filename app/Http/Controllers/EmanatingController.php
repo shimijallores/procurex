@@ -37,6 +37,14 @@ class EmanatingController extends Controller
                         $q->where('name', 'like', sprintf('%%%s%%', $search));
                     });
             })
+            ->when($request->office_id, function ($query, string $officeId): void {
+                $query->whereHas('project.fund.office', function ($q) use ($officeId): void {
+                    $q->where('office_id', $officeId);
+                });
+            })
+            ->when($request->fiscal_year, function ($query, string $fiscalYear): void {
+                $query->where('fiscal_year', $fiscalYear);
+            })
             ->latest()
             ->paginate(10)
             ->withQueryString();
@@ -56,6 +64,14 @@ class EmanatingController extends Controller
                     });
             });
         }
+        if ($request->office_id) {
+            $builder->whereHas('project.fund.office', function ($q) use ($request): void {
+                $q->where('office_id', $request->office_id);
+            });
+        }
+        if ($request->fiscal_year) {
+            $builder->where('fiscal_year', $request->fiscal_year);
+        }
 
         $stats = [
             'total' => $builder->count(),
@@ -64,11 +80,28 @@ class EmanatingController extends Controller
             'rejected' => (clone $builder)->whereNotNull('rejection_reason')->count(),
         ];
 
+        // Get unique offices and fiscal years for filters
+        $offices = Emanating::with('project.fund.office')
+            ->get()
+            ->pluck('project.fund.office')
+            ->unique('id')
+            ->sortBy('name')
+            ->mapWithKeys(fn($office) => [$office->id => $office->name]);
+
+        $currentYear = now()->year;
+        $fiscalYears = collect(range($currentYear - 4, $currentYear))
+            ->mapWithKeys(fn($year) => [$year => $year])
+            ->reverse();
+
         return Inertia::render('Emanatings/Index', [
             'emanatings' => $lengthAwarePaginator,
             'stats' => $stats,
+            'offices' => $offices,
+            'fiscalYears' => $fiscalYears,
             'filters' => [
                 'search' => $request->search,
+                'office_id' => $request->office_id,
+                'fiscal_year' => $request->fiscal_year,
             ],
         ]);
     }
@@ -143,9 +176,9 @@ class EmanatingController extends Controller
                 ->with('success', 'Emanating Request created successfully from CSV.');
         } catch (\Exception $exception) {
             DB::rollBack();
-            Log::error('[Emanating Store] Failed to create: '.$exception->getMessage());
+            Log::error('[Emanating Store] Failed to create: ' . $exception->getMessage());
 
-            return back()->withErrors(['error' => 'Failed to create Emanating Request: '.$exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to create Emanating Request: ' . $exception->getMessage()]);
         }
     }
 
@@ -207,9 +240,9 @@ class EmanatingController extends Controller
                 ->with('success', 'Emanating Request updated successfully.');
         } catch (\Exception $exception) {
             DB::rollBack();
-            Log::error('[Emanating Update] Failed to update: '.$exception->getMessage());
+            Log::error('[Emanating Update] Failed to update: ' . $exception->getMessage());
 
-            return back()->withErrors(['error' => 'Failed to update Emanating Request: '.$exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to update Emanating Request: ' . $exception->getMessage()]);
         }
     }
 
@@ -224,9 +257,9 @@ class EmanatingController extends Controller
                 ->with('success', 'Emanating Request deleted successfully.');
         } catch (\Exception $exception) {
             DB::rollBack();
-            Log::error('[Emanating Destroy] Failed to delete: '.$exception->getMessage());
+            Log::error('[Emanating Destroy] Failed to delete: ' . $exception->getMessage());
 
-            return back()->withErrors(['error' => 'Failed to delete Emanating Request: '.$exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to delete Emanating Request: ' . $exception->getMessage()]);
         }
     }
 
@@ -272,9 +305,9 @@ class EmanatingController extends Controller
                 ->with('success', 'CSV data imported successfully.');
         } catch (\Exception $exception) {
             DB::rollBack();
-            Log::error('[Emanating Import] Failed to import: '.$exception->getMessage());
+            Log::error('[Emanating Import] Failed to import: ' . $exception->getMessage());
 
-            return back()->withErrors(['error' => 'Failed to import CSV: '.$exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to import CSV: ' . $exception->getMessage()]);
         }
     }
 
@@ -341,6 +374,7 @@ class EmanatingController extends Controller
                 'approved_at' => now(),
                 'approved_by' => auth()->id(),
                 'rejection_reason' => null,
+                'status' => 'approved',
             ]);
 
             Log::info('[Emanating Approve] Database update successful', [
@@ -363,7 +397,7 @@ class EmanatingController extends Controller
 
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to approve Emanating Request: '.$exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to approve Emanating Request: ' . $exception->getMessage()]);
         }
     }
 
@@ -403,6 +437,7 @@ class EmanatingController extends Controller
                 'approved_at' => null,
                 'approved_by' => null,
                 'rejection_reason' => $request->rejection_reason,
+                'status' => 'rejected',
             ]);
 
             Log::info('[Emanating Reject] Database update successful', [
@@ -425,7 +460,7 @@ class EmanatingController extends Controller
 
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to reject Emanating Request: '.$exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to reject Emanating Request: ' . $exception->getMessage()]);
         }
     }
 

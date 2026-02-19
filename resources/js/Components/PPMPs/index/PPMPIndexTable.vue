@@ -13,8 +13,18 @@ import { Button } from "@/components/ui/button";
 defineProps({
     ppmps: Object,
     search: String,
+    offices: Object,
+    fiscalYears: Object,
+    selectedOffice: String,
+    selectedFiscalYear: String,
     onDeleteClick: Function,
 });
+
+defineEmits([
+    "update:search",
+    "update:selected-office",
+    "update:selected-fiscal-year",
+]);
 
 const formatDate = (date) => {
     return new Date(date).toLocaleDateString("en-US", {
@@ -28,7 +38,9 @@ const formatDate = (date) => {
 <template>
     <Card>
         <CardHeader>
-            <div class="flex items-center justify-between">
+            <div
+                class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+            >
                 <div>
                     <CardTitle>
                         All Project Procurement Management Plans
@@ -37,7 +49,46 @@ const formatDate = (date) => {
                         A list of all PPMPs across offices and projects
                     </CardDescription>
                 </div>
-                <slot name="search" />
+                <div class="flex flex-wrap items-center gap-2">
+                    <!-- Office filter -->
+                    <select
+                        :value="selectedOffice"
+                        @change="
+                            $emit('update:selected-office', $event.target.value)
+                        "
+                        class="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                        <option value="">All Offices</option>
+                        <option
+                            v-for="(office, id) in offices"
+                            :key="id"
+                            :value="id"
+                        >
+                            {{ office }}
+                        </option>
+                    </select>
+                    <!-- Fiscal Year filter -->
+                    <select
+                        :value="selectedFiscalYear"
+                        @change="
+                            $emit(
+                                'update:selected-fiscal-year',
+                                $event.target.value,
+                            )
+                        "
+                        class="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                        <option value="">All Years</option>
+                        <option
+                            v-for="(year, id) in fiscalYears"
+                            :key="id"
+                            :value="id"
+                        >
+                            {{ year }}
+                        </option>
+                    </select>
+                    <slot name="search" />
+                </div>
             </div>
         </CardHeader>
         <CardContent>
@@ -126,7 +177,7 @@ const formatDate = (date) => {
                                     class="flex items-center justify-center gap-2"
                                 >
                                     <span
-                                        v-if="ppmp.is_approved"
+                                        v-if="ppmp.status === 'approved'"
                                         class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
                                     >
                                         <Icon
@@ -134,6 +185,16 @@ const formatDate = (date) => {
                                             class="mr-1 h-3 w-3"
                                         />
                                         Approved
+                                    </span>
+                                    <span
+                                        v-else-if="ppmp.status === 'rejected'"
+                                        class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                                    >
+                                        <Icon
+                                            icon="lucide:x-circle"
+                                            class="mr-1 h-3 w-3"
+                                        />
+                                        Rejected
                                     </span>
                                     <span
                                         v-else
