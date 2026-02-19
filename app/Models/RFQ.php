@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class RFQ extends Model
 {
@@ -43,5 +44,10 @@ class RFQ extends Model
     public function suppliers(): HasMany
     {
         return $this->hasMany(RFQSupplier::class, 'rfq_id');
+    }
+
+    public function aoq(): HasOne
+    {
+        return $this->hasOne(AOQ::class, 'rfq_id');
     }
 }

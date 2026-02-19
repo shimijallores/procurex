@@ -20,9 +20,14 @@ const props = defineProps({
 });
 
 const exceedsExpectedPrice = (canvasItem) => {
-    if (!canvasItem.computed_price) return false;
-    const expectedPrice = canvasItem.emanating_item?.total_price ?? 0;
-    return canvasItem.computed_price > expectedPrice;
+    const computedPrice = parseFloat(canvasItem.computed_price ?? 0);
+    const expectedPrice = parseFloat(
+        canvasItem.emanating_item?.total_price ?? 0,
+    );
+
+    if (!computedPrice) return false;
+
+    return computedPrice > expectedPrice;
 };
 
 const itemsExceedingPrice = computed(() => {

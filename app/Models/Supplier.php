@@ -35,4 +35,9 @@ class Supplier extends Model
     {
         return $this->hasMany(RFQSupplier::class, 'supplier_id');
     }
+
+    public function wonAoqs(): HasMany
+    {
+        return $this->hasMany(AOQ::class, 'winner_supplier_id');
+    }
 }

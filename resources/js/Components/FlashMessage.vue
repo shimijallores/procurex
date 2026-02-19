@@ -6,26 +6,33 @@ import { Icon } from "@iconify/vue";
 const page = usePage();
 const messages = ref([]);
 let nextId = 0;
+const shownFlashAt = new Map();
+const DUPLICATE_WINDOW_MS = 30000;
 
-// Track the previous flash state to avoid duplicate messages
-let previousFlash = { success: null, error: null };
+const shouldDisplayFlash = (type, text) => {
+    if (!text) return false;
+
+    const key = `${type}:${text}`;
+    const now = Date.now();
+    const lastShownAt = shownFlashAt.get(key);
+
+    if (lastShownAt && now - lastShownAt < DUPLICATE_WINDOW_MS) {
+        return false;
+    }
+
+    shownFlashAt.set(key, now);
+    return true;
+};
 
 // Watch for flash messages
 watch(
     () => page.props.flash,
     (flash) => {
-        // Only add message if the flash content actually changed
-        if (flash?.success && flash.success !== previousFlash.success) {
+        if (shouldDisplayFlash("success", flash?.success)) {
             addMessage("success", flash.success);
-            previousFlash.success = flash.success;
         }
-        if (flash?.error && flash.error !== previousFlash.error) {
+        if (shouldDisplayFlash("error", flash?.error)) {
             addMessage("error", flash.error);
-            previousFlash.error = flash.error;
-        }
-        // Clear flash when it becomes empty
-        if (!flash?.success && !flash?.error) {
-            previousFlash = { success: null, error: null };
         }
     },
     { deep: true },

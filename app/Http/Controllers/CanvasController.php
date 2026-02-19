@@ -149,10 +149,11 @@ class CanvasController extends Controller
         }
 
         $request->validate([
-            'selections' => ['required', 'array'],
-            'selections.*.master_list_item_id' => ['required', 'exists:master_list_items,id'],
-            'selections.*.quantity' => ['required', 'numeric', 'min:0.01'],
-            'selections.*.unit_price' => ['required', 'numeric', 'min:0'],
+            'selections' => ['nullable', 'array'],
+            'selections.*.master_list_item_id' => ['required_with:selections', 'exists:master_list_items,id'],
+            'selections.*.quantity' => ['required_with:selections', 'numeric', 'min:0.01'],
+            'selections.*.unit_price' => ['required_with:selections', 'numeric', 'min:0'],
+            'computed_price' => ['required', 'numeric', 'min:0.01'],
         ]);
 
         DB::beginTransaction();
@@ -160,11 +161,10 @@ class CanvasController extends Controller
             // Remove old selections for this item
             $canvasItem->selections()->delete();
 
-            $computedPrice = 0;
+            $selections = $request->input('selections', []);
 
-            foreach ($request->selections as $sel) {
+            foreach ($selections as $sel) {
                 $subtotal = (float) $sel['quantity'] * (float) $sel['unit_price'];
-                $computedPrice += $subtotal;
 
                 CanvasItemSelection::create([
                     'canvas_item_id' => $canvasItem->id,
@@ -174,6 +174,8 @@ class CanvasController extends Controller
                     'subtotal' => $subtotal,
                 ]);
             }
+
+            $computedPrice = (float) $request->input('computed_price');
 
             $canvasItem->update(['computed_price' => $computedPrice]);
 

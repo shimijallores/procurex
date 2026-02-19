@@ -172,6 +172,13 @@ const mainNavItems = computed(() => {
             isActive: route().current("rfqs.*"),
             roles: ["Superadmin", "Quotation Admin"],
         },
+        {
+            title: "Abstract of Quotation",
+            url: route("aoqs.index"),
+            icon: "lucide:file-spreadsheet",
+            isActive: route().current("aoqs.*"),
+            roles: ["Superadmin", "Quotation Admin"],
+        },
     ];
 
     // Filter items based on user role
@@ -237,7 +244,7 @@ const budgetingItems = computed(() => {
 
 const quotationItems = computed(() => {
     return mainNavItems.value.filter((item) =>
-        ["Request for Quotation"].includes(item.title),
+        ["Request for Quotation", "Abstract of Quotation"].includes(item.title),
     );
 });
 

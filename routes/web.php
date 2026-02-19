@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\APPController;
+use App\Http\Controllers\AOQController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CanvasController;
 use App\Http\Controllers\DashboardController;
@@ -83,4 +84,8 @@ Route::middleware(['auth'])->group(function (): void {
     Route::resource('rfqs', RFQController::class)->only(['index', 'create', 'store', 'show', 'destroy'])->middleware($rfqRoles);
     Route::post('rfqs/{rfq}/suppliers/{rfq_supplier}/submit', [RFQController::class, 'submitSupplier'])->middleware($rfqRoles)->name('rfqs.suppliers.submit');
     Route::get('rfqs/{rfq}/pdf', [RFQController::class, 'printPdf'])->middleware($rfqRoles)->name('rfqs.pdf');
+
+    // AOQ module
+    Route::resource('aoqs', AOQController::class)->only(['index', 'create', 'store', 'show', 'destroy'])->middleware($rfqRoles);
+    Route::get('aoqs/{aoq}/pdf', [AOQController::class, 'printPdf'])->middleware($rfqRoles)->name('aoqs.pdf');
 });
