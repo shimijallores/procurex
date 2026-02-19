@@ -179,6 +179,13 @@ const mainNavItems = computed(() => {
             isActive: route().current("aoqs.*"),
             roles: ["Superadmin", "Quotation Admin"],
         },
+        {
+            title: "BAC Resolutions",
+            url: route("bac-resolutions.index"),
+            icon: "lucide:files",
+            isActive: route().current("bac-resolutions.*"),
+            roles: ["Superadmin", "BAC Reso Admin"],
+        },
     ];
 
     // Filter items based on user role
@@ -230,21 +237,21 @@ const canvassingItems = computed(() => {
     );
 });
 
-const purchaseRequestItems = computed(() => {
+const purchaseRequestBudgetingItems = computed(() => {
     return mainNavItems.value.filter((item) =>
-        ["Purchase Requests"].includes(item.title),
-    );
-});
-
-const budgetingItems = computed(() => {
-    return mainNavItems.value.filter((item) =>
-        ["Budgeting"].includes(item.title),
+        ["Purchase Requests", "Budgeting"].includes(item.title),
     );
 });
 
 const quotationItems = computed(() => {
     return mainNavItems.value.filter((item) =>
         ["Request for Quotation", "Abstract of Quotation"].includes(item.title),
+    );
+});
+
+const documentItems = computed(() => {
+    return mainNavItems.value.filter((item) =>
+        ["BAC Resolutions"].includes(item.title),
     );
 });
 
@@ -359,36 +366,15 @@ const userInitials = computed(() => {
                 </SidebarGroupContent>
             </SidebarGroup>
 
-            <!-- Purchase Request Group -->
-            <SidebarGroup v-if="purchaseRequestItems.length > 0">
-                <SidebarGroupLabel>Purchase Request</SidebarGroupLabel>
+            <!-- Purchase Request & Budgeting Group -->
+            <SidebarGroup v-if="purchaseRequestBudgetingItems.length > 0">
+                <SidebarGroupLabel
+                    >Purchase Request &amp; Budgeting</SidebarGroupLabel
+                >
                 <SidebarGroupContent>
                     <SidebarMenu>
                         <SidebarMenuItem
-                            v-for="item in purchaseRequestItems"
-                            :key="item.title"
-                        >
-                            <SidebarMenuButton
-                                as-child
-                                :is-active="item.isActive"
-                            >
-                                <Link :href="item.url">
-                                    <Icon :icon="item.icon" class="size-4" />
-                                    <span>{{ item.title }}</span>
-                                </Link>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                    </SidebarMenu>
-                </SidebarGroupContent>
-            </SidebarGroup>
-
-            <!-- Budgeting Group -->
-            <SidebarGroup v-if="budgetingItems.length > 0">
-                <SidebarGroupLabel>Budgeting</SidebarGroupLabel>
-                <SidebarGroupContent>
-                    <SidebarMenu>
-                        <SidebarMenuItem
-                            v-for="item in budgetingItems"
+                            v-for="item in purchaseRequestBudgetingItems"
                             :key="item.title"
                         >
                             <SidebarMenuButton
@@ -412,6 +398,29 @@ const userInitials = computed(() => {
                     <SidebarMenu>
                         <SidebarMenuItem
                             v-for="item in quotationItems"
+                            :key="item.title"
+                        >
+                            <SidebarMenuButton
+                                as-child
+                                :is-active="item.isActive"
+                            >
+                                <Link :href="item.url">
+                                    <Icon :icon="item.icon" class="size-4" />
+                                    <span>{{ item.title }}</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarGroupContent>
+            </SidebarGroup>
+
+            <!-- Documents Group -->
+            <SidebarGroup v-if="documentItems.length > 0">
+                <SidebarGroupLabel>Documents</SidebarGroupLabel>
+                <SidebarGroupContent>
+                    <SidebarMenu>
+                        <SidebarMenuItem
+                            v-for="item in documentItems"
                             :key="item.title"
                         >
                             <SidebarMenuButton

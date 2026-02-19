@@ -26,7 +26,11 @@ const form = useForm({
     earmark_no: "",
     earmark_date: new Date().toISOString().split("T")[0],
     certified_amount: props.purchaseRequest?.total_amount ?? "",
-    expense_class: "",
+    expense_class:
+        props.purchaseRequest?.category_name ||
+        props.purchaseRequest?.items?.[0]?.emanating_item?.ppmp_item?.category
+            ?.name ||
+        "",
     resolution_no: "",
     ordinance_no: "",
     ordinance_date: "",
@@ -60,7 +64,10 @@ watch(
         if (pr) {
             form.certified_amount = pr.total_amount;
             form.fund_id = pr.fund_id;
-            form.expense_class = pr.category_name || "";
+            form.expense_class =
+                pr.category_name ||
+                pr.items?.[0]?.emanating_item?.ppmp_item?.category?.name ||
+                "";
         }
     },
 );

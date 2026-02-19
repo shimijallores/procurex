@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class AOQ extends Model
 {
@@ -31,5 +32,10 @@ class AOQ extends Model
     public function winnerSupplier(): BelongsTo
     {
         return $this->belongsTo(Supplier::class, 'winner_supplier_id');
+    }
+
+    public function bacResolution(): HasOne
+    {
+        return $this->hasOne(BACResolution::class, 'aoq_id');
     }
 }

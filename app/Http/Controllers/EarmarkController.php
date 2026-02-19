@@ -138,11 +138,18 @@ class EarmarkController extends Controller
 
         DB::beginTransaction();
         try {
-            $pr = PurchaseRequest::findOrFail($validated['purchase_request_id']);
+            $pr = PurchaseRequest::with([
+                'items.emanatingItem.ppmpItem.category',
+            ])->findOrFail($validated['purchase_request_id']);
 
             if ($pr->status !== 'for_budget_review') {
                 return redirect()->back()
                     ->with('error', 'Only PRs with status "For Budget Review" can be issued an earmark.');
+            }
+
+            if (empty($validated['expense_class'])) {
+                $validated['expense_class'] = $pr->items
+                    ->first()?->emanatingItem?->ppmpItem?->category?->name;
             }
 
             // Create earmark

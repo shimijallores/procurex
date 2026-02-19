@@ -179,6 +179,29 @@
         </div>
 
         <div class="signature">APPROVED:</div>
+
+        <table style="margin-top: 28px; border: none;">
+            <tr>
+                <td style="border: none; width: 50%; text-align: center; padding: 12px;">
+                    <div style="font-weight: bold; text-decoration: underline;">BAC Chairperson</div>
+                    <div>Chairperson</div>
+                </td>
+                <td style="border: none; width: 50%; text-align: center; padding: 12px;">
+                    <div style="font-weight: bold; text-decoration: underline;">BAC Vice Chairperson</div>
+                    <div>Vice Chairperson</div>
+                </td>
+            </tr>
+            <tr>
+                <td style="border: none; width: 50%; text-align: center; padding: 12px;">
+                    <div style="font-weight: bold; text-decoration: underline;">BAC Member</div>
+                    <div>Member</div>
+                </td>
+                <td style="border: none; width: 50%; text-align: center; padding: 12px;">
+                    <div style="font-weight: bold; text-decoration: underline;">BAC Member</div>
+                    <div>Member</div>
+                </td>
+            </tr>
+        </table>
     </div>
 </body>
 

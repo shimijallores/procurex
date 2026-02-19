@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\APPController;
 use App\Http\Controllers\AOQController;
+use App\Http\Controllers\BACResolutionController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CanvasController;
 use App\Http\Controllers\DashboardController;
@@ -88,4 +89,10 @@ Route::middleware(['auth'])->group(function (): void {
     // AOQ module
     Route::resource('aoqs', AOQController::class)->only(['index', 'create', 'store', 'show', 'destroy'])->middleware($rfqRoles);
     Route::get('aoqs/{aoq}/pdf', [AOQController::class, 'printPdf'])->middleware($rfqRoles)->name('aoqs.pdf');
+
+    // BAC Resolution module
+    $bacResolutionRoles = 'role:Superadmin,BAC Reso Admin';
+    Route::resource('bac-resolutions', BACResolutionController::class)->only(['index', 'create', 'store', 'show', 'update', 'destroy'])->middleware($bacResolutionRoles);
+    Route::post('bac-resolutions/{bac_resolution}/finalize', [BACResolutionController::class, 'finalize'])->middleware($bacResolutionRoles)->name('bac-resolutions.finalize');
+    Route::get('bac-resolutions/{bac_resolution}/pdf', [BACResolutionController::class, 'printPdf'])->middleware($bacResolutionRoles)->name('bac-resolutions.pdf');
 });
