@@ -177,6 +177,26 @@ const secondaryNavItems = computed(() => {
 });
 
 // Get user initials for avatar fallback
+// Grouped navigation items
+const navigationItems = computed(() => {
+    return mainNavItems.value.filter((item) =>
+        ["Dashboard", "Users", "Roles", "Offices"].includes(item.title),
+    );
+});
+
+const submissionItems = computed(() => {
+    return mainNavItems.value.filter((item) =>
+        ["Funds", "APPs", "PPMPs", "Emanatings"].includes(item.title),
+    );
+});
+
+const canvassingItems = computed(() => {
+    return mainNavItems.value.filter((item) =>
+        ["Canvassing", "Suppliers", "Master List"].includes(item.title),
+    );
+});
+
+// Get user initials for avatar fallback
 const userInitials = computed(() => {
     if (!user.value?.name) return "U";
     return user.value.name
@@ -218,13 +238,59 @@ const userInitials = computed(() => {
         </SidebarHeader>
 
         <SidebarContent>
-            <!-- Main Navigation -->
-            <SidebarGroup>
+            <!-- Navigation Group -->
+            <SidebarGroup v-if="navigationItems.length > 0">
                 <SidebarGroupLabel>Navigation</SidebarGroupLabel>
                 <SidebarGroupContent>
                     <SidebarMenu>
                         <SidebarMenuItem
-                            v-for="item in mainNavItems"
+                            v-for="item in navigationItems"
+                            :key="item.title"
+                        >
+                            <SidebarMenuButton
+                                as-child
+                                :is-active="item.isActive"
+                            >
+                                <Link :href="item.url">
+                                    <Icon :icon="item.icon" class="size-4" />
+                                    <span>{{ item.title }}</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarGroupContent>
+            </SidebarGroup>
+
+            <!-- Submission Group -->
+            <SidebarGroup v-if="submissionItems.length > 0">
+                <SidebarGroupLabel>Submissions</SidebarGroupLabel>
+                <SidebarGroupContent>
+                    <SidebarMenu>
+                        <SidebarMenuItem
+                            v-for="item in submissionItems"
+                            :key="item.title"
+                        >
+                            <SidebarMenuButton
+                                as-child
+                                :is-active="item.isActive"
+                            >
+                                <Link :href="item.url">
+                                    <Icon :icon="item.icon" class="size-4" />
+                                    <span>{{ item.title }}</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarGroupContent>
+            </SidebarGroup>
+
+            <!-- Canvassing & Pricing Group -->
+            <SidebarGroup v-if="canvassingItems.length > 0">
+                <SidebarGroupLabel>Canvassing & Pricing</SidebarGroupLabel>
+                <SidebarGroupContent>
+                    <SidebarMenu>
+                        <SidebarMenuItem
+                            v-for="item in canvassingItems"
                             :key="item.title"
                         >
                             <SidebarMenuButton

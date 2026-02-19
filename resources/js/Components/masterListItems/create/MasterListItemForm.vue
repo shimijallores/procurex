@@ -1,6 +1,5 @@
 <script setup>
-import { ref } from "vue";
-import { Link } from "@inertiajs/vue3";
+import { Form, Link } from "@inertiajs/vue3";
 import { Icon } from "@iconify/vue";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -12,7 +11,7 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 
-defineProps({
+const props = defineProps({
     action: String,
     route: String,
     returnRoute: String,
@@ -23,10 +22,7 @@ defineProps({
     processing: Boolean,
 });
 
-const isEdit = defineProps().action === "edit";
-const isPhasedOut = ref(
-    isEdit && defineProps().item?.is_phased_out ? true : false,
-);
+const isEdit = props.action === "edit";
 </script>
 
 <template>
@@ -40,13 +36,11 @@ const isPhasedOut = ref(
             }}</CardDescription>
         </CardHeader>
         <CardContent>
-            <form
+            <Form
                 :action="route"
                 :method="isEdit ? 'put' : 'post'"
-                class="space-y-5"
+                #default="{ errors: formErrors, processing }"
             >
-                <input v-if="isEdit" type="hidden" name="_method" value="put" />
-
                 <div class="grid gap-4 sm:grid-cols-2">
                     <div class="space-y-2">
                         <Label for="master_list_category_id"
@@ -64,15 +58,18 @@ const isPhasedOut = ref(
                                 v-for="cat in categories"
                                 :key="cat.id"
                                 :value="cat.id"
+                                :selected="
+                                    item?.master_list_category_id === cat.id
+                                "
                             >
                                 {{ cat.name }}
                             </option>
                         </select>
                         <p
-                            v-if="errors?.master_list_category_id"
+                            v-if="formErrors?.master_list_category_id"
                             class="text-sm text-destructive"
                         >
-                            {{ errors.master_list_category_id }}
+                            {{ formErrors.master_list_category_id }}
                         </p>
                     </div>
                     <div class="space-y-2">
@@ -91,15 +88,16 @@ const isPhasedOut = ref(
                                 v-for="sup in suppliers"
                                 :key="sup.id"
                                 :value="sup.id"
+                                :selected="item?.supplier_id === sup.id"
                             >
                                 {{ sup.name }}
                             </option>
                         </select>
                         <p
-                            v-if="errors?.supplier_id"
+                            v-if="formErrors?.supplier_id"
                             class="text-sm text-destructive"
                         >
-                            {{ errors.supplier_id }}
+                            {{ formErrors.supplier_id }}
                         </p>
                     </div>
                 </div>
@@ -113,15 +111,15 @@ const isPhasedOut = ref(
                         id="item_name"
                         name="item_name"
                         type="text"
-                        :value="item?.item_name ?? ''"
+                        :defaultValue="item?.item_name ?? ''"
                         placeholder="e.g. Bond Paper A4 80gsm"
                         class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     />
                     <p
-                        v-if="errors?.item_name"
+                        v-if="formErrors?.item_name"
                         class="text-sm text-destructive"
                     >
-                        {{ errors.item_name }}
+                        {{ formErrors.item_name }}
                     </p>
                 </div>
 
@@ -132,7 +130,7 @@ const isPhasedOut = ref(
                             id="unit"
                             name="unit"
                             type="text"
-                            :value="item?.unit ?? ''"
+                            :defaultValue="item?.unit ?? ''"
                             placeholder="e.g. ream, piece, box"
                             class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         />
@@ -147,7 +145,7 @@ const isPhasedOut = ref(
                             type="number"
                             step="0.01"
                             min="0"
-                            :value="item?.default_unit_price ?? ''"
+                            :defaultValue="item?.default_unit_price ?? ''"
                             placeholder="0.00"
                             class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         />
@@ -165,7 +163,7 @@ const isPhasedOut = ref(
                         id="search_key"
                         name="search_key"
                         type="text"
-                        :value="item?.search_key ?? ''"
+                        :defaultValue="item?.search_key ?? ''"
                         placeholder="e.g. bond paper"
                         class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     />
@@ -190,9 +188,8 @@ const isPhasedOut = ref(
                             name="is_phased_out"
                             type="checkbox"
                             value="1"
-                            :checked="isPhasedOut"
+                            :defaultChecked="item?.is_phased_out"
                             class="h-4 w-4 rounded border-input"
-                            @change="isPhasedOut = $event.target.checked"
                         />
                         <Label
                             for="is_phased_out"
@@ -200,16 +197,16 @@ const isPhasedOut = ref(
                             >Mark as Phased Out</Label
                         >
                     </div>
-                    <div v-if="isPhasedOut" class="space-y-2">
+                    <div v-if="item?.is_phased_out" class="space-y-2">
                         <Label for="phased_out_reason">Phase-Out Reason</Label>
                         <textarea
                             id="phased_out_reason"
                             name="phased_out_reason"
                             rows="2"
                             placeholder="Reason for phasing out this item"
-                            :value="item?.phased_out_reason ?? ''"
                             class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        />
+                            >{{ item?.phased_out_reason ?? "" }}</textarea
+                        >
                     </div>
                 </div>
 
@@ -222,7 +219,7 @@ const isPhasedOut = ref(
                         <Button type="button" variant="outline">Cancel</Button>
                     </Link>
                 </div>
-            </form>
+            </Form>
         </CardContent>
     </Card>
 </template>

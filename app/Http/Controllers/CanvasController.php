@@ -246,10 +246,24 @@ class CanvasController extends Controller
                 ->with('error', 'Only pending canvasses can be returned.');
         }
 
-        $canvas->update([
-            'status' => 'returned',
-            'return_reason' => $request->validated()['return_reason'],
-        ]);
+        DB::beginTransaction();
+        try {
+            $canvas->update([
+                'status' => 'returned',
+                'return_reason' => $request->validated()['return_reason'],
+            ]);
+
+            // Reset the associated emanating's is_approved status
+            $canvas->emanating->update(['is_approved' => false]);
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Canvas return failed: ' . $e->getMessage());
+
+            return redirect()->back()
+                ->with('error', 'Failed to return canvas.');
+        }
 
         return redirect()->route('canvasses.index')
             ->with('success', 'Canvas returned successfully.');

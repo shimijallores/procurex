@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
                     Items
                 </Button>
             </Link>
-            <Link :href="route('master-list-items.create')">
+            <Link :href="route('master-list-categories.create')">
                 <Button>
                     <Icon icon="lucide:plus" class="mr-2 h-4 w-4" />
                     Add Category

@@ -1,5 +1,5 @@
 <script setup>
-import { Link } from "@inertiajs/vue3";
+import { Form, Link } from "@inertiajs/vue3";
 import { Icon } from "@iconify/vue";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -11,7 +11,7 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 
-defineProps({
+const props = defineProps({
     action: String,
     route: String,
     returnRoute: String,
@@ -20,7 +20,7 @@ defineProps({
     processing: Boolean,
 });
 
-const isEdit = defineProps().action === "edit";
+const isEdit = props.action === "edit";
 </script>
 
 <template>
@@ -34,13 +34,11 @@ const isEdit = defineProps().action === "edit";
             }}</CardDescription>
         </CardHeader>
         <CardContent>
-            <form
+            <Form
                 :action="route"
                 :method="isEdit ? 'put' : 'post'"
-                class="space-y-5"
+                #default="{ errors: formErrors, processing }"
             >
-                <input v-if="isEdit" type="hidden" name="_method" value="put" />
-
                 <div class="space-y-2">
                     <Label for="name"
                         >Supplier Name
@@ -50,12 +48,12 @@ const isEdit = defineProps().action === "edit";
                         id="name"
                         name="name"
                         type="text"
-                        :value="supplier?.name ?? ''"
+                        :defaultValue="supplier?.name ?? ''"
                         placeholder="e.g. ABC Office Supplies"
                         class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     />
-                    <p v-if="errors?.name" class="text-sm text-destructive">
-                        {{ errors.name }}
+                    <p v-if="formErrors?.name" class="text-sm text-destructive">
+                        {{ formErrors.name }}
                     </p>
                 </div>
 
@@ -66,7 +64,7 @@ const isEdit = defineProps().action === "edit";
                             id="contact_person"
                             name="contact_person"
                             type="text"
-                            :value="supplier?.contact_person ?? ''"
+                            :defaultValue="supplier?.contact_person ?? ''"
                             placeholder="Full name"
                             class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         />
@@ -77,7 +75,7 @@ const isEdit = defineProps().action === "edit";
                             id="contact_number"
                             name="contact_number"
                             type="text"
-                            :value="supplier?.contact_number ?? ''"
+                            :defaultValue="supplier?.contact_number ?? ''"
                             placeholder="+63 XXX XXX XXXX"
                             class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         />
@@ -91,15 +89,15 @@ const isEdit = defineProps().action === "edit";
                             id="email"
                             name="email"
                             type="email"
-                            :value="supplier?.email ?? ''"
+                            :defaultValue="supplier?.email ?? ''"
                             placeholder="supplier@example.com"
                             class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         />
                         <p
-                            v-if="errors?.email"
+                            v-if="formErrors?.email"
                             class="text-sm text-destructive"
                         >
-                            {{ errors.email }}
+                            {{ formErrors.email }}
                         </p>
                     </div>
                     <div class="space-y-2">
@@ -108,7 +106,7 @@ const isEdit = defineProps().action === "edit";
                             id="tin"
                             name="tin"
                             type="text"
-                            :value="supplier?.tin ?? ''"
+                            :defaultValue="supplier?.tin ?? ''"
                             placeholder="000-000-000-000"
                             class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         />
@@ -145,7 +143,7 @@ const isEdit = defineProps().action === "edit";
                         name="is_active"
                         type="checkbox"
                         value="1"
-                        :checked="supplier?.is_active ?? true"
+                        :defaultChecked="supplier?.is_active ?? true"
                         class="h-4 w-4 rounded border-input"
                     />
                     <Label for="is_active">Active supplier</Label>
@@ -160,7 +158,7 @@ const isEdit = defineProps().action === "edit";
                         <Button type="button" variant="outline">Cancel</Button>
                     </Link>
                 </div>
-            </form>
+            </Form>
         </CardContent>
     </Card>
 </template>

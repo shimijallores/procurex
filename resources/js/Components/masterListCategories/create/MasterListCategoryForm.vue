@@ -1,5 +1,5 @@
 <script setup>
-import { Link } from "@inertiajs/vue3";
+import { Form, Link } from "@inertiajs/vue3";
 import { Icon } from "@iconify/vue";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -11,16 +11,14 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 
-defineProps({
+const props = defineProps({
     action: String,
     route: String,
     returnRoute: String,
     category: Object,
-    errors: Object,
-    processing: Boolean,
 });
 
-const isEdit = defineProps().action === "edit";
+const isEdit = props.action === "edit";
 </script>
 
 <template>
@@ -34,13 +32,12 @@ const isEdit = defineProps().action === "edit";
             }}</CardDescription>
         </CardHeader>
         <CardContent>
-            <form
+            <Form
                 :action="route"
                 :method="isEdit ? 'put' : 'post'"
                 class="space-y-5"
+                #default="{ errors, processing }"
             >
-                <input v-if="isEdit" type="hidden" name="_method" value="put" />
-
                 <div class="space-y-2">
                     <Label for="name"
                         >Category Name
@@ -50,7 +47,7 @@ const isEdit = defineProps().action === "edit";
                         id="name"
                         name="name"
                         type="text"
-                        :value="category?.name ?? ''"
+                        :defaultValue="category?.name ?? ''"
                         placeholder="e.g. Office Supplies, Medical Supplies"
                         class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     />
@@ -66,9 +63,9 @@ const isEdit = defineProps().action === "edit";
                         name="description"
                         rows="3"
                         placeholder="Optional category description"
+                        :defaultValue="category?.description ?? ''"
                         class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        >{{ category?.description ?? "" }}</textarea
-                    >
+                    ></textarea>
                 </div>
 
                 <div class="space-y-2">
@@ -77,9 +74,9 @@ const isEdit = defineProps().action === "edit";
                         id="remarks"
                         name="remarks"
                         rows="2"
+                        :defaultValue="category?.remarks ?? ''"
                         class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        >{{ category?.remarks ?? "" }}</textarea
-                    >
+                    ></textarea>
                 </div>
 
                 <div class="flex items-center gap-2">
@@ -88,7 +85,7 @@ const isEdit = defineProps().action === "edit";
                         name="is_active"
                         type="checkbox"
                         value="1"
-                        :checked="category?.is_active ?? true"
+                        :defaultChecked="category?.is_active ?? true"
                         class="h-4 w-4 rounded border-input"
                     />
                     <Label for="is_active">Active category</Label>
@@ -103,7 +100,7 @@ const isEdit = defineProps().action === "edit";
                         <Button type="button" variant="outline">Cancel</Button>
                     </Link>
                 </div>
-            </form>
+            </Form>
         </CardContent>
     </Card>
 </template>
