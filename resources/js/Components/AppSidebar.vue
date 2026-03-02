@@ -302,9 +302,13 @@ const userInitials = computed(() => {
                     <SidebarMenuButton size="lg" as-child>
                         <Link :href="route('dashboard.index')">
                             <div
-                                class="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground"
+                                class="flex aspect-square size-8 items-center justify-center overflow-hidden rounded-lg border bg-background"
                             >
-                                <Icon icon="lucide:boxes" class="size-4" />
+                                <img
+                                    src="/images/batangas-seal.png"
+                                    alt="Province of Batangas Seal"
+                                    class="size-7 object-contain"
+                                />
                             </div>
                             <div
                                 class="grid flex-1 text-left text-sm leading-tight"
