@@ -103,7 +103,7 @@ const totalBudget = computed(() => {
                             No categories or items yet
                         </p>
                         <p class="text-sm text-muted-foreground">
-                            Import a CSV file to populate this APP with
+                            Import an XLSX file to populate this APP with
                             procurement data
                         </p>
                     </div>

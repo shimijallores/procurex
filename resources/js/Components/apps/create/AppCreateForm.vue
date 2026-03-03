@@ -90,22 +90,22 @@ defineEmits(["submit", "fileChange"]);
                             icon="lucide:file-spreadsheet"
                             class="h-5 w-5 text-primary"
                         />
-                        <h3 class="font-semibold">Import from CSV</h3>
+                        <h3 class="font-semibold">Import from XLSX</h3>
                     </div>
 
                     <p class="text-sm text-muted-foreground">
-                        Upload a CSV file to automatically populate categories
+                        Upload an XLSX file to automatically populate categories
                         and items. You can also create an empty APP and import
-                        the CSV later.
+                        the file later.
                     </p>
 
                     <div class="space-y-2">
-                        <Label for="csv_file">CSV File (Optional)</Label>
+                        <Label for="csv_file">XLSX File (Optional)</Label>
                         <div class="flex items-center gap-2">
                             <input
                                 id="csv_file"
                                 type="file"
-                                accept=".csv,.txt"
+                                accept=".xlsx"
                                 @change="$emit('fileChange', $event)"
                                 :class="[
                                     'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
@@ -142,13 +142,19 @@ defineEmits(["submit", "fileChange"]);
                             <div
                                 class="text-sm text-blue-800 dark:text-blue-300"
                             >
-                                <p class="font-medium mb-1">CSV Format Tips:</p>
+                                <p class="font-medium mb-1">
+                                    XLSX Format Tips:
+                                </p>
                                 <ul
                                     class="list-disc list-inside space-y-1 text-xs"
                                 >
                                     <li>
                                         Make sure to use the provided APP
                                         template
+                                    </li>
+                                    <li>
+                                        XLSX templates with an empty column A
+                                        are supported
                                     </li>
                                 </ul>
                             </div>

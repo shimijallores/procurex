@@ -86,6 +86,8 @@ class AccountSeeder extends Seeder
             ['main_category' => 'Repair and Maintenance', 'subcategory' => null, 'code' => '5 02 13 050', 'name' => 'Repairs and Maintenance – Machinery and Equipment'],
             ['main_category' => 'Repair and Maintenance', 'subcategory' => null, 'code' => '5 02 13 060', 'name' => 'Repairs and Maintenance – Transportation Equipment'],
             ['main_category' => 'Repair and Maintenance', 'subcategory' => null, 'code' => '5 02 13 070', 'name' => 'Repairs and Maintenance – Furniture and Fixtures'],
+            ['main_category' => 'Repair and Maintenance', 'subcategory' => null, 'code' => '5 02 13 210', 'name' => 'Repairs & Maint. - Semi Expendable Machinery & Equipment'],
+            ['main_category' => 'Repair and Maintenance', 'subcategory' => null, 'code' => '5 02 13 220', 'name' => 'Repairs & Maint. - Semi Expendable Furniture, Fixtures & Books'],
 
             ['main_category' => 'Capital Outlay', 'subcategory' => 'Furniture and Fixtures', 'code' => '1 07 07 010', 'name' => 'Furniture and Fixtures'],
             ['main_category' => 'Capital Outlay', 'subcategory' => 'Furniture and Fixtures', 'code' => '1 07 07 020', 'name' => 'Books'],

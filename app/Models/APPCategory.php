@@ -17,8 +17,7 @@ class APPCategory extends Model
 
     protected $fillable = [
         'app_id',
-        'pap_code',
-        'name',
+        'account_id',
         'early_procurement',
         'mode_of_procurement',
         'schedule_from_month',
@@ -39,11 +38,16 @@ class APPCategory extends Model
         'co_amount' => 'decimal:2',
     ];
 
-    protected $appends = ['items'];
+    protected $appends = ['pap_code', 'name', 'items'];
 
     public function APP(): BelongsTo
     {
         return $this->belongsTo(APP::class, 'app_id');
+    }
+
+    public function account(): BelongsTo
+    {
+        return $this->belongsTo(Account::class, 'account_id');
     }
 
     public function APPItems(): HasMany
@@ -54,5 +58,15 @@ class APPCategory extends Model
     public function getItemsAttribute()
     {
         return $this->APPItems;
+    }
+
+    public function getPapCodeAttribute(): ?string
+    {
+        return $this->account?->code;
+    }
+
+    public function getNameAttribute(): ?string
+    {
+        return $this->account?->name;
     }
 }

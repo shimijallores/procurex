@@ -28,9 +28,9 @@ class StoreAPPRequest extends FormRequest
             'fiscal_year' => ['required', 'integer', 'min:2000', 'max:2100'],
         ];
 
-        // Only validate CSV file when uploaded
+        // Only validate XLSX file when uploaded
         if ($this->hasFile('csv_file')) {
-            $rules['csv_file'] = ['file', 'mimes:csv,txt,xlsx,xls', 'max:10240'];
+            $rules['csv_file'] = ['file', 'mimes:xlsx', 'max:10240'];
         }
 
         return $rules;
@@ -48,7 +48,7 @@ class StoreAPPRequest extends FormRequest
             'office_id.exists' => 'The selected office is invalid.',
             'fiscal_year.required' => 'The fiscal year is required.',
             'fiscal_year.integer' => 'The fiscal year must be a valid year.',
-            'csv_file.mimes' => 'The file must be a CSV file.',
+            'csv_file.mimes' => 'The file must be an XLSX file.',
             'csv_file.max' => 'The file size must not exceed 10MB.',
         ];
     }

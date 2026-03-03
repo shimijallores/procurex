@@ -14,8 +14,7 @@ return new class extends Migration
         Schema::create('app_categories', function (Blueprint $table) {
             $table->id();
             $table->foreignId('app_id')->nullable()->constrained()->cascadeOnDelete();
-            $table->string('pap_code')->unique();
-            $table->string('name');
+            $table->foreignId('account_id')->nullable()->constrained('accounts')->nullOnDelete();
             $table->boolean('early_procurement')->default(false)->nullable();
             $table->string('mode_of_procurement');
             $table->unsignedTinyInteger('schedule_from_month')->nullable();
@@ -29,8 +28,7 @@ return new class extends Migration
 
             // Indexes for performance
             $table->index('app_id');
-            $table->index('pap_code');
-            $table->index('name');
+            $table->index('account_id');
         });
     }
 

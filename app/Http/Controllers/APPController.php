@@ -12,6 +12,7 @@ use App\Models\Office;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -51,7 +52,7 @@ class APPController extends Controller
 
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear))
-            ->mapWithKeys(fn ($year) => [$year => $year])
+            ->mapWithKeys(fn($year) => [$year => $year])
             ->reverse();
 
         return Inertia::render('APPs/Index', [
@@ -77,6 +78,12 @@ class APPController extends Controller
     {
         $validated = $storeAPPRequest->validated();
 
+        Log::info('[APP Store] Request validated', [
+            'office_id' => $validated['office_id'] ?? null,
+            'fiscal_year' => $validated['fiscal_year'] ?? null,
+            'has_file' => $storeAPPRequest->hasFile('csv_file'),
+        ]);
+
         DB::beginTransaction();
         try {
             // Delete existing APP with same office_id + fiscal_year
@@ -90,13 +97,34 @@ class APPController extends Controller
                 'fiscal_year' => $validated['fiscal_year'],
             ]);
 
-            // Handle CSV import if file is uploaded
+            Log::info('[APP Store] APP record created', [
+                'app_id' => $app->id,
+                'office_id' => $app->office_id,
+                'fiscal_year' => $app->fiscal_year,
+            ]);
+
+            // Handle XLSX import if file is uploaded
             if ($storeAPPRequest->hasFile('csv_file') && $storeAPPRequest->file('csv_file')->isValid()) {
+                $uploadedFile = $storeAPPRequest->file('csv_file');
+
+                Log::info('[APP Store] Upload detected', [
+                    'app_id' => $app->id,
+                    'original_name' => $uploadedFile->getClientOriginalName(),
+                    'mime_type' => $uploadedFile->getClientMimeType(),
+                    'extension' => $uploadedFile->getClientOriginalExtension(),
+                    'size_bytes' => $uploadedFile->getSize(),
+                ]);
+
                 // Store the uploaded file
-                $filePath = $storeAPPRequest->file('csv_file')->store('apps', 'public');
+                $filePath = $uploadedFile->store('apps', 'public');
                 $app->update(['uploaded_file' => $filePath]);
 
-                Excel::import(new APPImport($app), $storeAPPRequest->file('csv_file'));
+                Excel::import(new APPImport($app), $uploadedFile);
+
+                Log::info('[APP Store] XLSX import finished', [
+                    'app_id' => $app->id,
+                    'stored_path' => $filePath,
+                ]);
             }
 
             DB::commit();
@@ -106,13 +134,19 @@ class APPController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to create APP: '.$exception->getMessage()]);
+            Log::error('[APP Store] Failed', [
+                'office_id' => $validated['office_id'] ?? null,
+                'fiscal_year' => $validated['fiscal_year'] ?? null,
+                'message' => $exception->getMessage(),
+            ]);
+
+            return back()->withErrors(['error' => 'Failed to create APP: ' . $exception->getMessage()]);
         }
     }
 
     public function show(APP $app): Response
     {
-        $app->load(['office', 'APPCategories.APPItems']);
+        $app->load(['office', 'APPCategories.account', 'APPCategories.APPItems']);
 
         return Inertia::render('APPs/Show', [
             'app' => $app,
@@ -121,7 +155,7 @@ class APPController extends Controller
 
     public function edit(APP $app): Response
     {
-        $app->load(['office', 'APPCategories.APPItems']);
+        $app->load(['office', 'APPCategories.account', 'APPCategories.APPItems']);
 
         return Inertia::render('APPs/Edit', [
             'app' => $app,
@@ -147,7 +181,7 @@ class APPController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to update APP: '.$exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to update APP: ' . $exception->getMessage()]);
         }
     }
 
@@ -163,47 +197,83 @@ class APPController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to delete APP: '.$exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to delete APP: ' . $exception->getMessage()]);
         }
     }
 
     /**
-     * Handle CSV import for existing APP
+     * Handle XLSX import for existing APP
      */
     public function import(Request $request, APP $app): RedirectResponse
     {
         $request->validate([
-            'csv_file' => ['required', 'file', 'mimes:csv,txt,xlsx,xls', 'max:10240'],
+            'csv_file' => ['required', 'file', 'mimes:xlsx', 'max:10240'],
+        ]);
+
+        Log::info('[APP Import] Request validated', [
+            'app_id' => $app->id,
+            'has_file' => $request->hasFile('csv_file'),
         ]);
 
         DB::beginTransaction();
         try {
             // Delete existing categories and items
+            $existingCategoriesCount = $app->APPCategories()->count();
             $app->APPCategories()->delete();
+
+            Log::info('[APP Import] Existing categories deleted', [
+                'app_id' => $app->id,
+                'deleted_categories_count' => $existingCategoriesCount,
+            ]);
 
             // Handle file upload
             if ($request->hasFile('csv_file') && $request->file('csv_file')->isValid()) {
+                $uploadedFile = $request->file('csv_file');
+
+                Log::info('[APP Import] Upload detected', [
+                    'app_id' => $app->id,
+                    'original_name' => $uploadedFile->getClientOriginalName(),
+                    'mime_type' => $uploadedFile->getClientMimeType(),
+                    'extension' => $uploadedFile->getClientOriginalExtension(),
+                    'size_bytes' => $uploadedFile->getSize(),
+                ]);
+
                 // Delete old file if exists
                 if ($app->uploaded_file) {
                     Storage::disk('public')->delete($app->uploaded_file);
                 }
 
                 // Store new file
-                $filePath = $request->file('csv_file')->store('apps', 'public');
+                $filePath = $uploadedFile->store('apps', 'public');
                 $app->update(['uploaded_file' => $filePath]);
-            }
 
-            // Import from CSV/Excel
-            Excel::import(new APPImport($app), $request->file('csv_file'));
+                Log::info('[APP Import] File stored', [
+                    'app_id' => $app->id,
+                    'stored_path' => $filePath,
+                ]);
+
+                // Import from XLSX
+                Excel::import(new APPImport($app), $uploadedFile);
+
+                Log::info('[APP Import] XLSX import finished', [
+                    'app_id' => $app->id,
+                    'stored_path' => $filePath,
+                ]);
+            }
 
             DB::commit();
 
             return redirect()->route('apps.show', $app)
-                ->with('success', 'CSV data imported successfully.');
+                ->with('success', 'APP data imported successfully.');
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to import CSV: '.$exception->getMessage()]);
+            Log::error('[APP Import] Failed', [
+                'app_id' => $app->id,
+                'message' => $exception->getMessage(),
+            ]);
+
+            return back()->withErrors(['error' => 'Failed to import file: ' . $exception->getMessage()]);
         }
     }
 

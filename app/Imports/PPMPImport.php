@@ -56,7 +56,7 @@ class PPMPImport implements ToCollection, WithCustomCsvSettings, WithStartRow
             $rowData = $row->toArray();
 
             // Skip completely empty rows
-            if (array_filter($rowData, fn ($val): bool => ! empty($val)) === []) {
+            if (array_filter($rowData, fn($val): bool => ! empty($val)) === []) {
                 continue;
             }
 
@@ -151,14 +151,23 @@ class PPMPImport implements ToCollection, WithCustomCsvSettings, WithStartRow
     {
         $normalizedCode = $this->normalizeCode($code);
 
-        // Find matching APP category by pap_code for the same office and fiscal year
-        $appCategory = APPCategory::where('pap_code', $normalizedCode)
+        $appCategories = APPCategory::query()
             ->whereHas('APP', function ($query): void {
                 $query->where('office_id', $this->ppmp->office_id)
                     ->where('fiscal_year', $this->ppmp->fiscal_year);
             })
-            ->with('APPItems')
-            ->first();
+            ->with(['APPItems', 'account'])
+            ->get();
+
+        $appCategory = $appCategories->first(function (APPCategory $category) use ($normalizedCode): bool {
+            $accountCode = $category->account?->code;
+
+            if (! $accountCode) {
+                return false;
+            }
+
+            return $this->normalizeCode($accountCode) === $normalizedCode;
+        });
 
         if (! $appCategory) {
             return [

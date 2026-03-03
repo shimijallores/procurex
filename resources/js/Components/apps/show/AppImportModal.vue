@@ -48,19 +48,19 @@ const submitImport = () => {
         >
             <Card>
                 <CardHeader>
-                    <CardTitle>Import CSV Data</CardTitle>
+                    <CardTitle>Import APP Data</CardTitle>
                     <CardDescription>
-                        Upload a CSV file to import categories and items
+                        Upload an XLSX file to import categories and items
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <form @submit.prevent="submitImport" class="space-y-4">
                         <div class="space-y-2">
-                            <Label for="import_csv">CSV File</Label>
+                            <Label for="import_csv">XLSX File</Label>
                             <input
                                 id="import_csv"
                                 type="file"
-                                accept=".csv,.txt,.xlsx,.xls"
+                                accept=".xlsx"
                                 @change="handleFileChange"
                                 :class="[
                                     'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
@@ -102,8 +102,8 @@ const submitImport = () => {
                                     class="text-sm text-yellow-800 dark:text-yellow-300"
                                 >
                                     This will delete all existing categories and
-                                    items, then import the new data from the CSV
-                                    file.
+                                    items, then import the new data from the
+                                    selected file.
                                 </p>
                             </div>
                         </div>
