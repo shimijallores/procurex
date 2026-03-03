@@ -14,41 +14,61 @@
 
         body {
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 10.5pt;
             color: #000;
+            font-size: 11px;
+            line-height: 1.2;
         }
 
         .page {
             width: 210mm;
             min-height: 297mm;
-            padding: 10mm;
+            padding: 4mm 6mm 0;
         }
 
-        .top-right-meta {
-            width: 100%;
-            text-align: right;
-            font-size: 10pt;
-            line-height: 1.35;
-            margin-bottom: 10px;
-        }
-
-        .header-layout {
+        table {
             width: 100%;
             border-collapse: collapse;
         }
 
-        .header-layout td {
-            vertical-align: middle;
+        .form {
+            border: 1px solid #000;
+            border-top: 2px solid #000;
         }
 
-        .header-logo-cell {
-            width: 18%;
+        .form td,
+        .form th {
+            border: 1px solid #000;
+            padding: 3px 5px;
+            vertical-align: top;
+        }
+
+        .no-border {
+            border: 0 !important;
+        }
+
+        .center {
             text-align: center;
         }
 
-        .header-main {
-            width: 64%;
-            text-align: center;
+        .right {
+            text-align: right;
+        }
+
+        .bold {
+            font-weight: 700;
+        }
+
+        .u {
+            text-decoration: underline;
+            font-weight: 700;
+        }
+
+        .small {
+            font-size: 10px;
+        }
+
+        .tiny {
+            font-size: 9px;
         }
 
         .logo-seal {
@@ -57,182 +77,92 @@
             object-fit: contain;
         }
 
-        .logo-bagong {
-            width: 74px;
-            height: 58px;
-            object-fit: contain;
-        }
-
         .header-title {
-            font-size: 11pt;
-            font-weight: 700;
-            text-transform: uppercase;
-            line-height: 1.25;
-        }
-
-        .header-sub {
-            margin-top: 4px;
-            font-size: 10pt;
-        }
-
-        .doc-title {
-            margin-top: 10px;
-            font-size: 14pt;
-            font-weight: 700;
-            text-transform: uppercase;
+            font-size: 33px;
+            line-height: 1;
             letter-spacing: 0.3px;
+            margin-top: 3px;
         }
 
-        .divider {
-            border-top: 2px solid #000;
-            margin-top: 8px;
-            margin-bottom: 12px;
+        .row-sir {
+            height: 26px;
         }
 
-        .details {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 12px;
-        }
-
-        .details td {
-            border: 1px solid #000;
-            padding: 6px 8px;
-            vertical-align: top;
-        }
-
-        .details .label {
-            width: 17%;
-            font-weight: 700;
-            background: #f5f5f5;
-        }
-
-        .details .value {
-            width: 33%;
-        }
-
-        .details .label-right {
-            width: 17%;
-            font-weight: 700;
-            background: #f5f5f5;
-        }
-
-        .details .value-right {
-            width: 33%;
-        }
-
-        .intro {
-            margin-top: 8px;
-            line-height: 1.45;
-            text-align: justify;
-        }
-
-        .items {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 12px;
-        }
-
-        .items th,
-        .items td {
-            border: 1px solid #000;
-            padding: 6px 8px;
-            vertical-align: top;
+        .row-mid {
+            height: 22px;
         }
 
         .items th {
             text-align: center;
             font-weight: 700;
+            font-size: 10px;
         }
 
-        .items .col-no {
-            width: 7%;
-            text-align: center;
+        .items .item-no {
+            width: 8%;
         }
 
-        .items .col-unit {
+        .items .unit {
             width: 9%;
-            text-align: center;
         }
 
-        .items .col-qty {
-            width: 9%;
-            text-align: center;
+        .items .qty {
+            width: 10%;
         }
 
-        .items .col-desc {
+        .items .desc {
             width: 39%;
         }
 
-        .items .col-unit-cost {
-            width: 18%;
-            text-align: right;
+        .items .unit-cost {
+            width: 17%;
         }
 
-        .items .col-amount {
-            width: 18%;
-            text-align: right;
+        .items .amount {
+            width: 17%;
         }
 
-        .items .item-row td {
-            min-height: 30px;
+        .item-row td {
+            height: 24px;
         }
 
-        .items .total-row td {
+        .item-row .desc-cell {
+            line-height: 1.2;
+        }
+
+        .total-row td {
             font-weight: 700;
         }
 
-        .amount-words {
-            margin-top: 8px;
-            border: 1px solid #000;
-            padding: 8px;
-            font-size: 10.5pt;
-        }
-
-        .amount-words .label {
-            font-weight: 700;
+        .words-row {
+            height: 24px;
         }
 
         .penalty {
-            margin-top: 10px;
-            border: 1px solid #000;
-            padding: 8px;
-            line-height: 1.45;
-            text-align: justify;
-        }
-
-        .signatures {
-            width: 100%;
-            margin-top: 22px;
-        }
-
-        .signatures td {
-            width: 50%;
-            vertical-align: top;
             text-align: center;
-            padding: 8px;
+            line-height: 1.35;
+            padding-top: 8px !important;
+            padding-bottom: 8px !important;
+        }
+
+        .sign-block {
+            height: 110px;
         }
 
         .sig-line {
             display: inline-block;
             min-width: 220px;
             border-top: 1px solid #000;
-            padding-top: 4px;
-            text-transform: uppercase;
-            font-weight: 700;
+            padding-top: 2px;
+            text-align: center;
         }
 
-        .sig-sub {
-            margin-top: 2px;
-            font-size: 10pt;
-        }
-
-        .mt-24 {
-            margin-top: 24px;
-        }
-
-        .mt-32 {
-            margin-top: 32px;
+        .sig-line-sm {
+            display: inline-block;
+            min-width: 160px;
+            border-top: 1px solid #000;
+            padding-top: 2px;
+            text-align: center;
         }
     </style>
 </head>
@@ -261,156 +191,197 @@
     };
 
     $sealLogo = $imagePath(['batangas-seal.png']);
-    $bagongLogo = $imagePath(['bagong-pilipinas.png']);
 
-    $winnerSupplierName = strtoupper((string) ($winnerSupplier?->name ?? 'SUPPLIER'));
-    $winnerAddress = (string) ($winnerSupplier?->address ?? '');
-    $projectName = (string) ($rfq?->project_name ?? $resolution?->project_name ?? '—');
+    $supplierName = strtoupper((string) ($winnerSupplier?->name ?? 'SUPPLIER'));
+    $supplierAddress = (string) ($winnerSupplier?->address ?? '');
+    $projectName = (string) ($rfq?->project_name ?? $resolution?->project_name ?? '');
 
     $rows = collect($purchaseOrder->items ?? [])->values();
-    $minRows = 10;
-    $emptyRows = max(0, $minRows - $rows->count());
+    $minRows = 15;
+    $displayRows = $rows->take($minRows);
+    $blankRows = max(0, $minRows - $displayRows->count());
+
+    $deliveryDays = (int) ($purchaseOrder->delivery_term_days ?? 0);
+    $deliveryText = $deliveryDays > 0
+    ? 'within ' . $deliveryDays . ' calendar days upon receipt of this Purchase Order'
+    : '________________________';
     @endphp
 
     <div class="page">
-        <div class="top-right-meta">
-            <div><strong>PR No.:</strong> {{ $rfq?->purchaseRequest?->pr_no ?? '—' }}</div>
-            <div><strong>NOA No.:</strong> {{ $noa?->noa_no ?? '—' }}</div>
-            <div><strong>BAC Resolution No.:</strong> {{ $resolution?->resolution_no ?? '—' }}</div>
-        </div>
-
-        <table class="header-layout">
+        <table class="form">
             <tr>
-                <td class="header-logo-cell">
-                    @if ($sealLogo)
+                <td colspan="8" class="center no-border" style="padding-top:6px; padding-bottom:2px;">
+                    @if($sealLogo)
                     <img src="{{ $sealLogo }}" alt="Batangas Seal" class="logo-seal">
                     @endif
                 </td>
-                <td class="header-main">
-                    <div class="header-title">Republic of the Philippines</div>
-                    <div class="header-title">Provincial Government of Batangas</div>
-                    <div class="header-sub">Capitol Site, Kumintang Ibaba, Batangas City 4200</div>
-                    <div class="doc-title">Purchase Order</div>
-                </td>
-                <td class="header-logo-cell">
-                    @if ($bagongLogo)
-                    <img src="{{ $bagongLogo }}" alt="Bagong Pilipinas" class="logo-bagong">
-                    @endif
-                </td>
             </tr>
-        </table>
 
-        <div class="divider"></div>
-
-        <table class="details">
             <tr>
-                <td class="label">Supplier</td>
-                <td class="value">{{ $winnerSupplierName }}</td>
-                <td class="label-right">P.O. No.</td>
-                <td class="value-right">{{ $purchaseOrder->po_no }}</td>
+                <td colspan="8" class="center no-border bold" style="font-size:32px; line-height:1; padding-top:0; padding-bottom:0;">PURCHASE ORDER</td>
             </tr>
             <tr>
-                <td class="label">Address</td>
-                <td class="value">{{ $winnerAddress !== '' ? $winnerAddress : '—' }}</td>
-                <td class="label-right">P.O. Date</td>
-                <td class="value-right">{{ optional($purchaseOrder->po_date)->format('F d, Y') }}</td>
+                <td colspan="8" class="center no-border bold" style="font-size:21px; padding-top:0; padding-bottom:4px;">LGU</td>
             </tr>
+
             <tr>
-                <td class="label">Mode of Procurement</td>
-                <td class="value">{{ $purchaseOrder->mode_of_procurement }}</td>
-                <td class="label-right">Delivery Term</td>
-                <td class="value-right">
-                    @if($purchaseOrder->delivery_term_days)
-                    {{ (int) $purchaseOrder->delivery_term_days }} calendar days
-                    @else
-                    —
-                    @endif
-                </td>
+                <td style="width:16%;" class="no-border">Supplier</td>
+                <td style="width:2%;" class="center no-border">:</td>
+                <td style="width:48%;" class="no-border"><span class="u">{{ $supplierName }}</span></td>
+                <td style="width:18%;" class="no-border">P.O. No.</td>
+                <td style="width:2%;" class="center no-border">:</td>
+                <td style="width:14%;" class="right no-border"><span class="u">{{ $purchaseOrder->po_no }}</span></td>
             </tr>
+
             <tr>
-                <td class="label">Place of Delivery</td>
-                <td class="value">{{ $purchaseOrder->place_of_delivery }}</td>
-                <td class="label-right">Payment Term</td>
-                <td class="value-right">{{ $purchaseOrder->payment_term ?: '—' }}</td>
+                <td class="no-border">Address</td>
+                <td class="center no-border">:</td>
+                <td class="no-border"><span class="u">{{ $supplierAddress !== '' ? $supplierAddress : '________________________' }}</span></td>
+                <td class="no-border">Date</td>
+                <td class="center no-border">:</td>
+                <td class="right no-border"><span class="u">{{ optional($purchaseOrder->po_date)->format('m/d/Y') }}</span></td>
             </tr>
+
             <tr>
-                <td class="label">Project</td>
-                <td class="value" colspan="3">{{ $projectName }}</td>
+                <td class="no-border"></td>
+                <td class="center no-border"></td>
+                <td class="no-border"></td>
+                <td class="small no-border">Mode of Procurement</td>
+                <td class="center no-border">:</td>
+                <td class="right no-border"><span class="u">{{ $purchaseOrder->mode_of_procurement }}</span></td>
             </tr>
-        </table>
 
-        <div class="intro">
-            Please furnish this office the following item(s), subject to the terms and conditions stated herein and in the referenced procurement documents.
-        </div>
+            <tr>
+                <td class="no-border"></td>
+                <td class="center no-border"></td>
+                <td class="no-border"></td>
+                <td class="no-border">P.R. No/s.</td>
+                <td class="center no-border">:</td>
+                <td class="right no-border"><span class="u">{{ $rfq?->purchaseRequest?->pr_no ?? '—' }}</span></td>
+            </tr>
 
-        <table class="items">
-            <thead>
-                <tr>
-                    <th class="col-no">Item No.</th>
-                    <th class="col-unit">Unit</th>
-                    <th class="col-qty">Qty</th>
-                    <th class="col-desc">Description</th>
-                    <th class="col-unit-cost">Unit Cost (Php)</th>
-                    <th class="col-amount">Amount (Php)</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($rows as $index => $item)
-                <tr class="item-row">
-                    <td class="col-no">{{ $index + 1 }}</td>
-                    <td class="col-unit">{{ $item->rfqItem?->purchaseRequestItem?->unit ?? '' }}</td>
-                    <td class="col-qty">{{ (int) $item->quantity_snapshot }}</td>
-                    <td class="col-desc">{{ $item->rfqItem?->purchaseRequestItem?->item_name ?? '' }}</td>
-                    <td class="col-unit-cost">{{ number_format((float) $item->unit_cost_snapshot, 2) }}</td>
-                    <td class="col-amount">{{ number_format((float) $item->amount_snapshot, 2) }}</td>
-                </tr>
-                @endforeach
+            <tr class="row-sir">
+                <td class="bold">Sir/Madam:</td>
+                <td colspan="5">Please furnish this office the following articles subject to the terms and conditions contained herein:</td>
+            </tr>
 
-                @for($i = 0; $i < $emptyRows; $i++)
-                    <tr class="item-row">
-                    <td class="col-no">&nbsp;</td>
-                    <td class="col-unit">&nbsp;</td>
-                    <td class="col-qty">&nbsp;</td>
-                    <td class="col-desc">&nbsp;</td>
-                    <td class="col-unit-cost">&nbsp;</td>
-                    <td class="col-amount">&nbsp;</td>
-                    </tr>
-                    @endfor
+            <tr class="row-mid">
+                <td class="no-border">Place of Delivery</td>
+                <td class="center no-border">:</td>
+                <td class="no-border"><span class="u">{{ strtoupper((string) ($purchaseOrder->place_of_delivery ?? '')) }}</span></td>
+                <td class="no-border">Delivery Term:</td>
+                <td colspan="2" class="right no-border"><span class="u">{{ $deliveryDays > 0 ? 'within ' . $deliveryDays . ' calendar days upon receipt hereof' : '________________________' }}</span></td>
+            </tr>
 
-                    <tr class="total-row">
-                        <td colspan="5" style="text-align: right;">TOTAL (Php)</td>
-                        <td class="col-amount">{{ number_format((float) $purchaseOrder->total_amount, 2) }}</td>
-                    </tr>
+            <tr class="row-mid">
+                <td class="no-border">Date of Delivery</td>
+                <td class="center no-border">:</td>
+                <td class="no-border"><span class="u">{{ $deliveryText }}</span></td>
+                <td class="no-border">Payment Term :</td>
+                <td colspan="2" class="right no-border"><span class="u">{{ $purchaseOrder->payment_term ?: '________________________' }}</span></td>
+            </tr>
+
+            <tr>
+                <td colspan="6" style="padding:0;">
+                    <table class="items">
+                        <thead>
+                            <tr>
+                                <th class="item-no">ITEM NO.</th>
+                                <th class="unit">UNIT</th>
+                                <th class="qty">QTY</th>
+                                <th class="desc">DESCRIPTION</th>
+                                <th class="unit-cost">UNIT COST</th>
+                                <th class="amount">AMOUNT</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($displayRows as $index => $item)
+                            <tr class="item-row">
+                                <td class="center">{{ $index + 1 }}</td>
+                                <td class="center">{{ $item->rfqItem?->purchaseRequestItem?->unit ?? '' }}</td>
+                                <td class="center">{{ (int) $item->quantity_snapshot }}</td>
+                                <td class="desc-cell">{{ $item->rfqItem?->purchaseRequestItem?->item_name ?? '' }}</td>
+                                <td class="right">{{ number_format((float) $item->unit_cost_snapshot, 2) }}</td>
+                                <td class="right">{{ number_format((float) $item->amount_snapshot, 2) }}</td>
+                            </tr>
+                            @endforeach
+
+                            @for($i = 0; $i < $blankRows; $i++)
+                                <tr class="item-row">
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td class="desc-cell">&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+            </tr>
+            @endfor
+
+            <tr class="total-row">
+                <td colspan="5" class="right">TOTAL (Php)</td>
+                <td class="right">{{ number_format((float) $purchaseOrder->total_amount, 2) }}</td>
+            </tr>
             </tbody>
         </table>
+        </td>
+        </tr>
 
-        <div class="amount-words">
-            <span class="label">Total Amount in Words:</span>
-            {{ $purchaseOrder->total_amount_words ?: '—' }}
-        </div>
+        <tr class="words-row">
+            <td colspan="6" style="padding:10px 4px;">
+                <span>(Total Amount in Words)</span>
+                <span class="u">{{ $purchaseOrder->total_amount_words ?: '________________________' }}</span>
+            </td>
+        </tr>
 
-        <div class="penalty">
-            In case of failure to make complete delivery within the period specified above, a penalty of one-tenth (1/10) of one percent (1%) for every day of delay shall be imposed on the undelivered portion.
-        </div>
+        <tr>
+            <td colspan="6" class="penalty">
+                In case of failure to make the full delivery within the time specified above, a penalty of one-tenth (1/10) of one (1) percent
+                for every day of delay shall be imposed.
+            </td>
+        </tr>
 
-        <table class="signatures">
-            <tr>
-                <td>
-                    <div>Conforme:</div>
-                    <div class="mt-32">
-                        <span class="sig-line">{{ $winnerSupplierName }}</span>
-                    </div>
-                    <div class="sig-sub">Supplier / Authorized Signatory</div>
-                    <div class="mt-24">Date: ______________________</div>
-                </td>
-                <td>
-                    <div>Very truly yours,</div>
-                    <div class="mt-32">
-                        <span class="sig-line">VILMA SANTOS-RECTO</span>
-                    </div>
-                    <div class="sig-sub">Governor</div>
-                </td>
-            </tr>
+        <tr class="sign-block">
+            <td colspan="3" style="vertical-align: top; padding-top: 18px;">
+                <div class="bold">Conforme:</div>
+                <div style="margin-top: 44px;" class="center">
+                    <span class="sig-line">(Signature over printed name)</span>
+                </div>
+                <div style="margin-top: 18px;" class="center">
+                    <span class="sig-line-sm">Date</span>
+                </div>
+            </td>
+            <td colspan="3" style="vertical-align: top; padding-top: 18px;" class="center">
+                <div style="margin-top: 18px;">Very truly yours,</div>
+                <div style="margin-top: 28px;"><span class="sig-line-sm">&nbsp;</span></div>
+                <div class="bold" style="margin-top: 6px;">VILMA SANTOS - RECTO</div>
+                <div>Governor</div>
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="6" class="small">
+                (In case of Negotiated Purchase pursuant to Section 369 (a) of RA 7160, this portion must be accomplished.)
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="6" class="no-border">
+                <span class="bold">Approved per Sangguniang Resolution No:</span>
+                <span style="display:inline-block; border-bottom:1px solid #000; width:58%; margin-left:6px;">&nbsp;</span>
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="4" class="no-border">
+                <span class="bold">Certified Correct</span>
+                <span style="display:inline-block; border-bottom:1px solid #000; width:45%; margin-left:6px;">&nbsp;</span>
+                <div class="center" style="margin-top:2px;">Secretary to the Sanggunian</div>
+            </td>
+            <td colspan="2" class="no-border">
+                <span class="bold">Date:</span>
+                <span style="display:inline-block; border-bottom:1px solid #000; width:70%; margin-left:6px;">&nbsp;</span>
+            </td>
+        </tr>
         </table>
     </div>
 </body>
