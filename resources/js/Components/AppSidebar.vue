@@ -109,6 +109,13 @@ const mainNavItems = computed(() => {
             roles: ["Superadmin"],
         },
         {
+            title: "Accounts",
+            url: route("accounts.index"),
+            icon: "lucide:book-marked",
+            isActive: route().current("accounts.*"),
+            roles: ["Superadmin"],
+        },
+        {
             title: "APPs",
             url: route("apps.index"),
             icon: "lucide:clipboard-check",
@@ -250,9 +257,14 @@ const secondaryNavItems = computed(() => {
 // Grouped navigation items
 const navigationItems = computed(() => {
     return mainNavItems.value.filter((item) =>
-        ["Dashboard", "Users", "Roles", "Offices", "Project Codes"].includes(
-            item.title,
-        ),
+        [
+            "Dashboard",
+            "Users",
+            "Roles",
+            "Offices",
+            "Project Codes",
+            "Accounts",
+        ].includes(item.title),
     );
 });
 

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\APPController;
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AOQController;
 use App\Http\Controllers\BACResolutionController;
 use App\Http\Controllers\CalendarController;
@@ -44,6 +45,7 @@ Route::middleware(['auth'])->group(function (): void {
     Route::resource('roles', RoleController::class)->middleware('role:Superadmin');
     Route::resource('offices', OfficeController::class)->middleware('role:Superadmin');
     Route::resource('project-codes', ProjectCodeController::class)->middleware('role:Superadmin');
+    Route::resource('accounts', AccountController::class)->middleware('role:Superadmin');
     Route::resource('calendars', CalendarController::class)->only(['index', 'store', 'update', 'destroy'])->middleware('role:Superadmin,BAC Reso Admin,Budgeting Admin,office');
     Route::post('calendars/check-date', [CalendarController::class, 'checkDate'])->middleware('auth')->name('calendars.check-date');
     Route::resource('funds', FundController::class)->middleware('role:Superadmin,office');
