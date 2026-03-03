@@ -169,18 +169,18 @@ const formatDate = (date) => {
                             <td class="p-4 align-middle text-center">
                                 <span
                                     v-if="
-                                        aoq.calculation_mode ===
-                                        'single_calculated'
+                                        (aoq.calculated_supplier_count || 0) >=
+                                        2
                                     "
-                                    class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-300"
-                                >
-                                    Single Calculated
-                                </span>
-                                <span
-                                    v-else
                                     class="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300"
                                 >
                                     Lowest Calculated
+                                </span>
+                                <span
+                                    v-else
+                                    class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+                                >
+                                    Single Calculated
                                 </span>
                             </td>
                             <td class="p-4 align-middle">

@@ -8,16 +8,29 @@ import { Label } from "@/components/ui/label";
 const props = defineProps({
     form: Object,
     eligiblePurchaseRequests: Array,
-    suppliers: Array,
 });
 
 const emit = defineEmits(["submit"]);
 
-const selectedPurchaseRequest = computed(() =>
-    props.eligiblePurchaseRequests?.find(
-        (pr) => String(pr.id) === String(props.form.pr_id),
-    ),
-);
+const selectedPurchaseRequest = computed(() => {
+    if (props.form.pr_id) {
+        return props.eligiblePurchaseRequests?.find(
+            (pr) => String(pr.id) === String(props.form.pr_id),
+        );
+    }
+
+    if (props.form.pr_no) {
+        const normalized = String(props.form.pr_no).trim().toLowerCase();
+        return props.eligiblePurchaseRequests?.find(
+            (pr) =>
+                String(pr.pr_no || "")
+                    .trim()
+                    .toLowerCase() === normalized,
+        );
+    }
+
+    return null;
+});
 
 const formatCurrency = (value) => {
     return new Intl.NumberFormat("en-PH", {
@@ -27,32 +40,40 @@ const formatCurrency = (value) => {
 };
 
 watch(
-    () => props.form.pr_id,
-    (newPrId) => {
-        if (!newPrId) return;
-        const pr = props.eligiblePurchaseRequests?.find(
-            (item) => String(item.id) === String(newPrId),
-        );
-
-        if (!pr) return;
-
-        if (!props.form.submission_deadline && props.form.rfq_date) {
-            const date = new Date(props.form.rfq_date);
-            date.setDate(date.getDate() + 7);
-            props.form.submission_deadline = date.toISOString().split("T")[0];
+    selectedPurchaseRequest,
+    (pr) => {
+        if (!pr) {
+            return;
         }
+
+        props.form.pr_id = String(pr.id);
+        props.form.pr_no = pr.pr_no || "";
+        props.form.project_name = pr.purpose || "";
+
+        const defaultAbc = Number(
+            pr.emanating?.ppmp_category?.total_estimated_budget ||
+                pr.total_amount ||
+                0,
+        );
+        props.form.abc_amount = String(defaultAbc || 0);
+
+        props.form.items = (pr.items || []).map((item) => ({
+            pr_item_id: item.id,
+            item_name:
+                item.item_name || item.emanating_item?.ppmp_item?.name || "",
+            unit: item.unit || item.emanating_item?.unit || "",
+            quantity: Number(item.quantity || 0),
+        }));
     },
+    { immediate: true },
 );
 
-const toggleSupplier = (supplierId) => {
-    if (props.form.supplier_ids.includes(supplierId)) {
-        props.form.supplier_ids = props.form.supplier_ids.filter(
-            (id) => id !== supplierId,
-        );
-        return;
-    }
-
-    props.form.supplier_ids = [...props.form.supplier_ids, supplierId];
+const onPrDropdownChange = (value) => {
+    props.form.pr_id = value;
+    const selected = props.eligiblePurchaseRequests?.find(
+        (pr) => String(pr.id) === String(value),
+    );
+    props.form.pr_no = selected?.pr_no || "";
 };
 </script>
 
@@ -65,32 +86,47 @@ const toggleSupplier = (supplierId) => {
                     Source Purchase Request
                 </CardTitle>
             </CardHeader>
-            <CardContent class="space-y-3">
-                <div class="space-y-2">
-                    <Label for="pr_id">Approved Purchase Request</Label>
-                    <select
-                        id="pr_id"
-                        :value="form.pr_id"
-                        @change="form.pr_id = $event.target.value"
-                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    >
-                        <option value="">— Select Purchase Request —</option>
-                        <option
-                            v-for="pr in eligiblePurchaseRequests"
-                            :key="pr.id"
-                            :value="pr.id"
+            <CardContent class="space-y-4">
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <div class="space-y-2">
+                        <Label for="pr_id">Approved Purchase Request</Label>
+                        <select
+                            id="pr_id"
+                            :value="form.pr_id"
+                            @change="onPrDropdownChange($event.target.value)"
+                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                         >
-                            {{ pr.pr_no || "PR #" + pr.id }} —
-                            {{ pr.office?.name }}
-                        </option>
-                    </select>
-                    <p
-                        v-if="form.errors?.pr_id"
-                        class="text-xs text-destructive"
-                    >
-                        {{ form.errors.pr_id }}
-                    </p>
+                            <option value="">
+                                — Select Purchase Request —
+                            </option>
+                            <option
+                                v-for="pr in eligiblePurchaseRequests"
+                                :key="pr.id"
+                                :value="pr.id"
+                            >
+                                {{ pr.pr_no || "PR #" + pr.id }} —
+                                {{ pr.office?.name }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-2">
+                        <Label for="pr_no">Or Enter PR Number</Label>
+                        <input
+                            id="pr_no"
+                            v-model="form.pr_no"
+                            type="text"
+                            placeholder="e.g. 0226-0001"
+                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        />
+                    </div>
                 </div>
+                <p v-if="form.errors?.pr_id" class="text-xs text-destructive">
+                    {{ form.errors.pr_id }}
+                </p>
+                <p v-if="form.errors?.pr_no" class="text-xs text-destructive">
+                    {{ form.errors.pr_no }}
+                </p>
 
                 <div
                     v-if="selectedPurchaseRequest"
@@ -98,32 +134,21 @@ const toggleSupplier = (supplierId) => {
                 >
                     <div>
                         <span class="text-muted-foreground">Office:</span>
-                        <span class="font-medium">
-                            {{
-                                selectedPurchaseRequest.office?.name || "—"
-                            }}</span
-                        >
+                        <span class="font-medium">{{
+                            selectedPurchaseRequest.office?.name || "—"
+                        }}</span>
                     </div>
                     <div>
-                        <span class="text-muted-foreground">Project:</span>
-                        <span class="font-medium">
-                            {{
-                                selectedPurchaseRequest.emanating?.project
-                                    ?.name ||
-                                selectedPurchaseRequest.purpose ||
-                                "N/A"
-                            }}</span
-                        >
+                        <span class="text-muted-foreground">Purpose:</span>
+                        <span class="font-medium">{{
+                            selectedPurchaseRequest.purpose || "N/A"
+                        }}</span>
                     </div>
                     <div>
-                        <span class="text-muted-foreground">ABC:</span>
-                        <span class="font-medium">
-                            {{
-                                formatCurrency(
-                                    selectedPurchaseRequest.total_amount,
-                                )
-                            }}</span
-                        >
+                        <span class="text-muted-foreground">PR Total:</span>
+                        <span class="font-medium">{{
+                            formatCurrency(selectedPurchaseRequest.total_amount)
+                        }}</span>
                     </div>
                 </div>
             </CardContent>
@@ -141,12 +166,12 @@ const toggleSupplier = (supplierId) => {
             </CardHeader>
             <CardContent class="grid gap-4 sm:grid-cols-2">
                 <div class="space-y-2">
-                    <Label for="rfq_date">RFQ Date</Label>
+                    <Label for="rfq_date">RFQ Date (Workday)</Label>
                     <input
                         id="rfq_date"
                         v-model="form.rfq_date"
                         type="date"
-                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     />
                     <p
                         v-if="form.errors?.rfq_date"
@@ -162,11 +187,8 @@ const toggleSupplier = (supplierId) => {
                         id="submission_deadline"
                         v-model="form.submission_deadline"
                         type="date"
-                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     />
-                    <p class="text-xs text-muted-foreground">
-                        Accomplishment beyond one week is tagged as late filing.
-                    </p>
                     <p
                         v-if="form.errors?.submission_deadline"
                         class="text-xs text-destructive"
@@ -176,13 +198,46 @@ const toggleSupplier = (supplierId) => {
                 </div>
 
                 <div class="space-y-2 sm:col-span-2">
+                    <Label for="project_name">Project Name</Label>
+                    <input
+                        id="project_name"
+                        v-model="form.project_name"
+                        type="text"
+                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    />
+                    <p
+                        v-if="form.errors?.project_name"
+                        class="text-xs text-destructive"
+                    >
+                        {{ form.errors.project_name }}
+                    </p>
+                </div>
+
+                <div class="space-y-2">
+                    <Label for="abc_amount">ABC Amount</Label>
+                    <input
+                        id="abc_amount"
+                        v-model="form.abc_amount"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    />
+                    <p
+                        v-if="form.errors?.abc_amount"
+                        class="text-xs text-destructive"
+                    >
+                        {{ form.errors.abc_amount }}
+                    </p>
+                </div>
+
+                <div class="space-y-2 sm:col-span-2">
                     <Label for="remarks">Remarks</Label>
                     <textarea
                         id="remarks"
                         v-model="form.remarks"
                         rows="3"
-                        placeholder="Optional notes for this RFQ..."
-                        class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     />
                     <p
                         v-if="form.errors?.remarks"
@@ -197,56 +252,79 @@ const toggleSupplier = (supplierId) => {
         <Card>
             <CardHeader>
                 <CardTitle class="flex items-center gap-2 text-base">
-                    <Icon
-                        icon="lucide:building-2"
-                        class="h-4 w-4 text-primary"
-                    />
-                    Suppliers
+                    <Icon icon="lucide:list" class="h-4 w-4 text-primary" />
+                    RFQ Items Snapshot
                 </CardTitle>
             </CardHeader>
-            <CardContent class="space-y-3">
-                <div class="grid gap-2 sm:grid-cols-2">
-                    <button
-                        v-for="supplier in suppliers"
-                        :key="supplier.id"
-                        type="button"
-                        :class="[
-                            'rounded-md border p-3 text-left transition-colors',
-                            form.supplier_ids.includes(supplier.id)
-                                ? 'border-primary bg-primary/10'
-                                : 'border-border hover:bg-muted',
-                        ]"
-                        @click="toggleSupplier(supplier.id)"
-                    >
-                        <div class="font-medium">{{ supplier.name }}</div>
-                        <div class="text-xs text-muted-foreground mt-1">
-                            {{ supplier.contact_number || "No contact number" }}
-                        </div>
-                        <div
-                            class="text-xs text-muted-foreground truncate"
-                            :title="supplier.address"
-                        >
-                            {{ supplier.address || "No address" }}
-                        </div>
-                    </button>
+            <CardContent>
+                <div class="relative w-full overflow-auto">
+                    <table class="w-full text-sm">
+                        <thead class="border-b">
+                            <tr>
+                                <th class="px-3 py-2 text-left">Item</th>
+                                <th class="px-3 py-2 text-center">Unit</th>
+                                <th class="px-3 py-2 text-center">Quantity</th>
+                                <th class="px-3 py-2 text-right">Unit Price</th>
+                                <th class="px-3 py-2 text-right">
+                                    Total Amount
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-if="!form.items?.length">
+                                <td
+                                    colspan="5"
+                                    class="px-3 py-6 text-center text-muted-foreground"
+                                >
+                                    Select a Purchase Request to load items.
+                                </td>
+                            </tr>
+                            <tr
+                                v-for="(item, index) in form.items"
+                                :key="item.pr_item_id"
+                                class="border-b"
+                            >
+                                <td class="px-3 py-2">{{ item.item_name }}</td>
+                                <td class="px-3 py-2 text-center">
+                                    {{ item.unit || "—" }}
+                                </td>
+                                <td class="px-3 py-2">
+                                    <input
+                                        v-model.number="
+                                            form.items[index].quantity
+                                        "
+                                        type="number"
+                                        min="1"
+                                        class="mx-auto flex h-9 w-24 rounded-md border border-input bg-background px-2 py-1 text-center"
+                                    />
+                                </td>
+                                <td
+                                    class="px-3 py-2 text-right text-muted-foreground"
+                                >
+                                    (to be filled by supplier)
+                                </td>
+                                <td
+                                    class="px-3 py-2 text-right text-muted-foreground"
+                                >
+                                    (to be filled by supplier)
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-
-                <p class="text-xs text-muted-foreground">
-                    Selected {{ form.supplier_ids.length }} supplier(s)
-                </p>
                 <p
-                    v-if="form.errors?.supplier_ids"
-                    class="text-xs text-destructive"
+                    v-if="form.errors?.items"
+                    class="mt-2 text-xs text-destructive"
                 >
-                    {{ form.errors.supplier_ids }}
+                    {{ form.errors.items }}
                 </p>
             </CardContent>
         </Card>
 
         <div class="flex justify-end gap-2">
-            <Button type="button" variant="outline" @click="form.reset()">
-                Reset
-            </Button>
+            <Button type="button" variant="outline" @click="form.reset()"
+                >Reset</Button
+            >
             <Button type="submit" :disabled="form.processing">
                 <Icon
                     v-if="form.processing"

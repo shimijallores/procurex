@@ -15,6 +15,15 @@ class RFQItem extends Model
     protected $fillable = [
         'rfq_id',
         'pr_item_id',
+        'item_name',
+        'unit',
+        'quantity',
+    ];
+
+    protected $casts = [
+        'quantity' => 'integer',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function rfq(): BelongsTo

@@ -82,7 +82,7 @@ Route::middleware(['auth'])->group(function (): void {
     // RFQ module
     $rfqRoles = 'role:Superadmin,Quotation Admin';
     Route::resource('rfqs', RFQController::class)->only(['index', 'create', 'store', 'show', 'destroy'])->middleware($rfqRoles);
-    Route::post('rfqs/{rfq}/suppliers/{rfq_supplier}/submit', [RFQController::class, 'submitSupplier'])->middleware($rfqRoles)->name('rfqs.suppliers.submit');
+    Route::get('rfqs/suggest-date', [RFQController::class, 'suggestRfqDate'])->middleware($rfqRoles)->name('rfqs.suggest-date');
     Route::get('rfqs/{rfq}/pdf', [RFQController::class, 'printPdf'])->middleware($rfqRoles)->name('rfqs.pdf');
 
     // AOQ module

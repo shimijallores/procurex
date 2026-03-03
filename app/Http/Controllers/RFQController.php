@@ -5,20 +5,16 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreRFQRequest;
-use App\Http\Requests\StoreRFQSupplierSubmissionRequest;
 use App\Models\PurchaseRequest;
 use App\Models\RFQ;
 use App\Models\RFQItem;
-use App\Models\RFQSupplier;
-use App\Models\RFQSupplierItem;
-use App\Models\Supplier;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
-use NumberFormatter;
 use Spatie\LaravelPdf\Facades\Pdf;
 
 class RFQController extends Controller
@@ -27,7 +23,7 @@ class RFQController extends Controller
     {
         $query = RFQ::with([
             'purchaseRequest.office',
-            'suppliers.supplier',
+            'items',
         ])
             ->when($request->search, function ($q, string $search): void {
                 $q->where('svp_no', 'like', sprintf('%%%s%%', $search))
@@ -35,8 +31,7 @@ class RFQController extends Controller
                     ->orWhereHas('purchaseRequest', function ($pr) use ($search): void {
                         $pr->where('pr_no', 'like', sprintf('%%%s%%', $search))
                             ->orWhereHas('office', fn($o) => $o->where('name', 'like', sprintf('%%%s%%', $search)));
-                    })
-                    ->orWhereHas('suppliers.supplier', fn($s) => $s->where('name', 'like', sprintf('%%%s%%', $search)));
+                    });
             })
             ->when($request->office_id, function ($q, string $officeId): void {
                 $q->whereHas('purchaseRequest', fn($pr) => $pr->where('office_id', $officeId));
@@ -53,8 +48,8 @@ class RFQController extends Controller
                 ->where(function ($q): void {
                     $q->whereNull('submission_deadline')->orWhereDate('submission_deadline', '>=', now()->toDateString());
                 })->count(),
-            'with_late_submission' => RFQSupplier::where('is_late', true)->distinct('rfq_id')->count('rfq_id'),
-            'submitted_supplier_count' => RFQSupplier::whereNotNull('submitted_at')->count(),
+            'with_deadline' => (clone $query)->whereNotNull('submission_deadline')->count(),
+            'for_aoq' => (clone $query)->whereDoesntHave('aoq')->count(),
         ];
 
         $offices = \App\Models\Office::orderBy('name')->get(['id', 'name']);
@@ -82,7 +77,7 @@ class RFQController extends Controller
         $eligiblePurchaseRequests = PurchaseRequest::with([
             'office',
             'fund',
-            'emanating.project',
+            'emanating.ppmpCategory',
             'items.emanatingItem.ppmpItem',
         ])
             ->where('status', 'approved')
@@ -90,15 +85,17 @@ class RFQController extends Controller
             ->latest()
             ->get();
 
-        $suppliers = Supplier::where('is_active', true)
-            ->orderBy('name')
-            ->get(['id', 'name', 'address', 'contact_number']);
-
         return Inertia::render('RFQs/Create', [
             'eligiblePurchaseRequests' => $eligiblePurchaseRequests,
-            'suppliers' => $suppliers,
-            'defaultRfqDate' => now()->toDateString(),
+            'defaultRfqDate' => $this->suggestNextRfqDate()->toDateString(),
             'defaultSubmissionDeadline' => now()->addWeek()->toDateString(),
+        ]);
+    }
+
+    public function suggestRfqDate(): JsonResponse
+    {
+        return response()->json([
+            'rfq_date' => $this->suggestNextRfqDate()->toDateString(),
         ]);
     }
 
@@ -108,17 +105,24 @@ class RFQController extends Controller
 
         DB::beginTransaction();
         try {
-            $purchaseRequest = PurchaseRequest::with([
+            $purchaseRequestQuery = PurchaseRequest::with([
                 'items',
                 'emanating.project',
-            ])->findOrFail($validated['pr_id']);
+                'emanating.ppmpCategory',
+            ])
+                ->where('status', 'approved')
+                ->whereDoesntHave('rfq');
 
-            if ($purchaseRequest->status !== 'approved') {
-                return redirect()->back()->with('error', 'Only approved Purchase Requests can create an RFQ.');
+            if (! empty($validated['pr_id'])) {
+                $purchaseRequestQuery->where('id', (int) $validated['pr_id']);
+            } elseif (! empty($validated['pr_no'])) {
+                $purchaseRequestQuery->where('pr_no', (string) $validated['pr_no']);
             }
 
-            if ($purchaseRequest->rfq()->exists()) {
-                return redirect()->back()->with('error', 'An RFQ already exists for this Purchase Request.');
+            $purchaseRequest = $purchaseRequestQuery->first();
+
+            if (! $purchaseRequest) {
+                return redirect()->back()->with('error', 'The selected Purchase Request is not eligible for RFQ creation.');
             }
 
             $rfqDate = Carbon::parse($validated['rfq_date']);
@@ -126,38 +130,32 @@ class RFQController extends Controller
                 ? Carbon::parse($validated['submission_deadline'])
                 : $rfqDate->copy()->addWeek();
 
+            $allowedPrItemIds = $purchaseRequest->items->pluck('id')->map(fn($id) => (int) $id)->all();
+
+            foreach ($validated['items'] as $itemPayload) {
+                if (! in_array((int) $itemPayload['pr_item_id'], $allowedPrItemIds, true)) {
+                    return redirect()->back()->with('error', 'One or more RFQ items are invalid for the selected Purchase Request.');
+                }
+            }
+
             $rfq = RFQ::create([
                 'pr_id' => $purchaseRequest->id,
                 'svp_no' => $this->generateSvpNo($rfqDate),
                 'rfq_date' => $rfqDate->toDateString(),
                 'submission_deadline' => $submissionDeadline->toDateString(),
-                'project_name' => $purchaseRequest->emanating?->project?->name
-                    ?? ($purchaseRequest->purpose ? mb_strimwidth($purchaseRequest->purpose, 0, 200, '...') : 'N/A'),
-                'abc_amount' => (float) $purchaseRequest->total_amount,
+                'project_name' => (string) $validated['project_name'],
+                'abc_amount' => (float) $validated['abc_amount'],
                 'remarks' => $validated['remarks'] ?? null,
             ]);
 
-            $rfqItems = [];
-            foreach ($purchaseRequest->items as $prItem) {
-                $rfqItems[] = RFQItem::create([
+            foreach ($validated['items'] as $itemPayload) {
+                RFQItem::create([
                     'rfq_id' => $rfq->id,
-                    'pr_item_id' => $prItem->id,
+                    'pr_item_id' => $itemPayload['pr_item_id'],
+                    'item_name' => $itemPayload['item_name'],
+                    'unit' => $itemPayload['unit'] ?? null,
+                    'quantity' => (int) $itemPayload['quantity'],
                 ]);
-            }
-
-            foreach ($validated['supplier_ids'] as $supplierId) {
-                $rfqSupplier = RFQSupplier::create([
-                    'rfq_id' => $rfq->id,
-                    'supplier_id' => $supplierId,
-                ]);
-
-                foreach ($rfqItems as $rfqItem) {
-                    RFQSupplierItem::create([
-                        'rfq_supplier_id' => $rfqSupplier->id,
-                        'rfq_item_id' => $rfqItem->id,
-                        'unit_price' => null,
-                    ]);
-                }
             }
 
             DB::commit();
@@ -178,8 +176,6 @@ class RFQController extends Controller
             'purchaseRequest.fund',
             'purchaseRequest.emanating.project',
             'items.purchaseRequestItem.emanatingItem.ppmpItem',
-            'suppliers.supplier',
-            'suppliers.supplierItems.rfqItem.purchaseRequestItem',
         ]);
 
         return Inertia::render('RFQs/Show', [
@@ -194,93 +190,15 @@ class RFQController extends Controller
         return redirect()->route('rfqs.index')->with('success', 'RFQ deleted successfully.');
     }
 
-    public function submitSupplier(StoreRFQSupplierSubmissionRequest $request, RFQ $rfq, RFQSupplier $rfqSupplier): RedirectResponse
-    {
-        if ($rfqSupplier->rfq_id !== $rfq->id) {
-            return redirect()->back()->with('error', 'Invalid RFQ supplier record.');
-        }
-
-        $validated = $request->validated();
-        $submittedAt = Carbon::parse($validated['submitted_at']);
-
-        $isLate = false;
-        if ($rfq->submission_deadline) {
-            $deadline = Carbon::parse($rfq->submission_deadline)->endOfDay();
-            $isLate = $submittedAt->greaterThan($deadline);
-        }
-
-        DB::beginTransaction();
-        try {
-            $rfqSupplier->update([
-                'submitted_at' => $submittedAt,
-                'is_late' => $isLate,
-                'remarks' => $validated['remarks'] ?? null,
-            ]);
-
-            $unitPrices = $validated['unit_prices'] ?? [];
-            if (! empty($unitPrices)) {
-                $supplierItems = $rfqSupplier->supplierItems()->get()->keyBy('rfq_item_id');
-                foreach ($unitPrices as $rfqItemId => $unitPrice) {
-                    if (! isset($supplierItems[$rfqItemId])) {
-                        continue;
-                    }
-
-                    $supplierItems[$rfqItemId]->update([
-                        'unit_price' => $unitPrice === null || $unitPrice === '' ? null : $unitPrice,
-                    ]);
-                }
-            }
-
-            DB::commit();
-        } catch (\Throwable $e) {
-            DB::rollBack();
-
-            return redirect()->back()->with('error', 'Failed to save supplier submission.');
-        }
-
-        $message = $isLate
-            ? 'Supplier submission saved and tagged as late filing (subject for RFQ Admin/Superadmin approval).'
-            : 'Supplier submission saved successfully.';
-
-        return redirect()->route('rfqs.show', $rfq)->with('success', $message);
-    }
-
-    public function printPdf(Request $request, RFQ $rfq)
+    public function printPdf(RFQ $rfq)
     {
         $rfq->load([
             'purchaseRequest.office',
             'items.purchaseRequestItem.emanatingItem.ppmpItem',
-            'suppliers.supplier',
-            'suppliers.supplierItems.rfqItem.purchaseRequestItem',
         ]);
-
-        $selectedSupplierId = $request->integer('supplier_id');
-
-        $supplierEntry = $rfq->suppliers
-            ->when($selectedSupplierId, fn($collection) => $collection->where('supplier_id', $selectedSupplierId))
-            ->first();
-
-        if (! $supplierEntry) {
-            return redirect()->back()->with('error', 'No supplier record found for this RFQ.');
-        }
-
-        $supplierEntry->load([
-            'supplier',
-            'supplierItems.rfqItem.purchaseRequestItem.emanatingItem.ppmpItem',
-        ]);
-
-        $totalQuotedAmount = $supplierEntry->supplierItems->sum(function (RFQSupplierItem $item): float {
-            $quantity = (int) ($item->rfqItem?->purchaseRequestItem?->quantity ?? 0);
-            $unitPrice = (float) ($item->unit_price ?? 0);
-
-            return $quantity * $unitPrice;
-        });
 
         return Pdf::view('pdf.rfq', [
             'rfq' => $rfq,
-            'supplierEntry' => $supplierEntry,
-            'totalQuotedAmount' => $totalQuotedAmount,
-            'totalAmountInWords' => $this->amountInWords($totalQuotedAmount),
         ])
             ->format('a4')
             ->name('RFQ-' . $rfq->svp_no . '.pdf')
@@ -290,7 +208,7 @@ class RFQController extends Controller
     private function generateSvpNo(Carbon $rfqDate): string
     {
         $year = $rfqDate->format('Y');
-        $prefix = 'SVP-' . $year . '-';
+        $prefix = $year . '-';
 
         $latest = RFQ::query()
             ->where('svp_no', 'like', $prefix . '%')
@@ -298,38 +216,26 @@ class RFQController extends Controller
             ->value('svp_no');
 
         $next = 1;
-        if ($latest && preg_match('/^SVP-\d{4}-(\d{4})$/', $latest, $matches) === 1) {
+        if ($latest && preg_match('/^\d{4}-(\d{4})$/', $latest, $matches) === 1) {
             $next = (int) $matches[1] + 1;
         }
 
         do {
-            $svpNo = $prefix . str_pad((string) $next, 4, '0', STR_PAD_LEFT);
+            $svpNo = sprintf('%s%04d', $prefix, $next);
             $next++;
         } while (RFQ::where('svp_no', $svpNo)->exists());
 
         return $svpNo;
     }
 
-    private function amountInWords(float $amount): string
+    private function suggestNextRfqDate(): Carbon
     {
-        if ($amount <= 0) {
-            return 'Zero Pesos Only';
+        $date = now()->addDay()->startOfDay();
+
+        while ($date->isWeekend()) {
+            $date->addDay();
         }
 
-        if (class_exists(NumberFormatter::class)) {
-            $whole = (int) floor($amount);
-            $cents = (int) round(($amount - $whole) * 100);
-
-            $formatter = new NumberFormatter('en', NumberFormatter::SPELLOUT);
-            $words = ucwords((string) $formatter->format($whole)) . ' Pesos';
-
-            if ($cents > 0) {
-                $words .= ' and ' . str_pad((string) $cents, 2, '0', STR_PAD_LEFT) . '/100';
-            }
-
-            return $words . ' Only';
-        }
-
-        return number_format($amount, 2) . ' Pesos Only';
+        return $date;
     }
 }

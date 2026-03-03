@@ -23,12 +23,14 @@ defineOptions({
 
 const props = defineProps({
     eligibleRfqs: Array,
+    suppliers: Array,
     defaultAoqDate: String,
 });
 
 const form = useForm({
     rfq_id: "",
     aoq_date: props.defaultAoqDate || "",
+    quotations: [],
 });
 
 const submit = () => {
@@ -43,6 +45,7 @@ const submit = () => {
         <AOQCreateForm
             :form="form"
             :eligible-rfqs="eligibleRfqs"
+            :suppliers="suppliers"
             @submit="submit"
         />
     </div>

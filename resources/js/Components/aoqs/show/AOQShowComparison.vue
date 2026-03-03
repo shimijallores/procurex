@@ -36,7 +36,7 @@ const lineTotal = (supplierEntry, rfqItem) => {
         supplierItem.unit_price === undefined
     )
         return null;
-    const quantity = Number(rfqItem.purchase_request_item?.quantity || 0);
+    const quantity = Number(rfqItem.quantity || 0);
     return Number(supplierItem.unit_price) * quantity;
 };
 
@@ -47,14 +47,31 @@ const unitPrice = (supplierEntry, rfqItem) => {
     );
     return supplierItem?.unit_price ?? null;
 };
+
+const calculationMessage = () => {
+    const count = Number(props.calculation?.calculated_supplier_count || 0);
+
+    if (count >= 2) {
+        return "lowest calculated";
+    }
+
+    if (count === 1) {
+        return "single calculated";
+    }
+
+    return "";
+};
 </script>
 
 <template>
     <div class="rounded-lg border bg-card p-4 space-y-4">
         <div>
             <h2 class="text-lg font-semibold">Abstract Comparison</h2>
-            <p class="text-sm text-muted-foreground">
-                Lowest calculated quotation is automatically identified.
+            <p
+                v-if="calculationMessage()"
+                class="text-sm text-muted-foreground"
+            >
+                {{ calculationMessage() }}
             </p>
         </div>
 
@@ -106,29 +123,22 @@ const unitPrice = (supplierEntry, rfqItem) => {
                         class="border-b"
                     >
                         <td class="px-3 py-2">
-                            {{ rfqItem.purchase_request_item?.quantity || 0 }}
+                            {{ rfqItem.quantity || 0 }}
                         </td>
                         <td class="px-3 py-2">
-                            {{
-                                rfqItem.purchase_request_item?.unit ||
-                                rfqItem.purchase_request_item?.emanating_item
-                                    ?.unit ||
-                                "—"
-                            }}
+                            {{ rfqItem.unit || "—" }}
                         </td>
                         <td class="px-3 py-2">
-                            {{
-                                rfqItem.purchase_request_item?.item_name ||
-                                rfqItem.purchase_request_item?.emanating_item
-                                    ?.ppmp_item?.name ||
-                                "—"
-                            }}
+                            {{ rfqItem.item_name || "—" }}
                         </td>
                         <td class="px-3 py-2 text-right">
                             {{
                                 formatCurrency(
-                                    rfqItem.purchase_request_item?.line_total ||
-                                        0,
+                                    Number(rfqItem.quantity || 0) *
+                                        Number(
+                                            rfqItem.purchase_request_item
+                                                ?.unit_cost || 0,
+                                        ),
                                 )
                             }}
                         </td>

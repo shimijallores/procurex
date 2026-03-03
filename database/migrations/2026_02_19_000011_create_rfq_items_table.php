@@ -14,6 +14,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('rfq_id')->constrained('rfqs')->cascadeOnDelete();
             $table->foreignId('pr_item_id')->constrained('purchase_request_items')->cascadeOnDelete();
+            $table->string('item_name');
+            $table->string('unit')->nullable();
+            $table->unsignedInteger('quantity');
             $table->timestamps();
 
             $table->unique(['rfq_id', 'pr_item_id'], 'uq_rfq_item_rfq_pr_item');

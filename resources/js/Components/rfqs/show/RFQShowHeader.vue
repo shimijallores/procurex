@@ -10,14 +10,7 @@ const props = defineProps({
 defineEmits(["delete"]);
 
 const openPdf = () => {
-    const firstSupplier = props.rfq?.suppliers?.[0];
-    const href = firstSupplier
-        ? route("rfqs.pdf", {
-              rfq: props.rfq.id,
-              supplier_id: firstSupplier.supplier_id,
-          })
-        : route("rfqs.pdf", props.rfq.id);
-    window.open(href, "_blank");
+    window.open(route("rfqs.pdf", props.rfq.id), "_blank");
 };
 </script>
 

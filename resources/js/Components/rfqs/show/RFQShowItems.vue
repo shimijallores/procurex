@@ -56,45 +56,23 @@ defineProps({
                             class="border-b transition-colors hover:bg-muted/50"
                         >
                             <td class="p-4 align-middle">
-                                {{
-                                    item.purchase_request_item?.item_name ||
-                                    item.purchase_request_item?.emanating_item
-                                        ?.ppmp_item?.name ||
-                                    "—"
-                                }}
+                                {{ item.item_name || "—" }}
                             </td>
                             <td class="p-4 align-middle text-center">
-                                {{ item.purchase_request_item?.quantity || 0 }}
+                                {{ item.quantity || 0 }}
                             </td>
                             <td class="p-4 align-middle text-center">
-                                {{
-                                    item.purchase_request_item?.unit ||
-                                    item.purchase_request_item?.emanating_item
-                                        ?.unit ||
-                                    "—"
-                                }}
+                                {{ item.unit || "—" }}
                             </td>
-                            <td class="p-4 align-middle text-right">
-                                {{
-                                    new Intl.NumberFormat("en-PH", {
-                                        style: "currency",
-                                        currency: "PHP",
-                                    }).format(
-                                        item.purchase_request_item?.unit_cost ||
-                                            0,
-                                    )
-                                }}
+                            <td
+                                class="p-4 align-middle text-right text-muted-foreground"
+                            >
+                                (to be filled by supplier)
                             </td>
-                            <td class="p-4 align-middle text-right font-medium">
-                                {{
-                                    new Intl.NumberFormat("en-PH", {
-                                        style: "currency",
-                                        currency: "PHP",
-                                    }).format(
-                                        item.purchase_request_item
-                                            ?.line_total || 0,
-                                    )
-                                }}
+                            <td
+                                class="p-4 align-middle text-right font-medium text-muted-foreground"
+                            >
+                                (to be filled by supplier)
                             </td>
                         </tr>
                     </tbody>

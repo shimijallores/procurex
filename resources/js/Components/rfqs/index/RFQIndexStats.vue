@@ -47,34 +47,34 @@ const props = defineProps({
 
         <Card>
             <CardHeader class="pb-2">
-                <CardDescription>Late Filings</CardDescription>
+                <CardDescription>With Deadline</CardDescription>
                 <CardTitle class="text-2xl">{{
-                    stats?.with_late_submission || 0
+                    stats?.with_deadline || 0
                 }}</CardTitle>
             </CardHeader>
             <CardContent>
                 <div
                     class="text-xs text-muted-foreground flex items-center gap-1"
                 >
-                    <Icon icon="lucide:triangle-alert" class="h-3.5 w-3.5" />
-                    RFQs with late supplier submission
+                    <Icon icon="lucide:calendar-check-2" class="h-3.5 w-3.5" />
+                    RFQs with a submission deadline
                 </div>
             </CardContent>
         </Card>
 
         <Card>
             <CardHeader class="pb-2">
-                <CardDescription>Submitted Suppliers</CardDescription>
+                <CardDescription>Pending AOQ</CardDescription>
                 <CardTitle class="text-2xl">{{
-                    stats?.submitted_supplier_count || 0
+                    stats?.for_aoq || 0
                 }}</CardTitle>
             </CardHeader>
             <CardContent>
                 <div
                     class="text-xs text-muted-foreground flex items-center gap-1"
                 >
-                    <Icon icon="lucide:inbox" class="h-3.5 w-3.5" />
-                    Supplier responses received
+                    <Icon icon="lucide:calculator" class="h-3.5 w-3.5" />
+                    Ready for AOQ creation
                 </div>
             </CardContent>
         </Card>

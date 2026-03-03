@@ -21,6 +21,12 @@ class StoreAOQRequest extends FormRequest
         return [
             'rfq_id' => ['required', 'integer', 'exists:rfqs,id', 'unique:aoqs,rfq_id'],
             'aoq_date' => ['required', 'date'],
+            'quotations' => ['required', 'array', 'min:1'],
+            'quotations.*.supplier_id' => ['required', 'integer', 'distinct', 'exists:suppliers,id'],
+            'quotations.*.submitted_at' => ['nullable', 'date'],
+            'quotations.*.remarks' => ['nullable', 'string'],
+            'quotations.*.unit_prices' => ['required', 'array', 'min:1'],
+            'quotations.*.unit_prices.*' => ['nullable', 'numeric', 'min:0'],
         ];
     }
 }

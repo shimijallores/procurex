@@ -7,6 +7,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreAOQRequest;
 use App\Models\AOQ;
 use App\Models\RFQ;
+use App\Models\RFQSupplier;
+use App\Models\RFQSupplierItem;
+use App\Models\Supplier;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -93,21 +97,21 @@ class AOQController extends Controller
     {
         $eligibleRfqs = RFQ::with([
             'purchaseRequest.office',
-            'purchaseRequest.items.emanatingItem.ppmpItem',
             'items.purchaseRequestItem',
-            'suppliers.supplier',
-            'suppliers.supplierItems.rfqItem.purchaseRequestItem',
         ])
+            ->whereNotNull('pr_id')
             ->whereDoesntHave('aoq')
             ->latest('rfq_date')
-            ->get()
-            ->filter(function (RFQ $rfq): bool {
-                return $this->calculateSupplierTotals($rfq)['calculated_supplier_count'] > 0;
-            })
-            ->values();
+            ->get();
+
+        $suppliers = Supplier::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'address', 'contact_number']);
 
         return Inertia::render('AOQs/Create', [
             'eligibleRfqs' => $eligibleRfqs,
+            'suppliers' => $suppliers,
             'defaultAoqDate' => now()->toDateString(),
         ]);
     }
@@ -119,20 +123,89 @@ class AOQController extends Controller
         DB::beginTransaction();
         try {
             $rfq = RFQ::with([
+                'purchaseRequest.items',
                 'suppliers.supplier',
                 'suppliers.supplierItems.rfqItem.purchaseRequestItem',
             ])->findOrFail($validated['rfq_id']);
+
+            if (! $rfq->purchaseRequest) {
+                return redirect()->back()->with('error', 'The selected RFQ is not linked to a Purchase Request.');
+            }
 
             if ($rfq->aoq()->exists()) {
                 return redirect()->back()->with('error', 'An AOQ already exists for this RFQ.');
             }
 
-            $calculation = $this->calculateSupplierTotals($rfq);
-            if ($calculation['calculated_supplier_count'] === 0) {
-                return redirect()->back()->with('error', 'This RFQ has no submitted supplier quotation yet.');
+            $rfqItemIds = $rfq->items->pluck('id')->map(fn($id) => (int) $id)->all();
+            if (count($rfqItemIds) === 0) {
+                return redirect()->back()->with('error', 'This RFQ has no items to evaluate.');
             }
 
-            $winnerSupplierId = $calculation['winner_supplier_id'];
+            $supplierTotals = [];
+            foreach ($validated['quotations'] as $quotation) {
+                $unitPrices = $quotation['unit_prices'] ?? [];
+                $hasPrice = false;
+                $runningTotal = 0.0;
+
+                foreach ($rfq->items as $rfqItem) {
+                    $rawPrice = $unitPrices[$rfqItem->id] ?? null;
+
+                    if ($rawPrice === null || $rawPrice === '') {
+                        continue;
+                    }
+
+                    $hasPrice = true;
+                    $runningTotal += (float) $rawPrice * (int) $rfqItem->quantity;
+                }
+
+                if (! $hasPrice) {
+                    continue;
+                }
+
+                $supplierTotals[] = [
+                    'supplier_id' => (int) $quotation['supplier_id'],
+                    'total_amount' => round($runningTotal, 2),
+                ];
+            }
+
+            if (count($supplierTotals) === 0) {
+                return redirect()->back()->with('error', 'Please enter at least one supplier quotation with unit prices.');
+            }
+
+            usort($supplierTotals, fn($a, $b) => $a['total_amount'] <=> $b['total_amount']);
+            $winnerSupplierId = $supplierTotals[0]['supplier_id'];
+
+            foreach ($validated['quotations'] as $quotation) {
+                $rfqSupplier = RFQSupplier::firstOrCreate([
+                    'rfq_id' => $rfq->id,
+                    'supplier_id' => $quotation['supplier_id'],
+                ]);
+
+                $submittedAt = $quotation['submitted_at'] ?? null;
+                $isLate = false;
+                if ($submittedAt && $rfq->submission_deadline) {
+                    $isLate = Carbon::parse($submittedAt)->greaterThan(Carbon::parse($rfq->submission_deadline)->endOfDay());
+                }
+
+                $rfqSupplier->update([
+                    'submitted_at' => $submittedAt,
+                    'is_late' => $isLate,
+                    'remarks' => $quotation['remarks'] ?? null,
+                ]);
+
+                $rfqSupplier->supplierItems()->delete();
+
+                $unitPrices = $quotation['unit_prices'] ?? [];
+                foreach ($rfq->items as $rfqItem) {
+                    $rawPrice = $unitPrices[$rfqItem->id] ?? null;
+
+                    RFQSupplierItem::create([
+                        'rfq_supplier_id' => $rfqSupplier->id,
+                        'rfq_item_id' => $rfqItem->id,
+                        'unit_price' => $rawPrice === '' ? null : $rawPrice,
+                    ]);
+                }
+            }
 
             $aoq = AOQ::create([
                 'rfq_id' => $rfq->id,
@@ -225,7 +298,7 @@ class AOQController extends Controller
                     continue;
                 }
 
-                $quantity = (float) ($supplierItem->rfqItem?->purchaseRequestItem?->quantity ?? 0);
+                $quantity = (float) ($supplierItem->rfqItem?->quantity ?? 0);
                 $lineTotal = $quantity * (float) $supplierItem->unit_price;
                 $total += $lineTotal;
                 $hasAtLeastOnePrice = true;
@@ -248,10 +321,15 @@ class AOQController extends Controller
         $count = count($supplierTotals);
         $winner = $count > 0 ? $supplierTotals[0] : null;
 
+        $calculationMode = 'single_calculated';
+        if ($count >= 2) {
+            $calculationMode = 'lowest_calculated';
+        }
+
         return [
             'supplier_totals' => $supplierTotals,
             'calculated_supplier_count' => $count,
-            'calculation_mode' => $count <= 1 ? 'single_calculated' : 'lowest_calculated',
+            'calculation_mode' => $calculationMode,
             'winner_supplier_id' => $winner['supplier_id'] ?? null,
             'winner_total_amount' => $winner['total_amount'] ?? null,
         ];

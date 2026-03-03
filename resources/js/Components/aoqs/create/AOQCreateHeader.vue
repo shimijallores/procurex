@@ -18,8 +18,8 @@ import { Icon } from "@iconify/vue";
                     Create Abstract of Quotation
                 </h1>
                 <p class="text-muted-foreground mt-1">
-                    Generate abstract and determine winning supplier from RFQ
-                    quotations
+                    Encode supplier quotations using a full-page matrix from RFQ
+                    data linked to PR
                 </p>
             </div>
         </div>

@@ -39,18 +39,6 @@ const formatCurrency = (value) => {
         currency: "PHP",
     }).format(value || 0);
 };
-
-const getSupplierProgress = (rfq) => {
-    const total = rfq?.suppliers?.length || 0;
-    const submitted = (rfq?.suppliers || []).filter(
-        (s) => !!s.submitted_at,
-    ).length;
-    return `${submitted}/${total}`;
-};
-
-const hasLateFiling = (rfq) => {
-    return (rfq?.suppliers || []).some((s) => s.is_late);
-};
 </script>
 
 <template>
@@ -138,7 +126,7 @@ const hasLateFiling = (rfq) => {
                             <th
                                 class="h-12 px-4 text-center align-middle font-medium text-muted-foreground"
                             >
-                                Suppliers
+                                Items
                             </th>
                             <th
                                 class="h-12 px-4 text-right align-middle font-medium text-muted-foreground"
@@ -199,22 +187,10 @@ const hasLateFiling = (rfq) => {
                                 {{ formatDate(rfq.rfq_date) }}
                             </td>
                             <td class="p-4 align-middle text-center">
-                                <div class="space-y-1">
-                                    <div>
-                                        {{
-                                            formatDate(rfq.submission_deadline)
-                                        }}
-                                    </div>
-                                    <span
-                                        v-if="hasLateFiling(rfq)"
-                                        class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-medium text-red-800 dark:bg-red-900 dark:text-red-300"
-                                    >
-                                        Late Filing
-                                    </span>
-                                </div>
+                                {{ formatDate(rfq.submission_deadline) }}
                             </td>
                             <td class="p-4 align-middle text-center">
-                                {{ getSupplierProgress(rfq) }}
+                                {{ rfq.items?.length || 0 }}
                             </td>
                             <td class="p-4 align-middle text-right font-medium">
                                 {{ formatCurrency(rfq.abc_amount) }}
@@ -223,6 +199,17 @@ const hasLateFiling = (rfq) => {
                                 <div
                                     class="flex items-center justify-end gap-2"
                                 >
+                                    <a
+                                        :href="route('rfqs.pdf', rfq.id)"
+                                        target="_blank"
+                                    >
+                                        <Button variant="ghost" size="sm">
+                                            <Icon
+                                                icon="lucide:printer"
+                                                class="h-4 w-4"
+                                            />
+                                        </Button>
+                                    </a>
                                     <Link :href="route('rfqs.show', rfq.id)">
                                         <Button variant="ghost" size="sm">
                                             <Icon

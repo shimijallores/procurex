@@ -30,9 +30,9 @@ const formatCurrency = (value) =>
             <p class="text-muted-foreground">Calculation Mode</p>
             <p class="font-medium">
                 {{
-                    calculation?.calculation_mode === "single_calculated"
-                        ? "Single Calculated"
-                        : "Lowest Calculated"
+                    calculation?.calculated_supplier_count >= 2
+                        ? "Lowest Calculated"
+                        : "Single Calculated"
                 }}
             </p>
         </div>

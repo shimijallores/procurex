@@ -53,6 +53,45 @@
             margin-top: 20px;
         }
 
+        .top-right-meta {
+            width: 100%;
+            text-align: right;
+            font-size: 10pt;
+            line-height: 1.3;
+            margin-bottom: 8px;
+        }
+
+        .header-layout {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .header-layout td {
+            vertical-align: middle;
+        }
+
+        .header-logo-cell {
+            width: 18%;
+            text-align: center;
+        }
+
+        .header-main {
+            width: 64%;
+            text-align: center;
+        }
+
+        .logo-seal {
+            width: 58px;
+            height: 58px;
+            object-fit: contain;
+        }
+
+        .logo-bagong {
+            width: 74px;
+            height: 58px;
+            object-fit: contain;
+        }
+
         .header-title {
             font-size: 11pt;
             font-weight: bold;
@@ -170,33 +209,80 @@
 </head>
 
 <body>
+    @php
+    $imagePath = static function (array $candidates): ?string {
+    foreach ($candidates as $candidate) {
+    $absolute = public_path('images/' . $candidate);
+
+    if (! is_file($absolute)) {
+    continue;
+    }
+
+    $mime = mime_content_type($absolute) ?: 'image/png';
+    $content = file_get_contents($absolute);
+
+    if ($content === false) {
+    continue;
+    }
+
+    return 'data:' . $mime . ';base64,' . base64_encode($content);
+    }
+
+    return null;
+    };
+
+    $sealLogo = $imagePath(['batangas-seal.png']);
+    $bagongLogo = $imagePath(['bagong-pilipinas.png']);
+    $rows = $rfq->items ?? collect();
+    $minRows = 15;
+    $emptyRows = max(0, $minRows - $rows->count());
+    @endphp
+
     <div class="page">
-        <div class="text-center">
-            <div class="header-title">Republic of the Philippines</div>
-            <div class="header-title">Provincial Government of Batangas</div>
-            <div class="mt-1">Capitol Site, Kumintang Ibaba, Batangas City 4200</div>
-            <div class="mt-2 subtitle">Bids and Awards Committee</div>
-            <div class="mt-3 title">Request for Quotation (RFQ)</div>
-            <div class="subtitle">Small Value Procurement (SVP)</div>
-            <div class="mt-1">SVP No.: <strong>{{ $rfq->svp_no }}</strong></div>
+        <div class="top-right-meta">
+            <div><strong>PR No.:</strong> {{ $rfq->purchaseRequest?->pr_no }}</div>
+            <div><strong>SVP No.:</strong> {{ $rfq->svp_no }}</div>
         </div>
+
+        <table class="header-layout">
+            <tr>
+                <td class="header-logo-cell">
+                    @if ($sealLogo)
+                    <img src="{{ $sealLogo }}" alt="Batangas Seal" class="logo-seal">
+                    @endif
+                </td>
+                <td class="header-main">
+                    <div class="header-title">Republic of the Philippines</div>
+                    <div class="header-title">Provincial Government of Batangas</div>
+                    <div class="mt-1">Capitol Site, Kumintang Ibaba, Batangas City 4200</div>
+                    <div class="mt-2 subtitle">Bids and Awards Committee</div>
+                    <div class="mt-3 title">Request for Quotation (RFQ)</div>
+                    <div class="subtitle">Small Value Procurement (SVP)</div>
+                </td>
+                <td class="header-logo-cell">
+                    @if ($bagongLogo)
+                    <img src="{{ $bagongLogo }}" alt="Bagong Pilipinas" class="logo-bagong">
+                    @endif
+                </td>
+            </tr>
+        </table>
 
         <div class="mt-4">
             <div class="line-row">
                 <div class="line-label">Date:</div>
-                <div class="line-value">{{ \Carbon\Carbon::parse($rfq->rfq_date)->format('m/d/Y') }}</div>
+                <div class="line-value"></div>
             </div>
             <div class="line-row">
                 <div class="line-label">Company Name:</div>
-                <div class="line-value">{{ $supplierEntry->supplier?->name }}</div>
+                <div class="line-value"></div>
             </div>
             <div class="line-row">
                 <div class="line-label">Address:</div>
-                <div class="line-value">{{ $supplierEntry->supplier?->address }}</div>
+                <div class="line-value"></div>
             </div>
             <div class="line-row">
                 <div class="line-label">Contact Details:</div>
-                <div class="line-value">{{ $supplierEntry->supplier?->contact_number }}</div>
+                <div class="line-value"></div>
             </div>
         </div>
 
@@ -228,28 +314,14 @@
                 </tr>
             </thead>
             <tbody>
-                @php
-                $supplierItems = $supplierEntry->supplierItems ?? collect();
-                $minRows = 15;
-                $emptyRows = max(0, $minRows - $supplierItems->count());
-                @endphp
-
-                @foreach ($supplierItems as $index => $supplierItem)
-                @php
-                $prItem = $supplierItem->rfqItem?->purchaseRequestItem;
-                $quantity = (int) ($prItem?->quantity ?? 0);
-                $itemName = $prItem?->item_name ?? $prItem?->emanatingItem?->ppmpItem?->name ?? '';
-                $unit = $prItem?->unit ?? $prItem?->emanatingItem?->unit ?? '';
-                $unitPrice = $supplierItem->unit_price;
-                $lineTotal = $unitPrice !== null ? ((float) $unitPrice * $quantity) : null;
-                @endphp
+                @foreach ($rows as $index => $rfqItem)
                 <tr>
                     <td class="col-item-no">{{ $index + 1 }}</td>
-                    <td class="col-desc">{{ $itemName }}</td>
-                    <td class="col-qty">{{ $quantity }}</td>
-                    <td class="col-unit">{{ $unit }}</td>
-                    <td class="col-unit-price">{{ $unitPrice !== null ? number_format((float) $unitPrice, 2) : '' }}</td>
-                    <td class="col-total">{{ $lineTotal !== null ? number_format($lineTotal, 2) : '' }}</td>
+                    <td class="col-desc">{{ $rfqItem->item_name }}</td>
+                    <td class="col-qty">{{ (int) $rfqItem->quantity }}</td>
+                    <td class="col-unit">{{ $rfqItem->unit }}</td>
+                    <td class="col-unit-price"></td>
+                    <td class="col-total"></td>
                 </tr>
                 @endforeach
 
@@ -266,14 +338,14 @@
 
                     <tr class="total-row">
                         <td colspan="5" class="text-right">TOTAL AMOUNT:</td>
-                        <td class="col-total">{{ $totalQuotedAmount > 0 ? number_format((float) $totalQuotedAmount, 2) : '' }}</td>
+                        <td class="col-total"></td>
                     </tr>
             </tbody>
         </table>
 
-        <div class="footer-line">
+        <div class="footer-line mt-5">
             <div class="footer-label">Total Amount in Words:</div>
-            <div class="footer-value">{{ $totalQuotedAmount > 0 ? $totalAmountInWords : '' }}</div>
+            <div class="footer-value"></div>
         </div>
     </div>
 </body>

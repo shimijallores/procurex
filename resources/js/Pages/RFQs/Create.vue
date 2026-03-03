@@ -23,17 +23,19 @@ defineOptions({
 
 const props = defineProps({
     eligiblePurchaseRequests: Array,
-    suppliers: Array,
     defaultRfqDate: String,
     defaultSubmissionDeadline: String,
 });
 
 const form = useForm({
     pr_id: "",
+    pr_no: "",
     rfq_date: props.defaultRfqDate || "",
     submission_deadline: props.defaultSubmissionDeadline || "",
+    project_name: "",
+    abc_amount: "",
     remarks: "",
-    supplier_ids: [],
+    items: [],
 });
 
 const submit = () => {
@@ -48,7 +50,6 @@ const submit = () => {
         <RFQCreateForm
             :form="form"
             :eligible-purchase-requests="eligiblePurchaseRequests"
-            :suppliers="suppliers"
             @submit="submit"
         />
     </div>
