@@ -12,7 +12,6 @@ defineProps({
     completing: Boolean,
     formatCurrency: Function,
     onCompleteCanvas: Function,
-    onReturnClick: Function,
 });
 </script>
 
@@ -55,14 +54,6 @@ defineProps({
 
         <!-- Actions -->
         <div v-if="isPending" class="flex gap-2">
-            <Button
-                variant="outline"
-                class="border-destructive text-destructive hover:bg-destructive/10"
-                @click="onReturnClick"
-            >
-                <Icon icon="lucide:undo-2" class="mr-2 h-4 w-4" />
-                Return
-            </Button>
             <Button
                 :disabled="!allRowsPriced || completing"
                 @click="onCompleteCanvas"

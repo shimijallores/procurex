@@ -53,7 +53,6 @@ const statusVariant = (s) =>
     ({
         pending: "secondary",
         completed: "default",
-        returned: "destructive",
     })[s] ?? "outline";
 
 const formatCurrency = (value) => {
@@ -84,7 +83,6 @@ const formatDate = (date) => {
             :total-count="stats?.total || 0"
             :pending-count="stats?.pending || 0"
             :completed-count="stats?.completed || 0"
-            :returned-count="stats?.returned || 0"
         />
 
         <!-- Table -->
@@ -101,7 +99,6 @@ const formatDate = (date) => {
                         <option value="">All Statuses</option>
                         <option value="pending">Pending</option>
                         <option value="completed">Completed</option>
-                        <option value="returned">Returned</option>
                     </select>
                     <div class="relative w-56">
                         <Icon
@@ -133,9 +130,10 @@ const formatDate = (date) => {
             description="Are you sure you want to delete this canvas? All selections will be removed."
             :delete-url="
                 canvasToDelete
-                    ? route('canvasses.destroy', canvasToDelete.id)
+                    ? route('canvasses.delete', canvasToDelete.id)
                     : ''
             "
+            http-method="post"
         />
     </div>
 </template>

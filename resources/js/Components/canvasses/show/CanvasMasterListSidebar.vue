@@ -1,6 +1,7 @@
 <script setup>
 import { Icon } from "@iconify/vue";
 import { watch, computed } from "vue";
+import { route } from "ziggy-js";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -46,15 +47,36 @@ const currentCanvasItem = computed(() => {
 });
 
 // Get expected price for the current row
-const currentExpectedPrice = computed(() => {
-    return currentCanvasItem.value?.emanating_item?.total_price ?? 0;
+const currentEmanatingItem = computed(() => {
+    return currentCanvasItem.value?.emanating_item ?? null;
 });
 
-// Check if computed price exceeds expected
-const exceedsExpectedPrice = computed(() => {
-    const computed = parseFloat(props.localComputedPrice) || 0;
-    return computed > 0 && computed > currentExpectedPrice.value;
+const currentEmanatingItemName = computed(() => {
+    if (!currentEmanatingItem.value) {
+        return "";
+    }
+
+    return (
+        currentEmanatingItem.value?.name ||
+        currentEmanatingItem.value?.ppmp_item?.name ||
+        currentEmanatingItem.value?.ppmpItem?.name ||
+        currentEmanatingItem.value?.name ||
+        ""
+    );
 });
+
+const openMasterListCreateShortcut = () => {
+    const itemName = currentEmanatingItemName.value || "";
+    const unit = currentEmanatingItem.value?.unit || "";
+
+    const createUrl = route("master-list-items.create", {
+        item_name: itemName,
+        search_key: itemName,
+        unit,
+    });
+
+    window.open(createUrl, "_blank");
+};
 
 // Auto-update localComputedPrice when itemsSubtotal changes (always override)
 watch(
@@ -86,6 +108,18 @@ watch(
             <CardContent class="flex-1 flex flex-col min-h-0 p-3 space-y-3">
                 <!-- Search & Filter -->
                 <div class="space-y-2 shrink-0">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        class="w-full"
+                        @click="openMasterListCreateShortcut"
+                    >
+                        <Icon
+                            icon="lucide:plus-square"
+                            class="mr-2 h-3.5 w-3.5"
+                        />
+                        Add Missing Item to Master List
+                    </Button>
                     <div class="relative">
                         <Icon
                             icon="lucide:search"
@@ -240,12 +274,7 @@ watch(
                         min="0"
                         step="0.01"
                         placeholder="Enter total price"
-                        :class="[
-                            'h-9 w-full rounded-md border px-3 text-sm font-mono text-right focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
-                            exceedsExpectedPrice
-                                ? 'border-destructive bg-destructive/5'
-                                : 'border-input bg-background',
-                        ]"
+                        class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm font-mono text-right focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                         @input="
                             emit(
                                 'update:local-computed-price',
@@ -253,22 +282,6 @@ watch(
                             )
                         "
                     />
-                    <div
-                        v-if="exceedsExpectedPrice"
-                        class="flex gap-2 p-2 rounded bg-destructive/5 border border-destructive/20"
-                    >
-                        <Icon
-                            icon="lucide:alert-circle"
-                            class="h-4 w-4 text-destructive shrink-0 mt-0.5"
-                        />
-                        <div class="text-xs text-destructive">
-                            <p class="font-semibold">Exceeds Expected Price</p>
-                            <p class="text-destructive/80">
-                                Expected:
-                                {{ formatCurrency(currentExpectedPrice) }}
-                            </p>
-                        </div>
-                    </div>
                 </div>
             </CardContent>
 

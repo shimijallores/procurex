@@ -14,9 +14,26 @@ const emit = defineEmits(["select-emanating"]);
 const searchQuery = ref("");
 const officeFilter = ref("");
 
+const getOfficeName = (emanating) => {
+    return (
+        emanating?.project?.fund?.office?.name ||
+        emanating?.fund?.office?.name ||
+        ""
+    );
+};
+
+const getProjectName = (emanating) => {
+    return (
+        emanating?.project?.name ||
+        emanating?.fund?.project_code?.name ||
+        emanating?.fund?.projectCode?.name ||
+        ""
+    );
+};
+
 const offices = computed(() => {
     const unique = new Set(
-        props.emanatings?.map((em) => em.project?.fund?.office?.name) || [],
+        props.emanatings?.map((em) => getOfficeName(em)) || [],
     );
     return Array.from(unique).filter(Boolean).sort();
 });
@@ -29,13 +46,13 @@ const filteredEmanatings = computed(() => {
                 em.pr_no
                     ?.toLowerCase()
                     .includes(searchQuery.value.toLowerCase()) ||
-                em.project?.name
+                getProjectName(em)
                     ?.toLowerCase()
                     .includes(searchQuery.value.toLowerCase());
 
             const matchesOffice =
                 officeFilter.value === "" ||
-                em.project?.fund?.office?.name === officeFilter.value;
+                getOfficeName(em) === officeFilter.value;
 
             return matchesSearch && matchesOffice;
         }) || []
@@ -113,11 +130,11 @@ const formatDate = (date) => {
                             <td class="p-3">{{ emanating.pr_no || "—" }}</td>
                             <td class="p-3 max-w-xs">
                                 <div class="line-clamp-2">
-                                    {{ emanating.project?.name }}
+                                    {{ getProjectName(emanating) || "—" }}
                                 </div>
                             </td>
                             <td class="p-3 text-sm text-muted-foreground">
-                                {{ emanating.project?.fund?.office?.name }}
+                                {{ getOfficeName(emanating) || "—" }}
                             </td>
                             <td class="p-3 text-sm text-muted-foreground">
                                 FY {{ emanating.fiscal_year }}

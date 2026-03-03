@@ -1,6 +1,5 @@
 <script setup>
 import { Icon } from "@iconify/vue";
-import { computed } from "vue";
 import { Button } from "@/components/ui/button";
 import {
     Card,
@@ -19,20 +18,14 @@ const props = defineProps({
     onOpenRowEditor: Function,
 });
 
-const exceedsExpectedPrice = (canvasItem) => {
-    const computedPrice = parseFloat(canvasItem.computed_price ?? 0);
-    const expectedPrice = parseFloat(
-        canvasItem.emanating_item?.total_price ?? 0,
+const getItemDescription = (canvasItem) => {
+    return (
+        canvasItem?.emanating_item?.name ||
+        canvasItem?.emanating_item?.ppmp_item?.name ||
+        canvasItem?.emanating_item?.ppmpItem?.name ||
+        `Item #${canvasItem?.emanating_item_id}`
     );
-
-    if (!computedPrice) return false;
-
-    return computedPrice > expectedPrice;
 };
-
-const itemsExceedingPrice = computed(() => {
-    return props.canvas.canvas_items?.filter(exceedsExpectedPrice) ?? [];
-});
 </script>
 
 <template>
@@ -61,12 +54,6 @@ const itemsExceedingPrice = computed(() => {
                                 Unit
                             </th>
                             <th class="px-4 py-3 text-right font-medium">
-                                Expected Price Per Unit
-                            </th>
-                            <th class="px-4 py-3 text-right font-medium">
-                                Expected Price
-                            </th>
-                            <th class="px-4 py-3 text-right font-medium">
                                 Set Price
                             </th>
                             <th
@@ -80,7 +67,7 @@ const itemsExceedingPrice = computed(() => {
                     <tbody class="divide-y">
                         <tr v-if="!canvas.canvas_items?.length">
                             <td
-                                :colspan="isPending ? 8 : 7"
+                                :colspan="isPending ? 6 : 5"
                                 class="px-4 py-8 text-center text-muted-foreground"
                             >
                                 No items found in this canvas.
@@ -99,10 +86,7 @@ const itemsExceedingPrice = computed(() => {
                             </td>
                             <td class="px-4 py-3">
                                 <div class="font-medium">
-                                    {{
-                                        ci.emanating_item?.ppmp_item?.name ??
-                                        `Item #${ci.emanating_item_id}`
-                                    }}
+                                    {{ getItemDescription(ci) }}
                                 </div>
                             </td>
                             <td class="px-4 py-3 font-mono text-xs">
@@ -112,37 +96,12 @@ const itemsExceedingPrice = computed(() => {
                                 {{ ci.emanating_item?.unit ?? "—" }}
                             </td>
                             <td class="px-4 py-3 text-right">
-                                <span class="font-mono text-sm font-medium">
-                                    {{
-                                        formatCurrency(
-                                            ci.emanating_item?.total_price &&
-                                                ci.emanating_item?.quantity
-                                                ? ci.emanating_item
-                                                      .total_price /
-                                                      ci.emanating_item.quantity
-                                                : 0,
-                                        )
-                                    }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3 text-right">
-                                <span class="font-mono text-sm font-medium">
-                                    {{
-                                        formatCurrency(
-                                            ci.emanating_item?.total_price ?? 0,
-                                        )
-                                    }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3 text-right">
                                 <span
                                     :class="[
                                         'font-mono text-sm font-medium',
-                                        exceedsExpectedPrice(ci)
-                                            ? 'text-destructive font-bold'
-                                            : ci.computed_price !== null
-                                              ? 'text-foreground'
-                                              : 'text-muted-foreground',
+                                        ci.computed_price !== null
+                                            ? 'text-foreground'
+                                            : 'text-muted-foreground',
                                     ]"
                                 >
                                     {{ formatCurrency(ci.computed_price) }}
@@ -178,32 +137,5 @@ const itemsExceedingPrice = computed(() => {
                 </table>
             </div>
         </CardContent>
-
-        <!-- Warning notice -->
-        <div
-            v-if="itemsExceedingPrice.length > 0"
-            class="border-t bg-destructive/5 border-destructive/20 px-4 py-3"
-        >
-            <div class="flex gap-3">
-                <Icon
-                    icon="lucide:alert-circle"
-                    class="h-5 w-5 text-destructive shrink-0 mt-0.5"
-                />
-                <div class="text-sm">
-                    <p class="font-semibold text-destructive">
-                        Price Exceeds Expected
-                    </p>
-                    <p class="text-muted-foreground mt-1">
-                        {{
-                            itemsExceedingPrice.length === 1
-                                ? "1 item has"
-                                : itemsExceedingPrice.length + " items have"
-                        }}
-                        a set price that exceeds the expected price of the
-                        emanating request.
-                    </p>
-                </div>
-            </div>
-        </div>
     </Card>
 </template>

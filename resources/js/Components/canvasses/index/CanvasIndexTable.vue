@@ -15,6 +15,23 @@ defineProps({
     onDeleteClick: Function,
 });
 
+const getProjectName = (canvas) => {
+    return (
+        canvas?.emanating?.project?.name ||
+        canvas?.emanating?.fund?.project_code?.name ||
+        canvas?.emanating?.fund?.projectCode?.name ||
+        "—"
+    );
+};
+
+const getOfficeName = (canvas) => {
+    return (
+        canvas?.emanating?.project?.fund?.office?.name ||
+        canvas?.emanating?.fund?.office?.name ||
+        "—"
+    );
+};
+
 const statusConfig = (status) =>
     ({
         pending: {
@@ -26,11 +43,6 @@ const statusConfig = (status) =>
             label: "Completed",
             class: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
             icon: "lucide:check-circle",
-        },
-        returned: {
-            label: "Returned",
-            class: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
-            icon: "lucide:rotate-ccw",
         },
     })[status] ?? {
         label: status,
@@ -122,19 +134,16 @@ const formatDate = (date) => {
                                     </div>
                                     <div>
                                         <div class="font-medium">
-                                            {{
-                                                canvas.emanating?.project
-                                                    ?.name ?? "—"
-                                            }}
+                                            {{ getProjectName(canvas) }}
                                         </div>
                                         <div
                                             class="text-xs text-muted-foreground"
                                         >
+                                            Canvas #{{ canvas.id }} ·
+                                            {{ getOfficeName(canvas) }} · PR
                                             {{
-                                                canvas.emanating?.office
-                                                    ?.name ??
-                                                "Emanating #" +
-                                                    canvas.emanating_id
+                                                canvas.emanating?.pr_no ??
+                                                canvas.emanating_id
                                             }}
                                         </div>
                                     </div>

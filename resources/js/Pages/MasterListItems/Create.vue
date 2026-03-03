@@ -25,6 +25,7 @@ defineOptions({
 const props = defineProps({
     categories: Array,
     suppliers: Array,
+    prefill: Object,
 });
 </script>
 
@@ -53,6 +54,7 @@ const props = defineProps({
             :return-route="route('master-list-items.index')"
             :categories="categories"
             :suppliers="suppliers"
+            :prefill="prefill"
         />
     </div>
 </template>

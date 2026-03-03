@@ -50,11 +50,16 @@ class MasterListItemController extends Controller
         ]);
     }
 
-    public function create(): Response
+    public function create(Request $request): Response
     {
         return Inertia::render('MasterListItems/Create', [
             'categories' => MasterListCategory::where('is_active', true)->get(['id', 'name']),
             'suppliers' => Supplier::where('is_active', true)->get(['id', 'name']),
+            'prefill' => [
+                'item_name' => $request->query('item_name', ''),
+                'unit' => $request->query('unit', ''),
+                'search_key' => $request->query('search_key', ''),
+            ],
         ]);
     }
 

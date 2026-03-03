@@ -1,13 +1,12 @@
 <script setup>
 import { ref, computed } from "vue";
-import { Link, router } from "@inertiajs/vue3";
+import { router } from "@inertiajs/vue3";
 import Layout from "@/Layout/Layout.vue";
 import CanvasHeader from "@/components/canvasses/show/CanvasHeader.vue";
 import CanvasTotalTracker from "@/components/canvasses/show/CanvasTotalTracker.vue";
 import CanvasItemsTable from "@/components/canvasses/show/CanvasItemsTable.vue";
 import CanvasMasterListSidebar from "@/components/canvasses/show/CanvasMasterListSidebar.vue";
-import ReturnReasonBanner from "@/components/canvasses/show/ReturnReasonBanner.vue";
-import ReturnCanvasDialog from "@/components/canvasses/show/ReturnCanvasDialog.vue";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 defineOptions({
     layout: (h, page) =>
@@ -26,7 +25,6 @@ defineOptions({
 const props = defineProps({
     canvas: Object,
     masterListCategories: Array,
-    returnReasons: Array,
 });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -42,7 +40,6 @@ const statusVariant = (s) =>
     ({
         pending: "secondary",
         completed: "default",
-        returned: "destructive",
     })[s] ?? "outline";
 
 // ─── Computed canvas state ────────────────────────────────────────────────────
@@ -59,6 +56,23 @@ const canvasTotal = computed(
             0,
         ) ?? 0,
 );
+
+const officeName = computed(() => {
+    return (
+        props.canvas?.emanating?.project?.fund?.office?.name ||
+        props.canvas?.emanating?.fund?.office?.name ||
+        "—"
+    );
+});
+
+const projectName = computed(() => {
+    return (
+        props.canvas?.emanating?.project?.name ||
+        props.canvas?.emanating?.fund?.project_code?.name ||
+        props.canvas?.emanating?.fund?.projectCode?.name ||
+        "—"
+    );
+});
 
 // ─── Row editor state (for editing one emanating item at a time) ──────────────
 const activeRowId = ref(null);
@@ -203,26 +217,6 @@ const completeCanvas = () => {
         },
     );
 };
-
-// ─── Return canvas ────────────────────────────────────────────────────────────
-const returnDialogOpen = ref(false);
-const returnReason = ref("");
-const returningCanvas = ref(false);
-
-const submitReturn = () => {
-    if (!returnReason.value) return;
-    returningCanvas.value = true;
-    router.post(
-        route("canvasses.return", props.canvas.id),
-        { return_reason: returnReason.value },
-        {
-            onFinish: () => {
-                returningCanvas.value = false;
-                returnDialogOpen.value = false;
-            },
-        },
-    );
-};
 </script>
 
 <template>
@@ -236,14 +230,51 @@ const submitReturn = () => {
             :completing="completing"
             :format-currency="formatCurrency"
             :on-complete-canvas="completeCanvas"
-            :on-return-click="() => (returnDialogOpen = true)"
         />
 
-        <!-- Return reason banner -->
-        <ReturnReasonBanner
-            v-if="canvas.status === 'returned'"
-            :canvas="canvas"
-        />
+        <Card>
+            <CardHeader class="pb-3">
+                <CardTitle>Canvas Context</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div class="grid gap-4 text-sm md:grid-cols-2 lg:grid-cols-3">
+                    <div>
+                        <p class="text-muted-foreground">Canvas Number</p>
+                        <p class="font-semibold">Canvas #{{ canvas.id }}</p>
+                    </div>
+                    <div>
+                        <p class="text-muted-foreground">Emanating Request</p>
+                        <p class="font-semibold">
+                            PR {{ canvas.emanating?.pr_no ?? "—" }}
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-muted-foreground">Office</p>
+                        <p class="font-semibold">{{ officeName }}</p>
+                    </div>
+                    <div>
+                        <p class="text-muted-foreground">Project</p>
+                        <p class="font-semibold">{{ projectName }}</p>
+                    </div>
+                    <div>
+                        <p class="text-muted-foreground">Fiscal Year</p>
+                        <p class="font-semibold">
+                            {{ canvas.emanating?.fiscal_year ?? "—" }}
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-muted-foreground">PPMP</p>
+                        <p class="font-semibold">
+                            {{
+                                canvas.emanating?.ppmp?.id
+                                    ? `PPMP #${canvas.emanating.ppmp.id}`
+                                    : "—"
+                            }}
+                        </p>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
 
         <!-- Total tracker (pending only) -->
         <CanvasTotalTracker
@@ -286,16 +317,5 @@ const submitReturn = () => {
                 @close-row-editor="closeRowEditor"
             />
         </div>
-
-        <!-- Return Dialog -->
-        <ReturnCanvasDialog
-            :open="returnDialogOpen"
-            :return-reasons="returnReasons"
-            :return-reason="returnReason"
-            :returning-canvas="returningCanvas"
-            @update:open="returnDialogOpen = $event"
-            @update:return-reason="returnReason = $event"
-            @submit-return="submitReturn"
-        />
     </div>
 </template>

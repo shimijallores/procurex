@@ -8,6 +8,15 @@ defineProps({
     form: Object,
 });
 
+const getProjectName = (emanating) => {
+    return (
+        emanating?.project?.name ||
+        emanating?.fund?.project_code?.name ||
+        emanating?.fund?.projectCode?.name ||
+        "—"
+    );
+};
+
 const emit = defineEmits(["submit"]);
 
 const handleSubmit = () => {
@@ -27,7 +36,7 @@ const handleSubmit = () => {
                 class="rounded-lg bg-muted p-3 text-sm space-y-1"
             >
                 <p class="font-medium">
-                    {{ selectedEmanating.project?.name }}
+                    {{ getProjectName(selectedEmanating) }}
                 </p>
                 <p class="text-muted-foreground text-xs">
                     PR No: {{ selectedEmanating.pr_no ?? "—" }}

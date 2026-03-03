@@ -70,7 +70,7 @@ Route::middleware(['auth'])->group(function (): void {
     Route::resource('canvasses', CanvasController::class)->except(['edit', 'update'])->middleware($canvassingRoles);
     Route::post('canvasses/{canvas}/items/{canvas_item}/selections', [CanvasController::class, 'saveItemSelections'])->middleware($canvassingRoles)->name('canvasses.items.selections');
     Route::post('canvasses/{canvas}/complete', [CanvasController::class, 'complete'])->middleware($canvassingRoles)->name('canvasses.complete');
-    Route::post('canvasses/{canvas}/return', [CanvasController::class, 'return'])->middleware($canvassingRoles)->name('canvasses.return');
+    Route::post('canvasses/{canvas}/delete', [CanvasController::class, 'delete'])->middleware($canvassingRoles)->name('canvasses.delete');
 
     // Purchase Request module
     $prRoles = 'role:Superadmin,PR Admin';

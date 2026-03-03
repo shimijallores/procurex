@@ -18,6 +18,7 @@ const props = defineProps({
     item: Object,
     categories: Array,
     suppliers: Array,
+    prefill: Object,
     errors: Object,
     processing: Boolean,
 });
@@ -111,7 +112,9 @@ const isEdit = props.action === "edit";
                         id="item_name"
                         name="item_name"
                         type="text"
-                        :defaultValue="item?.item_name ?? ''"
+                        :defaultValue="
+                            item?.item_name ?? prefill?.item_name ?? ''
+                        "
                         placeholder="e.g. Bond Paper A4 80gsm"
                         class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     />
@@ -130,7 +133,7 @@ const isEdit = props.action === "edit";
                             id="unit"
                             name="unit"
                             type="text"
-                            :defaultValue="item?.unit ?? ''"
+                            :defaultValue="item?.unit ?? prefill?.unit ?? ''"
                             placeholder="e.g. ream, piece, box"
                             class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         />
@@ -163,7 +166,9 @@ const isEdit = props.action === "edit";
                         id="search_key"
                         name="search_key"
                         type="text"
-                        :defaultValue="item?.search_key ?? ''"
+                        :defaultValue="
+                            item?.search_key ?? prefill?.search_key ?? ''
+                        "
                         placeholder="e.g. bond paper"
                         class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     />

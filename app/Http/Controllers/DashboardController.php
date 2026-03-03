@@ -133,7 +133,6 @@ class DashboardController extends Controller
             $payload['pipeline'] = [
                 $this->stage('Pending', Canvas::where('status', 'pending')->count()),
                 $this->stage('Completed', Canvas::where('status', 'completed')->count()),
-                $this->stage('Returned', Canvas::where('status', 'returned')->count()),
             ];
 
             $payload['recentActivities'] = Canvas::with('emanating.project')

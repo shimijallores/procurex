@@ -22,6 +22,7 @@ const props = defineProps({
             "Are you sure you want to delete this item? This action cannot be undone.",
     },
     deleteUrl: { type: String, default: "" },
+    httpMethod: { type: String, default: "delete" },
 });
 
 const emit = defineEmits(["update:open", "cancel"]);
@@ -65,7 +66,7 @@ const handleFinish = () => {
                 >
                 <Link
                     :href="deleteUrl"
-                    method="delete"
+                    :method="httpMethod"
                     as="button"
                     preserve-scroll
                     @start="handleStart"

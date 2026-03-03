@@ -6,12 +6,11 @@ defineProps({
     totalCount: Number,
     pendingCount: Number,
     completedCount: Number,
-    returnedCount: Number,
 });
 </script>
 
 <template>
-    <div class="grid gap-4 md:grid-cols-4">
+    <div class="grid gap-4 md:grid-cols-3">
         <Card>
             <CardHeader
                 class="flex flex-row items-center justify-between space-y-0 pb-2"
@@ -58,24 +57,6 @@ defineProps({
             <CardContent>
                 <div class="text-2xl font-bold">{{ completedCount || 0 }}</div>
                 <p class="text-xs text-muted-foreground">Prices finalized</p>
-            </CardContent>
-        </Card>
-
-        <Card>
-            <CardHeader
-                class="flex flex-row items-center justify-between space-y-0 pb-2"
-            >
-                <CardTitle class="text-sm font-medium">Returned</CardTitle>
-                <Icon
-                    icon="lucide:rotate-ccw"
-                    class="h-4 w-4 text-muted-foreground"
-                />
-            </CardHeader>
-            <CardContent>
-                <div class="text-2xl font-bold">{{ returnedCount || 0 }}</div>
-                <p class="text-xs text-muted-foreground">
-                    Sent back for review
-                </p>
             </CardContent>
         </Card>
     </div>
