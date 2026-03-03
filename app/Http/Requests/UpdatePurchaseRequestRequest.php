@@ -40,7 +40,7 @@ class UpdatePurchaseRequestRequest extends FormRequest
             'requested_by_designation' => ['nullable', 'string', 'max:255'],
             'purpose'               => ['nullable', 'string'],
             'total_amount'          => ['nullable', 'numeric', 'min:0'],
-            'status'                => ['nullable', 'string', 'in:draft,returned,for_budget_review,approved,cancelled'],
+            'status'                => ['nullable', 'string', 'in:draft,returned,approved,cancelled'],
             'remarks'               => ['nullable', 'string'],
             'items'                 => ['nullable', 'array'],
             'items.*.id'            => ['nullable', 'integer', 'exists:purchase_request_items,id'],

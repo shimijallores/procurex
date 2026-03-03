@@ -9,7 +9,6 @@ use App\Models\APP;
 use App\Models\AOQ;
 use App\Models\BACResolution;
 use App\Models\Canvas;
-use App\Models\Earmark;
 use App\Models\Emanating;
 use App\Models\MasterListItem;
 use App\Models\NOA;
@@ -94,33 +93,32 @@ class DashboardController extends Controller
             $payload['metrics'] = [
                 $this->metric('PPMPs', PPMP::count(), 'lucide:clipboard-list', 'Annual and addendum plans'),
                 $this->metric('Emanatings', Emanating::count(), 'lucide:clipboard-minus', 'Submitted emanating requests'),
-                $this->metric('Pending Budget Review', PurchaseRequest::where('status', 'for_budget_review')->count(), 'lucide:clock', 'Awaiting budget action'),
-                $this->metric('Earmarks Issued', Earmark::count(), 'lucide:stamp', 'Budget certification records'),
+                $this->metric('Draft PRs', PurchaseRequest::where('status', 'draft')->count(), 'lucide:file-edit', 'Awaiting approval'),
+                $this->metric('Approved PRs', PurchaseRequest::where('status', 'approved')->count(), 'lucide:check-circle', 'Ready for RFQ flow'),
             ];
 
             $payload['pipeline'] = [
-                $this->stage('PR for Budget', PurchaseRequest::where('status', 'for_budget_review')->count()),
+                $this->stage('PR Draft', PurchaseRequest::where('status', 'draft')->count()),
                 $this->stage('PR Approved', PurchaseRequest::where('status', 'approved')->count()),
                 $this->stage('PR Returned', PurchaseRequest::where('status', 'returned')->count()),
-                $this->stage('Earmarks', Earmark::count()),
             ];
 
-            $payload['recentActivities'] = Earmark::with('purchaseRequest.office')
-                ->latest('earmark_date')
+            $payload['recentActivities'] = PurchaseRequest::with('office')
+                ->latest('pr_date')
                 ->limit(6)
                 ->get()
-                ->map(fn(Earmark $item) => [
-                    'title' => $item->earmark_no ?: ('Earmark #' . $item->id),
-                    'subtitle' => $item->purchaseRequest?->office?->name ?: 'No office',
-                    'meta' => 'Certified Amount: ₱' . number_format((float) $item->certified_amount, 2),
-                    'date' => optional($item->earmark_date)->format('M d, Y') ?: '—',
-                    'link' => route('earmarks.show', $item),
+                ->map(fn(PurchaseRequest $item) => [
+                    'title' => $item->pr_no ?: ('PR #' . $item->id),
+                    'subtitle' => $item->office?->name ?: 'No office',
+                    'meta' => ucfirst(str_replace('_', ' ', (string) $item->status)),
+                    'date' => optional($item->pr_date)->format('M d, Y') ?: '—',
+                    'link' => route('purchase-requests.show', $item),
                 ])->values();
 
             $payload['quickLinks'] = [
                 $this->quickLink('PPMPs', route('ppmps.index'), 'lucide:clipboard-list'),
                 $this->quickLink('Emanatings', route('emanatings.index'), 'lucide:clipboard-minus'),
-                $this->quickLink('Budgeting / Earmarks', route('earmarks.index'), 'lucide:stamp'),
+                $this->quickLink('Purchase Requests', route('purchase-requests.index'), 'lucide:file-plus-2'),
             ];
         } elseif ($roleName === RoleType::CANVASSING_ADMIN->value) {
             $payload['metrics'] = [
@@ -156,13 +154,12 @@ class DashboardController extends Controller
             $payload['metrics'] = [
                 $this->metric('Purchase Requests', PurchaseRequest::count(), 'lucide:file-plus-2', 'All submitted PRs'),
                 $this->metric('Draft', PurchaseRequest::where('status', 'draft')->count(), 'lucide:edit-3', 'Still editable'),
-                $this->metric('For Budget Review', PurchaseRequest::where('status', 'for_budget_review')->count(), 'lucide:clock', 'Awaiting budget action'),
                 $this->metric('Approved', PurchaseRequest::where('status', 'approved')->count(), 'lucide:check-circle', 'Ready for RFQ'),
+                $this->metric('Returned', PurchaseRequest::where('status', 'returned')->count(), 'lucide:undo-2', 'Needs office revision'),
             ];
 
             $payload['pipeline'] = [
                 $this->stage('Draft', PurchaseRequest::where('status', 'draft')->count()),
-                $this->stage('For Budget Review', PurchaseRequest::where('status', 'for_budget_review')->count()),
                 $this->stage('Approved', PurchaseRequest::where('status', 'approved')->count()),
                 $this->stage('Returned', PurchaseRequest::where('status', 'returned')->count()),
             ];
@@ -259,7 +256,6 @@ class DashboardController extends Controller
 
             $payload['pipeline'] = [
                 $this->stage('PR Draft', (clone $prQuery)->where('status', 'draft')->count()),
-                $this->stage('PR Budget Review', (clone $prQuery)->where('status', 'for_budget_review')->count()),
                 $this->stage('PR Approved', (clone $prQuery)->where('status', 'approved')->count()),
                 $this->stage('PR Returned', (clone $prQuery)->where('status', 'returned')->count()),
             ];

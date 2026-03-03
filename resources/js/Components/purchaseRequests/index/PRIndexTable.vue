@@ -51,11 +51,6 @@ const getStatusBadge = (status) => {
             color: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
             icon: "lucide:file-edit",
         },
-        for_budget_review: {
-            text: "For Budget Review",
-            color: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300",
-            icon: "lucide:clock",
-        },
         approved: {
             text: "Approved",
             color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
@@ -78,7 +73,6 @@ const getStatusBadge = (status) => {
 const statusOptions = [
     { value: "", label: "All Statuses" },
     { value: "draft", label: "Draft" },
-    { value: "for_budget_review", label: "For Budget Review" },
     { value: "approved", label: "Approved" },
     { value: "returned", label: "Returned" },
     { value: "cancelled", label: "Cancelled" },

@@ -62,7 +62,7 @@ const hasLateFiling = (rfq) => {
                 <div>
                     <CardTitle>All Request for Quotations</CardTitle>
                     <CardDescription>
-                        SVP RFQs generated from approved earmarks
+                        SVP RFQs generated from approved purchase requests
                     </CardDescription>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">

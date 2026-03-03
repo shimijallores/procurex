@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('requested_by_designation')->nullable();
             $table->text('purpose')->nullable();
             $table->decimal('total_amount', 15, 2)->default(0);
-            $table->enum('status', ['draft', 'returned', 'for_budget_review', 'approved', 'cancelled'])->default('draft')->index();
+            $table->enum('status', ['draft', 'returned', 'approved', 'cancelled'])->default('draft')->index();
             $table->text('remarks')->nullable();
             $table->timestamps();
 

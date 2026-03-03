@@ -24,11 +24,6 @@ const getStatusBadge = (status) => {
             color: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
             icon: "lucide:file-edit",
         },
-        for_budget_review: {
-            text: "For Budget Review",
-            color: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300",
-            icon: "lucide:clock",
-        },
         approved: {
             text: "Approved",
             color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
@@ -107,14 +102,14 @@ const getStatusBadge = (status) => {
                     </Button>
                 </Link>
 
-                <!-- Approve / Submit for Budget Review -->
+                <!-- Approve -->
                 <Button
                     v-if="purchaseRequest.status === 'draft'"
                     :disabled="approveProcessing"
                     @click="$emit('approve')"
                 >
                     <Icon icon="lucide:send" class="mr-2 h-4 w-4" />
-                    Submit for Budget Review
+                    Approve
                 </Button>
 
                 <!-- Return -->

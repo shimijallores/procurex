@@ -174,13 +174,6 @@ const mainNavItems = computed(() => {
             roles: ["Superadmin", "PR Admin"],
         },
         {
-            title: "Budgeting",
-            url: route("earmarks.index"),
-            icon: "lucide:stamp",
-            isActive: route().current("earmarks.*"),
-            roles: ["Superadmin", "Budgeting Admin"],
-        },
-        {
             title: "Request for Quotation",
             url: route("rfqs.index"),
             icon: "lucide:file-text",
@@ -282,7 +275,7 @@ const canvassingItems = computed(() => {
 
 const purchaseRequestBudgetingItems = computed(() => {
     return mainNavItems.value.filter((item) =>
-        ["Purchase Requests", "Budgeting"].includes(item.title),
+        ["Purchase Requests"].includes(item.title),
     );
 });
 
@@ -418,11 +411,9 @@ const userInitials = computed(() => {
                 </SidebarGroupContent>
             </SidebarGroup>
 
-            <!-- Purchase Request & Budgeting Group -->
+            <!-- Purchase Request Group -->
             <SidebarGroup v-if="purchaseRequestBudgetingItems.length > 0">
-                <SidebarGroupLabel
-                    >Purchase Request &amp; Budgeting</SidebarGroupLabel
-                >
+                <SidebarGroupLabel>Purchase Requests</SidebarGroupLabel>
                 <SidebarGroupContent>
                     <SidebarMenu>
                         <SidebarMenuItem

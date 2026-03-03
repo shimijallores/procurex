@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
                 Request for Quotation
             </h1>
             <p class="text-muted-foreground">
-                Manage SVP RFQs from approved and earmarked purchase requests
+                Manage SVP RFQs from approved purchase requests
             </p>
         </div>
         <Link :href="route('rfqs.create')">

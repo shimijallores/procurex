@@ -67,9 +67,7 @@ const toggleSupplier = (supplierId) => {
             </CardHeader>
             <CardContent class="space-y-3">
                 <div class="space-y-2">
-                    <Label for="pr_id"
-                        >Approved Purchase Request with Earmark</Label
-                    >
+                    <Label for="pr_id">Approved Purchase Request</Label>
                     <select
                         id="pr_id"
                         :value="form.pr_id"
@@ -122,9 +120,7 @@ const toggleSupplier = (supplierId) => {
                         <span class="font-medium">
                             {{
                                 formatCurrency(
-                                    selectedPurchaseRequest.earmark
-                                        ?.certified_amount ||
-                                        selectedPurchaseRequest.total_amount,
+                                    selectedPurchaseRequest.total_amount,
                                 )
                             }}</span
                         >

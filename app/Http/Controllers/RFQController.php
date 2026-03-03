@@ -27,7 +27,6 @@ class RFQController extends Controller
     {
         $query = RFQ::with([
             'purchaseRequest.office',
-            'purchaseRequest.earmark',
             'suppliers.supplier',
         ])
             ->when($request->search, function ($q, string $search): void {
@@ -85,10 +84,8 @@ class RFQController extends Controller
             'fund',
             'emanating.project',
             'items.emanatingItem.ppmpItem',
-            'earmark',
         ])
             ->where('status', 'approved')
-            ->whereHas('earmark')
             ->whereDoesntHave('rfq')
             ->latest()
             ->get();
@@ -112,13 +109,12 @@ class RFQController extends Controller
         DB::beginTransaction();
         try {
             $purchaseRequest = PurchaseRequest::with([
-                'earmark',
                 'items',
                 'emanating.project',
             ])->findOrFail($validated['pr_id']);
 
-            if ($purchaseRequest->status !== 'approved' || ! $purchaseRequest->earmark) {
-                return redirect()->back()->with('error', 'Only approved Purchase Requests with issued Earmarks can create an RFQ.');
+            if ($purchaseRequest->status !== 'approved') {
+                return redirect()->back()->with('error', 'Only approved Purchase Requests can create an RFQ.');
             }
 
             if ($purchaseRequest->rfq()->exists()) {
@@ -137,7 +133,7 @@ class RFQController extends Controller
                 'submission_deadline' => $submissionDeadline->toDateString(),
                 'project_name' => $purchaseRequest->emanating?->project?->name
                     ?? ($purchaseRequest->purpose ? mb_strimwidth($purchaseRequest->purpose, 0, 200, '...') : 'N/A'),
-                'abc_amount' => (float) ($purchaseRequest->earmark->certified_amount ?? $purchaseRequest->total_amount),
+                'abc_amount' => (float) $purchaseRequest->total_amount,
                 'remarks' => $validated['remarks'] ?? null,
             ]);
 
@@ -180,7 +176,6 @@ class RFQController extends Controller
         $rfq->load([
             'purchaseRequest.office',
             'purchaseRequest.fund',
-            'purchaseRequest.earmark',
             'purchaseRequest.emanating.project',
             'items.purchaseRequestItem.emanatingItem.ppmpItem',
             'suppliers.supplier',

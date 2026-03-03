@@ -18,7 +18,7 @@ import { Icon } from "@iconify/vue";
                     Create Request for Quotation
                 </h1>
                 <p class="text-muted-foreground mt-1">
-                    Generate RFQ from an approved purchase request with earmark
+                    Generate RFQ from an approved purchase request
                 </p>
             </div>
         </div>

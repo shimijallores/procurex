@@ -8,7 +8,7 @@ defineProps({
 </script>
 
 <template>
-    <div class="grid gap-4 md:grid-cols-5">
+    <div class="grid gap-4 md:grid-cols-4">
         <Card>
             <CardHeader
                 class="flex flex-row items-center justify-between space-y-0 pb-2"
@@ -21,7 +21,7 @@ defineProps({
             </CardHeader>
             <CardContent>
                 <div class="text-2xl font-bold">{{ stats?.total || 0 }}</div>
-                <p class="text-xs text-muted-foreground">Across all offices</p>
+                <p class="text-xs text-muted-foreground">All records</p>
             </CardContent>
         </Card>
 
@@ -37,27 +37,7 @@ defineProps({
             </CardHeader>
             <CardContent>
                 <div class="text-2xl font-bold">{{ stats?.draft || 0 }}</div>
-                <p class="text-xs text-muted-foreground">Pending submission</p>
-            </CardContent>
-        </Card>
-
-        <Card>
-            <CardHeader
-                class="flex flex-row items-center justify-between space-y-0 pb-2"
-            >
-                <CardTitle class="text-sm font-medium">Budget Review</CardTitle>
-                <Icon
-                    icon="lucide:clock"
-                    class="h-4 w-4 text-muted-foreground"
-                />
-            </CardHeader>
-            <CardContent>
-                <div class="text-2xl font-bold">
-                    {{ stats?.for_budget_review || 0 }}
-                </div>
-                <p class="text-xs text-muted-foreground">
-                    Awaiting budget office
-                </p>
+                <p class="text-xs text-muted-foreground">Still editable</p>
             </CardContent>
         </Card>
 

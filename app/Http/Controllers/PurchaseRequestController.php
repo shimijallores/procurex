@@ -77,7 +77,6 @@ class PurchaseRequestController extends Controller
         $stats = [
             'total'             => (clone $query)->count(),
             'draft'             => (clone $query)->where('status', 'draft')->count(),
-            'for_budget_review' => (clone $query)->where('status', 'for_budget_review')->count(),
             'approved'          => (clone $query)->where('status', 'approved')->count(),
             'returned'          => (clone $query)->where('status', 'returned')->count(),
         ];
@@ -323,19 +322,19 @@ class PurchaseRequestController extends Controller
     }
 
     /**
-     * Submit the purchase request for budget review (draft → for_budget_review).
+     * Approve the purchase request (draft → approved).
      */
     public function approve(PurchaseRequest $purchaseRequest): RedirectResponse
     {
         if ($purchaseRequest->status !== 'draft') {
             return redirect()->back()
-                ->with('error', 'Only draft PRs can be submitted for budget review.');
+                ->with('error', 'Only draft PRs can be approved.');
         }
 
-        $purchaseRequest->update(['status' => 'for_budget_review']);
+        $purchaseRequest->update(['status' => 'approved']);
 
         return redirect()->route('purchase-requests.show', $purchaseRequest)
-            ->with('success', 'Purchase Request submitted for budget review.');
+            ->with('success', 'Purchase Request approved successfully.');
     }
 
     /**
@@ -348,9 +347,9 @@ class PurchaseRequestController extends Controller
             'reason' => ['required', 'string', 'max:500'],
         ]);
 
-        if (! in_array($purchaseRequest->status, ['draft', 'for_budget_review'], true)) {
+        if (! in_array($purchaseRequest->status, ['draft', 'approved'], true)) {
             return redirect()->back()
-                ->with('error', 'Only draft or budget-review PRs can be returned.');
+                ->with('error', 'Only draft or approved PRs can be returned.');
         }
 
         DB::beginTransaction();

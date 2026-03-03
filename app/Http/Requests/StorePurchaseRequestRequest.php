@@ -44,7 +44,7 @@ class StorePurchaseRequestRequest extends FormRequest
             'requested_by_designation' => ['nullable', 'string', 'max:255'],
             'purpose'               => ['nullable', 'string'],
             'total_amount'          => ['nullable', 'numeric', 'min:0'],
-            'status'                => ['nullable', 'string', 'in:draft,returned,for_budget_review,approved,cancelled'],
+            'status'                => ['nullable', 'string', 'in:draft,returned,approved,cancelled'],
             'remarks'               => ['nullable', 'string'],
             'items'                 => ['required', 'array', 'min:1'],
             'items.*.emanating_item_id' => ['required', 'integer', 'exists:emanating_items,id'],
