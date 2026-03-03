@@ -13,8 +13,8 @@ const props = defineProps({
 
 defineEmits(["approve", "reject", "delete"]);
 
-const canApprove = (emanating, ppmpApproved, itemsMatch) => {
-    return !emanating.is_approved && ppmpApproved && itemsMatch;
+const canApprove = (emanating) => {
+    return !emanating.is_approved;
 };
 
 const canReject = (emanating) => {
@@ -25,8 +25,11 @@ const canReturn = (emanating) => {
     return emanating.is_approved;
 };
 
-const downloadCSV = () => {
-    window.location.href = route("emanatings.download-csv", props.emanating.id);
+const downloadXlsx = () => {
+    window.location.href = route(
+        "emanatings.download-xlsx",
+        props.emanating.id,
+    );
 };
 </script>
 
@@ -71,17 +74,22 @@ const downloadCSV = () => {
                 </div>
                 <p class="text-muted-foreground">
                     {{
+                        emanating.fund?.office?.name ||
                         emanating.project?.fund?.office?.name ||
                         "Unknown Office"
                     }}
                     -
-                    {{ emanating.project?.name || "Unknown Project" }}
+                    {{
+                        emanating.fund?.name ||
+                        emanating.project?.name ||
+                        "Unknown Fund"
+                    }}
                 </p>
             </div>
         </div>
         <div class="flex items-center gap-2">
             <Button
-                v-if="canApprove(emanating, ppmpApproved, itemsMatch)"
+                v-if="canApprove(emanating)"
                 @click="$emit('approve')"
                 :disabled="approveProcessing"
             >
@@ -104,7 +112,7 @@ const downloadCSV = () => {
                 <Icon icon="lucide:undo-2" class="mr-2 h-4 w-4" />
                 Return
             </Button>
-            <Button variant="outline" @click="downloadCSV">
+            <Button variant="outline" @click="downloadXlsx">
                 <Icon icon="lucide:download" class="mr-2 h-4 w-4" />
                 Download Emanating
             </Button>

@@ -8,6 +8,7 @@ import EmanatingMatchAlert from "@/components/emanatings/show/EmanatingMatchAler
 import EmanatingRejectionAlert from "@/components/emanatings/show/EmanatingRejectionAlert.vue";
 import EmanatingShowSummary from "@/components/emanatings/show/EmanatingShowSummary.vue";
 import EmanatingPPMPComparison from "@/components/emanatings/show/EmanatingPPMPComparison.vue";
+import EmanatingProjectDocumentsCard from "@/components/emanatings/show/EmanatingProjectDocumentsCard.vue";
 import EmanatingRejectModal from "@/components/emanatings/show/EmanatingRejectModal.vue";
 import EmanatingApproveModal from "@/components/emanatings/show/EmanatingApproveModal.vue";
 
@@ -114,6 +115,8 @@ const rejectEmanating = () => {
         <!-- Summary -->
         <EmanatingShowSummary :emanating="emanating" />
 
+        <EmanatingProjectDocumentsCard :fund="emanating.fund" />
+
         <!-- PPMP Comparison -->
         <EmanatingPPMPComparison
             :emanating="emanating"
@@ -124,7 +127,7 @@ const rejectEmanating = () => {
         <DeleteModal
             v-model:open="showDeleteModal"
             title="Delete Emanating Request"
-            :description="`Are you sure you want to delete the emanating request for ${emanating.project?.fund?.office?.name || 'Unknown'} - ${emanating.project?.name || 'Unknown'}? This action cannot be undone.`"
+            :description="`Are you sure you want to delete the emanating request for ${emanating.fund?.office?.name || emanating.project?.fund?.office?.name || 'Unknown'} - ${emanating.fund?.name || emanating.project?.name || 'Unknown'}? This action cannot be undone.`"
             :delete-url="route('emanatings.destroy', emanating.id)"
         />
 

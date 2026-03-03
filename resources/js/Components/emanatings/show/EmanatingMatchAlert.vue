@@ -45,7 +45,7 @@ const alertMessage = computed(() => {
         return "This emanating request has been approved and is ready for canvassing.";
     }
     if (!props.ppmpApproved) {
-        return "The related PPMP must be approved before this emanating request can be approved.";
+        return "The related PPMP is not yet approved. This is an advisory alert only.";
     }
 
     // Use comparison data if available (more reliable than cached boolean)
@@ -55,18 +55,18 @@ const alertMessage = computed(() => {
         const allMatch = props.comparison.status === "all_matched";
 
         if (allMatch && matchedCount === totalPPMPItems) {
-            return "All items match the PPMP. This emanating request is ready for approval.";
+            return "All items passed PPMP and APP checks. This emanating request is ready for approval.";
         }
 
-        return `${matchedCount} of ${totalPPMPItems} items match the PPMP. Please review the comparison below.`;
+        return `${matchedCount} of ${totalPPMPItems} items passed PPMP/APP checks. Review flagged items below (advisory only).`;
     }
 
     // Fallback to itemsMatch boolean if no comparison data
     if (props.itemsMatch) {
-        return "All items match the PPMP. This emanating request is ready for approval.";
+        return "All items passed PPMP and APP checks. This emanating request is ready for approval.";
     }
 
-    return "Items do not match the PPMP. Please review the comparison below.";
+    return "Some items are flagged by PPMP/APP checks. Please review the comparison below (advisory only).";
 });
 
 const alertClass = computed(() => {

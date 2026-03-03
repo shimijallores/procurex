@@ -24,6 +24,7 @@ class UpdateEmanatingRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'office_id' => ['required', 'exists:offices,id'],
             'ppmp_id' => ['nullable', 'exists:ppmps,id'],
             'ppmp_category_id' => ['nullable', 'exists:ppmp_categories,id'],
             'pr_no' => ['nullable', 'string', 'max:50'],
@@ -31,6 +32,35 @@ class UpdateEmanatingRequest extends FormRequest
             'remarks' => ['nullable', 'string', 'max:1000'],
             'reimbursement' => ['nullable', 'boolean'],
         ];
+    }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator): void {
+            if (! $this->ppmp_id || ! $this->ppmp_category_id) {
+                return;
+            }
+
+            if ($this->office_id) {
+                $ppmpBelongsToOffice = \App\Models\PPMP::query()
+                    ->where('id', $this->ppmp_id)
+                    ->where('office_id', $this->office_id)
+                    ->exists();
+
+                if (! $ppmpBelongsToOffice) {
+                    $validator->errors()->add('ppmp_id', 'The selected PPMP does not belong to the selected office.');
+                }
+            }
+
+            $categoryBelongsToPpmp = \App\Models\PPMPCategory::query()
+                ->where('id', $this->ppmp_category_id)
+                ->where('ppmp_id', $this->ppmp_id)
+                ->exists();
+
+            if (! $categoryBelongsToPpmp) {
+                $validator->errors()->add('ppmp_category_id', 'The selected PPMP category does not belong to the selected PPMP.');
+            }
+        });
     }
 
     /**
@@ -41,6 +71,8 @@ class UpdateEmanatingRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'office_id.required' => 'Please select an office first.',
+            'office_id.exists' => 'The selected office does not exist.',
             'ppmp_id.exists' => 'The selected PPMP does not exist.',
             'ppmp_category_id.exists' => 'The selected PPMP category does not exist.',
         ];

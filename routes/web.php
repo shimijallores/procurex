@@ -57,7 +57,7 @@ Route::middleware(['auth'])->group(function (): void {
     Route::get('ppmps/{ppmp}/download-xlsx', [PPMPController::class, 'downloadXlsx'])->middleware('role:Superadmin,Budgeting Admin,office')->name('ppmps.download-xlsx');
     Route::resource('emanatings', EmanatingController::class)->middleware('role:Superadmin,Budgeting Admin,office');
     Route::post('emanatings/{emanating}/import', [EmanatingController::class, 'import'])->middleware('role:Superadmin,Budgeting Admin,office')->name('emanatings.import');
-    Route::get('emanatings/{emanating}/download-csv', [EmanatingController::class, 'downloadCsv'])->middleware('role:Superadmin,Budgeting Admin,office')->name('emanatings.download-csv');
+    Route::get('emanatings/{emanating}/download-xlsx', [EmanatingController::class, 'downloadXlsx'])->middleware('role:Superadmin,Budgeting Admin,office')->name('emanatings.download-xlsx');
     Route::post('emanatings/{emanating}/approve', [EmanatingController::class, 'approve'])->middleware('role:Superadmin,Budgeting Admin,office')->name('emanatings.approve');
     Route::post('emanatings/{emanating}/reject', [EmanatingController::class, 'reject'])->middleware('role:Superadmin,Budgeting Admin,office')->name('emanatings.reject');
 

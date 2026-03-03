@@ -121,7 +121,7 @@ const openDeleteModal = (emanating) => {
         <DeleteModal
             v-model:open="showDeleteModal"
             title="Delete Emanating Request"
-            :description="`Are you sure you want to delete this emanating request for ${emanatingToDelete?.project?.fund?.office?.name} - ${emanatingToDelete?.project?.name} (FY ${emanatingToDelete?.fiscal_year})? This will also delete all associated items.`"
+            :description="`Are you sure you want to delete this emanating request for ${emanatingToDelete?.fund?.office?.name || emanatingToDelete?.project?.fund?.office?.name} - ${emanatingToDelete?.fund?.name || emanatingToDelete?.project?.name} (FY ${emanatingToDelete?.fiscal_year})? This will also delete all associated items.`"
             :delete-url="
                 emanatingToDelete
                     ? route('emanatings.destroy', emanatingToDelete.id)

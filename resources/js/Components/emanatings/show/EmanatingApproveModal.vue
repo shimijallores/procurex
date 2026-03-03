@@ -23,17 +23,15 @@ const props = defineProps({
 const emit = defineEmits(["update:show", "submit"]);
 
 const canApprove = computed(() => {
-    return (
-        props.ppmpApproved && props.itemsMatch && !props.emanating?.is_approved
-    );
+    return !props.emanating?.is_approved;
 });
 
 const warningMessage = computed(() => {
     if (!props.ppmpApproved) {
-        return "The related PPMP must be approved first.";
+        return "PPMP approval is not yet complete. You may still approve this emanating request.";
     }
     if (!props.itemsMatch) {
-        return "All emanating items must match PPMP items.";
+        return "Some items are flagged in PPMP/APP checks. You may still approve since these are suggestions.";
     }
     return null;
 });
@@ -87,7 +85,9 @@ const close = () => {
                     <div class="flex justify-between">
                         <span class="text-muted-foreground">Office:</span>
                         <span class="font-medium">{{
-                            emanating?.office?.name
+                            emanating?.fund?.office?.name ||
+                            emanating?.project?.fund?.office?.name ||
+                            "N/A"
                         }}</span>
                     </div>
                     <div class="flex justify-between">
@@ -138,7 +138,7 @@ const close = () => {
                 <Button
                     class="bg-green-600 hover:bg-green-700"
                     @click="$emit('submit')"
-                    :disabled="!canApprove || processing"
+                    :disabled="processing"
                 >
                     <Icon
                         v-if="processing"

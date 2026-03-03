@@ -28,11 +28,13 @@ defineOptions({
 
 const props = defineProps({
     emanating: Object,
+    offices: Array,
     ppmps: Array,
     ppmpCategories: Array,
 });
 
 const form = useForm({
+    office_id: props.emanating.ppmp?.office_id || "",
     ppmp_id: props.emanating.ppmp_id || "",
     ppmp_category_id: props.emanating.ppmp_category_id || "",
     pr_no: props.emanating.pr_no || "",
@@ -61,6 +63,7 @@ const submit = () => {
         <EmanatingEditForm
             :form="form"
             :emanating="emanating"
+            :offices="offices"
             :ppmps="ppmps"
             :ppmp-categories="ppmpCategories"
             @submit="submit"

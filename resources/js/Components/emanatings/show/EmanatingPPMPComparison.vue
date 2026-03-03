@@ -15,13 +15,6 @@ const props = defineProps({
     emanating: Object,
     comparison: Object,
 });
-
-const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-PH", {
-        style: "currency",
-        currency: "PHP",
-    }).format(amount || 0);
-};
 </script>
 
 <template>
@@ -30,7 +23,7 @@ const formatCurrency = (amount) => {
             <CardTitle class="flex items-center justify-between">
                 <span class="flex items-center">
                     <Icon icon="lucide:git-compare" class="mr-2 h-5 w-5" />
-                    PPMP Comparison
+                    Comparison
                 </span>
                 <Badge
                     v-if="comparison"
@@ -76,9 +69,8 @@ const formatCurrency = (amount) => {
                                     <TableHead>Description</TableHead>
                                     <TableHead>Quantity</TableHead>
                                     <TableHead>Unit</TableHead>
-                                    <TableHead>Total Price</TableHead>
                                     <TableHead>Status</TableHead>
-                                    <TableHead>PPMP Match</TableHead>
+                                    <TableHead>Findings</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -93,39 +85,14 @@ const formatCurrency = (amount) => {
                                 >
                                     <TableCell>{{ index + 1 }}</TableCell>
                                     <TableCell class="font-medium">
-                                        {{
-                                            item.is_missing_from_emanating
-                                                ? item.ppmp_item?.name
-                                                : item.emanating_item?.ppmp_item
-                                                      ?.name || "Not matched"
-                                        }}
+                                        {{ item.emanating_item?.name || "N/A" }}
                                     </TableCell>
                                     <TableCell>{{
-                                        item.is_missing_from_emanating
-                                            ? item.ppmp_item?.quantity
-                                            : item.emanating_item?.quantity ||
-                                              "-"
+                                        item.emanating_item?.quantity || "-"
                                     }}</TableCell>
                                     <TableCell>{{
-                                        item.is_missing_from_emanating
-                                            ? item.ppmp_item?.unit
-                                            : item.emanating_item?.unit || "-"
+                                        item.emanating_item?.unit || "-"
                                     }}</TableCell>
-                                    <TableCell>
-                                        <span
-                                            v-if="
-                                                item.is_missing_from_emanating
-                                            "
-                                            class="text-muted-foreground italic"
-                                            >Missing</span
-                                        >
-                                        <span v-else>{{
-                                            formatCurrency(
-                                                item.emanating_item
-                                                    ?.total_price,
-                                            )
-                                        }}</span>
-                                    </TableCell>
                                     <TableCell>
                                         <Badge
                                             :class="
@@ -145,9 +112,7 @@ const formatCurrency = (amount) => {
                                             {{
                                                 item.matched
                                                     ? "Matched"
-                                                    : item.is_missing_from_emanating
-                                                      ? "Missing"
-                                                      : "Not Matched"
+                                                    : "Flagged"
                                             }}
                                         </Badge>
                                     </TableCell>
@@ -155,9 +120,7 @@ const formatCurrency = (amount) => {
                                         class="text-sm text-muted-foreground"
                                     >
                                         {{
-                                            item.mismatch_reason ||
-                                            item.ppmp_item?.name ||
-                                            "No match found"
+                                            item.mismatch_reason || "No issues"
                                         }}
                                     </TableCell>
                                 </TableRow>
@@ -168,7 +131,7 @@ const formatCurrency = (amount) => {
                                     "
                                 >
                                     <TableCell
-                                        colspan="7"
+                                        colspan="6"
                                         class="text-center text-muted-foreground py-8"
                                     >
                                         No emanating items found
@@ -193,7 +156,6 @@ const formatCurrency = (amount) => {
                                     <TableHead>Item Description</TableHead>
                                     <TableHead>Quantity</TableHead>
                                     <TableHead>Unit</TableHead>
-                                    <TableHead>Estimated Budget</TableHead>
                                     <TableHead>Mode of Procurement</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -210,9 +172,6 @@ const formatCurrency = (amount) => {
                                     }}</TableCell>
                                     <TableCell>{{ item.quantity }}</TableCell>
                                     <TableCell>{{ item.unit }}</TableCell>
-                                    <TableCell>{{
-                                        formatCurrency(item.estimated_budget)
-                                    }}</TableCell>
                                     <TableCell>
                                         <Badge variant="outline">{{
                                             item.mode_of_procurement
@@ -226,7 +185,7 @@ const formatCurrency = (amount) => {
                                     "
                                 >
                                     <TableCell
-                                        colspan="6"
+                                        colspan="5"
                                         class="text-center text-muted-foreground py-8"
                                     >
                                         No PPMP items found in this category

@@ -14,6 +14,7 @@ class EmanatingItem extends Model
     protected $fillable = [
         'emanating_id',
         'ppmp_item_id',
+        'name',
         'quantity',
         'unit',
         'total_price',

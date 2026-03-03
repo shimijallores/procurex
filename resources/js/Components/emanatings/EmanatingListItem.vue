@@ -88,13 +88,6 @@ const getMatchStatusColor = (matched) => {
                             {{ emanating.charged_to_code || "N/A" }}
                         </div>
                     </div>
-
-                    <p
-                        v-if="emanating.purpose"
-                        class="mt-3 text-sm line-clamp-2"
-                    >
-                        {{ emanating.purpose }}
-                    </p>
                 </div>
 
                 <Icon

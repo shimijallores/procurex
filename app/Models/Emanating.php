@@ -16,17 +16,19 @@ class Emanating extends Model
         'fund_id',
         'ppmp_id',
         'project_id',
+        'account_id',
         'ppmp_category_id',
         'charged_to_code',
         'pr_no',
         'fiscal_year',
         'quarter',
         'month',
-        'purpose',
         'is_addendum',
         'remarks',
         'reimbursement',
-        'csv_path',
+        'xlsx_path',
+        'requesting_officer_name',
+        'requesting_officer_title',
         'items_match_ppmp',
         'is_canvassed',
         'is_approved',
@@ -68,6 +70,11 @@ class Emanating extends Model
     public function fund(): BelongsTo
     {
         return $this->belongsTo(Fund::class);
+    }
+
+    public function account(): BelongsTo
+    {
+        return $this->belongsTo(Account::class);
     }
 
     public function ppmpCategory(): BelongsTo

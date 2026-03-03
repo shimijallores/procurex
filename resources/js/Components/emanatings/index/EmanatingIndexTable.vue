@@ -165,16 +165,18 @@ const getStatusBadge = (emanating) => {
                                     <div>
                                         <div class="font-medium">
                                             {{
+                                                emanating.fund?.office?.name ||
                                                 emanating.project?.fund?.office
-                                                    ?.name || "Unknown Office"
+                                                    ?.name ||
+                                                "Unknown Office"
                                             }}
                                         </div>
                                         <div
                                             class="text-xs text-muted-foreground"
                                         >
                                             {{
-                                                emanating.project?.name ||
-                                                "Unknown Project"
+                                                emanating.fund?.name ||
+                                                "Unknown Fund"
                                             }}
                                         </div>
                                     </div>

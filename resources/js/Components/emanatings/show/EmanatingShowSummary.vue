@@ -74,19 +74,46 @@ const getMonthName = (month) => {
                 <div class="flex justify-between">
                     <span class="text-muted-foreground">Fund:</span>
                     <span class="font-medium">{{
-                        emanating.project?.fund?.name || "N/A"
+                        emanating.fund?.name ||
+                        emanating.project?.fund?.name ||
+                        "N/A"
                     }}</span>
                 </div>
                 <div class="flex justify-between">
                     <span class="text-muted-foreground">Office:</span>
                     <span class="font-medium">{{
-                        emanating.project?.fund?.office?.name || "N/A"
+                        emanating.charged_to_project_code_name || "N/A"
                     }}</span>
                 </div>
                 <div class="flex justify-between">
                     <span class="text-muted-foreground">Project:</span>
                     <span class="font-medium">{{
                         emanating.project?.name || "N/A"
+                    }}</span>
+                </div>
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle class="text-base flex items-center">
+                    <Icon icon="lucide:signature" class="mr-2 h-5 w-5" />
+                    Signatories
+                </CardTitle>
+            </CardHeader>
+            <CardContent class="space-y-2 text-sm">
+                <div class="flex justify-between">
+                    <span class="text-muted-foreground"
+                        >Requesting Officer:</span
+                    >
+                    <span class="font-medium">{{
+                        emanating.requesting_officer_name || "N/A"
+                    }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-muted-foreground">Title:</span>
+                    <span class="font-medium">{{
+                        emanating.requesting_officer_title || "N/A"
                     }}</span>
                 </div>
             </CardContent>
@@ -119,19 +146,6 @@ const getMonthName = (month) => {
                         emanating.reimbursement ? "Yes" : "No"
                     }}</span>
                 </div>
-            </CardContent>
-        </Card>
-
-        <!-- Purpose -->
-        <Card class="md:col-span-2 lg:col-span-3">
-            <CardHeader>
-                <CardTitle class="text-base flex items-center">
-                    <Icon icon="lucide:file-text" class="mr-2 h-5 w-5" />
-                    Purpose
-                </CardTitle>
-            </CardHeader>
-            <CardContent>
-                <p class="text-sm">{{ emanating.purpose }}</p>
             </CardContent>
         </Card>
 

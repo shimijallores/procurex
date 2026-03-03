@@ -13,7 +13,8 @@ return new class extends Migration
         Schema::create('emanating_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('emanating_id')->constrained('emanatings')->onDelete('cascade');
-            $table->foreignId('ppmp_item_id')->constrained('ppmp_items')->onDelete('cascade');
+            $table->foreignId('ppmp_item_id')->nullable()->constrained('ppmp_items')->nullOnDelete();
+            $table->string('name');
             $table->integer('quantity')->nullable();
             $table->string('unit', 50)->nullable();
             $table->decimal('total_price', 15, 2)->nullable();

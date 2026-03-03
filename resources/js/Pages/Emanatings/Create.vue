@@ -23,26 +23,28 @@ defineOptions({
 });
 
 const props = defineProps({
+    offices: Array,
     ppmps: Array,
     ppmpCategories: Array,
 });
 
 const form = useForm({
+    office_id: "",
     ppmp_id: "",
     ppmp_category_id: "",
     pr_no: "",
     is_addendum: false,
     remarks: "",
     reimbursement: false,
-    csv_file: null,
+    xlsx_file: null,
 });
 
-const csvFileName = ref("");
+const xlsxFileName = ref("");
 
 const handleFileChange = (event) => {
     const file = event.target.files[0];
-    form.csv_file = file;
-    csvFileName.value = file ? file.name : "";
+    form.xlsx_file = file;
+    xlsxFileName.value = file ? file.name : "";
 };
 
 const submit = () => {
@@ -54,8 +56,8 @@ const submit = () => {
         form.reimbursement === true || form.reimbursement === 1;
 
     // Remove null file field if no file uploaded
-    if (!data.csv_file) {
-        delete data.csv_file;
+    if (!data.xlsx_file) {
+        delete data.xlsx_file;
     }
 
     form.transform(() => data).post(route("emanatings.store"));
@@ -67,9 +69,10 @@ const submit = () => {
         <EmanatingCreateHeader />
         <EmanatingCreateForm
             :form="form"
+            :offices="offices"
             :ppmps="ppmps"
             :ppmp-categories="ppmpCategories"
-            :csv-file-name="csvFileName"
+            :xlsx-file-name="xlsxFileName"
             @submit="submit"
             @file-change="handleFileChange"
         />

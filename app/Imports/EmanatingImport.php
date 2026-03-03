@@ -4,20 +4,25 @@ declare(strict_types=1);
 
 namespace App\Imports;
 
+use App\Models\APP;
+use App\Models\APPItem;
+use App\Models\Account;
 use App\Models\Emanating;
 use App\Models\EmanatingItem;
+use App\Models\Fund;
+use App\Models\Office;
 use App\Models\PPMP;
 use App\Models\PPMPCategory;
 use App\Models\PPMPItem;
-use App\Models\Project;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\ToCollection;
-use Maatwebsite\Excel\Concerns\WithCustomCsvSettings;
+use RuntimeException;
 
-class EmanatingImport implements ToCollection, WithCustomCsvSettings
+class EmanatingImport implements ToCollection
 {
-    protected ?Project $project = null;
+    protected ?Fund $fund = null;
 
     protected ?PPMP $ppmp = null;
 
@@ -31,365 +36,494 @@ class EmanatingImport implements ToCollection, WithCustomCsvSettings
 
     protected array $matchingResults = [];
 
-    public function __construct(?Project $project = null, ?PPMP $ppmp = null, ?int $ppmpCategoryId = null)
+    protected ?string $requestingOfficerName = null;
+
+    protected ?string $requestingOfficerTitle = null;
+
+    public function __construct(?PPMP $ppmp = null, ?int $ppmpCategoryId = null, ?Fund $fund = null)
     {
-        $this->project = $project;
         $this->ppmp = $ppmp;
         $this->ppmpCategoryId = $ppmpCategoryId;
+        $this->fund = $fund;
 
-        // Load the PPMPCategory if ID is provided
         if ($ppmpCategoryId) {
             $this->ppmpCategory = PPMPCategory::find($ppmpCategoryId);
         }
     }
 
-    public function getCsvSettings(): array
-    {
-        return [
-            'input_encoding' => 'UTF-8',
-            'delimiter' => ',',
-            'enclosure' => '"',
-            'escape_character' => '\\',
-            'contiguous' => false,
-            'use_bom' => false,
-        ];
-    }
-
     public function collection(Collection $rows): void
     {
         $rowArray = $rows->toArray();
+        Log::info('[EmanatingImport] Import started', [
+            'rows_count' => count($rowArray),
+            'ppmp_id_input' => $this->ppmp?->id,
+            'ppmp_category_id_input' => $this->ppmpCategoryId,
+            'fund_id_input' => $this->fund?->id,
+        ]);
 
-        // Parse metadata
         $metadata = $this->parseMetadata($rowArray);
-
-        // If project/ppmp not provided in constructor, try to find them
-        if (! $this->project && isset($metadata['office_name'])) {
-            $this->findRelatedModels($metadata);
-        }
-
-        // Create Emanating record
-        $emanating = Emanating::create([
-            'fund_id' => $this->project?->fund_id,
-            'ppmp_id' => $this->ppmp?->id,
-            'project_id' => $this->project?->id,
-            'ppmp_category_id' => $this->ppmpCategoryId,
-            'charged_to_code' => $metadata['charged_to_code'] ?? null,
+        Log::info('[EmanatingImport] Metadata parsed', [
             'pr_no' => $metadata['pr_no'] ?? null,
             'fiscal_year' => $metadata['fiscal_year'] ?? null,
             'quarter' => $metadata['quarter'] ?? null,
             'month' => $metadata['month'] ?? null,
-            'purpose' => $metadata['purpose'] ?? '',
-            'is_addendum' => false,
-            'reimbursement' => false,
-            'items_match_ppmp' => false, // Will update after parsing items
+            'charged_to_raw' => $metadata['charged_to_raw'] ?? null,
+            'charged_to_code' => $metadata['charged_to_code'] ?? null,
+            'office_name' => $metadata['office_name'] ?? null,
+            'ppmp_category_code' => $metadata['ppmp_category_code'] ?? null,
+            'ppmp_category_name' => $metadata['ppmp_category_name'] ?? null,
+            'requesting_officer_name' => $metadata['requesting_officer_name'] ?? null,
+            'requesting_officer_title' => $metadata['requesting_officer_title'] ?? null,
         ]);
 
-        // Parse and create items
+        if (! $this->ppmp && isset($metadata['office_name'], $metadata['fiscal_year'])) {
+            $office = Office::query()
+                ->where('name', 'like', '%' . $metadata['office_name'] . '%')
+                ->first();
+
+            Log::info('[EmanatingImport] PPMP auto-resolve attempt', [
+                'office_name_from_file' => $metadata['office_name'],
+                'office_id_resolved' => $office?->id,
+                'fiscal_year' => $metadata['fiscal_year'],
+            ]);
+
+            if ($office) {
+                $this->ppmp = PPMP::query()
+                    ->where('office_id', $office->id)
+                    ->where('fiscal_year', (int) $metadata['fiscal_year'])
+                    ->latest()
+                    ->first();
+
+                Log::info('[EmanatingImport] PPMP auto-resolved', [
+                    'ppmp_id' => $this->ppmp?->id,
+                ]);
+            }
+        }
+
+        if (! $this->fund && $this->ppmp) {
+            $this->fund = Fund::query()
+                ->where('office_id', $this->ppmp->office_id)
+                ->where('project_code_id', $this->ppmp->project_code_id)
+                ->where('fiscal_year', $this->ppmp->fiscal_year)
+                ->latest()
+                ->first();
+
+            Log::info('[EmanatingImport] Fund auto-resolve attempt', [
+                'ppmp_id' => $this->ppmp->id,
+                'office_id' => $this->ppmp->office_id,
+                'project_code_id' => $this->ppmp->project_code_id,
+                'fiscal_year' => $this->ppmp->fiscal_year,
+                'resolved_fund_id' => $this->fund?->id,
+            ]);
+        }
+
+        if (! $this->fund) {
+            Log::error('[EmanatingImport] Fund resolution failed', [
+                'ppmp_id' => $this->ppmp?->id,
+                'metadata_office_name' => $metadata['office_name'] ?? null,
+                'metadata_fiscal_year' => $metadata['fiscal_year'] ?? null,
+            ]);
+
+            throw new RuntimeException('No matching Fund found for selected PPMP (office, project code, fiscal year).');
+        }
+
+        $accountId = $this->resolveAccountId($metadata);
+
+        if (! $accountId) {
+            Log::error('[EmanatingImport] Account resolution failed', [
+                'ppmp_id' => $this->ppmp?->id,
+                'ppmp_category_id' => $this->ppmpCategory?->id ?? $this->ppmpCategoryId,
+                'account_code' => $metadata['account_code'] ?? $metadata['ppmp_category_code'] ?? null,
+                'account_name' => $metadata['account_name'] ?? $metadata['ppmp_category_name'] ?? null,
+            ]);
+
+            throw new RuntimeException('No matching Account found from the XLSX Account line.');
+        }
+
+        $emanating = Emanating::create([
+            'fund_id' => $this->fund->id,
+            'ppmp_id' => $this->ppmp?->id,
+            'project_id' => $this->fund->project_id,
+            'account_id' => $accountId,
+            'ppmp_category_id' => $this->ppmpCategory?->id ?? $this->ppmpCategoryId,
+            'charged_to_code' => $metadata['charged_to_code'] ?? null,
+            'pr_no' => $metadata['pr_no'] ?? null,
+            'fiscal_year' => $metadata['fiscal_year'] ?? (int) ($this->ppmp?->fiscal_year ?? now()->year),
+            'quarter' => $metadata['quarter'] ?? null,
+            'month' => $metadata['month'] ?? null,
+            'is_addendum' => false,
+            'reimbursement' => false,
+            'requesting_officer_name' => $metadata['requesting_officer_name'] ?? null,
+            'requesting_officer_title' => $metadata['requesting_officer_title'] ?? null,
+            'items_match_ppmp' => false,
+        ]);
+
+        Log::info('[EmanatingImport] Emanating created', [
+            'emanating_id' => $emanating->id,
+            'fund_id' => $emanating->fund_id,
+            'ppmp_id' => $emanating->ppmp_id,
+            'account_id' => $emanating->account_id,
+            'ppmp_category_id' => $emanating->ppmp_category_id,
+        ]);
+
         $this->parseItems($rowArray, $emanating);
 
-        // Update items_match_ppmp flag
         $emanating->update([
+            'items_match_ppmp' => $this->itemsMatchPPMP,
+        ]);
+
+        Log::info('[EmanatingImport] Import completed', [
+            'emanating_id' => $emanating->id,
+            'items_created' => $this->itemsCreated,
             'items_match_ppmp' => $this->itemsMatchPPMP,
         ]);
     }
 
     /**
-     * Parse metadata from CSV rows
+     * Parse metadata from XLSX rows
      */
     private function parseMetadata(array $rows): array
     {
-        $metadata = [];
+        $metadata = [
+            'fiscal_year' => (int) ($this->ppmp?->fiscal_year ?? now()->year),
+        ];
 
-        // Row 1: PR No.
-        if (isset($rows[1][3])) {
-            $metadata['pr_no'] = trim($rows[1][3]);
-        }
+        $underlineRow = null;
+        $detectedMarkers = [];
 
-        // Cell A8 (row 7): Office/Department name
-        if (isset($rows[7][0])) {
-            $officeText = trim($rows[7][0]);
-            // Extract office name (might have prefixes like "Office:" or "Department:")
-            if (preg_match('/(?:Office|Department|Div(?:ision)?)[:\s]*(.+)/i', $officeText, $matches)) {
-                $metadata['office_name'] = trim($matches[1]);
-            } else {
-                $metadata['office_name'] = $officeText;
+        foreach ($rows as $index => $row) {
+            $columnA = trim((string) ($row[0] ?? ''));
+            $columnB = trim((string) ($row[1] ?? ''));
+            $combinedText = trim($columnA . ' ' . $columnB);
+
+            if ($columnA !== '' && preg_match('/PR\s*NO\.?/i', $columnA) === 1 && $columnB !== '') {
+                $metadata['pr_no'] = $columnB;
+                $detectedMarkers[] = ['row' => $index + 1, 'marker' => 'pr_no', 'value' => $columnB];
+            }
+
+            if (preg_match('/\b(20\d{2})\b/', $combinedText, $yearMatches) === 1) {
+                $metadata['fiscal_year'] = (int) $yearMatches[1];
+                $detectedMarkers[] = ['row' => $index + 1, 'marker' => 'fiscal_year', 'value' => $metadata['fiscal_year']];
+            }
+
+            if (! isset($metadata['quarter']) && preg_match('/for\s+the\s+(\d{1,2})(?:st|nd|rd|th)\b/i', $combinedText, $quarterMatches) === 1) {
+                $quarter = (int) $quarterMatches[1];
+
+                if ($quarter >= 1 && $quarter <= 4) {
+                    $metadata['quarter'] = $quarter;
+                    $detectedMarkers[] = ['row' => $index + 1, 'marker' => 'quarter', 'value' => $quarter];
+                }
+            }
+
+            if (! isset($metadata['month']) && preg_match('/quarter\s*\/\s*month\s+of\s+([A-Za-z]+)/i', $combinedText, $monthMatches) === 1) {
+                try {
+                    $metadata['month'] = Carbon::parse('1 ' . $monthMatches[1])->month;
+                    $detectedMarkers[] = [
+                        'row' => $index + 1,
+                        'marker' => 'month',
+                        'value' => $metadata['month'],
+                    ];
+                } catch (\Throwable) {
+                }
+            }
+
+            if ($columnA !== '' && str_contains(mb_strtoupper($columnA), 'CHARGE TO:')) {
+                $metadata['charged_to_raw'] = $columnB;
+
+                if (preg_match('/\b(\d{4,})\b/', $columnB, $codeMatches) === 1) {
+                    $metadata['charged_to_code'] = $codeMatches[1];
+                } else {
+                    $metadata['charged_to_code'] = $columnB;
+                }
+
+                $metadata['office_name'] = trim((string) preg_replace('/\(.*$/', '', $columnB));
+                $detectedMarkers[] = ['row' => $index + 1, 'marker' => 'charge_to', 'value' => $columnB];
+            }
+
+            if ($columnA !== '' && preg_match('/^account\b/i', $columnA) === 1) {
+                if (preg_match('/([\d\-]+)\s*\(([^\)]+)\)/', $columnB, $accountMatches) === 1) {
+                    $metadata['account_code'] = $accountMatches[1];
+                    $metadata['account_name'] = trim($accountMatches[2]);
+                    $metadata['ppmp_category_code'] = $accountMatches[1];
+                    $metadata['ppmp_category_name'] = trim($accountMatches[2]);
+                    $detectedMarkers[] = ['row' => $index + 1, 'marker' => 'account', 'value' => $columnB];
+                } elseif (preg_match('/([\d\-]+)/', $columnB, $codeOnlyMatches) === 1) {
+                    $metadata['account_code'] = $codeOnlyMatches[1];
+                    $metadata['ppmp_category_code'] = $codeOnlyMatches[1];
+                    $detectedMarkers[] = ['row' => $index + 1, 'marker' => 'account_code_only', 'value' => $columnB];
+                }
+            }
+
+            if ($columnB !== '' && preg_match('/_{3,}/', $columnB) === 1) {
+                $underlineRow = $index;
+                $detectedMarkers[] = ['row' => $index + 1, 'marker' => 'underline', 'value' => $columnB];
             }
         }
 
-        // Cell A14 (row 13): Parse quarter/month/fiscal year from request text
-        if (isset($rows[13][0])) {
-            $requestText = $rows[13][0];
-            $timeInfo = $this->parseTimeInfo($requestText);
-            $metadata = array_merge($metadata, $timeInfo);
-        }
+        Log::debug('[EmanatingImport] Metadata markers detected', [
+            'markers' => $detectedMarkers,
+        ]);
 
-        // Cell A23 (row 22): Charged to code
-        if (isset($rows[22][0])) {
-            $chargedTo = $rows[22][0];
-            if (preg_match('/Charged to:\s*(\d+)/', $chargedTo, $matches)) {
-                $metadata['charged_to_code'] = $matches[1];
+        if ($underlineRow !== null) {
+            $name = null;
+            $title = null;
+
+            for ($i = $underlineRow + 1; $i < count($rows); $i++) {
+                $candidate = trim((string) ($rows[$i][1] ?? ''));
+                if ($candidate === '') {
+                    continue;
+                }
+
+                if (! $name) {
+                    $name = $candidate;
+                    continue;
+                }
+
+                $title = $candidate;
+                break;
             }
+
+            $metadata['requesting_officer_name'] = $name;
+            $metadata['requesting_officer_title'] = $title;
+
+            $this->requestingOfficerName = $name;
+            $this->requestingOfficerTitle = $title;
+
+            Log::info('[EmanatingImport] Signatory block parsed', [
+                'underline_row' => $underlineRow + 1,
+                'requesting_officer_name' => $name,
+                'requesting_officer_title' => $title,
+            ]);
         }
 
-        // Row 23: Account code (PPMP category code)
-        if (isset($rows[23][1])) {
-            $accountText = $rows[23][1];
-            if (preg_match('/Account:\s*([\d-]+)/', $accountText, $matches)) {
-                $metadata['ppmp_category_code'] = $matches[1];
-            }
-        }
+        if (isset($metadata['ppmp_category_code']) && $this->ppmp) {
+            $normalizedCategoryCode = $this->normalizeCode($metadata['ppmp_category_code']);
 
-        // Cell B27 (row 26, column 1): Purpose
-        if (isset($rows[26][1])) {
-            $metadata['purpose'] = trim($rows[26][1]);
+            $this->ppmpCategory = PPMPCategory::query()
+                ->where('ppmp_id', $this->ppmp->id)
+                ->with('account')
+                ->get()
+                ->first(function (PPMPCategory $category) use ($normalizedCategoryCode): bool {
+                    return $this->normalizeCode((string) $category->account?->code) === $normalizedCategoryCode;
+                });
+
+            Log::info('[EmanatingImport] PPMP category resolved from account code', [
+                'ppmp_id' => $this->ppmp->id,
+                'account_code_raw' => $metadata['ppmp_category_code'],
+                'account_code_normalized' => $normalizedCategoryCode,
+                'ppmp_category_id_resolved' => $this->ppmpCategory?->id,
+            ]);
         }
 
         return $metadata;
     }
 
     /**
-     * Parse time information from request text
-     */
-    private function parseTimeInfo(string $text): array
-    {
-        $info = [];
-
-        // Extract fiscal year
-        if (preg_match('/(\d{4})/', $text, $matches)) {
-            $info['fiscal_year'] = (int) $matches[1];
-        }
-
-        // Extract quarter
-        if (preg_match('/(\d+)(?:st|nd|rd|th)\s+quarter/i', $text, $matches)) {
-            $info['quarter'] = (int) $matches[1];
-        }
-
-        // Extract month
-        $months = [
-            'january' => 1,
-            'february' => 2,
-            'march' => 3,
-            'april' => 4,
-            'may' => 5,
-            'june' => 6,
-            'july' => 7,
-            'august' => 8,
-            'september' => 9,
-            'october' => 10,
-            'november' => 11,
-            'december' => 12,
-        ];
-
-        foreach ($months as $monthName => $monthNum) {
-            if (stripos($text, $monthName) !== false) {
-                $info['month'] = $monthNum;
-                break;
-            }
-        }
-
-        return $info;
-    }
-
-    /**
-     * Parse items from CSV
+     * Parse items from XLSX
      */
     private function parseItems(array $rows, Emanating $emanating): array
     {
         $items = [];
-        $emanatingItemsData = [];
-        $counter = count($rows);
+        $ppmpItems = $this->ppmpCategory
+            ? PPMPItem::query()->where('ppmp_category_id', $this->ppmpCategory->id)->get()
+            : collect();
 
-        // Step 1: Parse all emanating items from CSV
-        for ($i = 15; $i < $counter; $i++) {
-            $row = $rows[$i];
+        $appItems = collect();
+        if ($this->ppmp) {
+            $app = APP::query()
+                ->where('office_id', $this->ppmp->office_id)
+                ->where('fiscal_year', $this->ppmp->fiscal_year)
+                ->latest()
+                ->first();
 
-            // Stop when we reach empty rows or metadata section
-            if (! isset($row[0]) || trim($row[0]) === '' || stripos($row[0], 'Charged to') !== false) {
+            if ($app) {
+                $appItems = APPItem::query()
+                    ->whereHas('appCategory', fn($query) => $query->where('app_id', $app->id))
+                    ->get();
+            }
+        }
+
+        $hasStartedItemSection = false;
+        $skippedBeforeStart = 0;
+        $skippedMissingDescription = 0;
+        $breakReason = null;
+
+        foreach ($rows as $index => $row) {
+            $columnA = trim((string) ($row[0] ?? ''));
+            $columnB = trim((string) ($row[1] ?? ''));
+            $columnC = trim((string) ($row[2] ?? ''));
+
+            if ($columnA !== '' && str_contains(mb_strtoupper($columnA), 'CHARGE TO:')) {
+                $breakReason = 'charge_to_marker';
+                Log::info('[EmanatingImport] Item parsing stopped at CHARGE TO marker', [
+                    'row' => $index + 1,
+                ]);
                 break;
             }
 
-            $qtyUnit = trim($row[0]);
-            $description = trim($row[1] ?? '');
-            $estimatedPrice = $this->parseAmount($row[2] ?? '0');
-
-            if ($description === '') {
+            if (! $hasStartedItemSection && ($columnA === '' || preg_match('/\d/', $columnA) !== 1)) {
+                $skippedBeforeStart++;
                 continue;
             }
 
-            // Parse quantity and unit
-            preg_match('/^(\d+)\s*(.*)$/', $qtyUnit, $matches);
-            $quantity = isset($matches[1]) ? (int) $matches[1] : 0;
-            $unit = isset($matches[2]) ? trim($matches[2]) : 'pcs';
+            if ($columnA === '' && $columnB === '' && $hasStartedItemSection) {
+                $breakReason = 'blank_row_after_start';
+                Log::info('[EmanatingImport] Item parsing stopped at blank row after start', [
+                    'row' => $index + 1,
+                ]);
+                break;
+            }
 
-            $emanatingItemsData[] = [
-                'description' => $description,
-                'quantity' => $quantity,
-                'unit' => $unit,
-                'price' => $estimatedPrice,
-            ];
-        }
+            if ($columnB === '') {
+                $skippedMissingDescription++;
+                continue;
+            }
 
-        // Step 2: Get all PPMP items for this category
-        $ppmpItems = $this->ppmpCategory instanceof \App\Models\PPMPCategory
-            ? PPMPItem::where('ppmp_category_id', $this->ppmpCategory->id)->get()
-            : collect();
+            $hasStartedItemSection = true;
 
-        // Step 3: Perform bidirectional matching
-        $matchedPPMPItemIds = [];
+            [$quantity, $unit] = $this->parseQuantityAndUnit($columnA);
+            $ppmpItem = $this->findMatchingPPMPItem($columnB, $ppmpItems);
+            $appItem = $this->findMatchingAPPItem($columnB, $appItems);
 
-        foreach ($emanatingItemsData as $emanatingItemData) {
-            $ppmpItem = $this->findMatchingPPMPItem(
-                $emanatingItemData['description']
-            );
+            $exceedsPPMPQuantity = $ppmpItem && $quantity > ((int) $ppmpItem->quantity);
+            $missingInPpmp = ! $ppmpItem;
+            $missingInApp = ! $appItem;
 
-            if (! $ppmpItem instanceof \App\Models\PPMPItem) {
+            if ($missingInPpmp || $missingInApp || $exceedsPPMPQuantity) {
                 $this->itemsMatchPPMP = false;
-                $this->matchingResults[] = [
-                    'description' => $emanatingItemData['description'],
-                    'quantity' => $emanatingItemData['quantity'],
-                    'unit' => $emanatingItemData['unit'],
-                    'matched' => false,
-                    'message' => 'No matching PPMP item found',
-                ];
-
-                continue;
             }
 
-            // PPMP item found - create the emanating item regardless of quantity/unit
-            // The comparison logic will validate and report mismatches
-            $matchedPPMPItemIds[] = $ppmpItem->id;
+            $messages = [];
+            if ($missingInPpmp) {
+                $messages[] = 'Missing in PPMP';
+            }
+            if ($missingInApp) {
+                $messages[] = 'Missing in APP';
+            }
+            if ($exceedsPPMPQuantity) {
+                $messages[] = sprintf('Quantity exceeds PPMP (%d > %d)', $quantity, (int) $ppmpItem->quantity);
+            }
 
             $this->matchingResults[] = [
-                'description' => $emanatingItemData['description'],
-                'quantity' => $emanatingItemData['quantity'],
-                'unit' => $emanatingItemData['unit'],
-                'matched' => true,
-                'ppmp_item_id' => $ppmpItem->id,
-                'ppmp_item_name' => $ppmpItem->name,
+                'description' => $columnB,
+                'quantity' => $quantity,
+                'unit' => $unit,
+                'matched' => $messages === [],
+                'messages' => $messages,
             ];
 
-            // Create emanating item
             $emanatingItem = EmanatingItem::create([
                 'emanating_id' => $emanating->id,
-                'ppmp_item_id' => $ppmpItem->id,
-                'quantity' => $emanatingItemData['quantity'],
-                'unit' => $emanatingItemData['unit'],
-                'total_price' => $emanatingItemData['price'],
+                'ppmp_item_id' => $ppmpItem?->id,
+                'name' => $columnB,
+                'quantity' => $quantity,
+                'unit' => $unit,
+                'total_price' => $this->parseAmount($columnC),
+            ]);
+
+            Log::debug('[EmanatingImport] Item parsed', [
+                'row' => $index + 1,
+                'description' => $columnB,
+                'quantity' => $quantity,
+                'unit' => $unit,
+                'ppmp_item_id' => $ppmpItem?->id,
+                'missing_in_ppmp' => $missingInPpmp,
+                'missing_in_app' => $missingInApp,
+                'exceeds_ppmp_quantity' => $exceedsPPMPQuantity,
+                'messages' => $messages,
             ]);
 
             $items[] = $emanatingItem;
             $this->itemsCreated++;
         }
 
-        // Step 4: Verify all PPMP items are accounted for in emanating request
-        $unmatchedPPMPItems = $ppmpItems->whereNotIn('id', $matchedPPMPItemIds);
-
-        if ($unmatchedPPMPItems->isNotEmpty()) {
-            $this->itemsMatchPPMP = false;
-
-            foreach ($unmatchedPPMPItems as $unmatchedPPMPItem) {
-                $this->matchingResults[] = [
-                    'description' => $unmatchedPPMPItem->name,
-                    'quantity' => $unmatchedPPMPItem->quantity,
-                    'unit' => $unmatchedPPMPItem->unit,
-                    'matched' => false,
-                    'message' => 'PPMP item not found in Emanating request',
-                    'ppmp_item_id' => $unmatchedPPMPItem->id,
-                    'is_missing_from_emanating' => true,
-                ];
-            }
-        }
-
-        // Step 5: Final validation - counts must match
-        if (count($emanatingItemsData) !== $ppmpItems->count() || $unmatchedPPMPItems->isNotEmpty()) {
-            $this->itemsMatchPPMP = false;
-        }
+        Log::info('[EmanatingImport] Item parsing summary', [
+            'emanating_id' => $emanating->id,
+            'has_started_item_section' => $hasStartedItemSection,
+            'items_created' => $this->itemsCreated,
+            'skipped_before_start' => $skippedBeforeStart,
+            'skipped_missing_description' => $skippedMissingDescription,
+            'break_reason' => $breakReason,
+            'ppmp_category_id' => $this->ppmpCategory?->id,
+            'ppmp_items_count' => $ppmpItems->count(),
+            'app_items_count' => $appItems->count(),
+        ]);
 
         return $items;
     }
 
     /**
-     * Find matching PPMP item by description and quantity
+     * Find matching PPMP item by description.
      */
-    private function findMatchingPPMPItem(string $description): ?PPMPItem
+    private function findMatchingPPMPItem(string $description, Collection $ppmpItems): ?PPMPItem
     {
-        if (! $this->ppmpCategory instanceof \App\Models\PPMPCategory) {
+        if (! $this->ppmpCategory || $ppmpItems->isEmpty()) {
             return null;
         }
 
-        // Try exact match first
-        $item = PPMPItem::where('ppmp_category_id', $this->ppmpCategory->id)
-            ->where('name', $description)
-            ->first();
-
-        if ($item) {
-            return $item;
+        $normalizedDescription = $this->normalizeItemText($description);
+        if ($normalizedDescription === '') {
+            return null;
         }
 
-        // Try fuzzy match (contains)
-        $item = PPMPItem::where('ppmp_category_id', $this->ppmpCategory->id)
-            ->where('name', 'like', '%' . $description . '%')
-            ->first();
+        $exact = $ppmpItems->first(function (PPMPItem $item) use ($normalizedDescription): bool {
+            return $this->normalizeItemText((string) $item->name) === $normalizedDescription;
+        });
 
-        if ($item) {
-            return $item;
+        if ($exact) {
+            return $exact;
         }
 
-        // Try reverse fuzzy match (description contains item name)
-        $item = PPMPItem::where('ppmp_category_id', $this->ppmpCategory->id)
-            ->whereRaw("? like ('%' || name || '%')", [$description])
-            ->first();
+        return $ppmpItems->first(function (PPMPItem $item) use ($normalizedDescription): bool {
+            $normalizedItemName = $this->normalizeItemText((string) $item->name);
 
-        return $item;
+            return str_contains($normalizedItemName, $normalizedDescription)
+                || str_contains($normalizedDescription, $normalizedItemName);
+        });
     }
 
-    /**
-     * Find related models (Project, PPMP, PPMPCategory) based on office name and PPMP category code
-     */
-    private function findRelatedModels(array $metadata): void
+    private function findMatchingAPPItem(string $description, Collection $appItems): ?APPItem
     {
-        if (! isset($metadata['office_name']) || ! isset($metadata['ppmp_category_code'])) {
-            return;
+        if ($appItems->isEmpty()) {
+            return null;
         }
 
-        $officeName = $metadata['office_name'];
-        $ppmpCategoryCode = $metadata['ppmp_category_code'];
-        $normalizedCategoryCode = $this->normalizeCode($ppmpCategoryCode);
-        $fiscalYear = $metadata['fiscal_year'] ?? date('Y');
-
-        // Find project by matching office through fund relationship
-        $this->project = Project::whereHas('fund.office', function ($query) use ($officeName): void {
-            $query->where('name', 'like', '%' . $officeName . '%')
-                ->orWhere('name', $officeName);
-        })
-            ->with('fund.office')
-            ->first();
-
-        if (! $this->project instanceof \App\Models\Project) {
-            Log::warning('[EmanatingImport] Project not found for office', ['office_name' => $officeName]);
-
-            return;
+        $normalizedDescription = $this->normalizeItemText($description);
+        if ($normalizedDescription === '') {
+            return null;
         }
 
-        // Find PPMP category by account code
-        $this->ppmpCategory = PPMPCategory::query()
-            ->whereHas('ppmp', function ($query) use ($fiscalYear): void {
-                $query->where('fiscal_year', $fiscalYear);
-            })
-            ->with(['ppmp', 'account'])
-            ->get()
-            ->first(function (PPMPCategory $category) use ($normalizedCategoryCode): bool {
-                return $this->normalizeCode((string) $category->account?->code) === $normalizedCategoryCode;
-            });
+        $exact = $appItems->first(function (APPItem $item) use ($normalizedDescription): bool {
+            return $this->normalizeItemText((string) $item->name) === $normalizedDescription;
+        });
 
-        if ($this->ppmpCategory instanceof \App\Models\PPMPCategory) {
-            $this->ppmp = $this->ppmpCategory->ppmp;
-        } else {
-            Log::warning('[EmanatingImport] PPMP category not found', [
-                'code' => $ppmpCategoryCode,
-                'fiscal_year' => $fiscalYear,
-            ]);
+        if ($exact) {
+            return $exact;
         }
+
+        return $appItems->first(function (APPItem $item) use ($description): bool {
+            $normalizedItemName = $this->normalizeItemText((string) $item->name);
+            $normalizedDescription = $this->normalizeItemText($description);
+
+            return str_contains($normalizedItemName, $normalizedDescription)
+                || str_contains($normalizedDescription, $normalizedItemName);
+        });
+    }
+
+    private function parseQuantityAndUnit(string $value): array
+    {
+        if ($value === '') {
+            return [0, 'pcs'];
+        }
+
+        if (preg_match('/^(\d+)\s*(.*)$/', $value, $matches) === 1) {
+            $quantity = (int) $matches[1];
+            $unit = trim((string) ($matches[2] ?? ''));
+
+            return [$quantity, $unit !== '' ? $unit : 'pcs'];
+        }
+
+        return [0, 'pcs'];
     }
 
     /**
@@ -407,6 +541,68 @@ class EmanatingImport implements ToCollection, WithCustomCsvSettings
         return preg_replace('/[^0-9]/', '', $code) ?? '';
     }
 
+    private function normalizeAccountCodeForMatch(string $code): string
+    {
+        $parts = preg_split('/[^0-9]+/', $code) ?: [];
+        $filtered = array_values(array_filter($parts, static fn(string $part): bool => $part !== ''));
+
+        if ($filtered === []) {
+            return '';
+        }
+
+        $normalizedParts = array_map(static fn(string $part): string => (string) ((int) $part), $filtered);
+
+        return implode('-', $normalizedParts);
+    }
+
+    private function resolveAccountId(array $metadata): ?int
+    {
+        if ($this->ppmpCategory?->account_id) {
+            return (int) $this->ppmpCategory->account_id;
+        }
+
+        $accountCode = trim((string) ($metadata['account_code'] ?? $metadata['ppmp_category_code'] ?? ''));
+        $accountName = trim((string) ($metadata['account_name'] ?? $metadata['ppmp_category_name'] ?? ''));
+
+        $accounts = Account::query()->get(['id', 'code', 'name']);
+
+        if ($accountCode !== '') {
+            $normalizedTargetCode = $this->normalizeAccountCodeForMatch($accountCode);
+
+            $matchedByCode = $accounts->first(function (Account $account) use ($normalizedTargetCode): bool {
+                return $this->normalizeAccountCodeForMatch((string) $account->code) === $normalizedTargetCode;
+            });
+
+            if ($matchedByCode) {
+                return (int) $matchedByCode->id;
+            }
+        }
+
+        if ($accountName !== '') {
+            $normalizedTargetName = $this->normalizeItemText($accountName);
+
+            $matchedByName = $accounts->first(function (Account $account) use ($normalizedTargetName): bool {
+                return $this->normalizeItemText((string) $account->name) === $normalizedTargetName;
+            });
+
+            if ($matchedByName) {
+                return (int) $matchedByName->id;
+            }
+        }
+
+        return null;
+    }
+
+    private function normalizeItemText(string $text): string
+    {
+        $normalized = mb_strtolower(trim($text));
+        $normalized = str_replace(['’', '“', '”', "\t", "\r", "\n"], ['\'', '"', '"', ' ', ' ', ' '], $normalized);
+        $normalized = preg_replace('/[^\pL\pN\s]/u', ' ', $normalized) ?? $normalized;
+        $normalized = preg_replace('/\s+/u', ' ', $normalized) ?? $normalized;
+
+        return trim($normalized);
+    }
+
     public function getItemsCreated(): int
     {
         return $this->itemsCreated;
@@ -420,5 +616,15 @@ class EmanatingImport implements ToCollection, WithCustomCsvSettings
     public function getMatchingResults(): array
     {
         return $this->matchingResults;
+    }
+
+    public function getRequestingOfficerName(): ?string
+    {
+        return $this->requestingOfficerName;
+    }
+
+    public function getRequestingOfficerTitle(): ?string
+    {
+        return $this->requestingOfficerTitle;
     }
 }

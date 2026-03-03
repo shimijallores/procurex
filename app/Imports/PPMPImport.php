@@ -43,12 +43,6 @@ class PPMPImport implements ToCollection, WithStartRow
 
     public function collection(Collection $rows): void
     {
-        Log::info('[PPMP Import] Started parsing rows', [
-            'ppmp_id' => $this->ppmp->id,
-            'start_row' => $this->startRow(),
-            'rows_received' => $rows->count(),
-        ]);
-
         $accounts = Account::query()->get(['id', 'code', 'name']);
         $this->accountsByCode = $accounts->keyBy(function (Account $account): string {
             return $this->normalizeCode((string) $account->code);
@@ -57,11 +51,6 @@ class PPMPImport implements ToCollection, WithStartRow
             return mb_strtolower(trim((string) $account->name));
         });
 
-        Log::info('[PPMP Import] Accounts preloaded for matching', [
-            'ppmp_id' => $this->ppmp->id,
-            'accounts_total' => $accounts->count(),
-        ]);
-
         foreach ($rows as $index => $row) {
             // Convert row to array for easier access
             $rowData = $row->toArray();
@@ -69,22 +58,11 @@ class PPMPImport implements ToCollection, WithStartRow
             $columnAValue = trim((string) ($rowData[0] ?? ''));
 
             if ($this->shouldStopParsing($columnAValue)) {
-                Log::info('[PPMP Import] Stop marker reached in column A', [
-                    'ppmp_id' => $this->ppmp->id,
-                    'sheet_row' => $sheetRow,
-                    'column_a_value' => $columnAValue,
-                ]);
-
                 break;
             }
 
             // Skip completely empty rows
             if (array_filter($rowData, fn($val): bool => ! empty($val)) === []) {
-                Log::debug('[PPMP Import] Skipping empty row', [
-                    'ppmp_id' => $this->ppmp->id,
-                    'sheet_row' => $sheetRow,
-                ]);
-
                 continue;
             }
 
@@ -99,12 +77,6 @@ class PPMPImport implements ToCollection, WithStartRow
             $modeOfProcurement = trim((string) ($rowData[8] ?? ''));
 
             if ($this->shouldSkipSectionHeaderRow($name)) {
-                Log::debug('[PPMP Import] Skipping section header row', [
-                    'ppmp_id' => $this->ppmp->id,
-                    'sheet_row' => $sheetRow,
-                    'name' => $name,
-                ]);
-
                 continue;
             }
 
@@ -157,14 +129,6 @@ class PPMPImport implements ToCollection, WithStartRow
                             'estimated_budget' => $estimatedBudget,
                         ]);
                     }
-
-                    Log::warning('[PPMP Import] Duplicate category row detected, reusing existing category', [
-                        'ppmp_id' => $this->ppmp->id,
-                        'sheet_row' => $sheetRow,
-                        'category_id' => $this->currentCategory->id,
-                        'account_id' => $accountId,
-                        'estimated_budget_in_row' => $estimatedBudget,
-                    ]);
                 } else {
                     // Create category
                     $this->currentCategory = PPMPCategory::create([
@@ -174,14 +138,6 @@ class PPMPImport implements ToCollection, WithStartRow
                     ]);
 
                     $this->categoriesCreated++;
-
-                    Log::debug('[PPMP Import] Category created', [
-                        'ppmp_id' => $this->ppmp->id,
-                        'sheet_row' => $sheetRow,
-                        'category_id' => $this->currentCategory->id,
-                        'account_id' => $accountId,
-                        'estimated_budget' => $estimatedBudget,
-                    ]);
                 }
             } elseif ($name !== '' && $name !== '0' && $this->currentCategory && ! str_contains(strtolower($name), 'total')) {
                 // This is an item row
@@ -209,34 +165,8 @@ class PPMPImport implements ToCollection, WithStartRow
                 }
 
                 $this->itemsCreated++;
-
-                Log::debug('[PPMP Import] Item created', [
-                    'ppmp_id' => $this->ppmp->id,
-                    'sheet_row' => $sheetRow,
-                    'item_id' => $ppmpItem->id,
-                    'category_id' => $this->currentCategory->id,
-                    'item_name' => $name,
-                    'quantity' => $ppmpItem->quantity,
-                    'months_created' => $monthsCreated,
-                ]);
-            } else {
-                Log::debug('[PPMP Import] Row skipped (not category/item)', [
-                    'ppmp_id' => $this->ppmp->id,
-                    'sheet_row' => $sheetRow,
-                    'code' => $code,
-                    'name' => $name,
-                    'has_current_category' => $this->currentCategory !== null,
-                    'mode_of_procurement' => $modeOfProcurement,
-                ]);
             }
         }
-
-        Log::info('[PPMP Import] Completed parsing', [
-            'ppmp_id' => $this->ppmp->id,
-            'categories_created' => $this->categoriesCreated,
-            'items_created' => $this->itemsCreated,
-            'budget_notices_count' => count($this->budgetNotices),
-        ]);
     }
 
     /**

@@ -52,21 +52,21 @@ const close = () => {
     <Dialog :open="show" @update:open="close">
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Import Emanating CSV</DialogTitle>
+                <DialogTitle>Import Emanating XLSX</DialogTitle>
                 <DialogDescription>
-                    Upload a new CSV file to import emanating items. This will
+                    Upload a new XLSX file to import emanating items. This will
                     replace existing items.
                 </DialogDescription>
             </DialogHeader>
 
             <div class="space-y-4">
                 <div>
-                    <Label for="csv-file">CSV File</Label>
+                    <Label for="xlsx-file">XLSX File</Label>
                     <Input
-                        id="csv-file"
+                        id="xlsx-file"
                         ref="fileInput"
                         type="file"
-                        accept=".csv,.xlsx,.xls"
+                        accept=".xlsx"
                         @change="handleFileChange"
                         class="mt-2"
                     />

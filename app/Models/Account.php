@@ -25,4 +25,9 @@ class Account extends Model
     {
         return $this->hasMany(PPMPCategory::class, 'account_id');
     }
+
+    public function emanatings(): HasMany
+    {
+        return $this->hasMany(Emanating::class, 'account_id');
+    }
 }
