@@ -102,6 +102,13 @@ const mainNavItems = computed(() => {
             roles: ["Superadmin"], // Superadmin only
         },
         {
+            title: "Project Codes",
+            url: route("project-codes.index"),
+            icon: "lucide:tags",
+            isActive: route().current("project-codes.*"),
+            roles: ["Superadmin"],
+        },
+        {
             title: "APPs",
             url: route("apps.index"),
             icon: "lucide:clipboard-check",
@@ -243,7 +250,9 @@ const secondaryNavItems = computed(() => {
 // Grouped navigation items
 const navigationItems = computed(() => {
     return mainNavItems.value.filter((item) =>
-        ["Dashboard", "Users", "Roles", "Offices"].includes(item.title),
+        ["Dashboard", "Users", "Roles", "Offices", "Project Codes"].includes(
+            item.title,
+        ),
     );
 });
 

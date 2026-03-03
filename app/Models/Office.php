@@ -28,4 +28,9 @@ class Office extends Model
     {
         return $this->hasMany(Fund::class);
     }
+
+    public function projectCodes(): HasMany
+    {
+        return $this->hasMany(ProjectCode::class);
+    }
 }

@@ -15,6 +15,7 @@ use App\Http\Controllers\NOAController;
 use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\PPMPController;
 use App\Http\Controllers\POTransmittalController;
+use App\Http\Controllers\ProjectCodeController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\PurchaseRequestController;
 use App\Http\Controllers\RFQController;
@@ -42,6 +43,7 @@ Route::middleware(['auth'])->group(function (): void {
     Route::resource('users', UserController::class);
     Route::resource('roles', RoleController::class)->middleware('role:Superadmin');
     Route::resource('offices', OfficeController::class)->middleware('role:Superadmin');
+    Route::resource('project-codes', ProjectCodeController::class)->middleware('role:Superadmin');
     Route::resource('calendars', CalendarController::class)->only(['index', 'store', 'update', 'destroy'])->middleware('role:Superadmin,BAC Reso Admin,Budgeting Admin,office');
     Route::post('calendars/check-date', [CalendarController::class, 'checkDate'])->middleware('auth')->name('calendars.check-date');
     Route::resource('funds', FundController::class)->middleware('role:Superadmin,office');
