@@ -13,7 +13,6 @@ use App\Models\PurchaseRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\LaravelPdf\Facades\Pdf;
@@ -161,7 +160,6 @@ class EarmarkController extends Controller
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
-            Log::error('Earmark creation failed', ['error' => $e->getMessage()]);
 
             return redirect()->back()
                 ->with('error', 'Failed to create Earmark. Please try again.');
@@ -246,7 +244,6 @@ class EarmarkController extends Controller
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
-            Log::error('Budget return failed', ['error' => $e->getMessage()]);
 
             return redirect()->back()->with('error', 'Failed to return PR.');
         }

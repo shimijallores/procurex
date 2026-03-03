@@ -14,7 +14,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\LaravelPdf\Facades\Pdf;
@@ -141,7 +140,6 @@ class BACResolutionController extends Controller
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
-            Log::error('BAC Resolution creation failed', ['error' => $e->getMessage()]);
 
             return redirect()->back()->with('error', 'Failed to create BAC Resolution. Please try again.');
         }

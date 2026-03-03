@@ -14,7 +14,6 @@ use App\Models\MasterListCategory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -98,7 +97,6 @@ class CanvasController extends Controller
             DB::commit();
         } catch (\Throwable $throwable) {
             DB::rollBack();
-            Log::error('Canvas creation failed', ['error' => $throwable->getMessage()]);
 
             return redirect()->back()
                 ->with('error', 'Failed to create canvas. Please try again.');
@@ -182,7 +180,6 @@ class CanvasController extends Controller
             DB::commit();
         } catch (\Throwable $throwable) {
             DB::rollBack();
-            Log::error('Canvas item selection save failed: ' . $throwable->getMessage());
 
             return redirect()->back()
                 ->with('error', 'Failed to save selections.');
@@ -231,7 +228,6 @@ class CanvasController extends Controller
             DB::commit();
         } catch (\Throwable $throwable) {
             DB::rollBack();
-            Log::error('Canvas completion failed: ' . $throwable->getMessage());
 
             return redirect()->back()
                 ->with('error', 'Failed to complete canvas.');
@@ -264,7 +260,6 @@ class CanvasController extends Controller
             DB::commit();
         } catch (\Throwable $throwable) {
             DB::rollBack();
-            Log::error('Canvas return failed: ' . $throwable->getMessage());
 
             return redirect()->back()
                 ->with('error', 'Failed to return canvas.');

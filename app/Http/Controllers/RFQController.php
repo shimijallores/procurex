@@ -16,7 +16,6 @@ use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 use NumberFormatter;
@@ -168,7 +167,6 @@ class RFQController extends Controller
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
-            Log::error('RFQ creation failed', ['error' => $e->getMessage()]);
 
             return redirect()->back()->with('error', 'Failed to create RFQ. Please try again.');
         }
@@ -241,7 +239,6 @@ class RFQController extends Controller
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
-            Log::error('RFQ supplier submission failed', ['error' => $e->getMessage()]);
 
             return redirect()->back()->with('error', 'Failed to save supplier submission.');
         }

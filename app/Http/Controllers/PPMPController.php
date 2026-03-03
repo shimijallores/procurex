@@ -14,7 +14,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -102,12 +101,6 @@ class PPMPController extends Controller
             }
         }
 
-        Log::info('[PPMP Store] Starting create', [
-            'office_id' => $validated['office_id'] ?? null,
-            'fiscal_year' => $validated['fiscal_year'] ?? null,
-            'has_xlsx_file' => $storePPMPRequest->hasFile('xlsx_file'),
-        ]);
-
         DB::beginTransaction();
         try {
             $existingPpmp = PPMP::query()
@@ -139,17 +132,6 @@ class PPMPController extends Controller
                     'budget_notices' => $budgetNotices,
                 ]);
 
-                Log::info('[PPMP Store] Addendum appended to existing PPMP', [
-                    'existing_ppmp_id' => $existingPpmp->id,
-                    'office_id' => $validated['office_id'],
-                    'project_code_id' => $validated['project_code_id'],
-                    'fiscal_year' => $validated['fiscal_year'],
-                    'xlsx_path' => $xlsxPath,
-                    'budget_notices_count' => count($budgetNotices),
-                    'categories_created' => $ppmpImport->getCategoriesCreated(),
-                    'items_created' => $ppmpImport->getItemsCreated(),
-                ]);
-
                 DB::commit();
 
                 return redirect()->route('ppmps.show', $existingPpmp)
@@ -170,12 +152,6 @@ class PPMPController extends Controller
 
             // Handle XLSX import if file is uploaded
             if ($storePPMPRequest->hasFile('xlsx_file') && $storePPMPRequest->file('xlsx_file')->isValid()) {
-                Log::info('[PPMP Store] XLSX file detected, starting import', [
-                    'ppmp_id' => $ppmp->id,
-                    'original_name' => $storePPMPRequest->file('xlsx_file')->getClientOriginalName(),
-                    'size_bytes' => $storePPMPRequest->file('xlsx_file')->getSize(),
-                ]);
-
                 // Store XLSX file
                 $xlsxPath = $storePPMPRequest->file('xlsx_file')->store('ppmps', 'public');
 
@@ -190,14 +166,6 @@ class PPMPController extends Controller
                     'xlsx_path' => $xlsxPath,
                     'budget_notices' => $budgetNotices,
                 ]);
-
-                Log::info('[PPMP Store] XLSX import completed', [
-                    'ppmp_id' => $ppmp->id,
-                    'xlsx_path' => $xlsxPath,
-                    'budget_notices_count' => count($budgetNotices),
-                    'categories_created' => $ppmpImport->getCategoriesCreated(),
-                    'items_created' => $ppmpImport->getItemsCreated(),
-                ]);
             }
 
             DB::commit();
@@ -206,13 +174,6 @@ class PPMPController extends Controller
                 ->with('success', 'Project Procurement Management Plan created successfully.');
         } catch (\Exception $exception) {
             DB::rollBack();
-
-            Log::error('[PPMP Store] Failed to create PPMP', [
-                'office_id' => $validated['office_id'] ?? null,
-                'fiscal_year' => $validated['fiscal_year'] ?? null,
-                'error' => $exception->getMessage(),
-                'trace' => $exception->getTraceAsString(),
-            ]);
 
             return back()->withErrors(['error' => 'Failed to create PPMP: ' . $exception->getMessage()]);
         }
@@ -288,12 +249,6 @@ class PPMPController extends Controller
             'xlsx_file' => ['required', 'file', 'mimes:xlsx', 'max:10240'],
         ]);
 
-        Log::info('[PPMP Import] Starting import endpoint', [
-            'ppmp_id' => $ppmp->id,
-            'file_name' => $request->file('xlsx_file')?->getClientOriginalName(),
-            'file_size_bytes' => $request->file('xlsx_file')?->getSize(),
-        ]);
-
         DB::beginTransaction();
         try {
             // Delete existing categories and items
@@ -320,26 +275,12 @@ class PPMPController extends Controller
                 'budget_notices' => $budgetNotices,
             ]);
 
-            Log::info('[PPMP Import] Import endpoint completed', [
-                'ppmp_id' => $ppmp->id,
-                'xlsx_path' => $xlsxPath,
-                'budget_notices_count' => count($budgetNotices),
-                'categories_created' => $ppmpImport->getCategoriesCreated(),
-                'items_created' => $ppmpImport->getItemsCreated(),
-            ]);
-
             DB::commit();
 
             return redirect()->route('ppmps.show', $ppmp)
                 ->with('success', 'XLSX data imported successfully.');
         } catch (\Exception $exception) {
             DB::rollBack();
-
-            Log::error('[PPMP Import] Failed import endpoint', [
-                'ppmp_id' => $ppmp->id,
-                'error' => $exception->getMessage(),
-                'trace' => $exception->getTraceAsString(),
-            ]);
 
             return back()->withErrors(['error' => 'Failed to import XLSX: ' . $exception->getMessage()]);
         }

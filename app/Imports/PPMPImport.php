@@ -10,7 +10,6 @@ use App\Models\PPMPCategory;
 use App\Models\PPMPItem;
 use App\Models\PPMPItemMonth;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithStartRow;
 
@@ -96,14 +95,6 @@ class PPMPImport implements ToCollection, WithStartRow
 
                 if (! $accountId) {
                     $this->currentCategory = null;
-
-                    Log::warning('[PPMP Import] Category row has no matching account', [
-                        'ppmp_id' => $this->ppmp->id,
-                        'sheet_row' => $sheetRow,
-                        'code' => $code,
-                        'name' => $name,
-                        'estimated_budget' => $estimatedBudget,
-                    ]);
 
                     $this->budgetNotices[] = [
                         'category_code' => $code,

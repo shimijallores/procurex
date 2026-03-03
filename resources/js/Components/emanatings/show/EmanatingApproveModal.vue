@@ -26,6 +26,10 @@ const canApprove = computed(() => {
     return !props.emanating?.is_approved;
 });
 
+const hasValidationAlerts = computed(() => {
+    return !props.ppmpApproved || !props.itemsMatch;
+});
+
 const warningMessage = computed(() => {
     if (!props.ppmpApproved) {
         return "PPMP approval is not yet complete. You may still approve this emanating request.";
@@ -52,9 +56,9 @@ const close = () => {
             </DialogHeader>
 
             <div class="space-y-4">
-                <!-- Warning if cannot approve -->
+                <!-- Advisory warning when checks are flagged -->
                 <Alert
-                    v-if="!canApprove"
+                    v-if="hasValidationAlerts"
                     class="border-l-4 border-l-yellow-500 bg-yellow-50 text-yellow-800"
                 >
                     <Icon icon="lucide:alert-triangle" class="h-5 w-5" />
@@ -63,7 +67,7 @@ const close = () => {
                     </AlertDescription>
                 </Alert>
 
-                <!-- Success if can approve -->
+                <!-- Success when all checks pass -->
                 <Alert
                     v-else
                     class="border-l-4 border-l-green-500 bg-green-50 text-green-800"
@@ -138,7 +142,7 @@ const close = () => {
                 <Button
                     class="bg-green-600 hover:bg-green-700"
                     @click="$emit('submit')"
-                    :disabled="processing"
+                    :disabled="!canApprove || processing"
                 >
                     <Icon
                         v-if="processing"

@@ -29,7 +29,6 @@ export function useCalendarCheck() {
 
             return checkedDates.value[date];
         } catch (error) {
-            console.error("Failed to check date availability:", error);
             return null;
         } finally {
             isChecking.value = false;

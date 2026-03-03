@@ -16,7 +16,6 @@ use App\Models\PPMPCategory;
 use App\Models\PPMPItem;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use RuntimeException;
 
@@ -54,38 +53,13 @@ class EmanatingImport implements ToCollection
     public function collection(Collection $rows): void
     {
         $rowArray = $rows->toArray();
-        Log::info('[EmanatingImport] Import started', [
-            'rows_count' => count($rowArray),
-            'ppmp_id_input' => $this->ppmp?->id,
-            'ppmp_category_id_input' => $this->ppmpCategoryId,
-            'fund_id_input' => $this->fund?->id,
-        ]);
 
         $metadata = $this->parseMetadata($rowArray);
-        Log::info('[EmanatingImport] Metadata parsed', [
-            'pr_no' => $metadata['pr_no'] ?? null,
-            'fiscal_year' => $metadata['fiscal_year'] ?? null,
-            'quarter' => $metadata['quarter'] ?? null,
-            'month' => $metadata['month'] ?? null,
-            'charged_to_raw' => $metadata['charged_to_raw'] ?? null,
-            'charged_to_code' => $metadata['charged_to_code'] ?? null,
-            'office_name' => $metadata['office_name'] ?? null,
-            'ppmp_category_code' => $metadata['ppmp_category_code'] ?? null,
-            'ppmp_category_name' => $metadata['ppmp_category_name'] ?? null,
-            'requesting_officer_name' => $metadata['requesting_officer_name'] ?? null,
-            'requesting_officer_title' => $metadata['requesting_officer_title'] ?? null,
-        ]);
 
         if (! $this->ppmp && isset($metadata['office_name'], $metadata['fiscal_year'])) {
             $office = Office::query()
                 ->where('name', 'like', '%' . $metadata['office_name'] . '%')
                 ->first();
-
-            Log::info('[EmanatingImport] PPMP auto-resolve attempt', [
-                'office_name_from_file' => $metadata['office_name'],
-                'office_id_resolved' => $office?->id,
-                'fiscal_year' => $metadata['fiscal_year'],
-            ]);
 
             if ($office) {
                 $this->ppmp = PPMP::query()
@@ -93,10 +67,6 @@ class EmanatingImport implements ToCollection
                     ->where('fiscal_year', (int) $metadata['fiscal_year'])
                     ->latest()
                     ->first();
-
-                Log::info('[EmanatingImport] PPMP auto-resolved', [
-                    'ppmp_id' => $this->ppmp?->id,
-                ]);
             }
         }
 
@@ -107,36 +77,15 @@ class EmanatingImport implements ToCollection
                 ->where('fiscal_year', $this->ppmp->fiscal_year)
                 ->latest()
                 ->first();
-
-            Log::info('[EmanatingImport] Fund auto-resolve attempt', [
-                'ppmp_id' => $this->ppmp->id,
-                'office_id' => $this->ppmp->office_id,
-                'project_code_id' => $this->ppmp->project_code_id,
-                'fiscal_year' => $this->ppmp->fiscal_year,
-                'resolved_fund_id' => $this->fund?->id,
-            ]);
         }
 
         if (! $this->fund) {
-            Log::error('[EmanatingImport] Fund resolution failed', [
-                'ppmp_id' => $this->ppmp?->id,
-                'metadata_office_name' => $metadata['office_name'] ?? null,
-                'metadata_fiscal_year' => $metadata['fiscal_year'] ?? null,
-            ]);
-
             throw new RuntimeException('No matching Fund found for selected PPMP (office, project code, fiscal year).');
         }
 
         $accountId = $this->resolveAccountId($metadata);
 
         if (! $accountId) {
-            Log::error('[EmanatingImport] Account resolution failed', [
-                'ppmp_id' => $this->ppmp?->id,
-                'ppmp_category_id' => $this->ppmpCategory?->id ?? $this->ppmpCategoryId,
-                'account_code' => $metadata['account_code'] ?? $metadata['ppmp_category_code'] ?? null,
-                'account_name' => $metadata['account_name'] ?? $metadata['ppmp_category_name'] ?? null,
-            ]);
-
             throw new RuntimeException('No matching Account found from the XLSX Account line.');
         }
 
@@ -158,23 +107,9 @@ class EmanatingImport implements ToCollection
             'items_match_ppmp' => false,
         ]);
 
-        Log::info('[EmanatingImport] Emanating created', [
-            'emanating_id' => $emanating->id,
-            'fund_id' => $emanating->fund_id,
-            'ppmp_id' => $emanating->ppmp_id,
-            'account_id' => $emanating->account_id,
-            'ppmp_category_id' => $emanating->ppmp_category_id,
-        ]);
-
         $this->parseItems($rowArray, $emanating);
 
         $emanating->update([
-            'items_match_ppmp' => $this->itemsMatchPPMP,
-        ]);
-
-        Log::info('[EmanatingImport] Import completed', [
-            'emanating_id' => $emanating->id,
-            'items_created' => $this->itemsCreated,
             'items_match_ppmp' => $this->itemsMatchPPMP,
         ]);
     }
@@ -260,10 +195,6 @@ class EmanatingImport implements ToCollection
             }
         }
 
-        Log::debug('[EmanatingImport] Metadata markers detected', [
-            'markers' => $detectedMarkers,
-        ]);
-
         if ($underlineRow !== null) {
             $name = null;
             $title = null;
@@ -288,12 +219,6 @@ class EmanatingImport implements ToCollection
 
             $this->requestingOfficerName = $name;
             $this->requestingOfficerTitle = $title;
-
-            Log::info('[EmanatingImport] Signatory block parsed', [
-                'underline_row' => $underlineRow + 1,
-                'requesting_officer_name' => $name,
-                'requesting_officer_title' => $title,
-            ]);
         }
 
         if (isset($metadata['ppmp_category_code']) && $this->ppmp) {
@@ -306,13 +231,6 @@ class EmanatingImport implements ToCollection
                 ->first(function (PPMPCategory $category) use ($normalizedCategoryCode): bool {
                     return $this->normalizeCode((string) $category->account?->code) === $normalizedCategoryCode;
                 });
-
-            Log::info('[EmanatingImport] PPMP category resolved from account code', [
-                'ppmp_id' => $this->ppmp->id,
-                'account_code_raw' => $metadata['ppmp_category_code'],
-                'account_code_normalized' => $normalizedCategoryCode,
-                'ppmp_category_id_resolved' => $this->ppmpCategory?->id,
-            ]);
         }
 
         return $metadata;
@@ -355,9 +273,6 @@ class EmanatingImport implements ToCollection
 
             if ($columnA !== '' && str_contains(mb_strtoupper($columnA), 'CHARGE TO:')) {
                 $breakReason = 'charge_to_marker';
-                Log::info('[EmanatingImport] Item parsing stopped at CHARGE TO marker', [
-                    'row' => $index + 1,
-                ]);
                 break;
             }
 
@@ -368,9 +283,6 @@ class EmanatingImport implements ToCollection
 
             if ($columnA === '' && $columnB === '' && $hasStartedItemSection) {
                 $breakReason = 'blank_row_after_start';
-                Log::info('[EmanatingImport] Item parsing stopped at blank row after start', [
-                    'row' => $index + 1,
-                ]);
                 break;
             }
 
@@ -421,33 +333,9 @@ class EmanatingImport implements ToCollection
                 'total_price' => $this->parseAmount($columnC),
             ]);
 
-            Log::debug('[EmanatingImport] Item parsed', [
-                'row' => $index + 1,
-                'description' => $columnB,
-                'quantity' => $quantity,
-                'unit' => $unit,
-                'ppmp_item_id' => $ppmpItem?->id,
-                'missing_in_ppmp' => $missingInPpmp,
-                'missing_in_app' => $missingInApp,
-                'exceeds_ppmp_quantity' => $exceedsPPMPQuantity,
-                'messages' => $messages,
-            ]);
-
             $items[] = $emanatingItem;
             $this->itemsCreated++;
         }
-
-        Log::info('[EmanatingImport] Item parsing summary', [
-            'emanating_id' => $emanating->id,
-            'has_started_item_section' => $hasStartedItemSection,
-            'items_created' => $this->itemsCreated,
-            'skipped_before_start' => $skippedBeforeStart,
-            'skipped_missing_description' => $skippedMissingDescription,
-            'break_reason' => $breakReason,
-            'ppmp_category_id' => $this->ppmpCategory?->id,
-            'ppmp_items_count' => $ppmpItems->count(),
-            'app_items_count' => $appItems->count(),
-        ]);
 
         return $items;
     }

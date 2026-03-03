@@ -10,7 +10,6 @@ use App\Models\RFQ;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\LaravelPdf\Facades\Pdf;
@@ -144,7 +143,6 @@ class AOQController extends Controller
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
-            Log::error('AOQ creation failed', ['error' => $e->getMessage()]);
 
             return redirect()->back()->with('error', 'Failed to create AOQ. Please try again.');
         }

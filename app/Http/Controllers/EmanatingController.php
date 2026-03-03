@@ -21,7 +21,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -134,14 +133,6 @@ class EmanatingController extends Controller
     {
         $validated = $storeEmanatingRequest->validated();
 
-        Log::info('[Emanating Store] Request received', [
-            'ppmp_id' => $validated['ppmp_id'] ?? null,
-            'ppmp_category_id' => $validated['ppmp_category_id'] ?? null,
-            'office_id' => $validated['office_id'] ?? null,
-            'has_xlsx_file' => $storeEmanatingRequest->hasFile('xlsx_file'),
-            'xlsx_original_name' => $storeEmanatingRequest->file('xlsx_file')?->getClientOriginalName(),
-        ]);
-
         DB::beginTransaction();
         try {
             $ppmp = PPMP::findOrFail($validated['ppmp_id']);
@@ -154,28 +145,12 @@ class EmanatingController extends Controller
                 ->latest()
                 ->first();
 
-            Log::info('[Emanating Store] Context resolved', [
-                'ppmp_id' => $ppmp->id,
-                'ppmp_office_id' => $ppmp->office_id,
-                'ppmp_project_code_id' => $ppmp->project_code_id,
-                'ppmp_fiscal_year' => $ppmp->fiscal_year,
-                'resolved_fund_id' => $fund?->id,
-            ]);
-
             $xlsxPath = $storeEmanatingRequest->file('xlsx_file')->store('emanatings', 'public');
 
             $emanatingImport = new EmanatingImport($ppmp, (int) $validated['ppmp_category_id'], $fund);
             Excel::import($emanatingImport, $storeEmanatingRequest->file('xlsx_file'));
 
             $emanating = Emanating::query()->latest()->first();
-
-            Log::info('[Emanating Store] Import result', [
-                'import_items_created' => $emanatingImport->getItemsCreated(),
-                'import_items_match' => $emanatingImport->getItemsMatchPPMP(),
-                'import_requesting_officer_name' => $emanatingImport->getRequestingOfficerName(),
-                'import_requesting_officer_title' => $emanatingImport->getRequestingOfficerTitle(),
-                'latest_emanating_id' => $emanating?->id,
-            ]);
 
             if ($emanating) {
                 $existingEmanating = Emanating::where('ppmp_id', $validated['ppmp_id'])
@@ -215,7 +190,6 @@ class EmanatingController extends Controller
                 ->with('success', 'Emanating Request created successfully from XLSX.');
         } catch (\Exception $exception) {
             DB::rollBack();
-            Log::error('[Emanating Store] Failed to create: ' . $exception->getMessage());
 
             return back()->withErrors(['error' => 'Failed to create Emanating Request: ' . $exception->getMessage()]);
         }
@@ -294,7 +268,6 @@ class EmanatingController extends Controller
                 ->with('success', 'Emanating Request updated successfully.');
         } catch (\Exception $exception) {
             DB::rollBack();
-            Log::error('[Emanating Update] Failed to update: ' . $exception->getMessage());
 
             return back()->withErrors(['error' => 'Failed to update Emanating Request: ' . $exception->getMessage()]);
         }
@@ -311,7 +284,6 @@ class EmanatingController extends Controller
                 ->with('success', 'Emanating Request deleted successfully.');
         } catch (\Exception $exception) {
             DB::rollBack();
-            Log::error('[Emanating Destroy] Failed to delete: ' . $exception->getMessage());
 
             return back()->withErrors(['error' => 'Failed to delete Emanating Request: ' . $exception->getMessage()]);
         }
@@ -324,14 +296,6 @@ class EmanatingController extends Controller
     {
         $request->validate([
             'xlsx_file' => ['required', 'file', 'mimes:xlsx', 'max:10240'],
-        ]);
-
-        Log::info('[Emanating Import] Re-import request received', [
-            'emanating_id' => $emanating->id,
-            'ppmp_id' => $emanating->ppmp_id,
-            'ppmp_category_id' => $emanating->ppmp_category_id,
-            'fund_id' => $emanating->fund_id,
-            'xlsx_original_name' => $request->file('xlsx_file')?->getClientOriginalName(),
         ]);
 
         DB::beginTransaction();
@@ -352,14 +316,6 @@ class EmanatingController extends Controller
             );
             Excel::import($emanatingImport, $request->file('xlsx_file'));
 
-            Log::info('[Emanating Import] Re-import parser result', [
-                'emanating_id' => $emanating->id,
-                'import_items_created' => $emanatingImport->getItemsCreated(),
-                'import_items_match' => $emanatingImport->getItemsMatchPPMP(),
-                'import_requesting_officer_name' => $emanatingImport->getRequestingOfficerName(),
-                'import_requesting_officer_title' => $emanatingImport->getRequestingOfficerTitle(),
-            ]);
-
             $emanating->update([
                 'xlsx_path' => $xlsxPath,
                 'requesting_officer_name' => $emanatingImport->getRequestingOfficerName(),
@@ -376,7 +332,6 @@ class EmanatingController extends Controller
                 ->with('success', 'XLSX data imported successfully.');
         } catch (\Exception $exception) {
             DB::rollBack();
-            Log::error('[Emanating Import] Failed to import: ' . $exception->getMessage());
 
             return back()->withErrors(['error' => 'Failed to import XLSX: ' . $exception->getMessage()]);
         }
@@ -402,31 +357,15 @@ class EmanatingController extends Controller
      */
     public function approve(Emanating $emanating): RedirectResponse
     {
-        Log::info('[Emanating Approve] Starting approval process', [
-            'emanating_id' => $emanating->id,
-            'is_approved' => $emanating->is_approved,
-            'user_id' => Auth::id(),
-        ]);
-
         // Check if already approved
         if ($emanating->is_approved) {
-            Log::warning('[Emanating Approve] Emanating already approved', ['emanating_id' => $emanating->id]);
-
             return back()->withErrors(['error' => 'This Emanating Request is already approved.']);
         }
 
         $comparison = $this->compareWithDocuments($emanating);
-        if ($comparison['status'] !== 'all_matched') {
-            Log::info('[Emanating Approve] Proceeding with approval despite comparison alerts', [
-                'emanating_id' => $emanating->id,
-                'comparison_status' => $comparison['status'],
-            ]);
-        }
 
         DB::beginTransaction();
         try {
-            Log::info('[Emanating Approve] Attempting database update', ['emanating_id' => $emanating->id]);
-
             $emanating->update([
                 'is_approved' => true,
                 'approved_at' => now(),
@@ -435,24 +374,11 @@ class EmanatingController extends Controller
                 'status' => 'approved',
             ]);
 
-            Log::info('[Emanating Approve] Database update successful', [
-                'emanating_id' => $emanating->id,
-                'approved_by' => Auth::id(),
-            ]);
-
             DB::commit();
-
-            Log::info('[Emanating Approve] Transaction committed successfully', ['emanating_id' => $emanating->id]);
 
             return redirect()->route('emanatings.show', $emanating)
                 ->with('success', 'Emanating Request approved successfully.');
         } catch (\Exception $exception) {
-            Log::error('[Emanating Approve] Exception caught', [
-                'emanating_id' => $emanating->id,
-                'error' => $exception->getMessage(),
-                'trace' => $exception->getTraceAsString(),
-            ]);
-
             DB::rollBack();
 
             return back()->withErrors(['error' => 'Failed to approve Emanating Request: ' . $exception->getMessage()]);
@@ -464,16 +390,8 @@ class EmanatingController extends Controller
      */
     public function reject(Request $request, Emanating $emanating): RedirectResponse
     {
-        Log::info('[Emanating Reject] Starting rejection process', [
-            'emanating_id' => $emanating->id,
-            'is_approved' => $emanating->is_approved,
-            'user_id' => Auth::id(),
-        ]);
-
         // Check if already approved
         if ($emanating->is_approved) {
-            Log::warning('[Emanating Reject] Cannot reject approved Emanating', ['emanating_id' => $emanating->id]);
-
             return back()->withErrors(['error' => 'Cannot reject an approved Emanating Request.']);
         }
 
@@ -481,15 +399,8 @@ class EmanatingController extends Controller
             'rejection_reason' => ['required', 'string', 'max:1000'],
         ]);
 
-        Log::debug('[Emanating Reject] Rejection reason provided', [
-            'emanating_id' => $emanating->id,
-            'reason_length' => strlen($request->rejection_reason),
-        ]);
-
         DB::beginTransaction();
         try {
-            Log::info('[Emanating Reject] Attempting database update', ['emanating_id' => $emanating->id]);
-
             $emanating->update([
                 'is_approved' => false,
                 'approved_at' => null,
@@ -498,24 +409,11 @@ class EmanatingController extends Controller
                 'status' => 'rejected',
             ]);
 
-            Log::info('[Emanating Reject] Database update successful', [
-                'emanating_id' => $emanating->id,
-                'reason_saved' => ! empty($emanating->rejection_reason),
-            ]);
-
             DB::commit();
-
-            Log::info('[Emanating Reject] Transaction committed successfully', ['emanating_id' => $emanating->id]);
 
             return redirect()->route('emanatings.show', $emanating)
                 ->with('success', 'Emanating Request rejected. Please address the issues and upload a new XLSX or create an addendum.');
         } catch (\Exception $exception) {
-            Log::error('[Emanating Reject] Exception caught', [
-                'emanating_id' => $emanating->id,
-                'error' => $exception->getMessage(),
-                'trace' => $exception->getTraceAsString(),
-            ]);
-
             DB::rollBack();
 
             return back()->withErrors(['error' => 'Failed to reject Emanating Request: ' . $exception->getMessage()]);

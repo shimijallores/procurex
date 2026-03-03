@@ -13,7 +13,6 @@ use App\Models\PurchaseRequestItem;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\LaravelPdf\Facades\Pdf;
@@ -181,7 +180,6 @@ class PurchaseRequestController extends Controller
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
-            Log::error('Purchase Request creation failed', ['error' => $e->getMessage()]);
 
             return redirect()->back()
                 ->with('error', 'Failed to create Purchase Request. Please try again.');
@@ -269,7 +267,6 @@ class PurchaseRequestController extends Controller
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
-            Log::error('Purchase Request update failed', ['error' => $e->getMessage()]);
 
             return redirect()->back()
                 ->with('error', 'Failed to update Purchase Request.');
@@ -349,7 +346,6 @@ class PurchaseRequestController extends Controller
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
-            Log::error('PR return failed', ['error' => $e->getMessage()]);
 
             return redirect()->back()->with('error', 'Failed to return Purchase Request.');
         }
