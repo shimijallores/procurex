@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { useForm } from "@inertiajs/vue3";
 import Layout from "@/Layout/Layout.vue";
 import PPMPCreateHeader from "@/components/ppmps/create/PPMPCreateHeader.vue";
@@ -24,11 +24,13 @@ defineOptions({
 
 const props = defineProps({
     offices: Array,
+    funds: Array,
     projects: Array,
 });
 
 const form = useForm({
     office_id: "",
+    fund_id: "",
     project_id: "",
     account_code: "",
     project_code: "",
@@ -39,6 +41,13 @@ const form = useForm({
 });
 
 const csvFileName = ref("");
+
+watch(
+    () => form.fund_id,
+    () => {
+        form.project_id = "";
+    },
+);
 
 const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -67,6 +76,7 @@ const submit = () => {
         <PPMPCreateForm
             :form="form"
             :offices="offices"
+            :funds="funds"
             :projects="projects"
             :csv-file-name="csvFileName"
             @submit="submit"

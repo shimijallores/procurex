@@ -28,28 +28,51 @@ class UpdateFundRequest extends FormRequest
 
         $rules = [
             'office_id' => ['required', 'exists:offices,id'],
-            'code' => ['required', 'string', 'max:255', 'unique:funds,code,'.$fundId],
+            'code' => ['required', 'string', 'max:255', 'unique:funds,code,' . $fundId],
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', 'in:general,project'],
             'fiscal_year' => ['required', 'integer', 'min:2000', 'max:2100'],
             'remarks' => ['nullable', 'string', 'max:1000'],
             'project_name' => ['nullable', 'string', 'max:255'],
+            'work_program' => ['nullable', 'file', 'mimes:docx', 'max:51200'],
+            'project_brief' => ['nullable', 'file', 'mimes:docx', 'max:51200'],
+            'project_proposal' => ['nullable', 'file', 'mimes:docx', 'max:51200'],
         ];
 
-        // Only validate file fields when they are present and not null
-        if ($this->file('work_program')) {
-            $rules['work_program'] = ['file', 'mimes:pdf', 'max:10240'];
-        }
-
-        if ($this->file('project_brief')) {
-            $rules['project_brief'] = ['file', 'mimes:pdf', 'max:10240'];
-        }
-
-        if ($this->file('project_proposal')) {
-            $rules['project_proposal'] = ['file', 'mimes:pdf', 'max:10240'];
-        }
-
         return $rules;
+    }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator): void {
+            if ($this->input('type') !== 'project') {
+                return;
+            }
+
+            $fund = $this->route('fund');
+
+            if (! $fund instanceof \App\Models\Fund) {
+                return;
+            }
+
+            $fund->loadMissing(['project.workProgram', 'project.projectBrief', 'project.projectProposal']);
+
+            $hasWorkProgram = (bool) $fund->project?->workProgram;
+            $hasProjectBrief = (bool) $fund->project?->projectBrief;
+            $hasProjectProposal = (bool) $fund->project?->projectProposal;
+
+            if (! $this->hasFile('work_program') && ! $hasWorkProgram) {
+                $validator->errors()->add('work_program', 'Work program is required for project type funds.');
+            }
+
+            if (! $this->hasFile('project_brief') && ! $hasProjectBrief) {
+                $validator->errors()->add('project_brief', 'Project brief is required for project type funds.');
+            }
+
+            if (! $this->hasFile('project_proposal') && ! $hasProjectProposal) {
+                $validator->errors()->add('project_proposal', 'Project proposal is required for project type funds.');
+            }
+        });
     }
 
     /**
@@ -69,12 +92,12 @@ class UpdateFundRequest extends FormRequest
             'type.in' => 'The fund type must be either general or project.',
             'fiscal_year.required' => 'The fiscal year is required.',
             'fiscal_year.integer' => 'The fiscal year must be a valid year.',
-            'work_program.mimes' => 'Work program must be a PDF file.',
-            'work_program.max' => 'Work program file size must not exceed 10MB.',
-            'project_brief.mimes' => 'Project brief must be a PDF file.',
-            'project_brief.max' => 'Project brief file size must not exceed 10MB.',
-            'project_proposal.mimes' => 'Project proposal must be a PDF file.',
-            'project_proposal.max' => 'Project proposal file size must not exceed 10MB.',
+            'work_program.mimes' => 'Work program must be a DOCX file.',
+            'work_program.max' => 'Work program file size must not exceed 50MB.',
+            'project_brief.mimes' => 'Project brief must be a DOCX file.',
+            'project_brief.max' => 'Project brief file size must not exceed 50MB.',
+            'project_proposal.mimes' => 'Project proposal must be a DOCX file.',
+            'project_proposal.max' => 'Project proposal file size must not exceed 50MB.',
         ];
     }
 }

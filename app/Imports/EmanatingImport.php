@@ -6,7 +6,6 @@ namespace App\Imports;
 
 use App\Models\Emanating;
 use App\Models\EmanatingItem;
-use App\Models\Fund;
 use App\Models\PPMP;
 use App\Models\PPMPCategory;
 use App\Models\PPMPItem;
@@ -70,6 +69,7 @@ class EmanatingImport implements ToCollection, WithCustomCsvSettings
 
         // Create Emanating record
         $emanating = Emanating::create([
+            'fund_id' => $this->ppmp?->fund_id,
             'ppmp_id' => $this->ppmp?->id,
             'project_id' => $this->project?->id,
             'ppmp_category_id' => $this->ppmpCategoryId,
@@ -328,7 +328,7 @@ class EmanatingImport implements ToCollection, WithCustomCsvSettings
 
         // Try fuzzy match (contains)
         $item = PPMPItem::where('ppmp_category_id', $this->ppmpCategory->id)
-            ->where('name', 'like', '%'.$description.'%')
+            ->where('name', 'like', '%' . $description . '%')
             ->first();
 
         if ($item) {
@@ -358,7 +358,7 @@ class EmanatingImport implements ToCollection, WithCustomCsvSettings
 
         // Find project by matching office through fund relationship
         $this->project = Project::whereHas('fund.office', function ($query) use ($officeName): void {
-            $query->where('name', 'like', '%'.$officeName.'%')
+            $query->where('name', 'like', '%' . $officeName . '%')
                 ->orWhere('name', $officeName);
         })
             ->with('fund.office')

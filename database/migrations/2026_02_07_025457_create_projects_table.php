@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('projects', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('fund_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('fund_id')->constrained()->cascadeOnDelete()->unique();
             $table->string('name');
             $table->text('remarks')->nullable();
             $table->timestamps();
@@ -23,7 +23,7 @@ return new class extends Migration
 
         Schema::create('work_programs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('project_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('project_id')->constrained()->cascadeOnDelete()->unique();
             $table->string('file_url');
             $table->timestamps();
 
@@ -32,7 +32,7 @@ return new class extends Migration
 
         Schema::create('project_briefs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('project_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('project_id')->constrained()->cascadeOnDelete()->unique();
             $table->string('file_url');
             $table->timestamps();
 
@@ -41,7 +41,7 @@ return new class extends Migration
 
         Schema::create('project_proposals', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('project_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('project_id')->constrained()->cascadeOnDelete()->unique();
             $table->string('file_url');
             $table->timestamps();
 

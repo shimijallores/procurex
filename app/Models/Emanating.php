@@ -13,6 +13,7 @@ class Emanating extends Model
     protected $table = 'emanatings';
 
     protected $fillable = [
+        'fund_id',
         'ppmp_id',
         'project_id',
         'ppmp_category_id',
@@ -61,12 +62,12 @@ class Emanating extends Model
 
     public function office(): BelongsTo
     {
-        return $this->project->fund->office();
+        return $this->fund->office();
     }
 
     public function fund(): BelongsTo
     {
-        return $this->project->fund();
+        return $this->belongsTo(Fund::class);
     }
 
     public function ppmpCategory(): BelongsTo

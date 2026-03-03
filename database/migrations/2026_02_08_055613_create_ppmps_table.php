@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('ppmps', function (Blueprint $table) {
             $table->id();
             $table->foreignId('office_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('project_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('fund_id')->constrained()->cascadeOnDelete()->unique();
+            $table->foreignId('project_id')->nullable()->constrained()->nullOnDelete();
             // These codes will be provided by the accounting office.
             $table->string('account_code')->unique()->nullable();
             $table->string('project_code')->unique()->nullable();
@@ -31,7 +32,7 @@ return new class extends Migration
 
             $table->timestamps();
 
-            $table->index(['office_id', 'project_id', 'fiscal_year'], 'idx_ppmp');
+            $table->index(['office_id', 'fund_id', 'fiscal_year'], 'idx_ppmp');
         });
     }
 

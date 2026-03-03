@@ -8,12 +8,14 @@ use App\Http\Requests\StoreFundRequest;
 use App\Http\Requests\UpdateFundRequest;
 use App\Models\Fund;
 use App\Models\Office;
+use App\Models\PPMP;
 use App\Models\Project;
 use App\Models\ProjectBrief;
 use App\Models\ProjectProposal;
 use App\Models\WorkProgram;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -86,39 +88,13 @@ class FundController extends Controller
 
         // If type is project, create project and upload files
         if ($validated['type'] === 'project') {
-            // Create project record
             $project = Project::create([
                 'fund_id' => $fund->id,
-                'name' => $validated['project_name'] ?? $fund->name, // Use project_name if provided, otherwise fund name
+                'name' => $validated['project_name'] ?? $fund->name,
                 'remarks' => $fund->remarks,
             ]);
 
-            // Upload and create work program
-            if ($storeFundRequest->hasFile('work_program') && $storeFundRequest->file('work_program')->isValid()) {
-                $workProgramPath = $storeFundRequest->file('work_program')->store('projects/work-programs', 'public');
-                WorkProgram::create([
-                    'project_id' => $project->id,
-                    'file_url' => $workProgramPath,
-                ]);
-            }
-
-            // Upload and create project brief
-            if ($storeFundRequest->hasFile('project_brief') && $storeFundRequest->file('project_brief')->isValid()) {
-                $projectBriefPath = $storeFundRequest->file('project_brief')->store('projects/project-briefs', 'public');
-                ProjectBrief::create([
-                    'project_id' => $project->id,
-                    'file_url' => $projectBriefPath,
-                ]);
-            }
-
-            // Upload and create project proposal
-            if ($storeFundRequest->hasFile('project_proposal') && $storeFundRequest->file('project_proposal')->isValid()) {
-                $projectProposalPath = $storeFundRequest->file('project_proposal')->store('projects/project-proposals', 'public');
-                ProjectProposal::create([
-                    'project_id' => $project->id,
-                    'file_url' => $projectProposalPath,
-                ]);
-            }
+            $this->storeProjectDocuments($storeFundRequest, $project);
         }
 
         return redirect()->route('funds.index')
@@ -127,16 +103,38 @@ class FundController extends Controller
 
     public function show(Fund $fund): Response
     {
-        $fund->load(['office', 'project.workProgram', 'project.projectBrief', 'project.projectProposal']);
+        $fund->load([
+            'office',
+            'ppmp',
+            'emanatings',
+            'project.workProgram',
+            'project.projectBrief',
+            'project.projectProposal',
+        ]);
+
+        $ppmpReference = PPMP::query()
+            ->where('office_id', $fund->office_id)
+            ->where('fiscal_year', $fund->fiscal_year)
+            ->whereNotNull('csv_path')
+            ->latest()
+            ->first(['id', 'fiscal_year', 'csv_path']);
 
         return Inertia::render('Funds/Show', [
             'fund' => $fund,
+            'ppmpReference' => $ppmpReference,
         ]);
     }
 
     public function edit(Fund $fund): Response
     {
-        $fund->load(['office', 'project.workProgram', 'project.projectBrief', 'project.projectProposal']);
+        $fund->load([
+            'office',
+            'ppmp',
+            'emanatings',
+            'project.workProgram',
+            'project.projectBrief',
+            'project.projectProposal',
+        ]);
 
         return Inertia::render('Funds/Edit', [
             'fund' => $fund,
@@ -159,82 +157,23 @@ class FundController extends Controller
 
         // Handle project type
         if ($validated['type'] === 'project') {
-            // Create project if it doesn't exist
             if (! $fund->project) {
                 $project = Project::create([
                     'fund_id' => $fund->id,
-                    'name' => $validated['project_name'] ?? $fund->name, // Use project_name if provided, otherwise fund name
+                    'name' => $validated['project_name'] ?? $fund->name,
                     'remarks' => $fund->remarks,
                 ]);
             } else {
                 $project = $fund->project;
-                // Update project name if provided
-                if (isset($validated['project_name'])) {
-                    $project->update(['name' => $validated['project_name']]);
-                }
-            }
-
-            // Handle work program upload
-            if ($updateFundRequest->hasFile('work_program') && $updateFundRequest->file('work_program')->isValid()) {
-                // Delete old file if exists
-                if ($project->workProgram) {
-                    Storage::disk('public')->delete($project->workProgram->file_url);
-                    $project->workProgram->delete();
-                }
-
-                // Upload and create new work program
-                $workProgramPath = $updateFundRequest->file('work_program')->store('projects/work-programs', 'public');
-                WorkProgram::create([
-                    'project_id' => $project->id,
-                    'file_url' => $workProgramPath,
+                $project->update([
+                    'name' => $validated['project_name'] ?? $fund->name,
+                    'remarks' => $fund->remarks,
                 ]);
             }
 
-            // Handle project brief upload
-            if ($updateFundRequest->hasFile('project_brief') && $updateFundRequest->file('project_brief')->isValid()) {
-                // Delete old file if exists
-                if ($project->projectBrief) {
-                    Storage::disk('public')->delete($project->projectBrief->file_url);
-                    $project->projectBrief->delete();
-                }
-
-                // Upload and create new project brief
-                $projectBriefPath = $updateFundRequest->file('project_brief')->store('projects/project-briefs', 'public');
-                ProjectBrief::create([
-                    'project_id' => $project->id,
-                    'file_url' => $projectBriefPath,
-                ]);
-            }
-
-            // Handle project proposal upload
-            if ($updateFundRequest->hasFile('project_proposal') && $updateFundRequest->file('project_proposal')->isValid()) {
-                // Delete old file if exists
-                if ($project->projectProposal) {
-                    Storage::disk('public')->delete($project->projectProposal->file_url);
-                    $project->projectProposal->delete();
-                }
-
-                // Upload and create new project proposal
-                $projectProposalPath = $updateFundRequest->file('project_proposal')->store('projects/project-proposals', 'public');
-                ProjectProposal::create([
-                    'project_id' => $project->id,
-                    'file_url' => $projectProposalPath,
-                ]);
-            }
+            $this->storeProjectDocuments($updateFundRequest, $project);
         } elseif ($fund->project) {
-            // If type changed from project to general, delete the project and related files
-            if ($fund->project->workProgram) {
-                Storage::disk('public')->delete($fund->project->workProgram->file_url);
-            }
-
-            if ($fund->project->projectBrief) {
-                Storage::disk('public')->delete($fund->project->projectBrief->file_url);
-            }
-
-            if ($fund->project->projectProposal) {
-                Storage::disk('public')->delete($fund->project->projectProposal->file_url);
-            }
-
+            $this->deleteProjectDocumentFiles($fund->project);
             $fund->project->delete();
         }
 
@@ -244,24 +183,80 @@ class FundController extends Controller
 
     public function destroy(Fund $fund): RedirectResponse
     {
-        // Delete project files if exists
         if ($fund->project) {
-            if ($fund->project->workProgram) {
-                Storage::disk('public')->delete($fund->project->workProgram->file_url);
-            }
-
-            if ($fund->project->projectBrief) {
-                Storage::disk('public')->delete($fund->project->projectBrief->file_url);
-            }
-
-            if ($fund->project->projectProposal) {
-                Storage::disk('public')->delete($fund->project->projectProposal->file_url);
-            }
+            $this->deleteProjectDocumentFiles($fund->project);
         }
 
         $fund->delete();
 
         return redirect()->route('funds.index')
             ->with('success', 'Fund deleted successfully.');
+    }
+
+    private function storeProjectDocuments(Request $request, Project $project): void
+    {
+        if ($request->hasFile('work_program') && $request->file('work_program')?->isValid()) {
+            $this->replaceProjectDocument(
+                $project,
+                'workProgram',
+                $request->file('work_program'),
+                'projects/work-programs',
+                WorkProgram::class
+            );
+        }
+
+        if ($request->hasFile('project_brief') && $request->file('project_brief')?->isValid()) {
+            $this->replaceProjectDocument(
+                $project,
+                'projectBrief',
+                $request->file('project_brief'),
+                'projects/project-briefs',
+                ProjectBrief::class
+            );
+        }
+
+        if ($request->hasFile('project_proposal') && $request->file('project_proposal')?->isValid()) {
+            $this->replaceProjectDocument(
+                $project,
+                'projectProposal',
+                $request->file('project_proposal'),
+                'projects/project-proposals',
+                ProjectProposal::class
+            );
+        }
+    }
+
+    private function replaceProjectDocument(Project $project, string $relation, UploadedFile $file, string $directory, string $modelClass): void
+    {
+        $existingDocument = $project->{$relation};
+
+        if ($existingDocument) {
+            Storage::disk('public')->delete($existingDocument->file_url);
+            $existingDocument->delete();
+        }
+
+        $filePath = $file->store($directory, 'public');
+
+        $modelClass::create([
+            'project_id' => $project->id,
+            'file_url' => $filePath,
+        ]);
+    }
+
+    private function deleteProjectDocumentFiles(Project $project): void
+    {
+        $project->loadMissing(['workProgram', 'projectBrief', 'projectProposal']);
+
+        if ($project->workProgram) {
+            Storage::disk('public')->delete($project->workProgram->file_url);
+        }
+
+        if ($project->projectBrief) {
+            Storage::disk('public')->delete($project->projectBrief->file_url);
+        }
+
+        if ($project->projectProposal) {
+            Storage::disk('public')->delete($project->projectProposal->file_url);
+        }
     }
 }

@@ -10,7 +10,6 @@ use App\Imports\EmanatingImport;
 use App\Models\Emanating;
 use App\Models\PPMP;
 use App\Models\PPMPCategory;
-use App\Models\Project;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -158,6 +157,7 @@ class EmanatingController extends Controller
 
                 // Update with validated data and CSV path
                 $emanating->update([
+                    'fund_id' => $ppmp->fund_id,
                     'ppmp_id' => $validated['ppmp_id'],
                     'project_id' => $ppmp->project_id, // Get from PPMP
                     'ppmp_category_id' => $validated['ppmp_category_id'],
@@ -224,9 +224,17 @@ class EmanatingController extends Controller
 
         DB::beginTransaction();
         try {
+            $selectedPpmp = null;
+
+            if (array_key_exists('ppmp_id', $validated) && $validated['ppmp_id']) {
+                $selectedPpmp = PPMP::find($validated['ppmp_id']);
+            }
+
             // Only update editable fields (CSV-imported fields are immutable)
             $emanating->update([
                 'ppmp_id' => $validated['ppmp_id'] ?? $emanating->ppmp_id,
+                'fund_id' => $selectedPpmp?->fund_id ?? $emanating->fund_id,
+                'project_id' => $selectedPpmp?->project_id ?? $emanating->project_id,
                 'ppmp_category_id' => $validated['ppmp_category_id'] ?? $emanating->ppmp_category_id,
                 'pr_no' => $validated['pr_no'] ?? $emanating->pr_no,
                 'is_addendum' => $validated['is_addendum'] ?? $emanating->is_addendum,

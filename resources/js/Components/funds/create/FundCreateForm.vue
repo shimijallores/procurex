@@ -186,13 +186,16 @@ defineEmits(["update:fundType", "submit"]);
                         />
                         <h3 class="font-semibold">Project Documents</h3>
                     </div>
+                    <p class="text-xs text-muted-foreground">
+                        Upload all three project documents together.
+                    </p>
 
                     <div class="space-y-2">
-                        <Label for="work_program">Work Program (PDF)</Label>
+                        <Label for="work_program">Work Program (DOCX)</Label>
                         <input
                             id="work_program"
                             type="file"
-                            accept=".pdf"
+                            accept=".docx"
                             @input="form.work_program = $event.target.files[0]"
                             :class="[
                                 'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
@@ -213,11 +216,11 @@ defineEmits(["update:fundType", "submit"]);
                     </div>
 
                     <div class="space-y-2">
-                        <Label for="project_brief">Project Brief (PDF)</Label>
+                        <Label for="project_brief">Project Brief (DOCX)</Label>
                         <input
                             id="project_brief"
                             type="file"
-                            accept=".pdf"
+                            accept=".docx"
                             @input="form.project_brief = $event.target.files[0]"
                             :class="[
                                 'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
@@ -239,12 +242,12 @@ defineEmits(["update:fundType", "submit"]);
 
                     <div class="space-y-2">
                         <Label for="project_proposal"
-                            >Project Proposal (PDF)</Label
+                            >Project Proposal (DOCX)</Label
                         >
                         <input
                             id="project_proposal"
                             type="file"
-                            accept=".pdf"
+                            accept=".docx"
                             @input="
                                 form.project_proposal = $event.target.files[0]
                             "

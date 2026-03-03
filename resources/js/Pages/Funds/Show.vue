@@ -23,6 +23,7 @@ defineOptions({
 
 const props = defineProps({
     fund: Object,
+    ppmpReference: Object,
 });
 
 const showDeleteModal = ref(false);
@@ -39,7 +40,10 @@ const showDeleteModal = ref(false);
         </div>
 
         <!-- Project Documents Card (only for project type) -->
-        <FundShowProjectDocumentsCard :fund="fund" />
+        <FundShowProjectDocumentsCard
+            :fund="fund"
+            :ppmp-reference="ppmpReference"
+        />
 
         <!-- Delete Confirmation Modal -->
         <DeleteModal

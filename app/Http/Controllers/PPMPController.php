@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StorePPMPRequest;
 use App\Http\Requests\UpdatePPMPRequest;
 use App\Imports\PPMPImport;
+use App\Models\Fund;
 use App\Models\Office;
 use App\Models\PPMP;
 use App\Models\Project;
@@ -77,6 +78,7 @@ class PPMPController extends Controller
     {
         return Inertia::render('PPMPs/Create', [
             'offices' => Office::all(['id', 'name']),
+            'funds' => Fund::with('office:id,name')->get(['id', 'office_id', 'name', 'type', 'fiscal_year']),
             'projects' => Project::with('fund:id,office_id,fiscal_year,name')->get(['id', 'fund_id', 'name']),
         ]);
     }
@@ -103,7 +105,8 @@ class PPMPController extends Controller
             // Create PPMP
             $ppmp = PPMP::create([
                 'office_id' => $validated['office_id'],
-                'project_id' => $validated['project_id'],
+                'fund_id' => $validated['fund_id'],
+                'project_id' => $validated['project_id'] ?? null,
                 'account_code' => $validated['account_code'] ?? null,
                 'project_code' => $validated['project_code'] ?? null,
                 'fiscal_year' => $validated['fiscal_year'],
@@ -145,7 +148,7 @@ class PPMPController extends Controller
 
     public function show(PPMP $ppmp): Response
     {
-        $ppmp->load(['office', 'project', 'categories.items.months', 'approvedBy']);
+        $ppmp->load(['office', 'fund', 'project', 'categories.items.months', 'approvedBy']);
 
         return Inertia::render('PPMPs/Show', [
             'ppmp' => $ppmp,
@@ -154,12 +157,13 @@ class PPMPController extends Controller
 
     public function edit(PPMP $ppmp): Response
     {
-        $ppmp->load(['office', 'project', 'categories.items.months']);
+        $ppmp->load(['office', 'fund', 'project', 'categories.items.months']);
 
         return Inertia::render('PPMPs/Edit', [
             'ppmp' => $ppmp,
             'offices' => Office::all(['id', 'name']),
-            'projects' => Project::all(['id', 'name']),
+            'funds' => Fund::with('office:id,name')->get(['id', 'office_id', 'name', 'type', 'fiscal_year']),
+            'projects' => Project::with('fund:id,office_id,fiscal_year,name')->get(['id', 'fund_id', 'name']),
         ]);
     }
 
@@ -171,7 +175,8 @@ class PPMPController extends Controller
         try {
             $ppmp->update([
                 'office_id' => $validated['office_id'],
-                'project_id' => $validated['project_id'],
+                'fund_id' => $validated['fund_id'],
+                'project_id' => $validated['project_id'] ?? null,
                 'account_code' => $validated['account_code'] ?? null,
                 'project_code' => $validated['project_code'] ?? null,
                 'fiscal_year' => $validated['fiscal_year'],

@@ -7,7 +7,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
 class Fund extends Model
 {
@@ -33,5 +35,30 @@ class Fund extends Model
     public function project(): HasOne
     {
         return $this->hasOne(Project::class);
+    }
+
+    public function ppmp(): HasOne
+    {
+        return $this->hasOne(PPMP::class);
+    }
+
+    public function emanatings(): HasMany
+    {
+        return $this->hasMany(Emanating::class);
+    }
+
+    public function workProgram(): HasOneThrough
+    {
+        return $this->hasOneThrough(WorkProgram::class, Project::class, 'fund_id', 'project_id');
+    }
+
+    public function projectBrief(): HasOneThrough
+    {
+        return $this->hasOneThrough(ProjectBrief::class, Project::class, 'fund_id', 'project_id');
+    }
+
+    public function projectProposal(): HasOneThrough
+    {
+        return $this->hasOneThrough(ProjectProposal::class, Project::class, 'fund_id', 'project_id');
     }
 }

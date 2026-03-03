@@ -39,20 +39,10 @@ class StoreFundRequest extends FormRequest
             'fiscal_year' => ['required', 'integer', 'min:2000', 'max:2100'],
             'remarks' => ['nullable', 'string', 'max:1000'],
             'project_name' => ['nullable', 'string', 'max:255'],
+            'work_program' => ['nullable', 'file', 'mimes:docx', 'max:51200'],
+            'project_brief' => ['nullable', 'file', 'mimes:docx', 'max:51200'],
+            'project_proposal' => ['nullable', 'file', 'mimes:docx', 'max:51200'],
         ];
-
-        // Only validate file format when files are actually uploaded
-        if ($this->hasFile('work_program')) {
-            $rules['work_program'] = ['file', 'mimes:pdf', 'max:10240'];
-        }
-
-        if ($this->hasFile('project_brief')) {
-            $rules['project_brief'] = ['file', 'mimes:pdf', 'max:10240'];
-        }
-
-        if ($this->hasFile('project_proposal')) {
-            $rules['project_proposal'] = ['file', 'mimes:pdf', 'max:10240'];
-        }
 
         return $rules;
     }
@@ -100,14 +90,14 @@ class StoreFundRequest extends FormRequest
             'fiscal_year.required' => 'The fiscal year is required.',
             'fiscal_year.integer' => 'The fiscal year must be a valid year.',
             'work_program.required_if' => 'Work program is required for project type funds.',
-            'work_program.mimes' => 'Work program must be a PDF file.',
-            'work_program.max' => 'Work program file size must not exceed 10MB.',
+            'work_program.mimes' => 'Work program must be a DOCX file.',
+            'work_program.max' => 'Work program file size must not exceed 50MB.',
             'project_brief.required_if' => 'Project brief is required for project type funds.',
-            'project_brief.mimes' => 'Project brief must be a PDF file.',
-            'project_brief.max' => 'Project brief file size must not exceed 10MB.',
+            'project_brief.mimes' => 'Project brief must be a DOCX file.',
+            'project_brief.max' => 'Project brief file size must not exceed 50MB.',
             'project_proposal.required_if' => 'Project proposal is required for project type funds.',
-            'project_proposal.mimes' => 'Project proposal must be a PDF file.',
-            'project_proposal.max' => 'Project proposal file size must not exceed 10MB.',
+            'project_proposal.mimes' => 'Project proposal must be a DOCX file.',
+            'project_proposal.max' => 'Project proposal file size must not exceed 50MB.',
         ];
     }
 }

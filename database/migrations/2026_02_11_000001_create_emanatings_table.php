@@ -12,8 +12,9 @@ return new class extends Migration
     {
         Schema::create('emanatings', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('fund_id')->constrained('funds')->onDelete('cascade');
             $table->foreignId('ppmp_id')->constrained('ppmps')->onDelete('cascade');
-            $table->foreignId('project_id')->constrained('projects')->onDelete('cascade');
+            $table->foreignId('project_id')->nullable()->constrained('projects')->nullOnDelete();
             $table->foreignId('ppmp_category_id')->constrained('ppmp_categories')->onDelete('cascade');
             $table->string('charged_to_code')->nullable();
             $table->string('pr_no')->nullable();

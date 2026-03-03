@@ -1,6 +1,7 @@
 <script setup>
 import { Icon } from "@iconify/vue";
 import { Link } from "@inertiajs/vue3";
+import { computed } from "vue";
 import {
     Card,
     CardContent,
@@ -15,10 +16,34 @@ const props = defineProps({
     form: Object,
     ppmp: Object,
     offices: Array,
+    funds: Array,
     projects: Array,
 });
 
 const emit = defineEmits(["submit"]);
+
+const filteredFunds = computed(() => {
+    if (!props.funds) return [];
+
+    return props.funds.filter((fund) => {
+        if (!props.form.office_id || !props.form.fiscal_year) return false;
+
+        return (
+            parseInt(fund.office_id) === parseInt(props.form.office_id) &&
+            parseInt(fund.fiscal_year) === parseInt(props.form.fiscal_year)
+        );
+    });
+});
+
+const filteredProjects = computed(() => {
+    if (!props.projects) return [];
+
+    return props.projects.filter((project) => {
+        if (!props.form.fund_id) return false;
+
+        return parseInt(project.fund_id) === parseInt(props.form.fund_id);
+    });
+});
 
 const handleSubmit = () => {
     emit("submit");
@@ -65,6 +90,42 @@ const handleSubmit = () => {
                 </div>
 
                 <div class="space-y-2">
+                    <Label for="fund_id">Fund</Label>
+                    <select
+                        id="fund_id"
+                        v-model="form.fund_id"
+                        :class="[
+                            'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
+                            'ring-offset-background focus-visible:outline-none focus-visible:ring-2',
+                            'focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+                            form.errors.fund_id ? 'border-destructive' : '',
+                        ]"
+                        :disabled="!form.office_id || !form.fiscal_year"
+                    >
+                        <option value="">
+                            {{
+                                !form.office_id || !form.fiscal_year
+                                    ? "Select office and fiscal year first"
+                                    : "Select a fund"
+                            }}
+                        </option>
+                        <option
+                            v-for="fund in filteredFunds"
+                            :key="fund.id"
+                            :value="fund.id"
+                        >
+                            {{ fund.name }}
+                        </option>
+                    </select>
+                    <p
+                        v-if="form.errors.fund_id"
+                        class="text-sm text-destructive"
+                    >
+                        {{ form.errors.fund_id }}
+                    </p>
+                </div>
+
+                <div class="space-y-2">
                     <Label for="project_id">Project</Label>
                     <select
                         id="project_id"
@@ -75,10 +136,13 @@ const handleSubmit = () => {
                             'focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
                             form.errors.project_id ? 'border-destructive' : '',
                         ]"
+                        :disabled="!form.fund_id"
                     >
-                        <option value="">Select a project</option>
+                        <option value="">
+                            Optional: select a project (for project funds)
+                        </option>
                         <option
-                            v-for="project in projects"
+                            v-for="project in filteredProjects"
                             :key="project.id"
                             :value="project.id"
                         >

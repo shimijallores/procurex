@@ -14,6 +14,7 @@ class PPMP extends Model
 
     protected $fillable = [
         'office_id',
+        'fund_id',
         'project_id',
         'account_code',
         'project_code',
@@ -47,6 +48,11 @@ class PPMP extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function fund(): BelongsTo
+    {
+        return $this->belongsTo(Fund::class);
     }
 
     public function categories(): HasMany
