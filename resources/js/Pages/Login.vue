@@ -15,7 +15,7 @@ import { route } from "ziggy-js";
 
 <template>
     <div class="min-h-svh w-full bg-muted/30 px-4 py-8 sm:px-6 lg:px-8">
-        <div class="mx-auto w-full max-w-md">
+        <div class="mx-auto w-full max-w-sm">
             <div
                 class="flex min-h-[calc(100svh-8rem)] items-center justify-center"
             >
@@ -28,12 +28,11 @@ import { route } from "ziggy-js";
                                 class="h-20 w-20 object-contain"
                             />
                         </div>
-                        <CardTitle class="text-center">Procurex</CardTitle>
+                        <CardTitle class="text-center"
+                            >Procurement System</CardTitle
+                        >
                         <CardDescription>
-                            <p class="text-center">
-                                General Services Office<br />
-                                Province of Batangas
-                            </p>
+                            <p class="text-center">Province of Batangas</p>
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -51,7 +50,8 @@ import { route } from "ziggy-js";
                                         id="email"
                                         type="email"
                                         name="email"
-                                        placeholder="superadmin@procurex.com"
+                                        placeholder="Enter your email"
+                                        autofocus
                                         required
                                     />
                                 </div>
@@ -63,6 +63,7 @@ import { route } from "ziggy-js";
                                         id="password"
                                         name="password"
                                         type="password"
+                                        placeholder="Enter your password"
                                         required
                                     />
                                 </div>
