@@ -28,13 +28,22 @@ const props = defineProps({
 
 const form = useForm({
     purchase_order_id: "",
-    type: props.defaults?.type || "coa",
-    transmittal_no: "",
-    transmittal_date: props.defaults?.transmittal_date || "",
-    header_text: props.defaults?.header_text || "",
-    signatory_name: props.defaults?.signatory_name || "",
-    signatory_title: props.defaults?.signatory_title || "",
-    coa_circular_no: props.defaults?.coa_circular_no || "",
+    coa: {
+        transmittal_no: "",
+        transmittal_date: props.defaults?.transmittal_date || "",
+        header_text: props.defaults?.coa?.header_text || "",
+        signatory_name: props.defaults?.coa?.signatory_name || "",
+        signatory_title: props.defaults?.coa?.signatory_title || "",
+        coa_circular_no: props.defaults?.coa?.coa_circular_no || "",
+    },
+    opg: {
+        transmittal_no: "",
+        transmittal_date: props.defaults?.transmittal_date || "",
+        header_text: props.defaults?.opg?.header_text || "",
+        signatory_name: props.defaults?.opg?.signatory_name || "",
+        signatory_title: props.defaults?.opg?.signatory_title || "",
+        coa_circular_no: props.defaults?.opg?.coa_circular_no || "",
+    },
 });
 
 const submit = () => {

@@ -11,6 +11,7 @@ use App\Models\POTransmittal;
 use App\Models\PurchaseOrder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\LaravelPdf\Facades\Pdf;
@@ -78,12 +79,21 @@ class POTransmittalController extends Controller
         return Inertia::render('POTransmittals/Create', [
             'purchaseOrders' => $purchaseOrders,
             'defaults' => [
-                'type' => 'coa',
                 'transmittal_date' => now()->toDateString(),
-                'header_text' => $this->defaultHeaderText('coa'),
-                'signatory_name' => 'NOEL R. ROCAFORT',
-                'signatory_title' => 'PGDH – GSO',
-                'coa_circular_no' => '',
+                'coa' => [
+                    'type' => 'coa',
+                    'header_text' => $this->defaultHeaderText('coa'),
+                    'signatory_name' => 'NOEL R. ROCAFORT',
+                    'signatory_title' => 'PGDH – GSO',
+                    'coa_circular_no' => '',
+                ],
+                'opg' => [
+                    'type' => 'opg',
+                    'header_text' => $this->defaultHeaderText('opg'),
+                    'signatory_name' => 'NOEL R. ROCAFORT',
+                    'signatory_title' => 'PGDH – GSO',
+                    'coa_circular_no' => '',
+                ],
             ],
         ]);
     }
@@ -92,10 +102,53 @@ class POTransmittalController extends Controller
     {
         $validated = $request->validated();
 
-        $poTransmittal = POTransmittal::create($validated);
+        $purchaseOrderId = (int) $validated['purchase_order_id'];
 
-        return redirect()->route('po-transmittals.show', $poTransmittal)
-            ->with('success', 'PO Transmittal created successfully.');
+        $existingTypes = POTransmittal::query()
+            ->where('purchase_order_id', $purchaseOrderId)
+            ->pluck('type')
+            ->all();
+
+        if (in_array('coa', $existingTypes, true) || in_array('opg', $existingTypes, true)) {
+            return redirect()->back()->withErrors([
+                'purchase_order_id' => 'COA and OPG transmittals already exist for this Purchase Order.',
+            ])->withInput();
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $coaTransmittal = POTransmittal::create([
+                'purchase_order_id' => $purchaseOrderId,
+                'type' => 'coa',
+                'transmittal_no' => $validated['coa']['transmittal_no'] ?? null,
+                'transmittal_date' => $validated['coa']['transmittal_date'],
+                'header_text' => $validated['coa']['header_text'] ?? null,
+                'signatory_name' => $validated['coa']['signatory_name'] ?? null,
+                'signatory_title' => $validated['coa']['signatory_title'] ?? null,
+                'coa_circular_no' => $validated['coa']['coa_circular_no'] ?? null,
+            ]);
+
+            $opgTransmittal = POTransmittal::create([
+                'purchase_order_id' => $purchaseOrderId,
+                'type' => 'opg',
+                'transmittal_no' => $validated['opg']['transmittal_no'] ?? null,
+                'transmittal_date' => $validated['opg']['transmittal_date'],
+                'header_text' => $validated['opg']['header_text'] ?? null,
+                'signatory_name' => $validated['opg']['signatory_name'] ?? null,
+                'signatory_title' => $validated['opg']['signatory_title'] ?? null,
+                'coa_circular_no' => $validated['opg']['coa_circular_no'] ?? null,
+            ]);
+
+            DB::commit();
+        } catch (\Throwable $exception) {
+            DB::rollBack();
+
+            return redirect()->back()->with('error', 'Failed to create PO Transmittals. Please try again.');
+        }
+
+        return redirect()->route('po-transmittals.show', $coaTransmittal)
+            ->with('success', 'COA and OPG PO Transmittals created successfully.');
     }
 
     public function show(POTransmittal $poTransmittal): Response
@@ -105,8 +158,14 @@ class POTransmittalController extends Controller
             'purchaseOrder.noa.bacResolution.aoq.winnerSupplier',
         ]);
 
+        $relatedTransmittals = POTransmittal::query()
+            ->where('purchase_order_id', $poTransmittal->purchase_order_id)
+            ->orderByRaw("case when type = 'coa' then 1 else 2 end")
+            ->get(['id', 'type', 'transmittal_no']);
+
         return Inertia::render('POTransmittals/Show', [
             'poTransmittal' => $poTransmittal,
+            'relatedTransmittals' => $relatedTransmittals,
         ]);
     }
 

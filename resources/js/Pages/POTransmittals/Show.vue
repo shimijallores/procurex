@@ -25,6 +25,7 @@ defineOptions({
 
 const props = defineProps({
     poTransmittal: Object,
+    relatedTransmittals: Array,
 });
 
 const form = useForm({
@@ -49,6 +50,7 @@ const showDeleteModal = ref(false);
     <div class="space-y-6">
         <POTransmittalShowHeader
             :po-transmittal="poTransmittal"
+            :related-transmittals="relatedTransmittals"
             @delete="showDeleteModal = true"
         />
 

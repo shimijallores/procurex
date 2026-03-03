@@ -15,13 +15,13 @@
         body {
             font-family: Arial, Helvetica, sans-serif;
             color: #000;
-            font-size: 15px;
+            font-size: 12pt;
         }
 
         .page {
             width: 210mm;
             min-height: 297mm;
-            padding: 16mm 12mm 14mm;
+            padding: 14mm 12mm;
         }
 
         .header {
@@ -45,22 +45,16 @@
             font-weight: 700;
         }
 
-        .seal {
-            width: 70px;
-            height: 70px;
-            border: 2px solid #000;
-            border-radius: 50%;
-            margin: 0 auto;
-            font-size: 9px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .logo-seal {
+            width: 58px;
+            height: 58px;
+            object-fit: contain;
         }
 
-        .bagong {
-            margin-top: 10px;
-            font-style: italic;
-            font-weight: 700;
+        .logo-bagong {
+            width: 74px;
+            height: 58px;
+            object-fit: contain;
         }
 
         .recipient {
@@ -126,6 +120,30 @@
 
 <body>
     @php
+    $imagePath = static function (array $candidates): ?string {
+    foreach ($candidates as $candidate) {
+    $absolute = public_path('images/' . $candidate);
+
+    if (! is_file($absolute)) {
+    continue;
+    }
+
+    $mime = mime_content_type($absolute) ?: 'image/png';
+    $content = file_get_contents($absolute);
+
+    if ($content === false) {
+    continue;
+    }
+
+    return 'data:' . $mime . ';base64,' . base64_encode($content);
+    }
+
+    return null;
+    };
+
+    $sealLogo = $imagePath(['batangas-seal.png']);
+    $bagongLogo = $imagePath(['bagong-pilipinas.png']);
+
     $headerLines = collect(preg_split('/\r\n|\r|\n/', trim((string) ($poTransmittal->header_text ?? ''))))->filter();
     $supplier = strtoupper((string) ($winnerSupplier?->name ?? '—'));
     $projectName = (string) ($resolution?->project_name ?? '—');
@@ -135,17 +153,20 @@
         <table class="header">
             <tr>
                 <td class="logo-cell">
-                    <div class="seal">BATANGAS<br>SEAL</div>
+                    @if ($sealLogo)
+                    <img src="{{ $sealLogo }}" alt="Batangas Seal" class="logo-seal">
+                    @endif
                 </td>
                 <td class="head-cell">
                     Republic of the Philippines<br>
-                    PROVINCE OF BATANGAS<br>
+                    PROVINCIAL GOVERNMENT OF BATANGAS<br>
                     OFFICE OF THE GENERAL SERVICES<br>
                     Capitol Site, Batangas City
                 </td>
                 <td class="logo-cell">
-                    <div class="seal" style="border:0;">&nbsp;</div>
-                    <div class="bagong">BAGONG PILIPINAS</div>
+                    @if ($bagongLogo)
+                    <img src="{{ $bagongLogo }}" alt="Bagong Pilipinas" class="logo-bagong">
+                    @endif
                 </td>
             </tr>
         </table>
@@ -163,7 +184,7 @@
         </div>
 
         <div class="body normal-weight">
-            This is to respectfully transmit to your good office the Purchase Order of the project:
+            This is to respectfully transmit to your office the Purchase Order and related procurement documents for the project below:
         </div>
 
         <div class="table-wrap">

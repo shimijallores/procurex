@@ -4,12 +4,20 @@ import { Icon } from "@iconify/vue";
 
 const props = defineProps({
     poTransmittal: Object,
+    relatedTransmittals: Array,
 });
 
 defineEmits(["delete"]);
 
 const openPdf = () => {
-    window.open(route("po-transmittals.pdf", props.poTransmittal.id), "_blank");
+    const targets =
+        props.relatedTransmittals?.length > 0
+            ? props.relatedTransmittals
+            : [props.poTransmittal];
+
+    targets.forEach((entry) => {
+        window.open(route("po-transmittals.pdf", entry.id), "_blank");
+    });
 };
 </script>
 
@@ -33,7 +41,7 @@ const openPdf = () => {
         <div class="flex flex-wrap items-center gap-2">
             <Button variant="outline" @click="openPdf">
                 <Icon icon="lucide:printer" class="mr-2 h-4 w-4" />
-                Print PDF
+                Print COA + OPG
             </Button>
             <Button
                 variant="ghost"
