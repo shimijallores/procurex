@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreOfficeRequest;
+use App\Http\Requests\UpdateOfficeRequest;
 use App\Models\Office;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -36,12 +38,9 @@ class OfficeController extends Controller
         return Inertia::render('Office/Create');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(StoreOfficeRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:offices,name'],
-            'code' => ['required', 'string', 'max:255', 'unique:offices,code'],
-        ]);
+        $validated = $request->validated();
 
         Office::create($validated);
 
@@ -66,12 +65,9 @@ class OfficeController extends Controller
         ]);
     }
 
-    public function update(Request $request, Office $office): RedirectResponse
+    public function update(UpdateOfficeRequest $request, Office $office): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:offices,name,'.$office->id],
-            'code' => ['required', 'string', 'max:255', 'unique:offices,code,'.$office->id],
-        ]);
+        $validated = $request->validated();
 
         $office->update($validated);
 

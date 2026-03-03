@@ -15,10 +15,12 @@ return new class extends Migration
             $table->id();
             $table->string('name')->unique();
             $table->string('code')->unique();
+            $table->string('acronym')->nullable();
             $table->timestamps();
 
             $table->index('name');
             $table->index('code');
+            $table->index('acronym');
         });
     }
 

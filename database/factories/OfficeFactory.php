@@ -19,6 +19,7 @@ class OfficeFactory extends Factory
         return [
             'name' => fake()->unique()->company(),
             'code' => fake()->unique()->bothify('???-###'),
+            'acronym' => fake()->boolean() ? strtoupper(fake()->lexify('???')) : null,
         ];
     }
 
@@ -29,7 +30,8 @@ class OfficeFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'name' => 'Provincial Veterinary Office',
-            'code' => 'PVO-001',
+            'code' => '8721',
+            'acronym' => null,
         ]);
     }
 
@@ -38,6 +40,7 @@ class OfficeFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'name' => 'Governing Office',
             'code' => 'GOV-001',
+            'acronym' => null,
         ]);
     }
 }
