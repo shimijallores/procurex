@@ -31,6 +31,15 @@ const form = useForm({
     aoq_id: "",
     resolution_date: props.defaultResolutionDate || "",
     meeting_date: props.defaultMeetingDate || "",
+    project_name: "",
+    winner_supplier_name: "",
+    winner_amount: "",
+    calculation_label: "",
+    justification: "",
+    signatory_chairperson: "",
+    signatory_member_one: "",
+    signatory_member_two: "",
+    signatory_member_three: "",
 });
 
 const submit = () => {

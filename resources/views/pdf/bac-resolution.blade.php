@@ -37,20 +37,29 @@
             font-weight: bold;
         }
 
-        .header {
-            display: table;
+        .top-right-meta {
             width: 100%;
+            text-align: right;
+            font-size: 10pt;
+            line-height: 1.3;
             margin-bottom: 10px;
         }
 
-        .header-cell {
-            display: table-cell;
+        .header-layout {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+        }
+
+        .header-layout td {
             vertical-align: middle;
+            border: none;
+            padding: 0;
         }
 
         .header-left {
             width: 18%;
-            text-align: left;
+            text-align: center;
         }
 
         .header-mid {
@@ -60,29 +69,19 @@
 
         .header-right {
             width: 18%;
-            text-align: right;
+            text-align: center;
         }
 
-        .logo-mark {
-            width: 78px;
-            height: 78px;
-            border: 2px solid #000;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 7pt;
-            font-weight: bold;
+        .logo-seal {
+            width: 74px;
+            height: 74px;
+            object-fit: contain;
         }
 
-        .bagong-mark {
-            width: 78px;
-            height: 78px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 8pt;
-            font-weight: bold;
+        .logo-bagong {
+            width: 86px;
+            height: 74px;
+            object-fit: contain;
         }
 
         .gov-title {
@@ -221,43 +220,90 @@
 
 <body>
     @php
+    $imagePath = static function (array $candidates): ?string {
+    foreach ($candidates as $candidate) {
+    $absolute = public_path('images/' . $candidate);
+
+    if (! is_file($absolute)) {
+    continue;
+    }
+
+    $mime = mime_content_type($absolute) ?: 'image/png';
+    $content = file_get_contents($absolute);
+
+    if ($content === false) {
+    continue;
+    }
+
+    return 'data:' . $mime . ';base64,' . base64_encode($content);
+    }
+
+    return null;
+    };
+
+    $sealLogo = $imagePath(['batangas-seal.png']);
+    $bagongLogo = $imagePath(['bagong-pilipinas.png']);
+
     $officeName = strtoupper((string) ($rfq?->purchaseRequest?->office?->name ?? 'PROVINCIAL OFFICE'));
     $projectName = strtoupper((string) ($resolution->project_name ?? 'PROJECT'));
     $winnerName = strtoupper((string) ($resolution->winner_supplier_name ?? 'WINNING SUPPLIER'));
-    $amount = (float) ($resolution->winner_amount ?? 0);
-    $amountFmt = number_format($amount, 2);
+    $winnerAmount = (float) ($resolution->winner_amount ?? 0);
+    $winnerAmountFmt = number_format($winnerAmount, 2);
+    $abcAmount = (float) ($rfq?->abc_amount ?? 0);
+    $abcAmountFmt = number_format($abcAmount, 2);
 
+    $amountToWords = static function (float $amount): string {
     $whole = (int) floor($amount);
     $fraction = (int) round(($amount - $whole) * 100);
-    if (class_exists(\NumberFormatter::class)) {
+
+    if (! class_exists(\NumberFormatter::class)) {
+    return 'AMOUNT IN WORDS';
+    }
+
     $formatter = new \NumberFormatter('en', \NumberFormatter::SPELLOUT);
     $wholeWords = strtoupper((string) $formatter->format($whole));
-    $amountWords = $wholeWords . ' PESOS';
+    $words = $wholeWords . ' PESOS';
+
     if ($fraction > 0) {
-    $amountWords .= ' AND ' . strtoupper((string) $formatter->format($fraction)) . ' CENTAVOS';
+    $words .= ' AND ' . strtoupper((string) $formatter->format($fraction)) . ' CENTAVOS';
     }
-    } else {
-    $amountWords = 'AMOUNT IN WORDS';
-    }
+
+    return $words;
+    };
+
+    $winnerAmountWords = $amountToWords($winnerAmount);
+    $abcAmountWords = $amountToWords($abcAmount);
+    $calculationLabel = (string) ($resolution->calculation_label ?: 'Lowest Calculated');
 
     $meetingDate = $resolution->meeting_date ?? $resolution->resolution_date;
     @endphp
 
     <div class="page">
-        <div class="header">
-            <div class="header-cell header-left">
-                <div class="logo-mark">BATANGAS<br>SEAL</div>
-            </div>
-            <div class="header-cell header-mid">
-                <div class="gov-title">REPUBLIC OF THE PHILIPPINES</div>
-                <div class="gov-title">PROVINCIAL GOVERNMENT OF BATANGAS</div>
-                <div class="gov-sub">Capitol Site, Kumintang Ibaba, Batangas City 4200</div>
-                <div class="bac-title">BIDS and AWARDS COMMITTEE</div>
-            </div>
-            <div class="header-cell header-right">
-                <div class="bagong-mark">BAGONG PILIPINAS</div>
-            </div>
+        <div class="top-right-meta">
+            <div><strong>PR No.:</strong> {{ $rfq?->purchaseRequest?->pr_no }}</div>
+            <div><strong>SVP No.:</strong> {{ $rfq?->svp_no }}</div>
         </div>
+
+        <table class="header-layout">
+            <tr>
+                <td class="header-left">
+                    @if ($sealLogo)
+                    <img src="{{ $sealLogo }}" alt="Batangas Seal" class="logo-seal">
+                    @endif
+                </td>
+                <td class="header-mid">
+                    <div class="gov-title">REPUBLIC OF THE PHILIPPINES</div>
+                    <div class="gov-title">PROVINCIAL GOVERNMENT OF BATANGAS</div>
+                    <div class="gov-sub">Capitol Site, Kumintang Ibaba, Batangas City 4200</div>
+                    <div class="bac-title">BIDS and AWARDS COMMITTEE</div>
+                </td>
+                <td class="header-right">
+                    @if ($bagongLogo)
+                    <img src="{{ $bagongLogo }}" alt="Bagong Pilipinas" class="logo-bagong">
+                    @endif
+                </td>
+            </tr>
+        </table>
 
         <div class="text-center resolution-no">
             RESOLUTION NO. {{ strtoupper((string) ($resolution->resolution_no ?? 'BAC-____')) }}, Series of {{ optional($resolution->resolution_date)->format('Y') ?? now()->year }}
@@ -271,7 +317,7 @@
             FOR USE OF
             <span class="underlined">{{ $officeName }}</span>
             IN THE AMOUNT OF
-            <span class="underlined">{{ $amountWords }} ONLY (P {{ $amountFmt }})</span>
+            <span class="underlined">{{ $winnerAmountWords }} ONLY (P {{ $winnerAmountFmt }})</span>
             THROUGH SMALL VALUE PROCUREMENT
         </div>
 
@@ -279,7 +325,7 @@
             <strong>WHEREAS,</strong> the Provincial Government of Batangas, through its Bids and Awards Committee (BAC), is in need of a supplier for the
             <span class="underlined">{{ strtoupper((string) ($resolution->project_name ?? 'PROJECT')) }}</span>,
             with an Approved Budget for the Contract (ABC) in the amount of
-            <span class="underlined">{{ $amountWords }} (P{{ $amountFmt }})</span>;
+            <span class="underlined">{{ $abcAmountWords }} (P{{ $abcAmountFmt }})</span>;
         </div>
 
         <div class="whereas">
@@ -335,17 +381,17 @@
         </table>
 
         <div class="whereas">
-            <strong>WHEREAS,</strong> upon careful examination, validation and verification of all the documents submitted by the supplier with the Lowest Calculated Quotation, its price quotation has been found to be responsive;
+            <strong>WHEREAS,</strong> upon careful examination, validation and verification of all the documents submitted by the supplier with the {{ $calculationLabel }} Quotation, its price quotation has been found to be responsive;
         </div>
 
         <div class="resolved">
             <strong>NOW, THEREFORE,</strong> We, the members of the Bids and Awards Committee of the Provincial Government of Batangas, <strong>RESOLVE</strong>, as it is hereby <strong>RESOLVED</strong>, to recommend to HON. GOVERNOR VILMA SANTOS-RECTO, to resort to Small Value Procurement and award the contract for
             <span class="underlined">{{ strtoupper((string) ($resolution->project_name ?? 'PROJECT')) }}</span>
             in the amount of
-            <span class="underlined">{{ $amountWords }} (P {{ $amountFmt }})</span>
+            <span class="underlined">{{ $winnerAmountWords }} (P {{ $winnerAmountFmt }})</span>
             to
             <span class="underlined">{{ $winnerName }}</span>
-            as the supplier with the Lowest Calculated and Responsive Quotation;
+            as the supplier with the {{ $calculationLabel }} and Responsive Quotation;
         </div>
 
         <div class="resolved-date">

@@ -76,23 +76,44 @@ class BACResolutionController extends Controller
     {
         $eligibleAoqs = AOQ::with([
             'rfq.purchaseRequest.office',
+            'rfq.suppliers.supplierItems.rfqItem',
             'winnerSupplier',
         ])
             ->whereDoesntHave('bacResolution')
             ->latest('aoq_date')
             ->get()
+            ->map(function (AOQ $aoq): AOQ {
+                $calculatedSupplierCount = $this->countCalculatedSuppliers($aoq);
+                $calculationLabel = $calculatedSupplierCount <= 1
+                    ? 'Single Calculated'
+                    : 'Lowest Calculated';
+
+                $aoq->setAttribute('calculated_supplier_count', $calculatedSupplierCount);
+                $aoq->setAttribute('calculation_label', $calculationLabel);
+                $aoq->setAttribute('winner_amount', $this->calculateWinnerAmount($aoq));
+
+                return $aoq;
+            })
             ->values();
+
+        $suggestedDate = $this->suggestNextWorkingDay()->toDateString();
 
         return Inertia::render('BACResolutions/Create', [
             'eligibleAoqs' => $eligibleAoqs,
-            'defaultResolutionDate' => now()->toDateString(),
-            'defaultMeetingDate' => now()->toDateString(),
+            'defaultResolutionDate' => $suggestedDate,
+            'defaultMeetingDate' => $suggestedDate,
         ]);
     }
 
     public function store(StoreBACResolutionRequest $request): RedirectResponse
     {
         $validated = $request->validated();
+
+        if (! $this->isWorkingDay($validated['resolution_date'] ?? null)) {
+            return redirect()->back()->withErrors([
+                'resolution_date' => 'Resolution date must be a working day (not weekend/holiday).',
+            ])->withInput();
+        }
 
         if (! $this->isWorkingDay($validated['meeting_date'] ?? null)) {
             return redirect()->back()->withErrors([
@@ -118,23 +139,27 @@ class BACResolutionController extends Controller
                 ? 'Single Calculated'
                 : 'Lowest Calculated';
 
+            $resolutionDate = Carbon::parse($validated['resolution_date']);
+
             $resolution = BACResolution::create([
                 'aoq_id' => $aoq->id,
-                'resolution_no' => $this->generateResolutionNumber(),
+                'resolution_no' => $this->generateResolutionNumber($resolutionDate),
                 'resolution_date' => $validated['resolution_date'],
                 'meeting_date' => $validated['meeting_date'] ?? null,
-                'project_name' => $aoq->rfq?->project_name ?? 'Untitled Project',
-                'winner_supplier_name' => $aoq->winnerSupplier?->name ?? 'N/A',
-                'winner_amount' => $winnerAmount,
-                'calculation_label' => $calculationLabel,
-                'justification' => sprintf(
-                    'for being the supplier with the %s and Responsive Quotation which is advantageous to the Provincial Government of Batangas.',
-                    $calculationLabel
-                ),
-                'signatory_chairperson' => 'BAC Chairperson',
-                'signatory_member_one' => 'BAC Member',
-                'signatory_member_two' => 'BAC Member',
-                'signatory_member_three' => 'BAC Member',
+                'project_name' => (string) $validated['project_name'],
+                'winner_supplier_name' => (string) $validated['winner_supplier_name'],
+                'winner_amount' => (float) ($validated['winner_amount'] ?? $winnerAmount),
+                'calculation_label' => (string) ($validated['calculation_label'] ?? $calculationLabel),
+                'justification' => $validated['justification']
+                    ?? sprintf(
+                        'for being the supplier with the %s and Responsive Quotation which is advantageous to the Provincial Government of Batangas.',
+                        $calculationLabel
+                    ),
+                'signatory_chairperson' => $validated['signatory_chairperson'] ?? 'BAC Chairperson',
+                'signatory_member_one' => $validated['signatory_member_one'] ?? 'BAC Member',
+                'signatory_member_two' => $validated['signatory_member_two'] ?? 'BAC Member',
+                'signatory_member_three' => $validated['signatory_member_three'] ?? 'BAC Member',
+                'finalized_at' => now(),
             ]);
 
             DB::commit();
@@ -156,8 +181,12 @@ class BACResolutionController extends Controller
             'aoq.winnerSupplier',
         ]);
 
+        $suggestedDate = $this->suggestNextWorkingDay()->toDateString();
+
         return Inertia::render('BACResolutions/Show', [
             'resolution' => $bacResolution,
+            'defaultResolutionDate' => $suggestedDate,
+            'defaultMeetingDate' => $suggestedDate,
         ]);
     }
 
@@ -168,6 +197,12 @@ class BACResolutionController extends Controller
         }
 
         $validated = $request->validated();
+
+        if (! $this->isWorkingDay($validated['resolution_date'] ?? null)) {
+            return redirect()->back()->withErrors([
+                'resolution_date' => 'Resolution date must be a working day (not weekend/holiday).',
+            ])->withInput();
+        }
 
         if (! $this->isWorkingDay($validated['meeting_date'] ?? null)) {
             return redirect()->back()->withErrors([
@@ -207,9 +242,9 @@ class BACResolutionController extends Controller
     {
         $bacResolution->load([
             'aoq.rfq.purchaseRequest.office',
-            'aoq.rfq.items.purchaseRequestItem',
+            'aoq.rfq.items',
             'aoq.rfq.suppliers.supplier',
-            'aoq.rfq.suppliers.supplierItems.rfqItem.purchaseRequestItem',
+            'aoq.rfq.suppliers.supplierItems.rfqItem',
         ]);
 
         $rfq = $bacResolution->aoq?->rfq;
@@ -226,7 +261,7 @@ class BACResolutionController extends Controller
                             continue;
                         }
 
-                        $quantity = (float) ($supplierItem->rfqItem?->purchaseRequestItem?->quantity ?? 0);
+                        $quantity = (float) ($supplierItem->rfqItem?->quantity ?? 0);
                         $total += $quantity * (float) $supplierItem->unit_price;
                     }
 
@@ -259,23 +294,27 @@ class BACResolutionController extends Controller
             ->inline();
     }
 
-    private function generateResolutionNumber(): string
+    private function generateResolutionNumber(Carbon $resolutionDate): string
     {
-        $year = now()->year;
-        $prefix = sprintf('BAC-%d-', $year);
+        $year = $resolutionDate->format('Y');
+        $prefix = $year . '-';
 
-        $latest = BACResolution::where('resolution_no', 'like', $prefix . '%')
-            ->orderByDesc('id')
+        $latest = BACResolution::query()
+            ->where('resolution_no', 'like', $prefix . '%')
+            ->orderByDesc('resolution_no')
             ->value('resolution_no');
 
-        $nextSeries = 1;
-        if ($latest) {
-            $parts = explode('-', $latest);
-            $last = (int) end($parts);
-            $nextSeries = $last + 1;
+        $next = 1;
+        if ($latest && preg_match('/^\d{4}-(\d{4})$/', $latest, $matches) === 1) {
+            $next = (int) $matches[1] + 1;
         }
 
-        return sprintf('%s%04d', $prefix, $nextSeries);
+        do {
+            $resolutionNo = sprintf('%s%04d', $prefix, $next);
+            $next++;
+        } while (BACResolution::where('resolution_no', $resolutionNo)->exists());
+
+        return $resolutionNo;
     }
 
     private function isWorkingDay(?string $date): bool
@@ -297,10 +336,21 @@ class BACResolutionController extends Controller
         return (bool) $calendarEntry->is_working_day;
     }
 
+    private function suggestNextWorkingDay(): Carbon
+    {
+        $date = now()->addDay()->startOfDay();
+
+        while (! $this->isWorkingDay($date->toDateString())) {
+            $date->addDay();
+        }
+
+        return $date;
+    }
+
     private function calculateWinnerAmount(AOQ $aoq): float
     {
         $aoq->loadMissing([
-            'rfq.suppliers.supplierItems.rfqItem.purchaseRequestItem',
+            'rfq.suppliers.supplierItems.rfqItem',
             'winnerSupplier',
         ]);
 
@@ -319,10 +369,39 @@ class BACResolutionController extends Controller
                 continue;
             }
 
-            $quantity = (float) ($supplierItem->rfqItem?->purchaseRequestItem?->quantity ?? 0);
+            $quantity = (float) ($supplierItem->rfqItem?->quantity ?? 0);
             $total += $quantity * (float) $supplierItem->unit_price;
         }
 
         return round($total, 2);
+    }
+
+    private function countCalculatedSuppliers(AOQ $aoq): int
+    {
+        $aoq->loadMissing([
+            'rfq.suppliers.supplierItems.rfqItem',
+        ]);
+
+        $count = 0;
+
+        foreach ($aoq->rfq?->suppliers ?? collect() as $entry) {
+            if (! $entry->submitted_at) {
+                continue;
+            }
+
+            $hasAtLeastOnePrice = false;
+            foreach ($entry->supplierItems as $supplierItem) {
+                if ($supplierItem->unit_price !== null) {
+                    $hasAtLeastOnePrice = true;
+                    break;
+                }
+            }
+
+            if ($hasAtLeastOnePrice) {
+                $count++;
+            }
+        }
+
+        return $count;
     }
 }

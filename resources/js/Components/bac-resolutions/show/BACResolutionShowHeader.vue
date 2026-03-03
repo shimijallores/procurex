@@ -1,16 +1,12 @@
 <script setup>
-import { computed } from "vue";
 import { Icon } from "@iconify/vue";
 import { Button } from "@/components/ui/button";
 
 const props = defineProps({
     resolution: Object,
-    saving: Boolean,
 });
 
-defineEmits(["save", "finalize", "delete"]);
-
-const canEdit = computed(() => !props.resolution?.finalized_at);
+defineEmits(["delete"]);
 
 const openPdf = () => {
     window.open(route("bac-resolutions.pdf", props.resolution.id), "_blank");
@@ -26,7 +22,7 @@ const openPdf = () => {
                 {{ resolution.resolution_no }}
             </h1>
             <p class="text-sm text-muted-foreground mt-1">
-                BAC Resolution document editor and print preview.
+                BAC Resolution details and print preview.
             </p>
         </div>
 
@@ -34,25 +30,6 @@ const openPdf = () => {
             <Button variant="outline" @click="openPdf">
                 <Icon icon="lucide:printer" class="mr-2 h-4 w-4" />
                 Print PDF
-            </Button>
-
-            <Button
-                v-if="canEdit"
-                variant="outline"
-                :disabled="saving"
-                @click="$emit('save')"
-            >
-                <Icon icon="lucide:save" class="mr-2 h-4 w-4" />
-                Save
-            </Button>
-
-            <Button
-                v-if="canEdit"
-                :disabled="saving"
-                @click="$emit('finalize')"
-            >
-                <Icon icon="lucide:check-check" class="mr-2 h-4 w-4" />
-                Finalize
             </Button>
 
             <Button

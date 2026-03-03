@@ -91,8 +91,7 @@ Route::middleware(['auth'])->group(function (): void {
 
     // BAC Resolution module
     $bacResolutionRoles = 'role:Superadmin,BAC Reso Admin';
-    Route::resource('bac-resolutions', BACResolutionController::class)->only(['index', 'create', 'store', 'show', 'update', 'destroy'])->middleware($bacResolutionRoles);
-    Route::post('bac-resolutions/{bac_resolution}/finalize', [BACResolutionController::class, 'finalize'])->middleware($bacResolutionRoles)->name('bac-resolutions.finalize');
+    Route::resource('bac-resolutions', BACResolutionController::class)->only(['index', 'create', 'store', 'show', 'destroy'])->middleware($bacResolutionRoles);
     Route::get('bac-resolutions/{bac_resolution}/pdf', [BACResolutionController::class, 'printPdf'])->middleware($bacResolutionRoles)->name('bac-resolutions.pdf');
 
     // Notice of Award module
