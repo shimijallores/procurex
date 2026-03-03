@@ -14,8 +14,7 @@ class PPMPCategory extends Model
 
     protected $fillable = [
         'ppmp_id',
-        'code',
-        'name',
+        'account_id',
         'estimated_budget',
     ];
 
@@ -25,11 +24,16 @@ class PPMPCategory extends Model
         'updated_at' => 'datetime',
     ];
 
-    protected $appends = ['items'];
+    protected $appends = ['code', 'name', 'items'];
 
     public function ppmp(): BelongsTo
     {
         return $this->belongsTo(PPMP::class, 'ppmp_id');
+    }
+
+    public function account(): BelongsTo
+    {
+        return $this->belongsTo(Account::class, 'account_id');
     }
 
     public function items(): HasMany
@@ -40,5 +44,15 @@ class PPMPCategory extends Model
     public function getItemsAttribute()
     {
         return $this->items()->with('months')->get();
+    }
+
+    public function getCodeAttribute(): ?string
+    {
+        return $this->account?->code;
+    }
+
+    public function getNameAttribute(): ?string
+    {
+        return $this->account?->name;
     }
 }

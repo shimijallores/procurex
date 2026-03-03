@@ -14,12 +14,12 @@ return new class extends Migration
         Schema::create('ppmp_categories', function (Blueprint $table) {
             $table->id();
             $table->foreignId('ppmp_id')->constrained()->cascadeOnDelete();
-            $table->string('code')->unique();
-            $table->string('name');
+            $table->foreignId('account_id')->constrained()->cascadeOnDelete();
             $table->decimal('estimated_budget', 15, 2);
             $table->timestamps();
 
             $table->index('ppmp_id', 'idx_ppmp_category_ppmp');
+            $table->unique(['ppmp_id', 'account_id'], 'uq_ppmp_category_ppmp_account');
         });
     }
 

@@ -1,8 +1,8 @@
 <?php
 
-use App\Http\Controllers\APPController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AOQController;
+use App\Http\Controllers\APPController;
 use App\Http\Controllers\BACResolutionController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CanvasController;
@@ -14,8 +14,8 @@ use App\Http\Controllers\MasterListCategoryController;
 use App\Http\Controllers\MasterListItemController;
 use App\Http\Controllers\NOAController;
 use App\Http\Controllers\OfficeController;
-use App\Http\Controllers\PPMPController;
 use App\Http\Controllers\POTransmittalController;
+use App\Http\Controllers\PPMPController;
 use App\Http\Controllers\ProjectCodeController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\PurchaseRequestController;
@@ -54,9 +54,7 @@ Route::middleware(['auth'])->group(function (): void {
     Route::get('apps/{app}/download', [APPController::class, 'download'])->middleware('role:Superadmin,BAC Reso Admin,office')->name('apps.download');
     Route::resource('ppmps', PPMPController::class)->middleware('role:Superadmin,Budgeting Admin,office');
     Route::post('ppmps/{ppmp}/import', [PPMPController::class, 'import'])->middleware('role:Superadmin,Budgeting Admin,office')->name('ppmps.import');
-    Route::get('ppmps/{ppmp}/download-csv', [PPMPController::class, 'downloadCsv'])->middleware('role:Superadmin,Budgeting Admin,office')->name('ppmps.download-csv');
-    Route::post('ppmps/{ppmp}/approve', [PPMPController::class, 'approve'])->middleware('role:Superadmin,Budgeting Admin,office')->name('ppmps.approve');
-    Route::post('ppmps/{ppmp}/reject', [PPMPController::class, 'reject'])->middleware('role:Superadmin,Budgeting Admin,office')->name('ppmps.reject');
+    Route::get('ppmps/{ppmp}/download-xlsx', [PPMPController::class, 'downloadXlsx'])->middleware('role:Superadmin,Budgeting Admin,office')->name('ppmps.download-xlsx');
     Route::resource('emanatings', EmanatingController::class)->middleware('role:Superadmin,Budgeting Admin,office');
     Route::post('emanatings/{emanating}/import', [EmanatingController::class, 'import'])->middleware('role:Superadmin,Budgeting Admin,office')->name('emanatings.import');
     Route::get('emanatings/{emanating}/download-csv', [EmanatingController::class, 'downloadCsv'])->middleware('role:Superadmin,Budgeting Admin,office')->name('emanatings.download-csv');

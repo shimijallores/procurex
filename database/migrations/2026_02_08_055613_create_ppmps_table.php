@@ -14,25 +14,15 @@ return new class extends Migration
         Schema::create('ppmps', function (Blueprint $table) {
             $table->id();
             $table->foreignId('office_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('fund_id')->constrained()->cascadeOnDelete()->unique();
-            $table->foreignId('project_id')->nullable()->constrained()->nullOnDelete();
-            // These codes will be provided by the accounting office.
-            $table->string('account_code')->unique()->nullable();
-            $table->string('project_code')->unique()->nullable();
             $table->unsignedSmallInteger('fiscal_year');
             $table->boolean('is_addendum')->default(false);
             $table->string('remarks')->nullable();
-            $table->string('csv_path')->nullable();
+            $table->string('xlsx_path')->nullable();
             $table->json('budget_notices')->nullable();
-            $table->string('status')->default('pending')->after('is_approved');
-            $table->boolean('is_approved')->default(false);
-            $table->timestamp('approved_at')->nullable();
-            $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->text('rejection_reason')->nullable();
 
             $table->timestamps();
 
-            $table->index(['office_id', 'fund_id', 'fiscal_year'], 'idx_ppmp');
+            $table->index(['office_id', 'fiscal_year'], 'idx_ppmp');
         });
     }
 

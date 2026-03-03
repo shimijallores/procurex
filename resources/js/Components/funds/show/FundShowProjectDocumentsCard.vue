@@ -146,18 +146,18 @@ defineProps({
                             <Icon icon="lucide:external-link" class="h-4 w-4" />
                             View PPMP
                         </a>
-                        <div class="mt-2" v-if="ppmpReference.csv_path">
+                        <div class="mt-2" v-if="ppmpReference.xlsx_path">
                             <a
                                 :href="
                                     route(
-                                        'ppmps.download-csv',
+                                        'ppmps.download-xlsx',
                                         ppmpReference.id,
                                     )
                                 "
                                 class="inline-flex items-center gap-2 text-sm text-primary hover:underline"
                             >
                                 <Icon icon="lucide:download" class="h-4 w-4" />
-                                Download CSV
+                                Download XLSX
                             </a>
                         </div>
                     </div>

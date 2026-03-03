@@ -108,14 +108,10 @@ class EmanatingController extends Controller
     public function create(): Response
     {
         return Inertia::render('Emanatings/Create', [
-            'ppmps' => PPMP::with('office', 'project')
-                ->where('is_approved', true)
-                ->get(['id', 'office_id', 'project_id', 'fiscal_year', 'account_code']),
-            'ppmpCategories' => PPMPCategory::with('ppmp.office', 'ppmp.project')
-                ->whereHas('ppmp', function ($query): void {
-                    $query->where('is_approved', true);
-                })
-                ->get(['id', 'ppmp_id', 'code', 'name']),
+            'ppmps' => PPMP::with('office')
+                ->get(['id', 'office_id', 'fiscal_year']),
+            'ppmpCategories' => PPMPCategory::with('ppmp.office', 'account')
+                ->get(['id', 'ppmp_id', 'account_id']),
         ]);
     }
 
@@ -125,15 +121,14 @@ class EmanatingController extends Controller
 
         DB::beginTransaction();
         try {
-            // Get PPMP and its project
-            $ppmp = PPMP::with('project')->findOrFail($validated['ppmp_id']);
-            $ppmpCategory = PPMPCategory::findOrFail($validated['ppmp_category_id']);
+            $ppmp = PPMP::findOrFail($validated['ppmp_id']);
+            PPMPCategory::findOrFail($validated['ppmp_category_id']);
 
             // CSV file is required, so we can assume it exists
             $csvPath = $storeEmanatingRequest->file('csv_file')->store('emanatings', 'public');
 
             // Import CSV - this creates the Emanating record and items
-            $emanatingImport = new EmanatingImport($ppmp->project, $ppmp, (int) $validated['ppmp_category_id']);
+            $emanatingImport = new EmanatingImport(null, $ppmp, (int) $validated['ppmp_category_id']);
             Excel::import($emanatingImport, $storeEmanatingRequest->file('csv_file'));
 
             // Get the created emanating record (we need to find it)
@@ -157,9 +152,7 @@ class EmanatingController extends Controller
 
                 // Update with validated data and CSV path
                 $emanating->update([
-                    'fund_id' => $ppmp->fund_id,
                     'ppmp_id' => $validated['ppmp_id'],
-                    'project_id' => $ppmp->project_id, // Get from PPMP
                     'ppmp_category_id' => $validated['ppmp_category_id'],
                     'pr_no' => $validated['pr_no'] ?? null,
                     'is_addendum' => $isAddendum,
@@ -207,14 +200,10 @@ class EmanatingController extends Controller
 
         return Inertia::render('Emanatings/Edit', [
             'emanating' => $emanating,
-            'ppmps' => PPMP::with('office', 'project')
-                ->where('is_approved', true)
-                ->get(['id', 'office_id', 'project_id', 'fiscal_year', 'account_code']),
-            'ppmpCategories' => PPMPCategory::with('ppmp.office', 'ppmp.project')
-                ->whereHas('ppmp', function ($query): void {
-                    $query->where('is_approved', true);
-                })
-                ->get(['id', 'ppmp_id', 'code', 'name']),
+            'ppmps' => PPMP::with('office')
+                ->get(['id', 'office_id', 'fiscal_year']),
+            'ppmpCategories' => PPMPCategory::with('ppmp.office', 'account')
+                ->get(['id', 'ppmp_id', 'account_id']),
         ]);
     }
 
@@ -224,17 +213,9 @@ class EmanatingController extends Controller
 
         DB::beginTransaction();
         try {
-            $selectedPpmp = null;
-
-            if (array_key_exists('ppmp_id', $validated) && $validated['ppmp_id']) {
-                $selectedPpmp = PPMP::find($validated['ppmp_id']);
-            }
-
             // Only update editable fields (CSV-imported fields are immutable)
             $emanating->update([
                 'ppmp_id' => $validated['ppmp_id'] ?? $emanating->ppmp_id,
-                'fund_id' => $selectedPpmp?->fund_id ?? $emanating->fund_id,
-                'project_id' => $selectedPpmp?->project_id ?? $emanating->project_id,
                 'ppmp_category_id' => $validated['ppmp_category_id'] ?? $emanating->ppmp_category_id,
                 'pr_no' => $validated['pr_no'] ?? $emanating->pr_no,
                 'is_addendum' => $validated['is_addendum'] ?? $emanating->is_addendum,
@@ -350,16 +331,6 @@ class EmanatingController extends Controller
             Log::warning('[Emanating Approve] Emanating already approved', ['emanating_id' => $emanating->id]);
 
             return back()->withErrors(['error' => 'This Emanating Request is already approved.']);
-        }
-
-        // Check if related PPMP is approved
-        if ($emanating->ppmp && ! $emanating->ppmp->is_approved) {
-            Log::warning('[Emanating Approve] Related PPMP not approved', [
-                'emanating_id' => $emanating->id,
-                'ppmp_id' => $emanating->ppmp_id,
-            ]);
-
-            return back()->withErrors(['error' => 'Cannot approve Emanating Request. The related PPMP must be approved first.']);
         }
 
         // Check if items match PPMP by performing actual comparison

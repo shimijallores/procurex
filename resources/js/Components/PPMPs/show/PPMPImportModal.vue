@@ -20,18 +20,18 @@ const props = defineProps({
 
 const emit = defineEmits(["update:open", "submit"]);
 
-const csvFile = ref(null);
-const csvFileName = ref("");
+const xlsxFile = ref(null);
+const xlsxFileName = ref("");
 
 const handleFileChange = (event) => {
     const file = event.target.files[0];
-    csvFile.value = file;
-    csvFileName.value = file ? file.name : "";
+    xlsxFile.value = file;
+    xlsxFileName.value = file ? file.name : "";
 };
 
 const submitImport = () => {
-    if (csvFile.value) {
-        emit("submit", csvFile.value);
+    if (xlsxFile.value) {
+        emit("submit", xlsxFile.value);
     }
 };
 </script>
@@ -48,17 +48,17 @@ const submitImport = () => {
         >
             <Card>
                 <CardHeader>
-                    <CardTitle>Import CSV Data</CardTitle>
+                    <CardTitle>Import XLSX Data</CardTitle>
                     <CardDescription>
-                        Upload a CSV file to import categories and items
+                        Upload an XLSX file to import categories and items
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <form @submit.prevent="submitImport" class="space-y-4">
                         <div class="space-y-2">
-                            <Label for="import_csv">CSV File</Label>
+                            <Label for="import_xlsx">XLSX File</Label>
                             <input
-                                id="import_csv"
+                                id="import_xlsx"
                                 type="file"
                                 accept=".csv,.txt,.xlsx,.xls"
                                 @change="handleFileChange"
@@ -67,26 +67,26 @@ const submitImport = () => {
                                     'ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium',
                                     'placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2',
                                     'focus-visible:ring-ring focus-visible:ring-offset-2',
-                                    errors?.csv_file
+                                    errors?.xlsx_file
                                         ? 'border-destructive'
                                         : '',
                                 ]"
                             />
                             <p
-                                v-if="csvFileName"
+                                v-if="xlsxFileName"
                                 class="text-sm text-muted-foreground flex items-center gap-1"
                             >
                                 <Icon
                                     icon="lucide:file-check"
                                     class="h-3 w-3"
                                 />
-                                Selected: {{ csvFileName }}
+                                Selected: {{ xlsxFileName }}
                             </p>
                             <p
-                                v-if="errors?.csv_file"
+                                v-if="errors?.xlsx_file"
                                 class="text-sm text-destructive"
                             >
-                                {{ errors.csv_file }}
+                                {{ errors.xlsx_file }}
                             </p>
                         </div>
 
@@ -102,8 +102,7 @@ const submitImport = () => {
                                     class="text-sm text-yellow-800 dark:text-yellow-300"
                                 >
                                     This will delete all existing categories and
-                                    items, then import the new data and validate
-                                    budgets against APP.
+                                    items, then import the new data.
                                 </p>
                             </div>
                         </div>
@@ -118,7 +117,7 @@ const submitImport = () => {
                             </Button>
                             <Button
                                 type="submit"
-                                :disabled="processing || !csvFile"
+                                :disabled="processing || !xlsxFile"
                             >
                                 <Icon
                                     v-if="processing"

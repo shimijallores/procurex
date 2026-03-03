@@ -46,7 +46,7 @@ const formatDate = (date) => {
                         All Project Procurement Management Plans
                     </CardTitle>
                     <CardDescription>
-                        A list of all PPMPs across offices and projects
+                        A list of all PPMPs across offices
                     </CardDescription>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
@@ -101,17 +101,12 @@ const formatDate = (date) => {
                             <th
                                 class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
                             >
-                                Office & Project
+                                End User/Unit
                             </th>
                             <th
                                 class="h-12 px-4 text-center align-middle font-medium text-muted-foreground"
                             >
                                 Fiscal Year
-                            </th>
-                            <th
-                                class="h-12 px-4 text-center align-middle font-medium text-muted-foreground"
-                            >
-                                Status
                             </th>
                             <th
                                 class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
@@ -151,10 +146,7 @@ const formatDate = (date) => {
                                         <div
                                             class="text-xs text-muted-foreground"
                                         >
-                                            {{
-                                                ppmp.project?.name ||
-                                                "Unknown Project"
-                                            }}
+                                            PPMP
                                         </div>
                                     </div>
                                 </div>
@@ -170,48 +162,6 @@ const formatDate = (date) => {
                                     <span class="font-medium">{{
                                         ppmp.fiscal_year
                                     }}</span>
-                                </div>
-                            </td>
-                            <td class="p-4 align-middle text-center">
-                                <div
-                                    class="flex items-center justify-center gap-2"
-                                >
-                                    <span
-                                        v-if="ppmp.is_approved"
-                                        class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                                    >
-                                        <Icon
-                                            icon="lucide:check-circle"
-                                            class="mr-1 h-3 w-3"
-                                        />
-                                        Approved
-                                    </span>
-                                    <span
-                                        v-else-if="ppmp.rejection_reason"
-                                        class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-                                    >
-                                        <Icon
-                                            icon="lucide:x-circle"
-                                            class="mr-1 h-3 w-3"
-                                        />
-                                        Rejected
-                                    </span>
-                                    <span
-                                        v-else
-                                        class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-                                    >
-                                        <Icon
-                                            icon="lucide:clock"
-                                            class="mr-1 h-3 w-3"
-                                        />
-                                        Pending
-                                    </span>
-                                    <span
-                                        v-if="ppmp.is_addendum"
-                                        class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
-                                    >
-                                        Addendum
-                                    </span>
                                 </div>
                             </td>
                             <td class="p-4 align-middle">
@@ -237,10 +187,7 @@ const formatDate = (date) => {
                                             />
                                         </Button>
                                     </Link>
-                                    <Link
-                                        v-if="!ppmp.is_approved"
-                                        :href="route('ppmps.edit', ppmp.id)"
-                                    >
+                                    <Link :href="route('ppmps.edit', ppmp.id)">
                                         <Button variant="ghost" size="sm">
                                             <Icon
                                                 icon="lucide:pencil"
@@ -249,7 +196,6 @@ const formatDate = (date) => {
                                         </Button>
                                     </Link>
                                     <Button
-                                        v-if="!ppmp.is_approved"
                                         variant="ghost"
                                         size="sm"
                                         @click="onDeleteClick(ppmp)"
@@ -263,7 +209,7 @@ const formatDate = (date) => {
                             </td>
                         </tr>
                         <tr v-if="ppmps.data.length === 0">
-                            <td colspan="5" class="p-8 text-center">
+                            <td colspan="4" class="p-8 text-center">
                                 <div class="flex flex-col items-center gap-2">
                                     <Icon
                                         icon="lucide:inbox"

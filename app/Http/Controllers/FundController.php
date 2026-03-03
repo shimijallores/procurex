@@ -44,6 +44,7 @@ class FundController extends Controller
             ->pluck('office_id')
             ->mapWithKeys(function ($officeId) {
                 $office = Office::find($officeId);
+
                 return [$officeId => $office?->name];
             })
             ->filter()
@@ -115,9 +116,9 @@ class FundController extends Controller
         $ppmpReference = PPMP::query()
             ->where('office_id', $fund->office_id)
             ->where('fiscal_year', $fund->fiscal_year)
-            ->whereNotNull('csv_path')
+            ->whereNotNull('xlsx_path')
             ->latest()
-            ->first(['id', 'fiscal_year', 'csv_path']);
+            ->first(['id', 'fiscal_year', 'xlsx_path']);
 
         return Inertia::render('Funds/Show', [
             'fund' => $fund,

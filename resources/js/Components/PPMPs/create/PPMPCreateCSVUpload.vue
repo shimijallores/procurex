@@ -4,7 +4,7 @@ import { Icon } from "@iconify/vue";
 import { Label } from "@/components/ui/label";
 
 const props = defineProps({
-    csvFileName: String,
+    xlsxFileName: String,
     errors: Object,
 });
 
@@ -19,40 +19,40 @@ const handleFileChange = (event) => {
     <div class="space-y-4 rounded-lg border p-4 bg-muted/50">
         <div class="flex items-center gap-2">
             <Icon icon="lucide:file-spreadsheet" class="h-5 w-5 text-primary" />
-            <h3 class="font-semibold">Import from CSV</h3>
+            <h3 class="font-semibold">Import from XLSX</h3>
         </div>
 
         <p class="text-sm text-muted-foreground">
-            Upload a CSV file to automatically populate categories and items.
-            You can also create an empty PPMP and import the CSV later.
+            Upload an XLSX file to automatically populate categories and items.
+            You can also create an empty PPMP and import the XLSX later.
         </p>
 
         <div class="space-y-2">
-            <Label for="csv_file">CSV File (Optional)</Label>
+            <Label for="xlsx_file">XLSX File (Optional)</Label>
             <div class="flex items-center gap-2">
                 <input
-                    id="csv_file"
+                    id="xlsx_file"
                     type="file"
-                    accept=".csv,.txt,.xlsx,.xls"
+                    accept=".xlsx"
                     @change="handleFileChange"
                     :class="[
                         'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
                         'ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium',
                         'placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2',
                         'focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-                        errors?.csv_file ? 'border-destructive' : '',
+                        errors?.xlsx_file ? 'border-destructive' : '',
                     ]"
                 />
             </div>
             <p
-                v-if="csvFileName"
+                v-if="xlsxFileName"
                 class="text-sm text-muted-foreground flex items-center gap-1"
             >
                 <Icon icon="lucide:file-check" class="h-3 w-3" />
-                Selected: {{ csvFileName }}
+                Selected: {{ xlsxFileName }}
             </p>
-            <p v-if="errors?.csv_file" class="text-sm text-destructive">
-                {{ errors.csv_file }}
+            <p v-if="errors?.xlsx_file" class="text-sm text-destructive">
+                {{ errors.xlsx_file }}
             </p>
         </div>
 
@@ -63,12 +63,11 @@ const handleFileChange = (event) => {
                     class="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5"
                 />
                 <div class="text-sm text-blue-800 dark:text-blue-300">
-                    <p class="font-medium mb-1">CSV Format Tips:</p>
+                    <p class="font-medium mb-1">XLSX Format Tips:</p>
                     <ul class="list-disc list-inside space-y-1 text-xs">
                         <li>Make sure to use the provided PPMP template</li>
                         <li>
-                            Budget validation against APP categories will be
-                            performed
+                            Categories are mapped using account code and name
                         </li>
                     </ul>
                 </div>

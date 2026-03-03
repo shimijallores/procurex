@@ -1,14 +1,19 @@
 <script setup>
 import { ref } from "vue";
 import { Icon } from "@iconify/vue";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import {
+    Card,
+    CardHeader,
+    CardTitle,
+    CardDescription,
+    CardContent,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 const props = defineProps({
     categories: Array,
     filteredCategories: Array,
-    budgetNotices: Array,
 });
 
 const searchQuery = ref("");
@@ -45,13 +50,6 @@ const getItemMonths = (item) => {
         .map((m) => `${getMonthName(m.month)}(${m.planned_quantity})`)
         .join(", ");
 };
-
-const getBudgetNotice = (categoryCode) => {
-    if (!props.budgetNotices) return null;
-    return props.budgetNotices.find(
-        (notice) => notice.category_code === categoryCode,
-    );
-};
 </script>
 
 <template>
@@ -67,8 +65,7 @@ const getBudgetNotice = (categoryCode) => {
                         {{ filteredCategories.length }} of
                         {{ categories.length }} categories ({{
                             filteredCategories.reduce(
-                                (sum, cat) =>
-                                    sum + (cat.items?.length || 0),
+                                (sum, cat) => sum + (cat.items?.length || 0),
                                 0,
                             )
                         }}
@@ -109,40 +106,6 @@ const getBudgetNotice = (categoryCode) => {
                                 <h3 class="font-semibold">
                                     {{ category.name }}
                                 </h3>
-                                <!-- Budget Validation Badge -->
-                                <span
-                                    v-if="getBudgetNotice(category.code)"
-                                    :class="[
-                                        'inline-flex items-center rounded-full px-2 py-1 text-xs font-medium',
-                                        getBudgetNotice(category.code)
-                                            .status === 'within_budget'
-                                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                                            : getBudgetNotice(category.code)
-                                                    .status ===
-                                                'over_budget'
-                                              ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-                                              : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-                                    ]"
-                                >
-                                    <Icon
-                                        :icon="
-                                            getBudgetNotice(category.code)
-                                                .status === 'within_budget'
-                                                ? 'lucide:check-circle'
-                                                : getBudgetNotice(
-                                                        category.code,
-                                                    ).status ===
-                                                    'over_budget'
-                                                  ? 'lucide:alert-circle'
-                                                  : 'lucide:info'
-                                        "
-                                        class="mr-1 h-3 w-3"
-                                    />
-                                    {{
-                                        getBudgetNotice(category.code)
-                                            .message
-                                    }}
-                                </span>
                             </div>
                         </div>
                         <div class="text-right">
@@ -150,27 +113,7 @@ const getBudgetNotice = (categoryCode) => {
                                 PPMP Budget
                             </p>
                             <p class="text-lg font-semibold">
-                                {{
-                                    formatCurrency(
-                                        category.estimated_budget,
-                                    )
-                                }}
-                            </p>
-                            <p
-                                v-if="
-                                    getBudgetNotice(category.code) &&
-                                    getBudgetNotice(category.code)
-                                        .app_budget
-                                "
-                                class="text-sm mt-2 px-2 py-1 rounded bg-green-50 dark:bg-green-950/30 text-green-900 dark:text-green-300"
-                            >
-                                APP Allocated Budget:
-                                {{
-                                    formatCurrency(
-                                        getBudgetNotice(category.code)
-                                            .app_budget,
-                                    )
-                                }}
+                                {{ formatCurrency(category.estimated_budget) }}
                             </p>
                             <p class="text-sm text-muted-foreground mt-2">
                                 {{ category.items?.length || 0 }} items
@@ -186,9 +129,7 @@ const getBudgetNotice = (categoryCode) => {
                         <table class="w-full text-sm">
                             <thead class="border-b bg-muted/50">
                                 <tr>
-                                    <th
-                                        class="px-4 py-2 text-left font-medium"
-                                    >
+                                    <th class="px-4 py-2 text-left font-medium">
                                         Item Name
                                     </th>
                                     <th
@@ -211,9 +152,7 @@ const getBudgetNotice = (categoryCode) => {
                                     >
                                         Mode
                                     </th>
-                                    <th
-                                        class="px-4 py-2 text-left font-medium"
-                                    >
+                                    <th class="px-4 py-2 text-left font-medium">
                                         Schedule (Month: Qty)
                                     </th>
                                 </tr>
@@ -233,7 +172,9 @@ const getBudgetNotice = (categoryCode) => {
                                     <td class="px-4 py-2 text-center">
                                         {{ item.unit }}
                                     </td>
-                                    <td class="px-4 py-2 text-right font-medium">
+                                    <td
+                                        class="px-4 py-2 text-right font-medium"
+                                    >
                                         {{
                                             formatCurrency(
                                                 item.estimated_budget,
@@ -291,13 +232,13 @@ const getBudgetNotice = (categoryCode) => {
                         No categories or items yet
                     </p>
                     <p class="text-sm text-muted-foreground">
-                        Import a CSV file to populate this PPMP with
+                        Import an XLSX file to populate this PPMP with
                         procurement data
                     </p>
                 </div>
                 <Button @click="$emit('import')">
                     <Icon icon="lucide:upload" class="mr-2 h-4 w-4" />
-                    Import CSV
+                    Import XLSX
                 </Button>
             </div>
         </CardContent>

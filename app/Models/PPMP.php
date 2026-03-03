@@ -14,28 +14,17 @@ class PPMP extends Model
 
     protected $fillable = [
         'office_id',
-        'fund_id',
-        'project_id',
-        'account_code',
-        'project_code',
         'fiscal_year',
         'is_addendum',
         'remarks',
-        'csv_path',
+        'xlsx_path',
         'budget_notices',
-        'is_approved',
-        'approved_at',
-        'approved_by',
-        'rejection_reason',
-        'status',
     ];
 
     protected $casts = [
         'fiscal_year' => 'integer',
         'is_addendum' => 'boolean',
-        'is_approved' => 'boolean',
         'budget_notices' => 'array',
-        'approved_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -45,23 +34,8 @@ class PPMP extends Model
         return $this->belongsTo(Office::class);
     }
 
-    public function project(): BelongsTo
-    {
-        return $this->belongsTo(Project::class);
-    }
-
-    public function fund(): BelongsTo
-    {
-        return $this->belongsTo(Fund::class);
-    }
-
     public function categories(): HasMany
     {
         return $this->hasMany(PPMPCategory::class, 'ppmp_id');
-    }
-
-    public function approvedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'approved_by');
     }
 }

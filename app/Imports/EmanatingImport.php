@@ -69,7 +69,7 @@ class EmanatingImport implements ToCollection, WithCustomCsvSettings
 
         // Create Emanating record
         $emanating = Emanating::create([
-            'fund_id' => $this->ppmp?->fund_id,
+            'fund_id' => $this->project?->fund_id,
             'ppmp_id' => $this->ppmp?->id,
             'project_id' => $this->project?->id,
             'ppmp_category_id' => $this->ppmpCategoryId,
@@ -200,7 +200,7 @@ class EmanatingImport implements ToCollection, WithCustomCsvSettings
         $counter = count($rows);
 
         // Step 1: Parse all emanating items from CSV
-        for ($i = 15; $i < $counter; ++$i) {
+        for ($i = 15; $i < $counter; $i++) {
             $row = $rows[$i];
 
             // Stop when we reach empty rows or metadata section
@@ -278,7 +278,7 @@ class EmanatingImport implements ToCollection, WithCustomCsvSettings
             ]);
 
             $items[] = $emanatingItem;
-            ++$this->itemsCreated;
+            $this->itemsCreated++;
         }
 
         // Step 4: Verify all PPMP items are accounted for in emanating request
@@ -354,6 +354,7 @@ class EmanatingImport implements ToCollection, WithCustomCsvSettings
 
         $officeName = $metadata['office_name'];
         $ppmpCategoryCode = $metadata['ppmp_category_code'];
+        $normalizedCategoryCode = $this->normalizeCode($ppmpCategoryCode);
         $fiscalYear = $metadata['fiscal_year'] ?? date('Y');
 
         // Find project by matching office through fund relationship
@@ -370,13 +371,16 @@ class EmanatingImport implements ToCollection, WithCustomCsvSettings
             return;
         }
 
-        // Find PPMP category by code
-        $this->ppmpCategory = PPMPCategory::where('code', $ppmpCategoryCode)
+        // Find PPMP category by account code
+        $this->ppmpCategory = PPMPCategory::query()
             ->whereHas('ppmp', function ($query) use ($fiscalYear): void {
                 $query->where('fiscal_year', $fiscalYear);
             })
-            ->with('ppmp')
-            ->first();
+            ->with(['ppmp', 'account'])
+            ->get()
+            ->first(function (PPMPCategory $category) use ($normalizedCategoryCode): bool {
+                return $this->normalizeCode((string) $category->account?->code) === $normalizedCategoryCode;
+            });
 
         if ($this->ppmpCategory instanceof \App\Models\PPMPCategory) {
             $this->ppmp = $this->ppmpCategory->ppmp;
@@ -396,6 +400,11 @@ class EmanatingImport implements ToCollection, WithCustomCsvSettings
         $cleaned = preg_replace('/[^0-9.]/', '', $amount);
 
         return $cleaned !== '' ? (float) $cleaned : 0.0;
+    }
+
+    private function normalizeCode(string $code): string
+    {
+        return preg_replace('/[^0-9]/', '', $code) ?? '';
     }
 
     public function getItemsCreated(): int

@@ -62,8 +62,7 @@ const handleFileChange = (event) => {
                                 :key="ppmp.id"
                                 :value="ppmp.id"
                             >
-                                {{ ppmp.office?.name }} -
-                                {{ ppmp.project?.name }} (FY
+                                {{ ppmp.office?.name }} (FY
                                 {{ ppmp.fiscal_year }})
                             </option>
                         </select>

@@ -46,7 +46,7 @@ const approveForm = useForm({});
 
 // Check if PPMP is approved
 const ppmpApproved = computed(() => {
-    return props.emanating.ppmp?.is_approved || false;
+    return true;
 });
 
 // Check if items match PPMP - use comparison status and verify all PPMP items are matched

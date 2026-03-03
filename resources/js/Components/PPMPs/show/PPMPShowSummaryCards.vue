@@ -16,7 +16,7 @@ const formatCurrency = (amount) => {
 </script>
 
 <template>
-    <div class="grid gap-6 md:grid-cols-4">
+    <div class="grid gap-6 md:grid-cols-3">
         <!-- Details Card -->
         <Card>
             <CardHeader>
@@ -28,7 +28,7 @@ const formatCurrency = (amount) => {
             <CardContent class="space-y-4">
                 <div class="grid gap-1">
                     <p class="text-sm font-medium text-muted-foreground">
-                        Office
+                        END USER/UNIT
                     </p>
                     <p class="font-medium">
                         {{ ppmp.office?.name || "Unknown Office" }}
@@ -36,45 +36,15 @@ const formatCurrency = (amount) => {
                 </div>
                 <div class="grid gap-1">
                     <p class="text-sm font-medium text-muted-foreground">
-                        Project
+                        Plan Type
                     </p>
-                    <p class="font-medium">
-                        {{ ppmp.project?.name || "Unknown Project" }}
-                    </p>
+                    <p class="font-medium">Office PPMP</p>
                 </div>
                 <div class="grid gap-1">
                     <p class="text-sm font-medium text-muted-foreground">
                         Fiscal Year
                     </p>
                     <p class="font-medium">{{ ppmp.fiscal_year }}</p>
-                </div>
-            </CardContent>
-        </Card>
-
-        <!-- Codes Card -->
-        <Card>
-            <CardHeader>
-                <CardTitle class="flex items-center gap-2">
-                    <Icon icon="lucide:hash" class="h-5 w-5" />
-                    Codes
-                </CardTitle>
-            </CardHeader>
-            <CardContent class="space-y-4">
-                <div class="grid gap-1">
-                    <p class="text-sm font-medium text-muted-foreground">
-                        Account Code
-                    </p>
-                    <p class="font-mono">
-                        {{ ppmp.account_code || "Not specified" }}
-                    </p>
-                </div>
-                <div class="grid gap-1">
-                    <p class="text-sm font-medium text-muted-foreground">
-                        Project Code
-                    </p>
-                    <p class="font-mono">
-                        {{ ppmp.project_code || "Not specified" }}
-                    </p>
                 </div>
             </CardContent>
         </Card>

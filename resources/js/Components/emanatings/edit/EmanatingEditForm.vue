@@ -57,8 +57,7 @@ const handleSubmit = () => {
                                 :key="ppmp.id"
                                 :value="ppmp.id"
                             >
-                                {{ ppmp.office?.name }} -
-                                {{ ppmp.project?.name }} (FY
+                                {{ ppmp.office?.name }} (FY
                                 {{ ppmp.fiscal_year }})
                             </option>
                         </select>
@@ -105,7 +104,7 @@ const handleSubmit = () => {
                 <!-- Info Note -->
                 <div class="rounded-md bg-muted p-4">
                     <p class="text-sm text-muted-foreground">
-                        <strong>Note:</strong> Fields like Office, Project,
+                        <strong>Note:</strong> Fields like End User/Unit,
                         Charged To Code, Fiscal Year, Quarter, Month, and
                         Purpose were imported from the CSV and cannot be edited.
                         You can only update the PPMP category, remarks, and

@@ -1,7 +1,6 @@
 <script setup>
 import { Icon } from "@iconify/vue";
 import { Link } from "@inertiajs/vue3";
-import { computed } from "vue";
 import {
     Card,
     CardContent,
@@ -16,34 +15,9 @@ const props = defineProps({
     form: Object,
     ppmp: Object,
     offices: Array,
-    funds: Array,
-    projects: Array,
 });
 
 const emit = defineEmits(["submit"]);
-
-const filteredFunds = computed(() => {
-    if (!props.funds) return [];
-
-    return props.funds.filter((fund) => {
-        if (!props.form.office_id || !props.form.fiscal_year) return false;
-
-        return (
-            parseInt(fund.office_id) === parseInt(props.form.office_id) &&
-            parseInt(fund.fiscal_year) === parseInt(props.form.fiscal_year)
-        );
-    });
-});
-
-const filteredProjects = computed(() => {
-    if (!props.projects) return [];
-
-    return props.projects.filter((project) => {
-        if (!props.form.fund_id) return false;
-
-        return parseInt(project.fund_id) === parseInt(props.form.fund_id);
-    });
-});
 
 const handleSubmit = () => {
     emit("submit");
@@ -61,7 +35,7 @@ const handleSubmit = () => {
         <CardContent>
             <form @submit.prevent="handleSubmit" class="space-y-6">
                 <div class="space-y-2">
-                    <Label for="office_id">Office</Label>
+                    <Label for="office_id">END USER/UNIT</Label>
                     <select
                         id="office_id"
                         v-model="form.office_id"
@@ -87,124 +61,6 @@ const handleSubmit = () => {
                     >
                         {{ form.errors.office_id }}
                     </p>
-                </div>
-
-                <div class="space-y-2">
-                    <Label for="fund_id">Fund</Label>
-                    <select
-                        id="fund_id"
-                        v-model="form.fund_id"
-                        :class="[
-                            'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
-                            'ring-offset-background focus-visible:outline-none focus-visible:ring-2',
-                            'focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-                            form.errors.fund_id ? 'border-destructive' : '',
-                        ]"
-                        :disabled="!form.office_id || !form.fiscal_year"
-                    >
-                        <option value="">
-                            {{
-                                !form.office_id || !form.fiscal_year
-                                    ? "Select office and fiscal year first"
-                                    : "Select a fund"
-                            }}
-                        </option>
-                        <option
-                            v-for="fund in filteredFunds"
-                            :key="fund.id"
-                            :value="fund.id"
-                        >
-                            {{ fund.name }}
-                        </option>
-                    </select>
-                    <p
-                        v-if="form.errors.fund_id"
-                        class="text-sm text-destructive"
-                    >
-                        {{ form.errors.fund_id }}
-                    </p>
-                </div>
-
-                <div class="space-y-2">
-                    <Label for="project_id">Project</Label>
-                    <select
-                        id="project_id"
-                        v-model="form.project_id"
-                        :class="[
-                            'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
-                            'ring-offset-background focus-visible:outline-none focus-visible:ring-2',
-                            'focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-                            form.errors.project_id ? 'border-destructive' : '',
-                        ]"
-                        :disabled="!form.fund_id"
-                    >
-                        <option value="">
-                            Optional: select a project (for project funds)
-                        </option>
-                        <option
-                            v-for="project in filteredProjects"
-                            :key="project.id"
-                            :value="project.id"
-                        >
-                            {{ project.name }}
-                        </option>
-                    </select>
-                    <p
-                        v-if="form.errors.project_id"
-                        class="text-sm text-destructive"
-                    >
-                        {{ form.errors.project_id }}
-                    </p>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-2">
-                        <Label for="account_code">Account Code</Label>
-                        <input
-                            id="account_code"
-                            v-model="form.account_code"
-                            type="text"
-                            placeholder="e.g., 5-02-02"
-                            :class="[
-                                'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
-                                'ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2',
-                                'focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-                                form.errors.account_code
-                                    ? 'border-destructive'
-                                    : '',
-                            ]"
-                        />
-                        <p
-                            v-if="form.errors.account_code"
-                            class="text-sm text-destructive"
-                        >
-                            {{ form.errors.account_code }}
-                        </p>
-                    </div>
-
-                    <div class="space-y-2">
-                        <Label for="project_code">Project Code</Label>
-                        <input
-                            id="project_code"
-                            v-model="form.project_code"
-                            type="text"
-                            placeholder="e.g., PROJ-2026"
-                            :class="[
-                                'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
-                                'ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2',
-                                'focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-                                form.errors.project_code
-                                    ? 'border-destructive'
-                                    : '',
-                            ]"
-                        />
-                        <p
-                            v-if="form.errors.project_code"
-                            class="text-sm text-destructive"
-                        >
-                            {{ form.errors.project_code }}
-                        </p>
-                    </div>
                 </div>
 
                 <div class="space-y-2">
@@ -242,7 +98,7 @@ const handleSubmit = () => {
                         for="is_addendum"
                         class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                     >
-                        This is an addendum
+                        This is an addendum (extension only)
                     </Label>
                 </div>
 

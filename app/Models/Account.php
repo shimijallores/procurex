@@ -20,4 +20,9 @@ class Account extends Model
     {
         return $this->hasMany(APPCategory::class, 'account_id');
     }
+
+    public function ppmpCategories(): HasMany
+    {
+        return $this->hasMany(PPMPCategory::class, 'account_id');
+    }
 }

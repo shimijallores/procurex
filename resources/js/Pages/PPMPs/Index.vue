@@ -121,7 +121,7 @@ const openDeleteModal = (ppmp) => {
         <DeleteModal
             v-model:open="showDeleteModal"
             title="Delete PPMP"
-            :description="`Are you sure you want to delete this PPMP for ${ppmpToDelete?.office?.name} - ${ppmpToDelete?.project?.name} (FY ${ppmpToDelete?.fiscal_year})? This will also delete all associated categories and items.`"
+            :description="`Are you sure you want to delete this PPMP for ${ppmpToDelete?.office?.name} (FY ${ppmpToDelete?.fiscal_year})? This will also delete all associated categories and items.`"
             :delete-url="
                 ppmpToDelete ? route('ppmps.destroy', ppmpToDelete.id) : ''
             "

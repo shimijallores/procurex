@@ -1,5 +1,4 @@
 <script setup>
-import { watch } from "vue";
 import { useForm } from "@inertiajs/vue3";
 import Layout from "@/Layout/Layout.vue";
 import PPMPEditHeader from "@/components/ppmps/edit/PPMPEditHeader.vue";
@@ -25,29 +24,14 @@ defineOptions({
 const props = defineProps({
     ppmp: Object,
     offices: Array,
-    funds: Array,
-    projects: Array,
 });
 
 const form = useForm({
     office_id: props.ppmp.office_id,
-    fund_id: props.ppmp.fund_id,
-    project_id: props.ppmp.project_id,
-    account_code: props.ppmp.account_code || "",
-    project_code: props.ppmp.project_code || "",
     fiscal_year: props.ppmp.fiscal_year,
     is_addendum: props.ppmp.is_addendum || false,
     remarks: props.ppmp.remarks || "",
 });
-
-watch(
-    () => form.fund_id,
-    (newFundId, oldFundId) => {
-        if (newFundId !== oldFundId) {
-            form.project_id = "";
-        }
-    },
-);
 
 const submit = () => {
     // Ensure is_addendum is a boolean
@@ -65,8 +49,6 @@ const submit = () => {
             :form="form"
             :ppmp="ppmp"
             :offices="offices"
-            :funds="funds"
-            :projects="projects"
             @submit="submit"
         />
     </div>

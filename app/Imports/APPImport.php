@@ -9,7 +9,6 @@ use App\Models\APP;
 use App\Models\APPCategory;
 use App\Models\APPItem;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithStartRow;
 
@@ -57,12 +56,6 @@ class APPImport implements ToCollection, WithStartRow
                     $this->accountsByNormalizedName[$normalizedName] = $accountData;
                 }
             });
-
-        Log::info('[APP Import] Account lookup maps prepared', [
-            'app_id' => $this->app->id,
-            'accounts_by_code_count' => count($this->accountsByNormalizedCode),
-            'accounts_by_name_count' => count($this->accountsByNormalizedName),
-        ]);
     }
 
     public function startRow(): int
@@ -73,12 +66,6 @@ class APPImport implements ToCollection, WithStartRow
 
     public function collection(Collection $rows): void
     {
-        Log::info('[APP Import] Starting XLSX collection parse', [
-            'app_id' => $this->app->id,
-            'rows_count' => $rows->count(),
-            'start_row' => $this->startRow(),
-        ]);
-
         foreach ($rows as $index => $row) {
             // Convert row to array for easier access
             $rowData = $row->toArray();
@@ -86,7 +73,7 @@ class APPImport implements ToCollection, WithStartRow
             $sheetRow = $this->startRow() + $index;
 
             // Skip completely empty rows
-            if (array_filter($rowData, fn($val): bool => ! empty($val)) === []) {
+            if (array_filter($rowData, fn ($val): bool => ! empty($val)) === []) {
                 continue;
             }
 
@@ -120,15 +107,6 @@ class APPImport implements ToCollection, WithStartRow
                 $scheduleFromMonth = $this->extractMonthNumber($scheduleAdPost);
                 $scheduleToMonth = $this->extractMonthNumber($scheduleSigning);
 
-                if (! $matchedAccount) {
-                    Log::warning('[APP Import] No account match found for category', [
-                        'app_id' => $this->app->id,
-                        'sheet_row' => $sheetRow,
-                        'pap_code' => $normalizedPapCode,
-                        'name' => $name,
-                    ]);
-                }
-
                 // Create category
                 $this->currentCategory = APPCategory::create([
                     'app_id' => $this->app->id,
@@ -143,16 +121,7 @@ class APPImport implements ToCollection, WithStartRow
                     'co_amount' => $coAmount,
                     'remarks' => $remarks,
                 ]);
-                ++$this->categoriesCreated;
-
-                Log::info('[APP Import] Category created', [
-                    'app_id' => $this->app->id,
-                    'sheet_row' => $sheetRow,
-                    'app_category_id' => $this->currentCategory->id,
-                    'account_id' => $this->currentCategory->account_id,
-                    'imported_pap_code' => $normalizedPapCode,
-                    'imported_name' => $name,
-                ]);
+                $this->categoriesCreated++;
             } elseif ($name !== '' && $name !== '0' && $this->currentCategory) {
                 // This is an item row (no PAP code or simple number, but has name)
                 APPItem::create([
@@ -163,34 +132,9 @@ class APPImport implements ToCollection, WithStartRow
                     'co_amount' => $coAmount,
                     'remarks' => $remarks,
                 ]);
-                ++$this->itemsCreated;
-
-                Log::info('[APP Import] Item created', [
-                    'app_id' => $this->app->id,
-                    'sheet_row' => $sheetRow,
-                    'app_category_id' => $this->currentCategory->id,
-                    'item_name' => $name,
-                ]);
-            } else {
-                Log::warning('[APP Import] Row skipped', [
-                    'app_id' => $this->app->id,
-                    'sheet_row' => $sheetRow,
-                    'column_offset' => $columnOffset,
-                    'pap_code_raw' => $papCode,
-                    'normalized_pap_code' => $normalizedPapCode,
-                    'name' => $name,
-                    'matched_account_id' => $matchedAccount['id'] ?? null,
-                    'is_category' => $isCategory,
-                    'has_current_category' => $this->currentCategory !== null,
-                ]);
+                $this->itemsCreated++;
             }
         }
-
-        Log::info('[APP Import] Completed XLSX parse', [
-            'app_id' => $this->app->id,
-            'categories_created' => $this->categoriesCreated,
-            'items_created' => $this->itemsCreated,
-        ]);
     }
 
     /**
