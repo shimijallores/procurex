@@ -30,7 +30,11 @@ const props = defineProps({
 const existingItems = (props.purchaseRequest.items || []).map((item) => ({
     id: item.id,
     emanating_item_id: item.emanating_item_id,
-    _name: item.emanating_item?.ppmp_item?.name || "Unknown Item",
+    _name:
+        item.emanating_item?.name ||
+        item.emanating_item?.ppmp_item?.name ||
+        item.emanating_item?.ppmpItem?.name ||
+        "Unknown Item",
     _unit: item.emanating_item?.unit || "",
     _original_qty: item.emanating_item?.quantity || item.quantity,
     quantity: item.quantity,
@@ -48,6 +52,9 @@ const form = useForm({
     pr_date: props.purchaseRequest.pr_date || "",
     sai_no: props.purchaseRequest.sai_no || "",
     sai_date: props.purchaseRequest.sai_date || "",
+    requested_by_name: props.purchaseRequest.requested_by_name || "",
+    requested_by_designation:
+        props.purchaseRequest.requested_by_designation || "",
     purpose: props.purchaseRequest.purpose || "",
     remarks: props.purchaseRequest.remarks || "",
     status: props.purchaseRequest.status || "draft",
@@ -77,6 +84,7 @@ const eligibleEmanatings = props.purchaseRequest.emanating
             :form="form"
             :eligible-emanatings="eligibleEmanatings"
             :common-purposes="commonPurposes"
+            :suggested-pr-date="purchaseRequest.pr_date"
             :is-edit="true"
             @submit="submit"
         />

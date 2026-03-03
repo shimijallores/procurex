@@ -28,11 +28,41 @@
 
         /* ── Header ── */
         .header {
-            text-align: center;
             border: 1px solid #000;
             border-bottom: none;
-            padding: 4px 2px 2px;
+            padding: 4px 6px 4px;
             position: relative;
+        }
+
+        .header-layout {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .header-layout td {
+            vertical-align: middle;
+        }
+
+        .header-logo-cell {
+            width: 18%;
+            text-align: center;
+        }
+
+        .header-main {
+            width: 64%;
+            text-align: center;
+        }
+
+        .logo-seal {
+            width: 58px;
+            height: 58px;
+            object-fit: contain;
+        }
+
+        .logo-bagong {
+            width: 74px;
+            height: 58px;
+            object-fit: contain;
         }
 
         .header .title {
@@ -46,6 +76,11 @@
             font-size: 10pt;
             font-weight: bold;
             text-transform: uppercase;
+        }
+
+        .header .sub-title {
+            font-size: 8pt;
+            margin-top: 1px;
         }
 
         .header {
@@ -217,16 +252,46 @@
 </head>
 
 <body>
+    @php
+    $batangasSealPath = public_path('images/batangas-seal.png');
+    $bagongPilipinasPath = public_path('images/bagong-pilipinas.png');
+
+    $batangasSealSrc = file_exists($batangasSealPath)
+    ? 'data:image/png;base64,' . base64_encode((string) file_get_contents($batangasSealPath))
+    : null;
+
+    $bagongPilipinasSrc = file_exists($bagongPilipinasPath)
+    ? 'data:image/png;base64,' . base64_encode((string) file_get_contents($bagongPilipinasPath))
+    : null;
+    @endphp
+
     <div class="page">
 
         {{-- ══ HEADER ══ --}}
         <div class="header">
             <div class="page-no">Page 1 of 1</div>
-            <div class="title">Purchase Request ✓</div>
-            <div class="gov-name">Provincial Government of Batangas</div>
-            <div class="agu-code">
-                LGU
-            </div>
+
+            <table class="header-layout">
+                <tr>
+                    <td class="header-logo-cell">
+                        @if ($batangasSealSrc)
+                        <img src="{{ $batangasSealSrc }}" alt="Batangas Seal" class="logo-seal">
+                        @endif
+                    </td>
+
+                    <td class="header-main">
+                        <div class="gov-name">Provincial Government of Batangas</div>
+                        <div class="title">Purchase Request</div>
+                        <div class="sub-title">Official Procurement Form</div>
+                    </td>
+
+                    <td class="header-logo-cell">
+                        @if ($bagongPilipinasSrc)
+                        <img src="{{ $bagongPilipinasSrc }}" alt="Bagong Pilipinas" class="logo-bagong">
+                        @endif
+                    </td>
+                </tr>
+            </table>
         </div>
 
         {{-- ══ DEPARTMENT / SAI ROW ══ --}}
@@ -274,7 +339,7 @@
             </thead>
             <tbody>
                 @php
-                $items = $pr->items ?? collect();
+                $items = $printItems ?? ($pr->items ?? collect());
                 $totalRows = 20; // fixed row count like the form
                 $filledRows = count($items);
                 $emptyRows = max(0, $totalRows - $filledRows);
@@ -284,11 +349,11 @@
                 <tr>
                     <td class="col-no">{{ $i + 1 }}</td>
                     <td class="col-stock"></td>
-                    <td class="col-unit">{{ $item->unit ?? $item->emanating_item?->unit ?? '' }}</td>
-                    <td class="col-desc">{{ $item->item_name ?? $item->emanating_item?->ppmp_item?->name ?? '' }}</td>
-                    <td class="col-qty">{{ $item->quantity }}</td>
-                    <td class="col-ucost">{{ number_format($item->unit_cost, 2) }}</td>
-                    <td class="col-tcost">{{ number_format($item->line_total, 2) }}</td>
+                    <td class="col-unit">{{ data_get($item, 'unit', '') }}</td>
+                    <td class="col-desc">{{ data_get($item, 'description', data_get($item, 'item_name', '')) }}</td>
+                    <td class="col-qty">{{ data_get($item, 'quantity', 0) }}</td>
+                    <td class="col-ucost">{{ number_format((float) data_get($item, 'unit_cost', 0), 2) }}</td>
+                    <td class="col-tcost">{{ number_format((float) data_get($item, 'line_total', 0), 2) }}</td>
                 </tr>
                 @endforeach
 
@@ -308,7 +373,7 @@
                     <tr class="total-row">
                         <td colspan="6" class="total-label">TOTAL-P</td>
                         <td class="col-tcost" style="font-weight:bold;">
-                            {{ number_format($pr->total_amount ?? 0, 2) }}
+                            {{ number_format($printTotal ?? ($pr->total_amount ?? 0), 2) }}
                         </td>
                     </tr>
             </tbody>
@@ -345,7 +410,7 @@
                 <tr>
                     <td style="width:20%; border-right:1px solid #000; border-top:1px solid #000; padding:4px; font-size:8pt; font-weight:bold;">Printed Name</td>
                     <td style="width:40%; border-right:1px solid #000; border-top:1px solid #000; padding:4px;">
-                        <div style="border-bottom:1px solid #000; height:16px; text-align:center; font-size:8pt;">&nbsp;</div>
+                        <div style="border-bottom:1px solid #000; height:16px; text-align:center; font-size:8pt;">{{ $requestedBy ?? '' }}</div>
                     </td>
                     <td style="width:40%; border-top:1px solid #000; padding:4px;">
                         <div style="border-bottom:1px solid #000; height:16px; text-align:center; font-size:8pt;">{{ $approvedBy ?? 'VILMA SANTOS-RECTO' }}</div>
@@ -354,7 +419,7 @@
                 <tr>
                     <td style="width:20%; border-right:1px solid #000; border-top:1px solid #000; padding:4px; font-size:8pt; font-weight:bold;">Designation</td>
                     <td style="width:40%; border-right:1px solid #000; border-top:1px solid #000; padding:4px;">
-                        <div style="border-bottom:1px solid #000; height:16px; text-align:center; font-size:8pt;">&nbsp;</div>
+                        <div style="border-bottom:1px solid #000; height:16px; text-align:center; font-size:8pt;">{{ $requestedByDesig ?? '' }}</div>
                     </td>
                     <td style="width:40%; border-top:1px solid #000; padding:4px;">
                         <div style="border-bottom:1px solid #000; height:16px; text-align:center; font-size:8pt;">{{ $approvedByDesig ?? 'Governor' }}</div>

@@ -83,7 +83,7 @@ defineEmits(["submit", "fileChange"]);
                     </p>
                 </div>
 
-                <!-- CSV Upload Section -->
+                <!-- XLSX Upload Section -->
                 <div class="space-y-4 rounded-lg border p-4 bg-muted/50">
                     <div class="flex items-center gap-2">
                         <Icon
@@ -94,13 +94,15 @@ defineEmits(["submit", "fileChange"]);
                     </div>
 
                     <p class="text-sm text-muted-foreground">
-                        Upload an XLSX file to automatically populate categories
-                        and items. You can also create an empty APP and import
-                        the file later.
+                        Upload an XLSX file to create the APP and automatically
+                        populate categories and items.
                     </p>
 
                     <div class="space-y-2">
-                        <Label for="csv_file">XLSX File (Optional)</Label>
+                        <Label for="csv_file"
+                            >XLSX File
+                            <span class="text-destructive">*</span></Label
+                        >
                         <div class="flex items-center gap-2">
                             <input
                                 id="csv_file"

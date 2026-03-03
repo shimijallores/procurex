@@ -58,7 +58,7 @@ class PurchaseRequestItem extends Model
      */
     public function getItemNameAttribute(): ?string
     {
-        return $this->emanatingItem?->ppmpItem?->name;
+        return $this->emanatingItem?->name ?: $this->emanatingItem?->ppmpItem?->name;
     }
 
     /**

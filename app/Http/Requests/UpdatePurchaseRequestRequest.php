@@ -20,9 +20,24 @@ class UpdatePurchaseRequestRequest extends FormRequest
     {
         return [
             'pr_no'                 => ['nullable', 'string', 'max:50'],
-            'pr_date'               => ['nullable', 'date'],
+            'pr_date'               => [
+                'nullable',
+                'date',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (! is_string($value)) {
+                        return;
+                    }
+
+                    $dayOfWeek = (int) date('N', strtotime($value));
+                    if ($dayOfWeek >= 6) {
+                        $fail('The PR date must not be a weekend.');
+                    }
+                },
+            ],
             'sai_no'                => ['nullable', 'string', 'max:50'],
             'sai_date'              => ['nullable', 'date'],
+            'requested_by_name'     => ['nullable', 'string', 'max:255'],
+            'requested_by_designation' => ['nullable', 'string', 'max:255'],
             'purpose'               => ['nullable', 'string'],
             'total_amount'          => ['nullable', 'numeric', 'min:0'],
             'status'                => ['nullable', 'string', 'in:draft,returned,for_budget_review,approved,cancelled'],

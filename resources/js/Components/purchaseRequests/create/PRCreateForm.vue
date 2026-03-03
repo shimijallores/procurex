@@ -2,6 +2,7 @@
 import { ref, computed, watch } from "vue";
 import { router } from "@inertiajs/vue3";
 import { Icon } from "@iconify/vue";
+import axios from "axios";
 import { useCalendarCheck } from "@/composables/useCalendarCheck";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,8 @@ const props = defineProps({
     form: Object,
     eligibleEmanatings: Array,
     commonPurposes: Array,
+    suggestedPrDate: String,
+    suggestedPrNo: String,
     isEdit: {
         type: Boolean,
         default: false,
@@ -47,12 +50,54 @@ const checkSAIDate = async (date) => {
     saiDateCheck.value = await checkDate(date);
 };
 
+const isAdjustingBudget = ref(false);
+const isSuggestingPrNo = ref(false);
+
+const categoryBudget = computed(() => {
+    return parseFloat(
+        selectedEmanating.value?.ppmp_category?.estimated_budget || 0,
+    );
+});
+
 // Derived: selected emanating object
 const selectedEmanating = computed(() =>
     props.eligibleEmanatings?.find(
         (e) => String(e.id) === String(props.form.emanating_id),
     ),
 );
+
+const getOfficeName = (emanating) => {
+    return (
+        emanating?.project?.fund?.office?.name ||
+        emanating?.fund?.office?.name ||
+        "—"
+    );
+};
+
+const getOfficeId = (emanating) => {
+    return (
+        emanating?.project?.fund?.office?.id ||
+        emanating?.fund?.office?.id ||
+        ""
+    );
+};
+
+const getFundName = (emanating) => {
+    return emanating?.project?.fund?.name || emanating?.fund?.name || "—";
+};
+
+const getFundId = (emanating) => {
+    return emanating?.project?.fund?.id || emanating?.fund?.id || "";
+};
+
+const getProjectName = (emanating) => {
+    return (
+        emanating?.project?.name ||
+        emanating?.fund?.project_code?.name ||
+        emanating?.fund?.projectCode?.name ||
+        "—"
+    );
+};
 
 // When emanating changes, auto-populate office/fund and build items list
 watch(
@@ -74,13 +119,23 @@ watch(
         );
         if (!em) return;
 
-        props.form.office_id = em.project?.fund?.office?.id ?? "";
-        props.form.fund_id = em.project?.fund?.id ?? "";
+        props.form.office_id = getOfficeId(em);
+        props.form.fund_id = getFundId(em);
+        props.form.requested_by_name =
+            props.form.requested_by_name || em.requesting_officer_name || "";
+        props.form.requested_by_designation =
+            props.form.requested_by_designation ||
+            em.requesting_officer_title ||
+            "";
 
         // Build items from emanating items (pre-fill with canvassed prices)
         props.form.items = (em.emanating_items || []).map((item) => ({
             emanating_item_id: item.id,
-            _name: item.ppmp_item?.name || "Unknown Item",
+            _name:
+                item.name ||
+                item.ppmp_item?.name ||
+                item.ppmpItem?.name ||
+                "Unknown Item",
             _unit: item.unit || "",
             _original_qty: item.quantity,
             quantity: item.quantity,
@@ -90,7 +145,121 @@ watch(
             vat_rate: 0.12,
             remarks: "",
         }));
+
+        if (props.form.purpose?.startsWith("Purchase of Office Supplies")) {
+            props.form.purpose = buildOfficeSuppliesPurpose(
+                em,
+                props.form.items,
+            );
+        }
     },
+);
+
+const effectiveUnitCost = (item) => {
+    const unitCost = parseFloat(item.unit_cost || 0);
+    const vatRate = item.vat_applicable ? parseFloat(item.vat_rate || 0.12) : 0;
+
+    return unitCost * (1 + vatRate);
+};
+
+const clampLineQuantityToBudget = (item, budget) => {
+    const maxQtyByOriginal = Math.max(0, parseInt(item._original_qty || 0));
+    const unitCostWithVat = effectiveUnitCost(item);
+
+    if (unitCostWithVat <= 0 || budget <= 0) {
+        item.quantity = Math.max(
+            0,
+            Math.min(parseInt(item.quantity || 0), maxQtyByOriginal),
+        );
+        return;
+    }
+
+    const maxQtyByBudget = Math.floor(budget / unitCostWithVat);
+    const allowedQty = Math.max(0, Math.min(maxQtyByOriginal, maxQtyByBudget));
+
+    if ((parseInt(item.quantity || 0) || 0) > allowedQty) {
+        item.quantity = allowedQty;
+    }
+};
+
+const applyCategoryBudgetCaps = () => {
+    if (isAdjustingBudget.value) {
+        return;
+    }
+
+    const budget = categoryBudget.value;
+    if (
+        !budget ||
+        budget <= 0 ||
+        !Array.isArray(props.form.items) ||
+        props.form.items.length === 0
+    ) {
+        return;
+    }
+
+    isAdjustingBudget.value = true;
+
+    for (const item of props.form.items) {
+        clampLineQuantityToBudget(item, budget);
+    }
+
+    let total = (props.form.items || []).reduce(
+        (sum, item) => sum + getLineTotal(item),
+        0,
+    );
+
+    if (total > budget) {
+        const indexedItems = [...props.form.items]
+            .map((item, index) => ({ item, index }))
+            .sort((left, right) => {
+                const leftLine = getLineTotal(left.item);
+                const rightLine = getLineTotal(right.item);
+                return rightLine - leftLine;
+            });
+
+        for (const entry of indexedItems) {
+            const currentQty = parseInt(entry.item.quantity || 0) || 0;
+            const unitWithVat = effectiveUnitCost(entry.item);
+
+            if (currentQty <= 0 || unitWithVat <= 0 || total <= budget) {
+                continue;
+            }
+
+            const excess = total - budget;
+            const qtyReductionNeeded = Math.ceil(excess / unitWithVat);
+            const nextQty = Math.max(0, currentQty - qtyReductionNeeded);
+
+            entry.item.quantity = nextQty;
+            total = (props.form.items || []).reduce(
+                (sum, item) => sum + getLineTotal(item),
+                0,
+            );
+
+            if (total <= budget) {
+                break;
+            }
+        }
+    }
+
+    isAdjustingBudget.value = false;
+};
+
+watch(
+    () => props.form.items,
+    () => {
+        applyCategoryBudgetCaps();
+
+        if (
+            props.form.purpose?.startsWith("Purchase of Office Supplies") &&
+            selectedEmanating.value
+        ) {
+            props.form.purpose = buildOfficeSuppliesPurpose(
+                selectedEmanating.value,
+                props.form.items || [],
+            );
+        }
+    },
+    { deep: true },
 );
 
 // Item line total (with or without VAT)
@@ -113,8 +282,30 @@ const formatCurrency = (val) =>
     }).format(val || 0);
 
 const selectPurpose = (p) => {
-    props.form.purpose = p;
+    if (p.startsWith("Purchase of Office Supplies")) {
+        props.form.purpose = buildOfficeSuppliesPurpose(
+            selectedEmanating.value,
+            props.form.items || [],
+        );
+    } else {
+        props.form.purpose = p;
+    }
     showPurposeSuggestions.value = false;
+};
+
+const buildOfficeSuppliesPurpose = (emanating, items) => {
+    const officeName = getOfficeName(emanating);
+    const itemNames = (items || [])
+        .map((item) => item?._name)
+        .filter((name) => typeof name === "string" && name.trim() !== "")
+        .map((name) => name.trim());
+
+    const uniqueItems = [...new Set(itemNames)];
+    const itemListText = uniqueItems.length
+        ? uniqueItems.join(", ")
+        : "office supplies";
+
+    return `Purchase of Office Supplies (${itemListText}) for use of ${officeName}.`;
 };
 
 const filteredPurposes = computed(() => {
@@ -127,10 +318,63 @@ const filteredPurposes = computed(() => {
 
 // PR number control suggestion helper
 const prNoPlaceholder = computed(() => {
-    const y = new Date().getFullYear().toString().slice(-2);
-    const m = String(new Date().getMonth() + 1).padStart(2, "0");
-    return `${y}${m}-A  `; // two buffer spaces
+    const selectedDate = props.form.pr_date
+        ? new Date(props.form.pr_date)
+        : new Date();
+    const y = selectedDate.getFullYear().toString().slice(-2);
+    const m = String(selectedDate.getMonth() + 1).padStart(2, "0");
+    return `${m}${y}-0001`;
 });
+
+const tomorrowDate = computed(() => {
+    const date = new Date();
+    date.setDate(date.getDate() + 1);
+    return date.toISOString().slice(0, 10);
+});
+
+if (!props.isEdit && !props.form.pr_date) {
+    props.form.pr_date = props.suggestedPrDate || tomorrowDate.value;
+}
+
+const suggestPrNo = async () => {
+    if (props.isEdit || !props.form.pr_date || isSuggestingPrNo.value) {
+        return;
+    }
+
+    isSuggestingPrNo.value = true;
+    try {
+        const { data } = await axios.post(
+            route("purchase-requests.suggest-pr-no"),
+            {
+                pr_date: props.form.pr_date,
+            },
+        );
+
+        props.form.pr_no = data?.pr_no || "";
+    } catch (error) {
+        props.form.pr_no = props.suggestedPrNo || "";
+    } finally {
+        isSuggestingPrNo.value = false;
+    }
+};
+
+watch(
+    () => props.form.pr_date,
+    () => {
+        suggestPrNo();
+    },
+    { immediate: true },
+);
+
+watch(
+    () => props.suggestedPrNo,
+    (value) => {
+        if (!props.isEdit && !props.form.pr_no) {
+            props.form.pr_no = value || "";
+        }
+    },
+    { immediate: true },
+);
 </script>
 
 <template>
@@ -164,8 +408,8 @@ const prNoPlaceholder = computed(() => {
                             :key="em.id"
                             :value="em.id"
                         >
-                            {{ em.project?.fund?.office?.name }} —
-                            {{ em.project?.name }} (FY {{ em.fiscal_year }})
+                            {{ getOfficeName(em) }} —
+                            {{ getProjectName(em) }} (FY {{ em.fiscal_year }})
                             {{ em.pr_no ? `· ${em.pr_no}` : "" }}
                         </option>
                     </select>
@@ -187,7 +431,7 @@ const prNoPlaceholder = computed(() => {
                             >Office:</span
                         >
                         <span class="font-medium">{{
-                            selectedEmanating.project?.fund?.office?.name
+                            getOfficeName(selectedEmanating)
                         }}</span>
                     </div>
                     <div class="flex gap-2">
@@ -195,7 +439,7 @@ const prNoPlaceholder = computed(() => {
                             >Fund:</span
                         >
                         <span class="font-medium">{{
-                            selectedEmanating.project?.fund?.name
+                            getFundName(selectedEmanating)
                         }}</span>
                     </div>
                     <div class="flex gap-2">
@@ -203,7 +447,7 @@ const prNoPlaceholder = computed(() => {
                             >Project:</span
                         >
                         <span class="font-medium">{{
-                            selectedEmanating.project?.name
+                            getProjectName(selectedEmanating)
                         }}</span>
                     </div>
                     <div class="flex gap-2">
@@ -239,14 +483,12 @@ const prNoPlaceholder = computed(() => {
                             v-model="form.pr_no"
                             type="text"
                             :placeholder="prNoPlaceholder"
+                            readonly
                             class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         />
                         <p class="text-xs text-muted-foreground">
-                            Format:
-                            <code class="font-mono">{{
-                                prNoPlaceholder.trim()
-                            }}</code>
-                            — leave at least 2 buffer spaces
+                            Automatically generated using MMYY-XXXX format and
+                            shown immediately.
                         </p>
                         <p
                             v-if="form.errors?.pr_no"
@@ -271,6 +513,7 @@ const prNoPlaceholder = computed(() => {
                             id="pr_date"
                             v-model="form.pr_date"
                             type="date"
+                            :min="tomorrowDate"
                             class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         />
                         <p class="text-xs text-muted-foreground">
@@ -304,7 +547,7 @@ const prNoPlaceholder = computed(() => {
                             id="sai_no"
                             v-model="form.sai_no"
                             type="text"
-                            placeholder="e.g. SAI-2026-001"
+                            placeholder="(Blank)"
                             class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         />
                         <p
@@ -348,6 +591,46 @@ const prNoPlaceholder = computed(() => {
                             }}<span v-if="saiDateCheck.message">
                                 ({{ saiDateCheck.message }})</span
                             >
+                        </p>
+                    </div>
+                </div>
+
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <div class="space-y-2">
+                        <Label for="requested_by_name"
+                            >Requested By (Name)</Label
+                        >
+                        <input
+                            id="requested_by_name"
+                            v-model="form.requested_by_name"
+                            type="text"
+                            placeholder="Auto-filled from emanating"
+                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        />
+                        <p
+                            v-if="form.errors?.requested_by_name"
+                            class="text-xs text-destructive"
+                        >
+                            {{ form.errors.requested_by_name }}
+                        </p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <Label for="requested_by_designation"
+                            >Requested By (Designation)</Label
+                        >
+                        <input
+                            id="requested_by_designation"
+                            v-model="form.requested_by_designation"
+                            type="text"
+                            placeholder="Auto-filled from emanating"
+                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        />
+                        <p
+                            v-if="form.errors?.requested_by_designation"
+                            class="text-xs text-destructive"
+                        >
+                            {{ form.errors.requested_by_designation }}
                         </p>
                     </div>
                 </div>
@@ -490,7 +773,7 @@ const prNoPlaceholder = computed(() => {
                                     <input
                                         v-model.number="item.quantity"
                                         type="number"
-                                        :min="1"
+                                        :min="0"
                                         :max="item._original_qty"
                                         class="w-full h-8 rounded border border-input bg-background px-2 text-center text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                     />
@@ -498,6 +781,13 @@ const prNoPlaceholder = computed(() => {
                                         class="text-xs text-muted-foreground mt-0.5 text-center"
                                     >
                                         max {{ item._original_qty }}
+                                    </p>
+                                    <p
+                                        v-if="categoryBudget > 0"
+                                        class="text-[10px] text-muted-foreground text-center"
+                                    >
+                                        Cat. Budget:
+                                        {{ formatCurrency(categoryBudget) }}
                                     </p>
                                 </td>
                                 <td class="p-3 align-middle">
@@ -543,6 +833,19 @@ const prNoPlaceholder = computed(() => {
                                     class="px-3 py-3 text-right font-bold text-primary text-base"
                                 >
                                     {{ formatCurrency(grandTotal) }}
+                                </td>
+                            </tr>
+                            <tr v-if="categoryBudget > 0" class="bg-muted/20">
+                                <td
+                                    colspan="6"
+                                    class="px-3 py-2 text-right text-xs text-muted-foreground"
+                                >
+                                    PPMP Category Budget
+                                </td>
+                                <td
+                                    class="px-3 py-2 text-right text-xs font-semibold text-muted-foreground"
+                                >
+                                    {{ formatCurrency(categoryBudget) }}
                                 </td>
                             </tr>
                         </tfoot>

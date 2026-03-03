@@ -21,6 +21,8 @@ class PurchaseRequest extends Model
         'pr_date',
         'sai_no',
         'sai_date',
+        'requested_by_name',
+        'requested_by_designation',
         'purpose',
         'total_amount',
         'status',

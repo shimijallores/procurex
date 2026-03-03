@@ -78,6 +78,28 @@ const formatCurrency = (value) => {
                             {{ formatDate(purchaseRequest.sai_date) }}
                         </p>
                     </div>
+                    <div>
+                        <p
+                            class="text-xs font-medium text-muted-foreground uppercase tracking-wide"
+                        >
+                            Requested By
+                        </p>
+                        <p class="mt-1 font-medium">
+                            {{ purchaseRequest.requested_by_name || "—" }}
+                        </p>
+                    </div>
+                    <div>
+                        <p
+                            class="text-xs font-medium text-muted-foreground uppercase tracking-wide"
+                        >
+                            Designation
+                        </p>
+                        <p class="mt-1 font-medium">
+                            {{
+                                purchaseRequest.requested_by_designation || "—"
+                            }}
+                        </p>
+                    </div>
                     <div class="col-span-2">
                         <p
                             class="text-xs font-medium text-muted-foreground uppercase tracking-wide"

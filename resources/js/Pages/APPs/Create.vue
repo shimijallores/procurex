@@ -41,14 +41,7 @@ const handleFileChange = (event) => {
 };
 
 const submit = () => {
-    const data = { ...form.data() };
-
-    // Remove null file field if no file uploaded
-    if (!data.csv_file) {
-        delete data.csv_file;
-    }
-
-    form.transform(() => data).post(route("apps.store"));
+    form.post(route("apps.store"));
 };
 </script>
 

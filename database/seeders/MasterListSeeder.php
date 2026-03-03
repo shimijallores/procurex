@@ -143,7 +143,7 @@ class MasterListSeeder extends Seeder
         );
 
         MasterListItem::firstOrCreate(
-            ['master_list_category_id' => $trainingMaterials->id, 'supplier_id' => $merryMerchants->id, 'item_name' => 'Training Kit', 'unit' => 'set'],
+            ['master_list_category_id' => $trainingMaterials->id, 'supplier_id' => $merryMerchants->id, 'item_name' => 'Training Kit', 'unit' => 'pcs'],
             ['default_unit_price' => 2500.00, 'is_phased_out' => false, 'search_key' => 'training kit seminar materials']
         );
 

@@ -80,6 +80,16 @@ const openDeleteModal = (app) => {
             @update:search="search = $event"
             @update:selected-office="selectedOffice = $event"
             @update:selected-fiscal-year="selectedFiscalYear = $event"
+            @delete="openDeleteModal"
+        />
+
+        <DeleteModal
+            v-model:open="showDeleteModal"
+            title="Delete APP"
+            :description="`Are you sure you want to delete this APP for ${appToDelete?.office?.name || 'Unknown Office'} (FY ${appToDelete?.fiscal_year || '—'})? This action cannot be undone.`"
+            :delete-url="
+                appToDelete ? route('apps.destroy', appToDelete.id) : ''
+            "
         />
     </div>
 </template>

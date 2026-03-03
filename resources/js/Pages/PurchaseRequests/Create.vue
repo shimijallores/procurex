@@ -24,6 +24,8 @@ defineOptions({
 const props = defineProps({
     eligibleEmanatings: Array,
     commonPurposes: Array,
+    suggestedPrDate: String,
+    suggestedPrNo: String,
     returnReasons: Array,
 });
 
@@ -35,6 +37,8 @@ const form = useForm({
     pr_date: "",
     sai_no: "",
     sai_date: "",
+    requested_by_name: "",
+    requested_by_designation: "",
     purpose: "",
     remarks: "",
     status: "draft",
@@ -54,6 +58,8 @@ const submit = () => {
             :form="form"
             :eligible-emanatings="eligibleEmanatings"
             :common-purposes="commonPurposes"
+            :suggested-pr-date="suggestedPrDate"
+            :suggested-pr-no="suggestedPrNo"
             @submit="submit"
         />
     </div>

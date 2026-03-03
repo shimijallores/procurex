@@ -19,6 +19,8 @@ return new class extends Migration
             $table->date('pr_date')->nullable();
             $table->string('sai_no')->nullable();
             $table->date('sai_date')->nullable();
+            $table->string('requested_by_name')->nullable();
+            $table->string('requested_by_designation')->nullable();
             $table->text('purpose')->nullable();
             $table->decimal('total_amount', 15, 2)->default(0);
             $table->enum('status', ['draft', 'returned', 'for_budget_review', 'approved', 'cancelled'])->default('draft')->index();

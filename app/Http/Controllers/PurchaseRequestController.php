@@ -10,6 +10,8 @@ use App\Models\Emanating;
 use App\Models\Office;
 use App\Models\PurchaseRequest;
 use App\Models\PurchaseRequestItem;
+use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -33,14 +35,11 @@ class PurchaseRequestController extends Controller
 
     /** Common PR purposes */
     private const COMMON_PURPOSES = [
-        'For the use of the office in its day-to-day operations',
-        'For the implementation of the project',
-        'For maintenance and repair of equipment',
-        'For training and capacity building',
-        'For official meetings and conferences',
-        'Capital outlay for equipment procurement',
-        'Supplies and materials for field operations',
-        'Information and communications technology supplies',
+        'Purchase of Office Supplies (item1, item2, item3, etc.) for use of [Office Name].',
+        'Repair and maintenance of Service Vehicle with Plate No. [Plate No.] and Property No. [Property No.].',
+        'Supply and Installation of Four (4) units Airconditioning units.',
+        'Purchase of Food to be served during [Event Name] on [Date of Event].',
+        '[Office Name] publication of [Year] budget for use of [Office Name].',
     ];
 
     public function index(Request $request): Response
@@ -109,6 +108,8 @@ class PurchaseRequestController extends Controller
         // Only approved AND canvassed emanatings without an existing PR
         $eligibleEmanatings = Emanating::with([
             'project.fund.office',
+            'fund.office',
+            'fund.projectCode',
             'ppmpCategory',
             'emanatingItems.ppmpItem',
         ])
@@ -121,7 +122,22 @@ class PurchaseRequestController extends Controller
         return Inertia::render('PurchaseRequests/Create', [
             'eligibleEmanatings' => $eligibleEmanatings,
             'commonPurposes'     => self::COMMON_PURPOSES,
+            'suggestedPrDate'    => $this->suggestNextPrDate()->toDateString(),
+            'suggestedPrNo'      => $this->previewNextPrNo($this->suggestNextPrDate()),
             'returnReasons'      => self::RETURN_REASONS,
+        ]);
+    }
+
+    public function suggestPrNo(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'pr_date' => ['required', 'date'],
+        ]);
+
+        $prDate = Carbon::parse((string) $validated['pr_date']);
+
+        return response()->json([
+            'pr_no' => $this->previewNextPrNo($prDate),
         ]);
     }
 
@@ -131,7 +147,21 @@ class PurchaseRequestController extends Controller
 
         DB::beginTransaction();
         try {
-            $emanating = Emanating::with(['project.fund.office', 'project.fund'])->findOrFail($validated['emanating_id']);
+            $emanating = Emanating::with([
+                'project.fund.office',
+                'project.fund',
+                'fund.office',
+                'fund.projectCode',
+            ])->findOrFail($validated['emanating_id']);
+
+            $prDate = Carbon::parse((string) $validated['pr_date']);
+            $generatedPrNo = $this->generateNextPrNo($prDate);
+
+            $officeId = (int) ($validated['office_id'] ?: ($emanating->project?->fund?->office_id ?? $emanating->fund?->office_id));
+            $fundId = (int) ($validated['fund_id'] ?: ($emanating->project?->fund?->id ?? $emanating->fund?->id));
+
+            $requestedByName = trim((string) ($validated['requested_by_name'] ?? ''));
+            $requestedByDesignation = trim((string) ($validated['requested_by_designation'] ?? ''));
 
             // Compute total (with VAT where applicable)
             $total = 0;
@@ -146,17 +176,21 @@ class PurchaseRequestController extends Controller
 
             $pr = PurchaseRequest::create([
                 'emanating_id' => $validated['emanating_id'],
-                'office_id'    => $validated['office_id'],
-                'fund_id'      => $validated['fund_id'],
-                'pr_no'        => $validated['pr_no'] ?? null,
-                'pr_date'      => $validated['pr_date'] ?? null,
+                'office_id'    => $officeId,
+                'fund_id'      => $fundId,
+                'pr_no'        => $generatedPrNo,
+                'pr_date'      => $prDate->toDateString(),
                 'sai_no'       => $validated['sai_no'] ?? null,
                 'sai_date'     => $validated['sai_date'] ?? null,
+                'requested_by_name' => $requestedByName !== '' ? $requestedByName : $emanating->requesting_officer_name,
+                'requested_by_designation' => $requestedByDesignation !== '' ? $requestedByDesignation : $emanating->requesting_officer_title,
                 'purpose'      => $validated['purpose'] ?? null,
                 'total_amount' => round($total, 2),
                 'status'       => $validated['status'] ?? 'draft',
                 'remarks'      => $validated['remarks'] ?? null,
             ]);
+
+            $emanating->update(['pr_no' => $generatedPrNo]);
 
             foreach ($validated['items'] as $item) {
                 $lineTotal = (float) $item['unit_cost'] * (int) $item['quantity'];
@@ -193,6 +227,8 @@ class PurchaseRequestController extends Controller
     {
         $purchaseRequest->load([
             'emanating.project.fund.office',
+            'emanating.fund.office',
+            'emanating.fund.projectCode',
             'emanating.ppmpCategory',
             'emanating.emanatingItems.ppmpItem',
             'office',
@@ -210,6 +246,8 @@ class PurchaseRequestController extends Controller
     {
         $purchaseRequest->load([
             'emanating.project.fund.office',
+            'emanating.fund.office',
+            'emanating.fund.projectCode',
             'emanating.emanatingItems.ppmpItem',
             'items.emanatingItem.ppmpItem',
             'office',
@@ -362,18 +400,116 @@ class PurchaseRequestController extends Controller
         $purchaseRequest->load([
             'office',
             'fund',
+            'emanating',
             'items.emanatingItem.ppmpItem',
         ]);
 
+        $printItems = collect($purchaseRequest->items)->map(function ($item): array {
+            $quantity = (int) ($item->quantity ?? 0);
+            $unitCost = (float) ($item->unit_cost ?? 0);
+            $vatRate = $item->vat_applicable ? (float) ($item->vat_rate ?? 0.12) : 0.0;
+            $effectiveUnitCost = $unitCost * (1 + $vatRate);
+
+            $ppmpBudget = (float) ($item->emanatingItem?->ppmpItem?->estimated_budget ?? 0);
+            $adjustedQuantity = $quantity;
+            $adjustedLineTotal = (float) ($item->line_total ?? 0);
+
+            if ($ppmpBudget > 0 && $effectiveUnitCost > 0 && $adjustedLineTotal > $ppmpBudget) {
+                $allowedQuantity = (int) floor($ppmpBudget / $effectiveUnitCost);
+                $adjustedQuantity = max(0, min($quantity, $allowedQuantity));
+                $adjustedLineTotal = round($adjustedQuantity * $effectiveUnitCost, 2);
+            }
+
+            return [
+                'id' => $item->id,
+                'unit' => $item->unit ?? $item->emanatingItem?->unit,
+                'description' => $item->item_name ?? $item->emanatingItem?->name ?? $item->emanatingItem?->ppmpItem?->name,
+                'quantity' => $adjustedQuantity,
+                'unit_cost' => $unitCost,
+                'line_total' => $adjustedLineTotal,
+            ];
+        })->values();
+
+        $printTotal = (float) $printItems->sum('line_total');
+
         return Pdf::view('pdf.purchase-request', [
             'pr'               => $purchaseRequest,
+            'printItems'       => $printItems,
+            'printTotal'       => $printTotal,
             'approvedBy'       => 'VILMA SANTOS-RECTO',
             'approvedByDesig'  => 'Governor',
-            'requestedBy'      => $purchaseRequest->office?->head ?? '',
-            'requestedByDesig' => 'Department Head',
+            'requestedBy'      => $purchaseRequest->requested_by_name ?: ($purchaseRequest->emanating?->requesting_officer_name ?? ''),
+            'requestedByDesig' => $purchaseRequest->requested_by_designation ?: ($purchaseRequest->emanating?->requesting_officer_title ?? ''),
         ])
             ->format('a4')
             ->name('PR-' . ($purchaseRequest->pr_no ?? $purchaseRequest->id) . '.pdf')
             ->inline();
+    }
+
+    private function suggestNextPrDate(): Carbon
+    {
+        $date = now()->addDay()->startOfDay();
+
+        while ($date->isWeekend()) {
+            $date->addDay();
+        }
+
+        return $date;
+    }
+
+    private function generateNextPrNo(Carbon $prDate): string
+    {
+        return $this->buildPrNo($prDate, true);
+    }
+
+    private function previewNextPrNo(Carbon $prDate): string
+    {
+        return $this->buildPrNo($prDate, false);
+    }
+
+    private function buildPrNo(Carbon $prDate, bool $lockRows): string
+    {
+        $monthPrefix = $prDate->format('m');
+        $yearPrefix = $prDate->format('y');
+        $prefix = $monthPrefix . $yearPrefix;
+
+        $query = PurchaseRequest::query()
+            ->whereYear('pr_date', (int) $prDate->format('Y'))
+            ->whereNotNull('pr_no');
+
+        if ($lockRows) {
+            $query->lockForUpdate();
+        }
+
+        $existingNumbers = $query->pluck('pr_no');
+
+        $latestCounter = 0;
+
+        foreach ($existingNumbers as $existingNumber) {
+            if (! is_string($existingNumber)) {
+                continue;
+            }
+
+            if (! preg_match('/^(\d{4})-(\d{4})$/', $existingNumber, $matches)) {
+                continue;
+            }
+
+            $numberPrefix = $matches[1] ?? null;
+            $counterPart = $matches[2] ?? null;
+
+            if ($numberPrefix === null || $counterPart === null) {
+                continue;
+            }
+
+            if (! str_ends_with($numberPrefix, $yearPrefix)) {
+                continue;
+            }
+
+            $latestCounter = max($latestCounter, (int) $counterPart);
+        }
+
+        $nextCounter = $latestCounter + 1;
+
+        return sprintf('%s-%04d', $prefix, $nextCounter);
     }
 }
