@@ -15,7 +15,6 @@ const props = defineProps({
 defineEmits(["submit"]);
 
 const amountWordsTouched = ref(false);
-const poNoTouched = ref(false);
 
 const selectedNoa = computed(() =>
     props.eligibleNoas?.find(
@@ -110,10 +109,7 @@ const refreshPoNo = async () => {
                 po_date: props.form.po_date,
             },
         );
-
-        if (!poNoTouched.value) {
-            props.form.po_no = data.po_no;
-        }
+        props.form.po_no = data.po_no;
     } catch {
         // noop
     }
@@ -289,10 +285,13 @@ const formatCurrency = (value) =>
                     <input
                         id="po_no"
                         v-model="form.po_no"
+                        readonly
                         placeholder="mmyy-####"
                         class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                        @input="poNoTouched = true"
                     />
+                    <p class="text-xs text-muted-foreground">
+                        Auto-generated using MMYY-XXXX format.
+                    </p>
                     <p
                         v-if="form.errors?.po_no"
                         class="text-xs text-destructive"

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePurchaseOrderRequest;
+use App\Models\Calendar;
 use App\Models\NOA;
 use App\Models\Office;
 use App\Models\PurchaseOrder;
@@ -87,14 +88,16 @@ class PurchaseOrderController extends Controller
             ->latest('noa_date')
             ->get();
 
+        $suggestedDate = $this->suggestNextWorkingDay()->toDateString();
+
         return Inertia::render('PurchaseOrders/Create', [
             'eligibleNoas' => $eligibleNoas,
             'defaults' => [
-                'po_date' => now()->toDateString(),
+                'po_date' => $suggestedDate,
                 'mode_of_procurement' => 'Small Value',
                 'delivery_term_days' => 15,
                 'payment_term' => 'upon 100% completion /delivery',
-                'po_no' => $this->generatePoNumber(now()->toDateString()),
+                'po_no' => $this->generatePoNumber($suggestedDate),
             ],
         ]);
     }
@@ -138,7 +141,7 @@ class PurchaseOrderController extends Controller
         try {
             $purchaseOrder = PurchaseOrder::create([
                 'noa_id' => $validated['noa_id'],
-                'po_no' => $validated['po_no'],
+                'po_no' => $this->generatePoNumber($validated['po_date']),
                 'po_date' => $validated['po_date'],
                 'mode_of_procurement' => $validated['mode_of_procurement'],
                 'place_of_delivery' => $validated['place_of_delivery'],
@@ -216,15 +219,19 @@ class PurchaseOrderController extends Controller
         $date = Carbon::parse($poDate);
         $prefix = $date->format('my') . '-';
 
-        $latestPoNo = PurchaseOrder::where('po_no', 'like', $prefix . '%')
-            ->orderByDesc('po_no')
-            ->value('po_no');
+        $currentYearSequenceMax = PurchaseOrder::query()
+            ->whereYear('po_date', $date->year)
+            ->pluck('po_no')
+            ->map(function ($poNo): int {
+                if (preg_match('/^\d{4}-(\d{4})$/', (string) $poNo, $matches) === 1) {
+                    return (int) $matches[1];
+                }
 
-        $next = 1;
-        if ($latestPoNo) {
-            $lastSequence = (int) substr($latestPoNo, -4);
-            $next = $lastSequence + 1;
-        }
+                return 0;
+            })
+            ->max();
+
+        $next = ((int) $currentYearSequenceMax) + 1;
 
         do {
             $poNo = $prefix . str_pad((string) $next, 4, '0', STR_PAD_LEFT);
@@ -232,5 +239,35 @@ class PurchaseOrderController extends Controller
         } while (PurchaseOrder::where('po_no', $poNo)->exists());
 
         return $poNo;
+    }
+
+    private function isWorkingDay(?string $date): bool
+    {
+        if (! $date) {
+            return true;
+        }
+
+        $carbonDate = Carbon::parse($date);
+        if ($carbonDate->isWeekend()) {
+            return false;
+        }
+
+        $calendarEntry = Calendar::where('date', $date)->first();
+        if (! $calendarEntry) {
+            return true;
+        }
+
+        return (bool) $calendarEntry->is_working_day;
+    }
+
+    private function suggestNextWorkingDay(): Carbon
+    {
+        $date = now()->addDay()->startOfDay();
+
+        while (! $this->isWorkingDay($date->toDateString())) {
+            $date->addDay();
+        }
+
+        return $date;
     }
 }

@@ -15,6 +15,7 @@ return new class extends Migration
             $table->foreignId('bac_resolution_id')->constrained('bac_resolutions')->cascadeOnDelete();
             $table->string('noa_no')->unique();
             $table->date('noa_date');
+            $table->string('recipient_name')->nullable();
             $table->timestamps();
 
             $table->unique('bac_resolution_id', 'uq_noa_bac_resolution');

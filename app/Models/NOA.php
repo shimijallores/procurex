@@ -16,6 +16,7 @@ class NOA extends Model
         'bac_resolution_id',
         'noa_no',
         'noa_date',
+        'recipient_name',
     ];
 
     protected $casts = [

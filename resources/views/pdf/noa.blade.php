@@ -50,31 +50,21 @@
             text-align: right;
         }
 
-        .logo-mark {
-            width: 76px;
-            height: 76px;
-            border: 2px solid #000;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 7pt;
-            font-weight: bold;
+        .logo-seal {
+            width: 58px;
+            height: 58px;
+            object-fit: contain;
         }
 
-        .bagong-mark {
-            width: 76px;
-            height: 76px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 8pt;
-            font-weight: bold;
+        .logo-bagong {
+            width: 74px;
+            height: 58px;
+            object-fit: contain;
         }
 
         .gov-line {
             text-transform: uppercase;
-            font-weight: 700;
+            font-weight: 600;
             line-height: 1.3;
         }
 
@@ -84,8 +74,8 @@
 
         .gov-office {
             margin-top: 4px;
-            font-size: 15pt;
-            font-weight: 800;
+            font-size: 12pt;
+            font-weight: 700;
             text-transform: uppercase;
         }
 
@@ -102,8 +92,8 @@
         .title {
             margin-top: 18px;
             text-align: center;
-            font-size: 15pt;
-            font-weight: 800;
+            font-size: 12pt;
+            font-weight: 700;
             text-transform: uppercase;
         }
 
@@ -178,9 +168,37 @@
 
 <body>
     @php
-    $recipientName = strtoupper((string) ($winnerSupplier?->contact_person ?? 'AUTHORIZED REPRESENTATIVE'));
-    $supplierName = strtoupper((string) ($winnerSupplier?->name ?? $resolution->winner_supplier_name ?? 'SUPPLIER'));
-    $recipientAddress = $winnerSupplier?->address ?? 'Batangas';
+    $imagePath = static function (array $candidates): ?string {
+    foreach ($candidates as $candidate) {
+    $absolute = public_path('images/' . $candidate);
+
+    if (! is_file($absolute)) {
+    continue;
+    }
+
+    $mime = mime_content_type($absolute) ?: 'image/png';
+    $content = file_get_contents($absolute);
+
+    if ($content === false) {
+    continue;
+    }
+
+    return 'data:' . $mime . ';base64,' . base64_encode($content);
+    }
+
+    return null;
+    };
+
+    $sealLogo = $imagePath(['batangas-seal.png']);
+    $bagongLogo = $imagePath(['bagong-pilipinas.png']);
+
+    $recipientRaw = $noa->recipient_name ?: ($addressedSupplier?->proprietor ?: ($addressedSupplier?->authorized_representative ?: ($addressedSupplier?->owner ?: ($winnerSupplier?->contact_person ?: 'AUTHORIZED REPRESENTATIVE'))));
+    $recipientName = strtoupper((string) $recipientRaw);
+    $supplierName = strtoupper((string) ($resolution->winner_supplier_name ?? $winnerSupplier?->name ?? 'SUPPLIER'));
+    $recipientAddress = $addressedSupplier?->address ?? $winnerSupplier?->address ?? 'Batangas';
+
+    $calculationLabel = strtoupper((string) ($resolution->calculation_label ?: 'LOWEST CALCULATED AND RESPONSIVE QUOTATION'));
+    $projectName = (string) ($rfq?->project_name ?: $resolution->project_name);
 
     $amount = (float) ($resolution->winner_amount ?? 0);
     $amountFmt = number_format($amount, 2);
@@ -202,16 +220,20 @@
     <div class="page">
         <div class="header">
             <div class="header-cell header-left">
-                <div class="logo-mark">BATANGAS<br>SEAL</div>
+                @if ($sealLogo)
+                <img src="{{ $sealLogo }}" alt="Batangas Seal" class="logo-seal">
+                @endif
             </div>
             <div class="header-cell header-mid">
                 <div class="gov-line">Republic of the Philippines</div>
-                <div class="gov-line">Province of Batangas</div>
+                <div class="gov-line">Provincial Government of Batangas</div>
                 <div class="gov-office">Office of the Provincial Governor</div>
-                <div class="gov-sub">Capitol Building, Batangas City 4200</div>
+                <div class="gov-sub">Capitol Site, Kumintang Ibaba, Batangas City 4200</div>
             </div>
             <div class="header-cell header-right">
-                <div class="bagong-mark">BAGONG PILIPINAS</div>
+                @if ($bagongLogo)
+                <img src="{{ $bagongLogo }}" alt="Bagong Pilipinas" class="logo-bagong">
+                @endif
             </div>
         </div>
 
@@ -226,13 +248,13 @@
         <div class="recipient">
             <div style="font-weight:700; text-transform: uppercase;">{{ $supplierName }}</div>
             <div style="font-weight:700; text-transform: uppercase;">{{ $recipientName }}</div>
-            <div>Authorized Representative</div>
+            <div>Proprietor / Authorized Representative / Owner</div>
             <div>{{ $recipientAddress }}</div>
         </div>
 
         <div class="body">
             Dear {{ explode(' ', $recipientName)[0] ?? 'Sir/Madam' }},<br><br>
-            We would like to inform you that your company was declared as the supplier with Lowest Calculated and Responsive Quotation, through BAC Resolution No. <b>{{ $resolution->resolution_no }}</b>, after passing all the terms, conditions and/or specifications needed by the Procuring Entity as stipulated in the Request for Quotation, dated <b>{{ optional($rfq?->rfq_date)->format('F d, Y') }}</b>. Thus, you are hereby AWARDED of the project, as follows:
+            We would like to inform you that your company was declared as the supplier with <b>{{ $calculationLabel }}</b>, through BAC Resolution No. <b>{{ $resolution->resolution_no }}</b> dated <b>{{ optional($resolution->resolution_date)->format('F d, Y') }}</b>, after passing all terms, conditions, and specifications stipulated in the Request for Quotation dated <b>{{ optional($rfq?->rfq_date)->format('F d, Y') }}</b>. Thus, you are hereby AWARDED of the project, as follows:
         </div>
 
         <div class="table-wrap">
@@ -246,7 +268,7 @@
                 <tbody>
                     <tr>
                         <td>
-                            {{ $resolution->project_name }}
+                            {{ $projectName }}
                             @if($rfq?->purchaseRequest?->office?->name)
                             for use in {{ $rfq->purchaseRequest->office->name }}.
                             @endif

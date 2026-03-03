@@ -14,6 +14,9 @@ class SupplierSeeder extends Seeder
         Supplier::firstOrCreate(
             ['name' => 'MERRY MERCHANTS TRADING AND GENERAL MERCHANDISE'],
             [
+                'proprietor' => 'Maria Santos',
+                'authorized_representative' => 'Maria Santos',
+                'owner' => 'Maria Santos',
                 'contact_person' => 'Maria Santos',
                 'contact_number' => '0917-123-4567',
                 'email' => 'merry.merchants@email.com',
@@ -27,6 +30,9 @@ class SupplierSeeder extends Seeder
         Supplier::firstOrCreate(
             ['name' => 'LUCKY-BK JANITORIAL OFFICE SUPPLIES TRADING'],
             [
+                'proprietor' => 'Jose Cruz',
+                'authorized_representative' => 'Jose Cruz',
+                'owner' => 'Jose Cruz',
                 'contact_person' => 'Jose Cruz',
                 'contact_number' => '0918-987-6543',
                 'email' => 'luckybk.trading@gmail.com',
@@ -40,6 +46,9 @@ class SupplierSeeder extends Seeder
         Supplier::firstOrCreate(
             ['name' => 'FYKER ENTERPRISES'],
             [
+                'proprietor' => 'Fernando Yap',
+                'authorized_representative' => 'Fernando Yap',
+                'owner' => 'Fernando Yap',
                 'contact_person' => 'Fernando Yap',
                 'contact_number' => '0919-555-7890',
                 'email' => 'fyker.enterprises@yahoo.com',

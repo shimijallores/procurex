@@ -59,6 +59,46 @@ const isEdit = props.action === "edit";
 
                 <div class="grid gap-4 sm:grid-cols-2">
                     <div class="space-y-2">
+                        <Label for="proprietor">Proprietor</Label>
+                        <input
+                            id="proprietor"
+                            name="proprietor"
+                            type="text"
+                            :defaultValue="supplier?.proprietor ?? ''"
+                            placeholder="Proprietor name"
+                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        />
+                    </div>
+                    <div class="space-y-2">
+                        <Label for="authorized_representative"
+                            >Authorized Representative</Label
+                        >
+                        <input
+                            id="authorized_representative"
+                            name="authorized_representative"
+                            type="text"
+                            :defaultValue="
+                                supplier?.authorized_representative ?? ''
+                            "
+                            placeholder="Authorized representative"
+                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        />
+                    </div>
+                </div>
+
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <div class="space-y-2">
+                        <Label for="owner">Owner</Label>
+                        <input
+                            id="owner"
+                            name="owner"
+                            type="text"
+                            :defaultValue="supplier?.owner ?? ''"
+                            placeholder="Owner name"
+                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        />
+                    </div>
+                    <div class="space-y-2">
                         <Label for="contact_person">Contact Person</Label>
                         <input
                             id="contact_person"

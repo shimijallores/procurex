@@ -20,7 +20,7 @@ class StorePurchaseOrderRequest extends FormRequest
     {
         return [
             'noa_id' => ['required', 'integer', 'exists:noas,id', 'unique:purchase_orders,noa_id'],
-            'po_no' => ['required', 'string', 'max:50', 'regex:/^\d{4}-\d{4}$/', 'unique:purchase_orders,po_no'],
+            'po_no' => ['nullable', 'string', 'max:50', 'regex:/^\d{4}-\d{4}$/'],
             'po_date' => ['required', 'date'],
             'mode_of_procurement' => ['required', 'string', 'max:120'],
             'place_of_delivery' => ['required', 'string', 'max:255'],
