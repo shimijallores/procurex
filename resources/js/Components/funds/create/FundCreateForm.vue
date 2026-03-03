@@ -1,4 +1,5 @@
 <script setup>
+import { computed, watch } from "vue";
 import { Link } from "@inertiajs/vue3";
 import { Icon } from "@iconify/vue";
 import { Button } from "@/components/ui/button";
@@ -11,12 +12,40 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 
-defineProps({
+const props = defineProps({
     form: Object,
     offices: Array,
     fundType: String,
     showProjectFields: Boolean,
 });
+
+const availableProjectCodes = computed(() => {
+    const officeId = Number(props.form.office_id);
+
+    if (!officeId) {
+        return [];
+    }
+
+    const selectedOffice = props.offices.find(
+        (office) => Number(office.id) === officeId,
+    );
+
+    return selectedOffice?.project_codes ?? [];
+});
+
+watch(
+    () => props.form.office_id,
+    () => {
+        const exists = availableProjectCodes.value.some(
+            (projectCode) =>
+                String(projectCode.id) === String(props.form.project_code_id),
+        );
+
+        if (!exists) {
+            props.form.project_code_id = "";
+        }
+    },
+);
 
 defineEmits(["update:fundType", "submit"]);
 </script>
@@ -57,6 +86,38 @@ defineEmits(["update:fundType", "submit"]);
                         class="text-sm text-destructive"
                     >
                         {{ form.errors.office_id }}
+                    </p>
+                </div>
+
+                <div class="space-y-2">
+                    <Label for="project_code_id">Project Code</Label>
+                    <select
+                        id="project_code_id"
+                        v-model="form.project_code_id"
+                        :disabled="!form.office_id"
+                        :class="[
+                            'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
+                            'ring-offset-background focus-visible:outline-none focus-visible:ring-2',
+                            'focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+                            form.errors.project_code_id
+                                ? 'border-destructive'
+                                : '',
+                        ]"
+                    >
+                        <option value="">Select a project code</option>
+                        <option
+                            v-for="projectCode in availableProjectCodes"
+                            :key="projectCode.id"
+                            :value="projectCode.id"
+                        >
+                            {{ projectCode.code }} - {{ projectCode.name }}
+                        </option>
+                    </select>
+                    <p
+                        v-if="form.errors.project_code_id"
+                        class="text-sm text-destructive"
+                    >
+                        {{ form.errors.project_code_id }}
                     </p>
                 </div>
 

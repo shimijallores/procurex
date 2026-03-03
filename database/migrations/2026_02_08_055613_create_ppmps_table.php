@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('ppmps', function (Blueprint $table) {
             $table->id();
             $table->foreignId('office_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('project_code_id');
             $table->unsignedSmallInteger('fiscal_year');
             $table->boolean('is_addendum')->default(false);
             $table->string('remarks')->nullable();
@@ -23,6 +24,8 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['office_id', 'fiscal_year'], 'idx_ppmp');
+            $table->index(['office_id', 'project_code_id', 'fiscal_year'], 'idx_ppmp_office_project_year');
+            $table->unique(['office_id', 'project_code_id', 'fiscal_year'], 'uniq_ppmp_office_project_year');
         });
     }
 

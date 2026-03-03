@@ -48,6 +48,15 @@ const getFundTypeBadgeClass = (type) => {
                 <p class="font-medium">{{ fund.office.name }}</p>
             </div>
             <div class="grid gap-1">
+                <p class="text-sm font-medium text-muted-foreground">
+                    Project Code
+                </p>
+                <p class="font-medium">
+                    {{ fund.project_code?.code }} -
+                    {{ fund.project_code?.name }}
+                </p>
+            </div>
+            <div class="grid gap-1">
                 <p class="text-sm font-medium text-muted-foreground">Type</p>
                 <span
                     :class="[

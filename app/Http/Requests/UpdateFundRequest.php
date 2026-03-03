@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateFundRequest extends FormRequest
 {
@@ -28,7 +29,20 @@ class UpdateFundRequest extends FormRequest
 
         $rules = [
             'office_id' => ['required', 'exists:offices,id'],
-            'code' => ['required', 'string', 'max:255', 'unique:funds,code,' . $fundId],
+            'project_code_id' => [
+                'required',
+                Rule::exists('project_codes', 'id')->where(fn($query) => $query->where('office_id', $this->office_id)),
+            ],
+            'code' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('funds', 'code')
+                    ->ignore($fundId)
+                    ->where('office_id', $this->office_id)
+                    ->where('project_code_id', $this->project_code_id)
+                    ->where('fiscal_year', $this->fiscal_year),
+            ],
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', 'in:general,project'],
             'fiscal_year' => ['required', 'integer', 'min:2000', 'max:2100'],
@@ -85,8 +99,10 @@ class UpdateFundRequest extends FormRequest
         return [
             'office_id.required' => 'Please select an office.',
             'office_id.exists' => 'The selected office is invalid.',
+            'project_code_id.required' => 'Please select a project code.',
+            'project_code_id.exists' => 'The selected project code is invalid for the selected office.',
             'code.required' => 'The fund code is required.',
-            'code.unique' => 'This fund code is already taken.',
+            'code.unique' => 'This fund code is already used for this office, project code, and fiscal year.',
             'name.required' => 'The fund name is required.',
             'type.required' => 'Please select a fund type.',
             'type.in' => 'The fund type must be either general or project.',

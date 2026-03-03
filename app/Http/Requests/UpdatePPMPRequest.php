@@ -6,6 +6,7 @@ namespace App\Http\Requests;
 
 use App\Models\PPMP;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdatePPMPRequest extends FormRequest
 {
@@ -26,6 +27,10 @@ class UpdatePPMPRequest extends FormRequest
     {
         return [
             'office_id' => ['required', 'exists:offices,id'],
+            'project_code_id' => [
+                'required',
+                Rule::exists('project_codes', 'id')->where(fn($query) => $query->where('office_id', $this->office_id)),
+            ],
             'fiscal_year' => ['required', 'integer', 'min:2000', 'max:2100'],
             'is_addendum' => ['nullable', 'boolean'],
             'remarks' => ['nullable', 'string', 'max:1000'],
@@ -42,6 +47,8 @@ class UpdatePPMPRequest extends FormRequest
         return [
             'office_id.required' => 'Please select an office.',
             'office_id.exists' => 'The selected office is invalid.',
+            'project_code_id.required' => 'Please select a project code.',
+            'project_code_id.exists' => 'The selected project code is invalid for the selected office.',
             'fiscal_year.required' => 'The fiscal year is required.',
             'fiscal_year.integer' => 'The fiscal year must be a valid year.',
             'remarks.max' => 'The remarks must not exceed 1000 characters.',
@@ -57,6 +64,7 @@ class UpdatePPMPRequest extends FormRequest
 
                 $existingBasePpmp = PPMP::query()
                     ->where('office_id', $this->office_id)
+                    ->where('project_code_id', $this->project_code_id)
                     ->where('fiscal_year', $this->fiscal_year)
                     ->where('is_addendum', false)
                     ->when($currentPpmp, fn($query) => $query->where('id', '!=', $currentPpmp->id))
@@ -65,7 +73,7 @@ class UpdatePPMPRequest extends FormRequest
                 if (! $existingBasePpmp) {
                     $validator->errors()->add(
                         'is_addendum',
-                        'Addendum requires an existing base PPMP for the selected office and fiscal year.'
+                        'Addendum requires an existing base PPMP for the selected office, project code, and fiscal year.'
                     );
                 }
             }

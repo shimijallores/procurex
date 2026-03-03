@@ -146,7 +146,8 @@ const formatDate = (date) => {
                                         <div
                                             class="text-xs text-muted-foreground"
                                         >
-                                            PPMP
+                                            {{ ppmp.project_code?.code }} -
+                                            {{ ppmp.project_code?.name }}
                                         </div>
                                     </div>
                                 </div>

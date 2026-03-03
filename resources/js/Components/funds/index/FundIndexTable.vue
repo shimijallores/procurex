@@ -128,6 +128,11 @@ const getFundTypeBadgeClass = (type) => {
                             <th
                                 class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
                             >
+                                Project Code
+                            </th>
+                            <th
+                                class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
+                            >
                                 Type
                             </th>
                             <th
@@ -171,13 +176,23 @@ const getFundTypeBadgeClass = (type) => {
                                 </div>
                             </td>
                             <td class="p-4 align-middle">
-                                <div class="flex items-center gap-2">
-                                    <Icon
-                                        icon="lucide:building-2"
-                                        class="h-4 w-4 text-muted-foreground"
-                                    />
-                                    <span>{{ fund.office.name }}</span>
+                                <div class="space-y-1">
+                                    <div class="flex items-center gap-2">
+                                        <Icon
+                                            icon="lucide:building-2"
+                                            class="h-4 w-4 text-muted-foreground"
+                                        />
+                                        <span>{{ fund.office.name }}</span>
+                                    </div>
+                                    <div class="text-xs text-muted-foreground">
+                                        {{ fund.project_code?.code }}
+                                    </div>
                                 </div>
+                            </td>
+                            <td class="p-4 align-middle">
+                                <span class="text-sm">
+                                    {{ fund.project_code?.name }}
+                                </span>
                             </td>
                             <td class="p-4 align-middle">
                                 <span
@@ -235,7 +250,7 @@ const getFundTypeBadgeClass = (type) => {
                             </td>
                         </tr>
                         <tr v-if="funds.data.length === 0">
-                            <td colspan="5" class="p-8 text-center">
+                            <td colspan="6" class="p-8 text-center">
                                 <div class="flex flex-col items-center gap-2">
                                     <Icon
                                         icon="lucide:inbox"

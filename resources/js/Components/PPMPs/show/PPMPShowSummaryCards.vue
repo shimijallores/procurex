@@ -42,6 +42,15 @@ const formatCurrency = (amount) => {
                 </div>
                 <div class="grid gap-1">
                     <p class="text-sm font-medium text-muted-foreground">
+                        Project Code
+                    </p>
+                    <p class="font-medium">
+                        {{ ppmp.project_code?.code }} -
+                        {{ ppmp.project_code?.name }}
+                    </p>
+                </div>
+                <div class="grid gap-1">
+                    <p class="text-sm font-medium text-muted-foreground">
                         Fiscal Year
                     </p>
                     <p class="font-medium">{{ ppmp.fiscal_year }}</p>

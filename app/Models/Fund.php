@@ -20,6 +20,7 @@ class Fund extends Model
 
     protected $fillable = [
         'office_id',
+        'project_code_id',
         'name',
         'code',
         'type',
@@ -32,6 +33,11 @@ class Fund extends Model
         return $this->belongsTo(Office::class);
     }
 
+    public function projectCode(): BelongsTo
+    {
+        return $this->belongsTo(ProjectCode::class);
+    }
+
     public function project(): HasOne
     {
         return $this->hasOne(Project::class);
@@ -39,7 +45,9 @@ class Fund extends Model
 
     public function ppmp(): HasOne
     {
-        return $this->hasOne(PPMP::class);
+        return $this->hasOne(PPMP::class, 'office_id', 'office_id')
+            ->whereColumn('ppmps.project_code_id', 'funds.project_code_id')
+            ->whereColumn('ppmps.fiscal_year', 'funds.fiscal_year');
     }
 
     public function emanatings(): HasMany

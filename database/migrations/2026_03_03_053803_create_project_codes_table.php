@@ -22,6 +22,14 @@ return new class extends Migration
             $table->index('code');
             $table->index('name');
         });
+
+        Schema::table('funds', function (Blueprint $table) {
+            $table->foreign('project_code_id')->references('id')->on('project_codes')->cascadeOnDelete();
+        });
+
+        Schema::table('ppmps', function (Blueprint $table) {
+            $table->foreign('project_code_id')->references('id')->on('project_codes')->cascadeOnDelete();
+        });
     }
 
     /**
@@ -29,6 +37,14 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::table('funds', function (Blueprint $table) {
+            $table->dropForeign(['project_code_id']);
+        });
+
+        Schema::table('ppmps', function (Blueprint $table) {
+            $table->dropForeign(['project_code_id']);
+        });
+
         Schema::dropIfExists('project_codes');
     }
 };

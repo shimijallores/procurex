@@ -28,6 +28,7 @@ const props = defineProps({
 
 const form = useForm({
     office_id: props.ppmp.office_id,
+    project_code_id: props.ppmp.project_code_id,
     fiscal_year: props.ppmp.fiscal_year,
     is_addendum: props.ppmp.is_addendum || false,
     remarks: props.ppmp.remarks || "",

@@ -134,7 +134,7 @@ defineProps({
                         <div>
                             <p class="font-medium">PPMP</p>
                             <p class="text-xs text-muted-foreground">
-                                Same office & fiscal year
+                                Same office, project code, and fiscal year
                             </p>
                         </div>
                     </div>

@@ -24,7 +24,7 @@ class FundController extends Controller
 {
     public function index(Request $request): Response
     {
-        $lengthAwarePaginator = Fund::with('office')
+        $lengthAwarePaginator = Fund::with(['office', 'projectCode'])
             ->when($request->search, function ($query, string $search): void {
                 $query->where('name', 'like', sprintf('%%%s%%', $search))
                     ->orWhere('code', 'like', sprintf('%%%s%%', $search));
@@ -70,7 +70,8 @@ class FundController extends Controller
     public function create(): Response
     {
         return Inertia::render('Funds/Create', [
-            'offices' => Office::all(['id', 'name']),
+            'offices' => Office::with(['projectCodes:id,office_id,code,name'])
+                ->get(['id', 'name']),
         ]);
     }
 
@@ -80,6 +81,7 @@ class FundController extends Controller
 
         $fund = Fund::create([
             'office_id' => $validated['office_id'],
+            'project_code_id' => $validated['project_code_id'],
             'code' => $validated['code'],
             'name' => $validated['name'],
             'type' => $validated['type'],
@@ -106,7 +108,7 @@ class FundController extends Controller
     {
         $fund->load([
             'office',
-            'ppmp',
+            'projectCode',
             'emanatings',
             'project.workProgram',
             'project.projectBrief',
@@ -115,6 +117,7 @@ class FundController extends Controller
 
         $ppmpReference = PPMP::query()
             ->where('office_id', $fund->office_id)
+            ->where('project_code_id', $fund->project_code_id)
             ->where('fiscal_year', $fund->fiscal_year)
             ->whereNotNull('xlsx_path')
             ->latest()
@@ -130,7 +133,7 @@ class FundController extends Controller
     {
         $fund->load([
             'office',
-            'ppmp',
+            'projectCode',
             'emanatings',
             'project.workProgram',
             'project.projectBrief',
@@ -139,7 +142,8 @@ class FundController extends Controller
 
         return Inertia::render('Funds/Edit', [
             'fund' => $fund,
-            'offices' => Office::all(['id', 'name']),
+            'offices' => Office::with(['projectCodes:id,office_id,code,name'])
+                ->get(['id', 'name']),
         ]);
     }
 
@@ -149,6 +153,7 @@ class FundController extends Controller
 
         $fund->update([
             'office_id' => $validated['office_id'],
+            'project_code_id' => $validated['project_code_id'],
             'code' => $validated['code'],
             'name' => $validated['name'],
             'type' => $validated['type'],

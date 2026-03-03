@@ -9,21 +9,24 @@ use App\Http\Requests\UpdatePPMPRequest;
 use App\Imports\PPMPImport;
 use App\Models\Office;
 use App\Models\PPMP;
+use App\Models\ProjectCode;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class PPMPController extends Controller
 {
     public function index(Request $request): Response
     {
-        $lengthAwarePaginator = PPMP::with(['office'])
+        $lengthAwarePaginator = PPMP::with(['office', 'projectCode'])
             ->when($request->search, function ($query, string $search): void {
                 $query->where('fiscal_year', 'like', sprintf('%%%s%%', $search))
                     ->orWhereHas('office', function ($q) use ($search): void {
@@ -71,13 +74,33 @@ class PPMPController extends Controller
     public function create(): Response
     {
         return Inertia::render('PPMPs/Create', [
-            'offices' => Office::all(['id', 'name']),
+            'offices' => Office::with(['projectCodes:id,office_id,code,name'])
+                ->get(['id', 'name']),
         ]);
     }
 
     public function store(StorePPMPRequest $storePPMPRequest): RedirectResponse
     {
         $validated = $storePPMPRequest->validated();
+
+        if ($storePPMPRequest->hasFile('xlsx_file') && $storePPMPRequest->file('xlsx_file')->isValid()) {
+            $resolvedProjectCode = $this->resolveProjectCodeFromXlsx(
+                $storePPMPRequest->file('xlsx_file'),
+                (int) $validated['office_id']
+            );
+
+            if (! $resolvedProjectCode) {
+                return back()->withErrors([
+                    'xlsx_file' => 'Unable to match the PPMP project code to the selected office project codes.',
+                ]);
+            }
+
+            if ((int) $resolvedProjectCode->id !== (int) $validated['project_code_id']) {
+                return back()->withErrors([
+                    'project_code_id' => 'Selected project code does not match the PPMP project code.',
+                ]);
+            }
+        }
 
         Log::info('[PPMP Store] Starting create', [
             'office_id' => $validated['office_id'] ?? null,
@@ -87,9 +110,56 @@ class PPMPController extends Controller
 
         DB::beginTransaction();
         try {
+            $existingPpmp = PPMP::query()
+                ->where('office_id', $validated['office_id'])
+                ->where('project_code_id', $validated['project_code_id'])
+                ->where('fiscal_year', $validated['fiscal_year'])
+                ->orderBy('id')
+                ->first();
+
+            if ($existingPpmp) {
+                if (! ($storePPMPRequest->hasFile('xlsx_file') && $storePPMPRequest->file('xlsx_file')->isValid())) {
+                    return back()->withErrors([
+                        'xlsx_file' => 'An XLSX file is required to append an addendum to the existing PPMP.',
+                    ]);
+                }
+
+                $xlsxPath = $storePPMPRequest->file('xlsx_file')->store('ppmps', 'public');
+
+                $ppmpImport = new PPMPImport($existingPpmp);
+                Excel::import($ppmpImport, $storePPMPRequest->file('xlsx_file'));
+
+                $budgetNotices = array_merge(
+                    $existingPpmp->budget_notices ?? [],
+                    $ppmpImport->getBudgetNotices()
+                );
+
+                $existingPpmp->update([
+                    'xlsx_path' => $xlsxPath,
+                    'budget_notices' => $budgetNotices,
+                ]);
+
+                Log::info('[PPMP Store] Addendum appended to existing PPMP', [
+                    'existing_ppmp_id' => $existingPpmp->id,
+                    'office_id' => $validated['office_id'],
+                    'project_code_id' => $validated['project_code_id'],
+                    'fiscal_year' => $validated['fiscal_year'],
+                    'xlsx_path' => $xlsxPath,
+                    'budget_notices_count' => count($budgetNotices),
+                    'categories_created' => $ppmpImport->getCategoriesCreated(),
+                    'items_created' => $ppmpImport->getItemsCreated(),
+                ]);
+
+                DB::commit();
+
+                return redirect()->route('ppmps.show', $existingPpmp)
+                    ->with('success', 'PPMP addendum imported and appended to the existing office-project code-year PPMP.');
+            }
+
             // Create PPMP
             $ppmp = PPMP::create([
                 'office_id' => $validated['office_id'],
+                'project_code_id' => $validated['project_code_id'],
                 'fiscal_year' => $validated['fiscal_year'],
                 'is_addendum' => $validated['is_addendum'] ?? false,
                 'remarks' => $validated['remarks'] ?? null,
@@ -150,7 +220,7 @@ class PPMPController extends Controller
 
     public function show(PPMP $ppmp): Response
     {
-        $ppmp->load(['office', 'categories.account', 'categories.items.months']);
+        $ppmp->load(['office', 'projectCode', 'categories.account', 'categories.items.months']);
 
         return Inertia::render('PPMPs/Show', [
             'ppmp' => $ppmp,
@@ -159,11 +229,12 @@ class PPMPController extends Controller
 
     public function edit(PPMP $ppmp): Response
     {
-        $ppmp->load(['office', 'categories.account', 'categories.items.months']);
+        $ppmp->load(['office', 'projectCode', 'categories.account', 'categories.items.months']);
 
         return Inertia::render('PPMPs/Edit', [
             'ppmp' => $ppmp,
-            'offices' => Office::all(['id', 'name']),
+            'offices' => Office::with(['projectCodes:id,office_id,code,name'])
+                ->get(['id', 'name']),
         ]);
     }
 
@@ -175,6 +246,7 @@ class PPMPController extends Controller
         try {
             $ppmp->update([
                 'office_id' => $validated['office_id'],
+                'project_code_id' => $validated['project_code_id'],
                 'fiscal_year' => $validated['fiscal_year'],
                 'is_addendum' => $validated['is_addendum'] ?? false,
                 'remarks' => $validated['remarks'] ?? null,
@@ -286,5 +358,55 @@ class PPMPController extends Controller
             Storage::disk('public')->path($ppmp->xlsx_path),
             sprintf('PPMP-%s-FY%s.xlsx', $ppmp->office->name, $ppmp->fiscal_year)
         );
+    }
+
+    private function resolveProjectCodeFromXlsx(UploadedFile $xlsxFile, int $officeId): ?ProjectCode
+    {
+        $spreadsheet = IOFactory::load($xlsxFile->getRealPath());
+        $cellValue = trim((string) $spreadsheet->getActiveSheet()->getCell('C4')->getFormattedValue());
+
+        if ($cellValue === '') {
+            return null;
+        }
+
+        $candidate = $this->extractProjectCodeCandidate($cellValue);
+        $candidateLower = mb_strtolower($candidate);
+
+        $projectCode = ProjectCode::query()
+            ->where('office_id', $officeId)
+            ->where(function ($query) use ($candidate, $candidateLower): void {
+                $query->whereRaw('LOWER(name) = ?', [$candidateLower])
+                    ->orWhereRaw('LOWER(code) = ?', [$candidateLower]);
+            })
+            ->first();
+
+        if ($projectCode) {
+            return $projectCode;
+        }
+
+        if (str_contains($candidate, '-')) {
+            [$left, $right] = array_map('trim', explode('-', $candidate, 2));
+
+            $projectCode = ProjectCode::query()
+                ->where('office_id', $officeId)
+                ->where(function ($query) use ($left, $right): void {
+                    $query->where('code', $left)
+                        ->orWhereRaw('LOWER(name) = ?', [mb_strtolower($right)]);
+                })
+                ->first();
+        }
+
+        return $projectCode;
+    }
+
+    private function extractProjectCodeCandidate(string $cellValue): string
+    {
+        $normalized = preg_replace('/\s+/', ' ', $cellValue) ?? $cellValue;
+
+        if (str_contains($normalized, ':')) {
+            return trim((string) preg_replace('/^[^:]+:/', '', $normalized));
+        }
+
+        return trim($normalized);
     }
 }

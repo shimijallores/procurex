@@ -14,6 +14,7 @@ class PPMP extends Model
 
     protected $fillable = [
         'office_id',
+        'project_code_id',
         'fiscal_year',
         'is_addendum',
         'remarks',
@@ -32,6 +33,11 @@ class PPMP extends Model
     public function office(): BelongsTo
     {
         return $this->belongsTo(Office::class);
+    }
+
+    public function projectCode(): BelongsTo
+    {
+        return $this->belongsTo(ProjectCode::class);
     }
 
     public function categories(): HasMany

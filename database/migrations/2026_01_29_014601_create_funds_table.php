@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('funds', function (Blueprint $table) {
             $table->id();
             $table->foreignId('office_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('project_code_id');
             $table->string('code')->unique();
             $table->string('name');
             $table->enum('type', ['general', 'project']);
@@ -23,6 +24,7 @@ return new class extends Migration
 
             $table->index('code');
             $table->index(['office_id', 'fiscal_year']);
+            $table->index(['office_id', 'project_code_id', 'fiscal_year'], 'idx_funds_office_project_year');
         });
     }
 

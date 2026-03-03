@@ -28,6 +28,7 @@ const props = defineProps({
 
 const form = useForm({
     office_id: "",
+    project_code_id: "",
     code: "",
     name: "",
     type: "general",

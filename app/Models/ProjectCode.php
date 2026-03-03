@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Model;
 
 class ProjectCode extends Model
@@ -21,5 +22,15 @@ class ProjectCode extends Model
     public function office(): BelongsTo
     {
         return $this->belongsTo(Office::class);
+    }
+
+    public function funds(): HasMany
+    {
+        return $this->hasMany(Fund::class);
+    }
+
+    public function ppmps(): HasMany
+    {
+        return $this->hasMany(PPMP::class);
     }
 }
