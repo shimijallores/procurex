@@ -28,7 +28,7 @@ const props = defineProps({
 
 const form = useForm({
     office_id: "",
-    project_code_id: "",
+    fund_id: "",
     fiscal_year: new Date().getFullYear(),
     is_addendum: false,
     remarks: "",

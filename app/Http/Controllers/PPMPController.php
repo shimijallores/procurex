@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StorePPMPRequest;
 use App\Http\Requests\UpdatePPMPRequest;
 use App\Imports\PPMPImport;
+use App\Models\Fund;
 use App\Models\Office;
 use App\Models\PPMP;
 use App\Models\ProjectCode;
@@ -25,7 +26,7 @@ class PPMPController extends Controller
 {
     public function index(Request $request): Response
     {
-        $lengthAwarePaginator = PPMP::with(['office', 'projectCode'])
+        $lengthAwarePaginator = PPMP::with(['office', 'projectCode', 'fund.projectCode'])
             ->when($request->search, function ($query, string $search): void {
                 $query->where('fiscal_year', 'like', sprintf('%%%s%%', $search))
                     ->orWhereHas('office', function ($q) use ($search): void {
@@ -73,16 +74,31 @@ class PPMPController extends Controller
     public function create(): Response
     {
         return Inertia::render('PPMPs/Create', [
-            'offices' => Office::with(['projectCodes:id,office_id,code,name'])
-                ->get(['id', 'name']),
+            'offices' => Office::with([
+                'funds' => fn($query) => $query
+                    ->select(['id', 'office_id', 'name', 'type', 'project_code_id', 'fiscal_year'])
+                    ->with('projectCode:id,code,name'),
+            ])->get(['id', 'name', 'code']),
         ]);
     }
 
     public function store(StorePPMPRequest $storePPMPRequest): RedirectResponse
     {
         $validated = $storePPMPRequest->validated();
+        $fund = Fund::query()
+            ->where('id', $validated['fund_id'])
+            ->where('office_id', $validated['office_id'])
+            ->firstOrFail();
 
-        if ($storePPMPRequest->hasFile('xlsx_file') && $storePPMPRequest->file('xlsx_file')->isValid()) {
+        $resolvedProjectCodeId = $fund->type === 'project'
+            ? $fund->project_code_id
+            : null;
+
+        if (
+            $fund->type === 'project'
+            && $storePPMPRequest->hasFile('xlsx_file')
+            && $storePPMPRequest->file('xlsx_file')->isValid()
+        ) {
             $resolvedProjectCode = $this->resolveProjectCodeFromXlsx(
                 $storePPMPRequest->file('xlsx_file'),
                 (int) $validated['office_id']
@@ -94,9 +110,9 @@ class PPMPController extends Controller
                 ]);
             }
 
-            if ((int) $resolvedProjectCode->id !== (int) $validated['project_code_id']) {
+            if ((int) $resolvedProjectCode->id !== (int) $resolvedProjectCodeId) {
                 return back()->withErrors([
-                    'project_code_id' => 'Selected project code does not match the PPMP project code.',
+                    'fund_id' => 'Selected fund project code does not match the PPMP project code.',
                 ]);
             }
         }
@@ -105,8 +121,12 @@ class PPMPController extends Controller
         try {
             $existingPpmp = PPMP::query()
                 ->where('office_id', $validated['office_id'])
-                ->where('project_code_id', $validated['project_code_id'])
                 ->where('fiscal_year', $validated['fiscal_year'])
+                ->when(
+                    $resolvedProjectCodeId === null,
+                    fn($query) => $query->whereNull('project_code_id'),
+                    fn($query) => $query->where('project_code_id', $resolvedProjectCodeId)
+                )
                 ->orderBy('id')
                 ->first();
 
@@ -141,7 +161,7 @@ class PPMPController extends Controller
             // Create PPMP
             $ppmp = PPMP::create([
                 'office_id' => $validated['office_id'],
-                'project_code_id' => $validated['project_code_id'],
+                'project_code_id' => $resolvedProjectCodeId,
                 'fiscal_year' => $validated['fiscal_year'],
                 'is_addendum' => $validated['is_addendum'] ?? false,
                 'remarks' => $validated['remarks'] ?? null,
@@ -181,7 +201,7 @@ class PPMPController extends Controller
 
     public function show(PPMP $ppmp): Response
     {
-        $ppmp->load(['office', 'projectCode', 'categories.account', 'categories.items.months']);
+        $ppmp->load(['office', 'projectCode', 'fund.projectCode', 'categories.account', 'categories.items.months']);
 
         return Inertia::render('PPMPs/Show', [
             'ppmp' => $ppmp,
@@ -190,24 +210,35 @@ class PPMPController extends Controller
 
     public function edit(PPMP $ppmp): Response
     {
-        $ppmp->load(['office', 'projectCode', 'categories.account', 'categories.items.months']);
+        $ppmp->load(['office', 'projectCode', 'fund.projectCode', 'categories.account', 'categories.items.months']);
 
         return Inertia::render('PPMPs/Edit', [
             'ppmp' => $ppmp,
-            'offices' => Office::with(['projectCodes:id,office_id,code,name'])
-                ->get(['id', 'name']),
+            'offices' => Office::with([
+                'funds' => fn($query) => $query
+                    ->select(['id', 'office_id', 'name', 'type', 'project_code_id', 'fiscal_year'])
+                    ->with('projectCode:id,code,name'),
+            ])->get(['id', 'name', 'code']),
         ]);
     }
 
     public function update(UpdatePPMPRequest $updatePPMPRequest, PPMP $ppmp): RedirectResponse
     {
         $validated = $updatePPMPRequest->validated();
+        $fund = Fund::query()
+            ->where('id', $validated['fund_id'])
+            ->where('office_id', $validated['office_id'])
+            ->firstOrFail();
+
+        $resolvedProjectCodeId = $fund->type === 'project'
+            ? $fund->project_code_id
+            : null;
 
         DB::beginTransaction();
         try {
             $ppmp->update([
                 'office_id' => $validated['office_id'],
-                'project_code_id' => $validated['project_code_id'],
+                'project_code_id' => $resolvedProjectCodeId,
                 'fiscal_year' => $validated['fiscal_year'],
                 'is_addendum' => $validated['is_addendum'] ?? false,
                 'remarks' => $validated['remarks'] ?? null,

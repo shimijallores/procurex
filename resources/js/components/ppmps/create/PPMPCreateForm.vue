@@ -19,7 +19,7 @@ const props = defineProps({
     xlsxFileName: String,
 });
 
-const availableProjectCodes = computed(() => {
+const availableFunds = computed(() => {
     const officeId = Number(props.form.office_id);
 
     if (!officeId) {
@@ -30,19 +30,18 @@ const availableProjectCodes = computed(() => {
         (office) => Number(office.id) === officeId,
     );
 
-    return selectedOffice?.project_codes ?? [];
+    return selectedOffice?.funds ?? [];
 });
 
 watch(
     () => props.form.office_id,
     () => {
         const exists = availableProjectCodes.value.some(
-            (projectCode) =>
-                String(projectCode.id) === String(props.form.project_code_id),
+            (fund) => String(fund.id) === String(props.form.fund_id),
         );
 
         if (!exists) {
-            props.form.project_code_id = "";
+            props.form.fund_id = "";
         }
     },
 );
@@ -122,34 +121,47 @@ const handleFileChange = (event) => {
                 </div>
 
                 <div class="space-y-2">
-                    <Label for="project_code_id">Project Code</Label>
+                    <Label for="fund_id">Fund</Label>
                     <select
-                        id="project_code_id"
-                        v-model="form.project_code_id"
+                        id="fund_id"
+                        v-model="form.fund_id"
                         :disabled="!form.office_id"
                         :class="[
                             'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
                             'ring-offset-background focus-visible:outline-none focus-visible:ring-2',
                             'focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-                            form.errors.project_code_id
-                                ? 'border-destructive'
-                                : '',
+                            form.errors.fund_id ? 'border-destructive' : '',
                         ]"
                     >
-                        <option value="">Select a project code</option>
+                        <option value="">Select a fund</option>
                         <option
-                            v-for="projectCode in availableProjectCodes"
-                            :key="projectCode.id"
-                            :value="projectCode.id"
+                            v-for="fund in availableFunds"
+                            :key="fund.id"
+                            :value="fund.id"
                         >
-                            {{ projectCode.code }} - {{ projectCode.name }}
+                            {{ fund.name }}
+                            ({{
+                                fund.type === "project" ? "Project" : "General"
+                            }}) -
+                            {{
+                                fund.type === "project"
+                                    ? `Project Code: ${fund.project_code?.code ?? "N/A"}`
+                                    : `General Code: ${
+                                          offices.find(
+                                              (office) =>
+                                                  Number(office.id) ===
+                                                  Number(form.office_id),
+                                          )?.code ?? "N/A"
+                                      }`
+                            }}
+                            - FY {{ fund.fiscal_year }}
                         </option>
                     </select>
                     <p
-                        v-if="form.errors.project_code_id"
+                        v-if="form.errors.fund_id"
                         class="text-sm text-destructive"
                     >
-                        {{ form.errors.project_code_id }}
+                        {{ form.errors.fund_id }}
                     </p>
                 </div>
 

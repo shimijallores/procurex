@@ -434,6 +434,36 @@ defineProps({
                         </Table>
                     </div>
                 </div>
+
+                <div v-if="comparison?.is_project_fund">
+                    <h3 class="text-lg font-semibold mb-3 flex items-center">
+                        <Icon icon="lucide:file-check-2" class="mr-2 h-5 w-5" />
+                        Project Proposal
+                    </h3>
+                    <div class="border rounded-lg p-4">
+                        <Badge
+                            :class="
+                                comparison?.project_proposal_present
+                                    ? 'bg-green-500/10 text-green-700 dark:bg-green-500/20 dark:text-green-400'
+                                    : 'bg-orange-500/10 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400'
+                            "
+                        >
+                            <Icon
+                                :icon="
+                                    comparison?.project_proposal_present
+                                        ? 'lucide:check'
+                                        : 'lucide:x'
+                                "
+                                class="mr-1 h-3 w-3"
+                            />
+                            {{
+                                comparison?.project_proposal_present
+                                    ? "Project Proposal found"
+                                    : "Project Proposal missing"
+                            }}
+                        </Badge>
+                    </div>
+                </div>
             </div>
         </CardContent>
     </Card>

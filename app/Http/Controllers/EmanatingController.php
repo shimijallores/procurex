@@ -435,7 +435,7 @@ class EmanatingController extends Controller
     }
 
     /**
-     * Compare emanating items against PPMP, APP, Work Program, and Project Brief.
+     * Compare emanating items against required documents by fund type.
      */
     private function compareWithDocuments(Emanating $emanating): array
     {
@@ -466,6 +466,9 @@ class EmanatingController extends Controller
         $projectBriefItems = $isProjectFund
             ? $this->getOrParseProjectBriefItems($emanating)
             : collect();
+        $hasProjectProposal = $isProjectFund
+            ? (bool) $emanating->fund?->project?->projectProposal
+            : false;
 
         $comparisonItems = [];
         $allMatched = true;
@@ -527,6 +530,10 @@ class EmanatingController extends Controller
                 );
             }
 
+            if ($isProjectFund && ! $hasProjectProposal) {
+                $issues[] = 'Missing in Project Proposal';
+            }
+
             if ($issues !== []) {
                 $allMatched = false;
             }
@@ -569,10 +576,10 @@ class EmanatingController extends Controller
             'status' => $allMatched ? 'all_matched' : 'partial_match',
             'message' => $allMatched
                 ? ($isProjectFund
-                    ? 'All items pass PPMP, APP, Work Program, and Project Brief checks.'
+                    ? 'All items pass PPMP, APP, Work Program, Project Brief, and Project Proposal checks.'
                     : 'All items pass PPMP and APP checks.')
                 : ($isProjectFund
-                    ? 'Some items are missing from PPMP/APP/Work Program/Project Brief or exceed allowed quantity.'
+                    ? 'Some items are missing from PPMP/APP/Work Program/Project Brief/Project Proposal or exceed allowed quantity.'
                     : 'Some items are missing from PPMP/APP or exceed PPMP quantity.'),
             'items' => $comparisonItems,
             'ppmp_items' => $ppmpItems,
@@ -585,11 +592,13 @@ class EmanatingController extends Controller
             'total_app_items' => $matchedAppItems->count(),
             'total_work_program_items' => $matchedWorkProgramItems->count(),
             'total_project_brief_items' => $matchedProjectBriefItems->count(),
+            'project_proposal_present' => $hasProjectProposal,
             'total_matched_items' => collect($comparisonItems)->where('matched', true)->count(),
             'unmatched_ppmp_items' => collect($comparisonItems)->filter(fn($item) => in_array('Missing in PPMP', $item['issues'] ?? [], true))->count(),
             'unmatched_app_items' => collect($comparisonItems)->filter(fn($item) => in_array('Missing in APP', $item['issues'] ?? [], true))->count(),
             'unmatched_work_program_items' => collect($comparisonItems)->filter(fn($item) => in_array('Missing in Work Program', $item['issues'] ?? [], true))->count(),
             'unmatched_project_brief_items' => collect($comparisonItems)->filter(fn($item) => in_array('Missing in Project Brief', $item['issues'] ?? [], true))->count(),
+            'unmatched_project_proposal_items' => collect($comparisonItems)->filter(fn($item) => in_array('Missing in Project Proposal', $item['issues'] ?? [], true))->count(),
         ];
     }
 

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('ppmps', function (Blueprint $table) {
             $table->id();
             $table->foreignId('office_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('project_code_id');
+            $table->foreignId('project_code_id')->nullable()->constrained('project_codes')->nullOnDelete();
             $table->unsignedSmallInteger('fiscal_year');
             $table->boolean('is_addendum')->default(false);
             $table->string('remarks')->nullable();

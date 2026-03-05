@@ -42,11 +42,26 @@ const formatCurrency = (amount) => {
                 </div>
                 <div class="grid gap-1">
                     <p class="text-sm font-medium text-muted-foreground">
-                        Project Code
+                        Code Reference
                     </p>
                     <p class="font-medium">
-                        {{ ppmp.project_code?.code }} -
-                        {{ ppmp.project_code?.name }}
+                        <span v-if="ppmp.fund?.type === 'general'">
+                            General Code: {{ ppmp.office?.code || "N/A" }}
+                        </span>
+                        <span v-else>
+                            Project Code:
+                            {{
+                                ppmp.fund?.project_code?.code ||
+                                ppmp.project_code?.code ||
+                                "N/A"
+                            }}
+                            -
+                            {{
+                                ppmp.fund?.project_code?.name ||
+                                ppmp.project_code?.name ||
+                                "N/A"
+                            }}
+                        </span>
                     </p>
                 </div>
                 <div class="grid gap-1">

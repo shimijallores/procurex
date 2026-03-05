@@ -13,6 +13,7 @@ class Emanating extends Model
     protected $table = 'emanatings';
 
     protected $fillable = [
+        'emanating_no',
         'fund_id',
         'ppmp_id',
         'project_id',
@@ -51,6 +52,43 @@ class Emanating extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Emanating $emanating): void {
+            if (! empty($emanating->emanating_no)) {
+                return;
+            }
+
+            $year = (int) ($emanating->fiscal_year ?: now()->year);
+            $emanating->emanating_no = self::generateEmanatingNoForYear($year);
+        });
+    }
+
+    private static function generateEmanatingNoForYear(int $year): string
+    {
+        $prefix = sprintf('%d-', $year);
+
+        $numbers = self::query()
+            ->where('fiscal_year', $year)
+            ->where('emanating_no', 'like', $prefix . '%')
+            ->lockForUpdate()
+            ->pluck('emanating_no');
+
+        $maxSequence = $numbers
+            ->map(function (string $emanatingNo) use ($year): int {
+                if (preg_match('/^' . preg_quote((string) $year, '/') . '-(\d+)$/', $emanatingNo, $matches) !== 1) {
+                    return 0;
+                }
+
+                return (int) ($matches[1] ?? 0);
+            })
+            ->max() ?? 0;
+
+        $nextSequence = $maxSequence + 1;
+
+        return sprintf('%d-%s', $year, str_pad((string) $nextSequence, 3, '0', STR_PAD_LEFT));
+    }
 
     public function ppmp(): BelongsTo
     {

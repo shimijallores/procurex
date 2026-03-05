@@ -146,8 +146,31 @@ const formatDate = (date) => {
                                         <div
                                             class="text-xs text-muted-foreground"
                                         >
-                                            {{ ppmp.project_code?.code }} -
-                                            {{ ppmp.project_code?.name }}
+                                            <span
+                                                v-if="
+                                                    ppmp.fund?.type ===
+                                                    'general'
+                                                "
+                                            >
+                                                General Code:
+                                                {{ ppmp.office?.code || "N/A" }}
+                                            </span>
+                                            <span v-else>
+                                                Project Code:
+                                                {{
+                                                    ppmp.fund?.project_code
+                                                        ?.code ||
+                                                    ppmp.project_code?.code ||
+                                                    "N/A"
+                                                }}
+                                                -
+                                                {{
+                                                    ppmp.fund?.project_code
+                                                        ?.name ||
+                                                    ppmp.project_code?.name ||
+                                                    "N/A"
+                                                }}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
