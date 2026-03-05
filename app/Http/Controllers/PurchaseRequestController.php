@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\RoleType;
 use App\Http\Requests\StorePurchaseRequestRequest;
 use App\Http\Requests\UpdatePurchaseRequestRequest;
 use App\Models\Emanating;
 use App\Models\Office;
 use App\Models\PurchaseRequest;
 use App\Models\PurchaseRequestItem;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -35,7 +37,7 @@ class PurchaseRequestController extends Controller
 
     /** Common PR purposes */
     private const COMMON_PURPOSES = [
-        'Purchase of Office Supplies (item1, item2, item3, etc.) for use of [Office Name].',
+        'Purchase of [name of account] (item1, item2, item3, etc.) for use of [Office Name].',
         'Repair and maintenance of Service Vehicle with Plate No. [Plate No.] and Property No. [Property No.].',
         'Supply and Installation of Four (4) units Airconditioning units.',
         'Purchase of Food to be served during [Event Name] on [Date of Event].',
@@ -109,6 +111,7 @@ class PurchaseRequestController extends Controller
             'project.fund.office',
             'fund.office',
             'fund.projectCode',
+            'account',
             'ppmpCategory',
             'emanatingItems.ppmpItem',
         ])
@@ -191,12 +194,18 @@ class PurchaseRequestController extends Controller
 
             $emanating->update(['pr_no' => $generatedPrNo]);
 
+            $defaultPrAdminId = $this->resolveSingleUserIdByRole(RoleType::PR_ADMIN->value);
+            $defaultBudgetingAdminId = $this->resolveSingleUserIdByRole(RoleType::BUDGETING_ADMIN->value);
+
             foreach ($validated['items'] as $item) {
                 $lineTotal = (float) $item['unit_cost'] * (int) $item['quantity'];
                 $vatRate   = ! empty($item['vat_applicable']) ? (float) ($item['vat_rate'] ?? 0.12) : 0;
                 if (! empty($item['vat_applicable'])) {
                     $lineTotal = $lineTotal * (1 + $vatRate);
                 }
+
+                $emanatingItem = $emanating->emanatingItems->firstWhere('id', (int) $item['emanating_item_id']);
+                $sourceAmount = (float) ($emanatingItem?->total_price ?? 0);
 
                 PurchaseRequestItem::create([
                     'purchase_request_id' => $pr->id,
@@ -207,6 +216,12 @@ class PurchaseRequestController extends Controller
                     'vat_applicable'      => ! empty($item['vat_applicable']),
                     'vat_rate'            => ! empty($item['vat_applicable']) ? $vatRate : 0,
                     'remarks'             => $item['remarks'] ?? null,
+                    'matrix_amount_below_1m' => $sourceAmount > 0 && $sourceAmount < 1000000 ? round($sourceAmount, 2) : null,
+                    'matrix_amount_above_1m' => $sourceAmount >= 1000000 ? round($sourceAmount, 2) : null,
+                    'matrix_new_amount' => round($lineTotal, 2),
+                    'matrix_account_id' => $emanating->account_id,
+                    'matrix_pr_admin_user_id' => $defaultPrAdminId,
+                    'matrix_budgeting_admin_user_id' => $defaultBudgetingAdminId,
                 ]);
             }
 
@@ -247,6 +262,7 @@ class PurchaseRequestController extends Controller
             'emanating.project.fund.office',
             'emanating.fund.office',
             'emanating.fund.projectCode',
+            'emanating.account',
             'emanating.emanatingItems.ppmpItem',
             'items.emanatingItem.ppmpItem',
             'office',
@@ -267,6 +283,26 @@ class PurchaseRequestController extends Controller
         try {
             // Recalculate total if items are provided
             if (! empty($validated['items'])) {
+                $purchaseRequest->loadMissing('emanating.emanatingItems');
+
+                $existingMatrixByEmanatingItemId = $purchaseRequest->items()
+                    ->get([
+                        'emanating_item_id',
+                        'matrix_amount_below_1m',
+                        'matrix_amount_above_1m',
+                        'matrix_new_amount',
+                        'matrix_account_id',
+                        'matrix_pr_admin_user_id',
+                        'matrix_budgeting_admin_user_id',
+                        'matrix_date_release',
+                        'matrix_new_date_release',
+                        'matrix_remarks',
+                    ])
+                    ->keyBy('emanating_item_id');
+
+                $defaultPrAdminId = $this->resolveSingleUserIdByRole(RoleType::PR_ADMIN->value);
+                $defaultBudgetingAdminId = $this->resolveSingleUserIdByRole(RoleType::BUDGETING_ADMIN->value);
+
                 $total = 0;
                 foreach ($validated['items'] as $item) {
                     $lineTotal = (float) $item['unit_cost'] * (int) $item['quantity'];
@@ -286,6 +322,12 @@ class PurchaseRequestController extends Controller
                     if (! empty($item['vat_applicable'])) {
                         $lineTotal = $lineTotal * (1 + $vatRate);
                     }
+
+                    $emanatingItemId = (int) $item['emanating_item_id'];
+                    $existingMatrix = $existingMatrixByEmanatingItemId->get($emanatingItemId);
+                    $emanatingItem = $purchaseRequest->emanating?->emanatingItems?->firstWhere('id', $emanatingItemId);
+                    $sourceAmount = (float) ($emanatingItem?->total_price ?? 0);
+
                     PurchaseRequestItem::create([
                         'purchase_request_id' => $purchaseRequest->id,
                         'emanating_item_id'   => $item['emanating_item_id'],
@@ -295,6 +337,15 @@ class PurchaseRequestController extends Controller
                         'vat_applicable'      => ! empty($item['vat_applicable']),
                         'vat_rate'            => ! empty($item['vat_applicable']) ? $vatRate : 0,
                         'remarks'             => $item['remarks'] ?? null,
+                        'matrix_amount_below_1m' => $existingMatrix?->matrix_amount_below_1m ?? ($sourceAmount > 0 && $sourceAmount < 1000000 ? round($sourceAmount, 2) : null),
+                        'matrix_amount_above_1m' => $existingMatrix?->matrix_amount_above_1m ?? ($sourceAmount >= 1000000 ? round($sourceAmount, 2) : null),
+                        'matrix_new_amount' => $existingMatrix?->matrix_new_amount ?? round($lineTotal, 2),
+                        'matrix_account_id' => $existingMatrix?->matrix_account_id ?? $purchaseRequest->emanating?->account_id,
+                        'matrix_pr_admin_user_id' => $existingMatrix?->matrix_pr_admin_user_id ?? $defaultPrAdminId,
+                        'matrix_budgeting_admin_user_id' => $existingMatrix?->matrix_budgeting_admin_user_id ?? $defaultBudgetingAdminId,
+                        'matrix_date_release' => $existingMatrix?->matrix_date_release,
+                        'matrix_new_date_release' => $existingMatrix?->matrix_new_date_release,
+                        'matrix_remarks' => $existingMatrix?->matrix_remarks,
                     ]);
                 }
             }
@@ -510,5 +561,21 @@ class PurchaseRequestController extends Controller
         $nextCounter = $latestCounter + 1;
 
         return sprintf('%s-%04d', $prefix, $nextCounter);
+    }
+
+    private function resolveSingleUserIdByRole(string $roleName): ?int
+    {
+        $users = User::query()
+            ->whereHas('role', function ($query) use ($roleName): void {
+                $query->where('name', $roleName);
+            })
+            ->orderBy('name')
+            ->pluck('id');
+
+        if ($users->count() !== 1) {
+            return null;
+        }
+
+        return (int) $users->first();
     }
 }

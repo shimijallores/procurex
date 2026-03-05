@@ -225,6 +225,7 @@ class EmanatingController extends Controller
                     'project_id' => $fund?->project?->id,
                     'ppmp_id' => $ppmp->id,
                     'ppmp_category_id' => $ppmpCategory->id,
+                    'account_id' => $ppmpCategory->account_id,
                     'pr_no' => $validated['pr_no'] ?? null,
                     'fiscal_year' => $ppmp->fiscal_year,
                     'is_addendum' => $isAddendum,
@@ -320,10 +321,16 @@ class EmanatingController extends Controller
 
         DB::beginTransaction();
         try {
+            $resolvedPpmpCategoryId = $validated['ppmp_category_id'] ?? $emanating->ppmp_category_id;
+            $resolvedPpmpCategory = $resolvedPpmpCategoryId
+                ? PPMPCategory::query()->find($resolvedPpmpCategoryId)
+                : null;
+
             // Only update editable fields (CSV-imported fields are immutable)
             $emanating->update([
                 'ppmp_id' => $validated['ppmp_id'] ?? $emanating->ppmp_id,
-                'ppmp_category_id' => $validated['ppmp_category_id'] ?? $emanating->ppmp_category_id,
+                'ppmp_category_id' => $resolvedPpmpCategoryId,
+                'account_id' => $resolvedPpmpCategory?->account_id ?? $emanating->account_id,
                 'pr_no' => $validated['pr_no'] ?? $emanating->pr_no,
                 'is_addendum' => $validated['is_addendum'] ?? $emanating->is_addendum,
                 'remarks' => $validated['remarks'] ?? $emanating->remarks,

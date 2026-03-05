@@ -174,6 +174,13 @@ const mainNavItems = computed(() => {
             roles: ["Superadmin", "PR Admin"],
         },
         {
+            title: "PR Matrix",
+            url: route("purchase-request-matrix.index"),
+            icon: "lucide:table-properties",
+            isActive: route().current("purchase-request-matrix.*"),
+            roles: ["Superadmin", "PR Admin"],
+        },
+        {
             title: "Request for Quotation",
             url: route("rfqs.index"),
             icon: "lucide:file-text",
@@ -275,7 +282,7 @@ const canvassingItems = computed(() => {
 
 const purchaseRequestBudgetingItems = computed(() => {
     return mainNavItems.value.filter((item) =>
-        ["Purchase Requests"].includes(item.title),
+        ["Purchase Requests", "PR Matrix"].includes(item.title),
     );
 });
 

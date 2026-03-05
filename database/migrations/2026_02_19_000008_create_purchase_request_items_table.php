@@ -20,6 +20,18 @@ return new class extends Migration
             $table->boolean('vat_applicable')->default(false);
             $table->decimal('vat_rate', 5, 4)->nullable()->default(0.1200);
             $table->text('remarks')->nullable();
+
+            // PR Matrix editable fields
+            $table->decimal('matrix_amount_below_1m', 15, 2)->nullable();
+            $table->decimal('matrix_amount_above_1m', 15, 2)->nullable();
+            $table->decimal('matrix_new_amount', 15, 2)->nullable();
+            $table->foreignId('matrix_account_id')->nullable()->constrained('accounts')->nullOnDelete();
+            $table->foreignId('matrix_pr_admin_user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('matrix_budgeting_admin_user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->date('matrix_date_release')->nullable();
+            $table->date('matrix_new_date_release')->nullable();
+            $table->text('matrix_remarks')->nullable();
+
             $table->timestamps();
 
             // Unique constraint: one item can only appear once per PR
@@ -28,6 +40,9 @@ return new class extends Migration
             // Indexes
             $table->index('purchase_request_id');
             $table->index('emanating_item_id');
+            $table->index('matrix_account_id');
+            $table->index('matrix_pr_admin_user_id');
+            $table->index('matrix_budgeting_admin_user_id');
         });
     }
 

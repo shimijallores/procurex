@@ -99,6 +99,10 @@ const getProjectName = (emanating) => {
     );
 };
 
+const getAccountName = (emanating) => {
+    return emanating?.account?.name || "name of account";
+};
+
 // When emanating changes, auto-populate office/fund and build items list
 watch(
     () => props.form.pr_date,
@@ -146,11 +150,8 @@ watch(
             remarks: "",
         }));
 
-        if (props.form.purpose?.startsWith("Purchase of Office Supplies")) {
-            props.form.purpose = buildOfficeSuppliesPurpose(
-                em,
-                props.form.items,
-            );
+        if (props.form.purpose?.startsWith("Purchase of ")) {
+            props.form.purpose = buildAccountPurpose(em, props.form.items);
         }
     },
 );
@@ -250,10 +251,10 @@ watch(
         applyCategoryBudgetCaps();
 
         if (
-            props.form.purpose?.startsWith("Purchase of Office Supplies") &&
+            props.form.purpose?.startsWith("Purchase of ") &&
             selectedEmanating.value
         ) {
-            props.form.purpose = buildOfficeSuppliesPurpose(
+            props.form.purpose = buildAccountPurpose(
                 selectedEmanating.value,
                 props.form.items || [],
             );
@@ -282,8 +283,8 @@ const formatCurrency = (val) =>
     }).format(val || 0);
 
 const selectPurpose = (p) => {
-    if (p.startsWith("Purchase of Office Supplies")) {
-        props.form.purpose = buildOfficeSuppliesPurpose(
+    if (p.startsWith("Purchase of [name of account]")) {
+        props.form.purpose = buildAccountPurpose(
             selectedEmanating.value,
             props.form.items || [],
         );
@@ -293,8 +294,9 @@ const selectPurpose = (p) => {
     showPurposeSuggestions.value = false;
 };
 
-const buildOfficeSuppliesPurpose = (emanating, items) => {
+const buildAccountPurpose = (emanating, items) => {
     const officeName = getOfficeName(emanating);
+    const accountName = getAccountName(emanating);
     const itemNames = (items || [])
         .map((item) => item?._name)
         .filter((name) => typeof name === "string" && name.trim() !== "")
@@ -303,9 +305,9 @@ const buildOfficeSuppliesPurpose = (emanating, items) => {
     const uniqueItems = [...new Set(itemNames)];
     const itemListText = uniqueItems.length
         ? uniqueItems.join(", ")
-        : "office supplies";
+        : "item1, item2, item3, etc.";
 
-    return `Purchase of Office Supplies (${itemListText}) for use of ${officeName}.`;
+    return `Purchase of ${accountName} (${itemListText}) for use of ${officeName}.`;
 };
 
 const filteredPurposes = computed(() => {

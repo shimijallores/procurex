@@ -18,6 +18,7 @@ use App\Http\Controllers\PPMPController;
 use App\Http\Controllers\ProjectCodeController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\PurchaseRequestController;
+use App\Http\Controllers\PurchaseRequestMatrixController;
 use App\Http\Controllers\RFQController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SessionController;
@@ -74,6 +75,11 @@ Route::middleware(['auth'])->group(function (): void {
     // Purchase Request module
     $prRoles = 'role:Superadmin,PR Admin';
     Route::resource('purchase-requests', PurchaseRequestController::class)->middleware($prRoles);
+    Route::get('purchase-request-matrix', [PurchaseRequestMatrixController::class, 'index'])->middleware($prRoles)->name('purchase-request-matrix.index');
+    Route::get('purchase-request-matrix/export/xlsx', [PurchaseRequestMatrixController::class, 'exportXlsx'])->middleware($prRoles)->name('purchase-request-matrix.export-xlsx');
+    Route::get('purchase-request-matrix/{purchase_request_item}', [PurchaseRequestMatrixController::class, 'show'])->middleware($prRoles)->name('purchase-request-matrix.show');
+    Route::get('purchase-request-matrix/{purchase_request_item}/edit', [PurchaseRequestMatrixController::class, 'edit'])->middleware($prRoles)->name('purchase-request-matrix.edit');
+    Route::put('purchase-request-matrix/{purchase_request_item}', [PurchaseRequestMatrixController::class, 'update'])->middleware($prRoles)->name('purchase-request-matrix.update');
     Route::post('purchase-requests/suggest-pr-no', [PurchaseRequestController::class, 'suggestPrNo'])->middleware($prRoles)->name('purchase-requests.suggest-pr-no');
     Route::post('purchase-requests/{purchase_request}/approve', [PurchaseRequestController::class, 'approve'])->middleware($prRoles)->name('purchase-requests.approve');
     Route::post('purchase-requests/{purchase_request}/return', [PurchaseRequestController::class, 'returnToOffice'])->middleware($prRoles)->name('purchase-requests.return');
