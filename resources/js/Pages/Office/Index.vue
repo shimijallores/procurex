@@ -206,6 +206,11 @@ const openDeleteModal = (office) => {
                                 <th
                                     class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
                                 >
+                                    Office Code
+                                </th>
+                                <th
+                                    class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
+                                >
                                     Users
                                 </th>
                                 <th
@@ -252,6 +257,11 @@ const openDeleteModal = (office) => {
                                             </div>
                                         </div>
                                     </div>
+                                </td>
+                                <td class="p-4 align-middle">
+                                    <span class="font-medium">{{
+                                        office.code ?? "-"
+                                    }}</span>
                                 </td>
                                 <td class="p-4 align-middle">
                                     <div class="flex items-center gap-2">
@@ -332,7 +342,7 @@ const openDeleteModal = (office) => {
                                 </td>
                             </tr>
                             <tr v-if="offices.data.length === 0">
-                                <td colspan="5" class="p-8 text-center">
+                                <td colspan="6" class="p-8 text-center">
                                     <div
                                         class="flex flex-col items-center gap-2"
                                     >

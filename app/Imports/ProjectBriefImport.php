@@ -9,13 +9,12 @@ use App\Models\ProjectBriefItem;
 use DOMDocument;
 use DOMXPath;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use ZipArchive;
 
 class ProjectBriefImport
 {
-    public function import(ProjectBrief $projectBrief, ?int $emanatingId = null): Collection
+    public function import(ProjectBrief $projectBrief, ?int $_emanatingId = null): Collection
     {
         if (! $projectBrief->file_url) {
             return collect();
@@ -45,12 +44,6 @@ class ProjectBriefImport
                 'row_order' => $index + 1,
             ]);
         }
-
-        Log::info('ProjectBrief items persisted from parsed DOCX rows.', [
-            'emanating_id' => $emanatingId,
-            'project_brief_id' => $projectBrief->id,
-            'inserted_items_count' => count($parsedRows),
-        ]);
 
         return $projectBrief->items()->orderBy('row_order')->get();
     }

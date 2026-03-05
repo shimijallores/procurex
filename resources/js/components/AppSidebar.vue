@@ -95,7 +95,7 @@ const mainNavItems = computed(() => {
             roles: ["Superadmin"], // Superadmin only
         },
         {
-            title: "Offices",
+            title: "Offices & General Codes",
             url: route("offices.index"),
             icon: "lucide:building-2",
             isActive: route().current("offices.*"),
@@ -254,7 +254,7 @@ const navigationItems = computed(() => {
             "Dashboard",
             "Users",
             "Roles",
-            "Offices",
+            "Offices & General Codes",
             "Project Codes",
             "Accounts",
         ].includes(item.title),
