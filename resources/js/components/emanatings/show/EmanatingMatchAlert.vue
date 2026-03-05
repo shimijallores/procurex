@@ -51,14 +51,19 @@ const alertMessage = computed(() => {
     // Use comparison data if available (more reliable than cached boolean)
     if (props.comparison) {
         const matchedCount = props.comparison.total_matched_items || 0;
-        const totalPPMPItems = props.comparison.total_ppmp_items || 0;
+        const totalItems = props.comparison.total_emanating_items || 0;
         const allMatch = props.comparison.status === "all_matched";
+        const isProjectFund = props.comparison.is_project_fund === true;
 
-        if (allMatch && matchedCount === totalPPMPItems) {
-            return "All items passed PPMP and APP checks. This emanating request is ready for approval.";
+        if (allMatch && matchedCount === totalItems) {
+            return isProjectFund
+                ? "All items passed PPMP, APP, and Work Program checks. This emanating request is ready for approval."
+                : "All items passed PPMP and APP checks. This emanating request is ready for approval.";
         }
 
-        return `${matchedCount} of ${totalPPMPItems} items passed PPMP/APP checks. Review flagged items below (advisory only).`;
+        return isProjectFund
+            ? `${matchedCount} of ${totalItems} items passed PPMP/APP/Work Program checks. Review flagged items below (advisory only).`
+            : `${matchedCount} of ${totalItems} items passed PPMP/APP checks. Review flagged items below (advisory only).`;
     }
 
     // Fallback to itemsMatch boolean if no comparison data
