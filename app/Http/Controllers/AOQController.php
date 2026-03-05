@@ -175,8 +175,15 @@ class AOQController extends Controller
             usort($supplierTotals, fn($a, $b) => $a['total_amount'] <=> $b['total_amount']);
             $winnerSupplierId = $supplierTotals[0]['supplier_id'];
 
+            // Reset previous RFQ quotation records so recreated AOQs don't reuse stale supplier items.
+            $rfq->loadMissing('suppliers.supplierItems');
+            foreach ($rfq->suppliers as $existingSupplier) {
+                $existingSupplier->supplierItems()->delete();
+            }
+            $rfq->suppliers()->delete();
+
             foreach ($validated['quotations'] as $quotation) {
-                $rfqSupplier = RFQSupplier::firstOrCreate([
+                $rfqSupplier = RFQSupplier::create([
                     'rfq_id' => $rfq->id,
                     'supplier_id' => $quotation['supplier_id'],
                 ]);
@@ -245,7 +252,16 @@ class AOQController extends Controller
 
     public function destroy(AOQ $aoq): RedirectResponse
     {
-        $aoq->delete();
+        DB::transaction(function () use ($aoq): void {
+            $aoq->loadMissing('rfq.suppliers.supplierItems');
+
+            foreach ($aoq->rfq?->suppliers ?? [] as $supplier) {
+                $supplier->supplierItems()->delete();
+            }
+
+            $aoq->rfq?->suppliers()->delete();
+            $aoq->delete();
+        });
 
         return redirect()->route('aoqs.index')->with('success', 'AOQ deleted successfully.');
     }
@@ -286,10 +302,6 @@ class AOQController extends Controller
         $supplierTotals = [];
 
         foreach ($rfq->suppliers as $rfqSupplier) {
-            if (! $rfqSupplier->submitted_at) {
-                continue;
-            }
-
             $total = 0.0;
             $hasAtLeastOnePrice = false;
 
