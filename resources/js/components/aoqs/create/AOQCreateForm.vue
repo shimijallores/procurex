@@ -321,6 +321,9 @@ const calculationMessage = computed(() => {
                                 <th class="px-3 py-2 text-left">Item</th>
                                 <th class="px-3 py-2 text-center">Qty</th>
                                 <th class="px-3 py-2 text-center">Unit</th>
+                                <th class="px-3 py-2 text-right">
+                                    Expected Price
+                                </th>
                                 <th
                                     v-for="(
                                         quotation, quotationIndex
@@ -351,6 +354,16 @@ const calculationMessage = computed(() => {
                                 <td class="px-3 py-2 text-center">
                                     {{ item.unit || "—" }}
                                 </td>
+                                <td class="px-3 py-2 text-right">
+                                    {{
+                                        formatCurrency(
+                                            Number(
+                                                item.purchase_request_item
+                                                    ?.unit_cost || 0,
+                                            ),
+                                        )
+                                    }}
+                                </td>
                                 <td
                                     v-for="(
                                         quotation, quotationIndex
@@ -371,7 +384,7 @@ const calculationMessage = computed(() => {
                         </tbody>
                         <tfoot>
                             <tr class="bg-muted/20 font-semibold">
-                                <td colspan="3" class="px-3 py-2 text-right">
+                                <td colspan="4" class="px-3 py-2 text-right">
                                     Supplier Totals
                                 </td>
                                 <td

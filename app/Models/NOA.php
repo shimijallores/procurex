@@ -17,6 +17,7 @@ class NOA extends Model
         'noa_no',
         'noa_date',
         'recipient_name',
+        'recipient_title',
     ];
 
     protected $casts = [

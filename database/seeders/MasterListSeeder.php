@@ -13,9 +13,9 @@ class MasterListSeeder extends Seeder
 {
     public function run(): void
     {
-        $merryMerchants = Supplier::query()->where('name', 'MERRY MERCHANTS TRADING AND GENERAL MERCHANDISE')->firstOrFail();
-        $luckyBk = Supplier::query()->where('name', 'LUCKY-BK JANITORIAL OFFICE SUPPLIES TRADING')->firstOrFail();
-        $fyker = Supplier::query()->where('name', 'FYKER ENTERPRISES')->firstOrFail();
+        $merryMerchants = Supplier::query()->where('name', '924 FOOD SERVICES')->firstOrFail();
+        $luckyBk = Supplier::query()->where('name', 'LUCKY - BK JANITORIAL OFFICE SUPPLIES TRADING')->firstOrFail();
+        $fyker = Supplier::query()->where('name', 'COPYLANDIA OFFICE SYSTEMS CORPORATION')->firstOrFail();
 
         $officeSupplies = MasterListCategory::firstOrCreate(
             ['name' => 'Office Supplies'],

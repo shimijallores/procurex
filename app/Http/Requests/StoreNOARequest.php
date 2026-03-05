@@ -35,6 +35,7 @@ class StoreNOARequest extends FormRequest
             'calculation_label' => ['nullable', 'string', 'max:255'],
             'winner_supplier_name' => ['required', 'string', 'max:255'],
             'recipient_name' => ['nullable', 'string', 'max:255'],
+            'recipient_title' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

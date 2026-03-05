@@ -23,6 +23,13 @@ const selectedResolution = computed(() =>
 );
 
 const showRepresentativeSuggestions = ref(false);
+const showRecipientTitleSuggestions = ref(false);
+
+const recipientTitleSuggestions = [
+    "Proprietor",
+    "Authorized Representative",
+    "Owner",
+];
 
 const normalizeName = (value) =>
     String(value || "")
@@ -111,6 +118,46 @@ const suggestNoaDate = (resolutionDate) => {
 const selectRecipientName = (name) => {
     props.form.recipient_name = String(name || "");
     showRepresentativeSuggestions.value = false;
+
+    const supplier = selectedSupplier.value;
+    if (!supplier) {
+        return;
+    }
+
+    if (
+        String(supplier.proprietor || "")
+            .trim()
+            .toLowerCase() ===
+        String(props.form.recipient_name || "")
+            .trim()
+            .toLowerCase()
+    ) {
+        props.form.recipient_title = "Proprietor";
+        return;
+    }
+
+    if (
+        String(supplier.authorized_representative || "")
+            .trim()
+            .toLowerCase() ===
+        String(props.form.recipient_name || "")
+            .trim()
+            .toLowerCase()
+    ) {
+        props.form.recipient_title = "Authorized Representative";
+        return;
+    }
+
+    if (
+        String(supplier.owner || "")
+            .trim()
+            .toLowerCase() ===
+        String(props.form.recipient_name || "")
+            .trim()
+            .toLowerCase()
+    ) {
+        props.form.recipient_title = "Owner";
+    }
 };
 
 const onRecipientFocus = () => {
@@ -121,6 +168,21 @@ const onRecipientFocus = () => {
 const onRecipientBlur = () => {
     setTimeout(() => {
         showRepresentativeSuggestions.value = false;
+    }, 120);
+};
+
+const selectRecipientTitle = (title) => {
+    props.form.recipient_title = String(title || "");
+    showRecipientTitleSuggestions.value = false;
+};
+
+const onRecipientTitleFocus = () => {
+    showRecipientTitleSuggestions.value = true;
+};
+
+const onRecipientTitleBlur = () => {
+    setTimeout(() => {
+        showRecipientTitleSuggestions.value = false;
     }, 120);
 };
 
@@ -174,6 +236,14 @@ watch(
                 supplier?.authorized_representative ||
                 supplier?.owner ||
                 "";
+
+            if (supplier?.proprietor) {
+                props.form.recipient_title = "Proprietor";
+            } else if (supplier?.authorized_representative) {
+                props.form.recipient_title = "Authorized Representative";
+            } else if (supplier?.owner) {
+                props.form.recipient_title = "Owner";
+            }
         }
     },
     { immediate: true },
@@ -187,6 +257,22 @@ watch(
         }
 
         props.form.recipient_name = representativeSuggestions.value[0] || "";
+
+        const supplier = selectedSupplier.value;
+        if (!supplier) {
+            return;
+        }
+
+        if (representativeSuggestions.value[0] === supplier.proprietor) {
+            props.form.recipient_title = "Proprietor";
+        } else if (
+            representativeSuggestions.value[0] ===
+            supplier.authorized_representative
+        ) {
+            props.form.recipient_title = "Authorized Representative";
+        } else if (representativeSuggestions.value[0] === supplier.owner) {
+            props.form.recipient_title = "Owner";
+        }
     },
 );
 
@@ -385,6 +471,44 @@ watch(representativeSuggestions, (suggestions) => {
                         class="text-xs text-destructive"
                     >
                         {{ form.errors.recipient_name }}
+                    </p>
+                </div>
+
+                <div class="space-y-2">
+                    <Label for="recipient_title">Recipient Title</Label>
+                    <div class="relative">
+                        <input
+                            id="recipient_title"
+                            v-model="form.recipient_title"
+                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            @focus="onRecipientTitleFocus"
+                            @click="onRecipientTitleFocus"
+                            @blur="onRecipientTitleBlur"
+                        />
+                        <div
+                            v-if="showRecipientTitleSuggestions"
+                            class="absolute z-20 mt-1 max-h-44 w-full overflow-auto rounded-md border border-input bg-background shadow-sm"
+                        >
+                            <button
+                                v-for="title in recipientTitleSuggestions"
+                                :key="title"
+                                type="button"
+                                class="block w-full px-3 py-2 text-left text-sm hover:bg-muted"
+                                @mousedown.prevent="selectRecipientTitle(title)"
+                            >
+                                {{ title }}
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-xs text-muted-foreground">
+                        Editable title for recipient. Suggested values are based
+                        on supplier roles.
+                    </p>
+                    <p
+                        v-if="form.errors?.recipient_title"
+                        class="text-xs text-destructive"
+                    >
+                        {{ form.errors.recipient_title }}
                     </p>
                 </div>
             </CardContent>

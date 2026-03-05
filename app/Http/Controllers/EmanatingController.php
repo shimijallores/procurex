@@ -124,12 +124,51 @@ class EmanatingController extends Controller
 
     public function create(): Response
     {
+        $funds = Fund::query()
+            ->with(['office:id,name', 'projectCode:id,code,name'])
+            ->orderBy('name')
+            ->get(['id', 'office_id', 'project_code_id', 'name', 'type', 'fiscal_year']);
+
+        $fundOptions = $funds->map(function (Fund $fund): array {
+            $ppmp = $this->resolvePpmpForFund($fund);
+
+            $categories = collect();
+
+            if ($ppmp) {
+                $categories = PPMPCategory::query()
+                    ->with('account:id,code,name')
+                    ->where('ppmp_id', $ppmp->id)
+                    ->get(['id', 'ppmp_id', 'account_id'])
+                    ->map(fn(PPMPCategory $category): array => [
+                        'id' => $category->id,
+                        'ppmp_id' => $category->ppmp_id,
+                        'code' => $category->account?->code,
+                        'name' => $category->account?->name,
+                    ])
+                    ->values();
+            }
+
+            return [
+                'id' => $fund->id,
+                'name' => $fund->name,
+                'type' => $fund->type,
+                'fiscal_year' => $fund->fiscal_year,
+                'office' => [
+                    'id' => $fund->office?->id,
+                    'name' => $fund->office?->name,
+                ],
+                'project_code' => [
+                    'id' => $fund->projectCode?->id,
+                    'code' => $fund->projectCode?->code,
+                    'name' => $fund->projectCode?->name,
+                ],
+                'ppmp_id' => $ppmp?->id,
+                'ppmp_categories' => $categories,
+            ];
+        })->values();
+
         return Inertia::render('Emanatings/Create', [
-            'offices' => Office::all(['id', 'name']),
-            'ppmps' => PPMP::with(['office', 'projectCode'])
-                ->get(['id', 'office_id', 'project_code_id', 'fiscal_year']),
-            'ppmpCategories' => PPMPCategory::with('ppmp.office', 'account')
-                ->get(['id', 'ppmp_id', 'account_id']),
+            'funds' => $fundOptions,
         ]);
     }
 
@@ -139,35 +178,38 @@ class EmanatingController extends Controller
 
         DB::beginTransaction();
         try {
-            $ppmp = PPMP::findOrFail($validated['ppmp_id']);
-            PPMPCategory::findOrFail($validated['ppmp_category_id']);
+            $fund = Fund::query()
+                ->where('id', $validated['fund_id'])
+                ->where('office_id', $validated['office_id'])
+                ->firstOrFail();
+            $ppmp = $this->resolvePpmpForFund($fund);
 
-            $fundQuery = Fund::query()
-                ->where('office_id', $ppmp->office_id)
-                ->where('fiscal_year', $ppmp->fiscal_year)
-                ->where('project_code_id', $ppmp->project_code_id);
+            if (! $ppmp) {
+                return back()->withErrors([
+                    'fund_id' => 'No PPMP is connected to the selected fund.',
+                ])->withInput();
+            }
 
-            $fund = (clone $fundQuery)->latest()->first();
+            $ppmpCategory = PPMPCategory::query()
+                ->where('id', $validated['ppmp_category_id'])
+                ->where('ppmp_id', $ppmp->id)
+                ->first();
 
-            if (! $fund) {
-                $fund = Fund::query()
-                    ->where('office_id', $ppmp->office_id)
-                    ->where('fiscal_year', $ppmp->fiscal_year)
-                    ->where('type', 'general')
-                    ->whereNull('project_code_id')
-                    ->latest()
-                    ->first();
+            if (! $ppmpCategory) {
+                return back()->withErrors([
+                    'ppmp_category_id' => 'The selected account/category is not part of the PPMP connected to this fund.',
+                ])->withInput();
             }
 
             $xlsxPath = $storeEmanatingRequest->file('xlsx_file')->store('emanatings', 'public');
 
-            $emanatingImport = new EmanatingImport($ppmp, (int) $validated['ppmp_category_id'], $fund);
+            $emanatingImport = new EmanatingImport($ppmp, (int) $ppmpCategory->id, $fund);
             Excel::import($emanatingImport, $storeEmanatingRequest->file('xlsx_file'));
 
             $emanating = Emanating::query()->latest()->first();
 
             if ($emanating) {
-                $existingEmanating = Emanating::where('ppmp_id', $validated['ppmp_id'])
+                $existingEmanating = Emanating::where('ppmp_id', $ppmp->id)
                     ->where('charged_to_code', $emanating->charged_to_code)
                     ->where('id', '!=', $emanating->id)
                     ->first();
@@ -181,8 +223,8 @@ class EmanatingController extends Controller
                 $emanating->update([
                     'fund_id' => $fund?->id,
                     'project_id' => $fund?->project?->id,
-                    'ppmp_id' => $validated['ppmp_id'],
-                    'ppmp_category_id' => $validated['ppmp_category_id'],
+                    'ppmp_id' => $ppmp->id,
+                    'ppmp_category_id' => $ppmpCategory->id,
                     'pr_no' => $validated['pr_no'] ?? null,
                     'fiscal_year' => $ppmp->fiscal_year,
                     'is_addendum' => $isAddendum,
@@ -207,6 +249,21 @@ class EmanatingController extends Controller
 
             return back()->withErrors(['error' => 'Failed to create Emanating Request: ' . $exception->getMessage()]);
         }
+    }
+
+    private function resolvePpmpForFund(Fund $fund): ?PPMP
+    {
+        $ppmpQuery = PPMP::query()
+            ->where('office_id', $fund->office_id)
+            ->where('fiscal_year', $fund->fiscal_year);
+
+        if (strtolower((string) $fund->type) === 'project' && $fund->project_code_id !== null) {
+            $ppmpQuery->where('project_code_id', $fund->project_code_id);
+        } else {
+            $ppmpQuery->whereNull('project_code_id');
+        }
+
+        return $ppmpQuery->latest('id')->first();
     }
 
     public function show(Emanating $emanating): Response

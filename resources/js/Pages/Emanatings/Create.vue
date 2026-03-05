@@ -23,14 +23,12 @@ defineOptions({
 });
 
 const props = defineProps({
-    offices: Array,
-    ppmps: Array,
-    ppmpCategories: Array,
+    funds: Array,
 });
 
 const form = useForm({
     office_id: "",
-    ppmp_id: "",
+    fund_id: "",
     ppmp_category_id: "",
     pr_no: "",
     is_addendum: false,
@@ -69,9 +67,7 @@ const submit = () => {
         <EmanatingCreateHeader />
         <EmanatingCreateForm
             :form="form"
-            :offices="offices"
-            :ppmps="ppmps"
-            :ppmp-categories="ppmpCategories"
+            :funds="funds"
             :xlsx-file-name="xlsxFileName"
             @submit="submit"
             @file-change="handleFileChange"

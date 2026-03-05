@@ -16,42 +16,70 @@ import { Textarea } from "@/components/ui/textarea";
 
 const props = defineProps({
     form: Object,
-    offices: Array,
-    ppmps: Array,
-    ppmpCategories: Array,
+    funds: Array,
     xlsxFileName: String,
 });
 
-const filteredPpmps = computed(() => {
+const officeOptions = computed(() => {
+    const seen = new Set();
+
+    return (props.funds || [])
+        .map((fund) => fund.office)
+        .filter((office) => office && office.id)
+        .filter((office) => {
+            const key = String(office.id);
+            if (seen.has(key)) {
+                return false;
+            }
+
+            seen.add(key);
+            return true;
+        })
+        .sort((a, b) =>
+            String(a.name || "").localeCompare(String(b.name || "")),
+        );
+});
+
+const filteredFunds = computed(() => {
     if (!props.form.office_id) {
         return [];
     }
 
-    return props.ppmps.filter(
-        (ppmp) => String(ppmp.office_id) === String(props.form.office_id),
+    return (props.funds || []).filter(
+        (fund) => String(fund.office?.id) === String(props.form.office_id),
+    );
+});
+
+const selectedFund = computed(() => {
+    if (!props.form.fund_id) {
+        return null;
+    }
+
+    return (
+        filteredFunds.value.find(
+            (fund) => String(fund.id) === String(props.form.fund_id),
+        ) || null
     );
 });
 
 const filteredCategories = computed(() => {
-    if (!props.form.ppmp_id) {
+    if (!selectedFund.value) {
         return [];
     }
 
-    return props.ppmpCategories.filter(
-        (category) => String(category.ppmp_id) === String(props.form.ppmp_id),
-    );
+    return selectedFund.value.ppmp_categories || [];
 });
 
 watch(
     () => props.form.office_id,
     () => {
-        props.form.ppmp_id = "";
+        props.form.fund_id = "";
         props.form.ppmp_category_id = "";
     },
 );
 
 watch(
-    () => props.form.ppmp_id,
+    () => props.form.fund_id,
     () => {
         props.form.ppmp_category_id = "";
     },
@@ -67,13 +95,13 @@ const handleFileChange = (event) => {
     emit("file-change", event);
 };
 
-const formatPpmpLabel = (ppmp) => {
-    const projectName = ppmp.project_code?.name || "No Project Name";
-    const projectCode = ppmp.project_code?.code
-        ? ` (${ppmp.project_code.code})`
-        : "";
+const formatFundLabel = (fund) => {
+    const codeLabel =
+        fund.type === "project"
+            ? `Project Code: ${fund.project_code?.code || "N/A"}`
+            : `General Fund`;
 
-    return `${ppmp.office?.name} - ${projectName}${projectCode} (FY ${ppmp.fiscal_year})`;
+    return `${fund.office?.name || "Unknown Office"} - ${fund.name} (${codeLabel}, FY ${fund.fiscal_year})`;
 };
 </script>
 
@@ -88,64 +116,65 @@ const formatPpmpLabel = (ppmp) => {
         </CardHeader>
         <CardContent>
             <form @submit.prevent="handleSubmit" class="space-y-6">
-                <div class="space-y-2">
-                    <Label for="office_id">Office *</Label>
-                    <select
-                        id="office_id"
-                        v-model="form.office_id"
-                        :class="[
-                            'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
-                            'ring-offset-background focus-visible:outline-none focus-visible:ring-2',
-                            'focus-visible:ring-ring focus-visible:ring-offset-2',
-                            form.errors.office_id ? 'border-destructive' : '',
-                        ]"
-                    >
-                        <option value="">Select an office</option>
-                        <option
-                            v-for="office in offices"
-                            :key="office.id"
-                            :value="office.id"
-                        >
-                            {{ office.name }}
-                        </option>
-                    </select>
-                    <p
-                        v-if="form.errors.office_id"
-                        class="text-sm text-destructive"
-                    >
-                        {{ form.errors.office_id }}
-                    </p>
-                </div>
-
-                <!-- PPMP Selection -->
                 <div class="grid grid-cols-2 gap-4">
                     <div class="space-y-2">
-                        <Label for="ppmp_id">PPMP *</Label>
+                        <Label for="office_id">Office *</Label>
                         <select
-                            id="ppmp_id"
-                            v-model="form.ppmp_id"
+                            id="office_id"
+                            v-model="form.office_id"
+                            :class="[
+                                'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
+                                'ring-offset-background focus-visible:outline-none focus-visible:ring-2',
+                                'focus-visible:ring-ring focus-visible:ring-offset-2',
+                                form.errors.office_id
+                                    ? 'border-destructive'
+                                    : '',
+                            ]"
+                        >
+                            <option value="">Select an office</option>
+                            <option
+                                v-for="office in officeOptions"
+                                :key="office.id"
+                                :value="office.id"
+                            >
+                                {{ office.name }}
+                            </option>
+                        </select>
+                        <p
+                            v-if="form.errors.office_id"
+                            class="text-sm text-destructive"
+                        >
+                            {{ form.errors.office_id }}
+                        </p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <Label for="fund_id">Fund *</Label>
+                        <select
+                            id="fund_id"
+                            v-model="form.fund_id"
                             :disabled="!form.office_id"
                             :class="[
                                 'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
                                 'ring-offset-background focus-visible:outline-none focus-visible:ring-2',
                                 'focus-visible:ring-ring focus-visible:ring-offset-2',
-                                form.errors.ppmp_id ? 'border-destructive' : '',
+                                form.errors.fund_id ? 'border-destructive' : '',
                             ]"
                         >
-                            <option value="">Select a PPMP</option>
+                            <option value="">Select a fund</option>
                             <option
-                                v-for="ppmp in filteredPpmps"
-                                :key="ppmp.id"
-                                :value="ppmp.id"
+                                v-for="fund in filteredFunds"
+                                :key="fund.id"
+                                :value="fund.id"
                             >
-                                {{ formatPpmpLabel(ppmp) }}
+                                {{ formatFundLabel(fund) }}
                             </option>
                         </select>
                         <p
-                            v-if="form.errors.ppmp_id"
+                            v-if="form.errors.fund_id"
                             class="text-sm text-destructive"
                         >
-                            {{ form.errors.ppmp_id }}
+                            {{ form.errors.fund_id }}
                         </p>
                     </div>
 
@@ -156,7 +185,7 @@ const formatPpmpLabel = (ppmp) => {
                         <select
                             id="ppmp_category_id"
                             v-model="form.ppmp_category_id"
-                            :disabled="!form.ppmp_id"
+                            :disabled="!form.office_id || !form.fund_id"
                             :class="[
                                 'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
                                 'ring-offset-background focus-visible:outline-none focus-visible:ring-2',

@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Models\Fund;
+use App\Models\PPMP;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StoreEmanatingRequest extends FormRequest
 {
@@ -26,10 +27,7 @@ class StoreEmanatingRequest extends FormRequest
     {
         return [
             'office_id' => ['required', 'exists:offices,id'],
-            'ppmp_id' => [
-                'required',
-                Rule::exists('ppmps', 'id')->where(fn($query) => $query->where('office_id', $this->office_id)),
-            ],
+            'fund_id' => ['required', 'exists:funds,id'],
             'ppmp_category_id' => ['required', 'exists:ppmp_categories,id'],
             'pr_no' => ['nullable', 'string', 'max:50'],
             'is_addendum' => ['nullable', 'boolean'],
@@ -42,17 +40,46 @@ class StoreEmanatingRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator): void {
-            if (! $this->ppmp_id || ! $this->ppmp_category_id) {
+            if (! $this->fund_id || ! $this->ppmp_category_id) {
+                return;
+            }
+
+            $fund = Fund::query()->find($this->fund_id);
+            if (! $fund) {
+                return;
+            }
+
+            if ((int) $fund->office_id !== (int) $this->office_id) {
+                $validator->errors()->add('fund_id', 'The selected fund does not belong to the selected office.');
+
+                return;
+            }
+
+            $ppmpQuery = PPMP::query()
+                ->where('office_id', $fund->office_id)
+                ->where('fiscal_year', $fund->fiscal_year);
+
+            if (strtolower((string) $fund->type) === 'project' && $fund->project_code_id !== null) {
+                $ppmpQuery->where('project_code_id', $fund->project_code_id);
+            } else {
+                $ppmpQuery->whereNull('project_code_id');
+            }
+
+            $ppmp = $ppmpQuery->latest('id')->first();
+
+            if (! $ppmp) {
+                $validator->errors()->add('fund_id', 'No PPMP is connected to the selected fund.');
+
                 return;
             }
 
             $categoryBelongsToPpmp = \App\Models\PPMPCategory::query()
                 ->where('id', $this->ppmp_category_id)
-                ->where('ppmp_id', $this->ppmp_id)
+                ->where('ppmp_id', $ppmp->id)
                 ->exists();
 
             if (! $categoryBelongsToPpmp) {
-                $validator->errors()->add('ppmp_category_id', 'The selected PPMP category does not belong to the selected PPMP.');
+                $validator->errors()->add('ppmp_category_id', 'The selected PPMP category does not belong to the PPMP connected to the selected fund.');
             }
         });
     }
@@ -67,8 +94,8 @@ class StoreEmanatingRequest extends FormRequest
         return [
             'office_id.required' => 'Please select an office first.',
             'office_id.exists' => 'The selected office does not exist.',
-            'ppmp_id.required' => 'Please select a PPMP.',
-            'ppmp_id.exists' => 'The selected PPMP does not exist.',
+            'fund_id.required' => 'Please select a fund first.',
+            'fund_id.exists' => 'The selected fund does not exist.',
             'ppmp_category_id.required' => 'Please select a PPMP Category.',
             'ppmp_category_id.exists' => 'The selected PPMP category does not exist.',
             'xlsx_file.required' => 'An XLSX file is required to create an emanating request.',

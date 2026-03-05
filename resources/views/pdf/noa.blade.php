@@ -248,7 +248,7 @@
         <div class="recipient">
             <div style="font-weight:700; text-transform: uppercase;">{{ $supplierName }}</div>
             <div style="font-weight:700; text-transform: uppercase;">{{ $recipientName }}</div>
-            <div>Proprietor / Authorized Representative / Owner</div>
+            <div>{{ $recipientTitle }}</div>
             <div>{{ $recipientAddress }}</div>
         </div>
 

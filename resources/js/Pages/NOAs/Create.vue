@@ -34,6 +34,7 @@ const form = useForm({
     calculation_label: "",
     winner_supplier_name: "",
     recipient_name: "",
+    recipient_title: "",
 });
 
 const submit = () => {

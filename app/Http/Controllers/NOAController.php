@@ -172,6 +172,7 @@ class NOAController extends Controller
                 'noa_no' => $noaNo,
                 'noa_date' => $noaDate->toDateString(),
                 'recipient_name' => (string) ($validated['recipient_name'] ?? ''),
+                'recipient_title' => (string) ($validated['recipient_title'] ?? ''),
             ]);
 
             DB::commit();
@@ -222,6 +223,24 @@ class NOAController extends Controller
                 ->first();
         }
 
+        $recipientTitle = trim((string) ($noa->recipient_title ?? ''));
+
+        if ($recipientTitle === '' && $addressedSupplier) {
+            $recipientName = trim((string) ($noa->recipient_name ?? ''));
+
+            if ($recipientName !== '' && strcasecmp($recipientName, (string) $addressedSupplier->proprietor) === 0) {
+                $recipientTitle = 'Proprietor';
+            } elseif ($recipientName !== '' && strcasecmp($recipientName, (string) $addressedSupplier->authorized_representative) === 0) {
+                $recipientTitle = 'Authorized Representative';
+            } elseif ($recipientName !== '' && strcasecmp($recipientName, (string) $addressedSupplier->owner) === 0) {
+                $recipientTitle = 'Owner';
+            }
+        }
+
+        if ($recipientTitle === '') {
+            $recipientTitle = 'Proprietor / Authorized Representative / Owner';
+        }
+
         return Pdf::view('pdf.noa', [
             'noa' => $noa,
             'resolution' => $resolution,
@@ -229,6 +248,7 @@ class NOAController extends Controller
             'rfq' => $resolution?->aoq?->rfq,
             'winnerSupplier' => $resolution?->aoq?->winnerSupplier,
             'addressedSupplier' => $addressedSupplier,
+            'recipientTitle' => $recipientTitle,
         ])
             ->format('a4')
             ->name('NOA-' . $noa->noa_no . '.pdf')
