@@ -8,7 +8,6 @@ enum RoleType: string
 {
     case SUPERADMIN = 'Superadmin';
     case BAC_RESO_ADMIN = 'BAC Reso Admin';
-    case BUDGETING_ADMIN = 'Budgeting Admin';
     case CANVASSING_ADMIN = 'Canvassing Admin';
     case DOCUMENT_ADMIN = 'Document Admin';
     case PR_ADMIN = 'PR Admin';

@@ -33,7 +33,7 @@ class PurchaseRequestMatrixController extends Controller
 
         $budgetingAdminUsers = User::query()
             ->whereHas('role', function ($query): void {
-                $query->where('name', RoleType::BUDGETING_ADMIN->value);
+                $query->where('name', RoleType::DOCUMENT_ADMIN->value);
             })
             ->orderBy('name')
             ->get(['id', 'name']);
@@ -79,7 +79,7 @@ class PurchaseRequestMatrixController extends Controller
 
         $budgetingAdminUsers = User::query()
             ->whereHas('role', function ($query): void {
-                $query->where('name', RoleType::BUDGETING_ADMIN->value);
+                $query->where('name', RoleType::DOCUMENT_ADMIN->value);
             })
             ->orderBy('name')
             ->get(['id']);
@@ -125,7 +125,7 @@ class PurchaseRequestMatrixController extends Controller
 
         $budgetingAdminUsers = User::query()
             ->whereHas('role', function ($query): void {
-                $query->where('name', RoleType::BUDGETING_ADMIN->value);
+                $query->where('name', RoleType::DOCUMENT_ADMIN->value);
             })
             ->orderBy('name')
             ->get(['id', 'name']);

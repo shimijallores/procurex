@@ -15,7 +15,6 @@ class SystemUserSeeder extends Seeder
     {
         $superadminRole = Role::where('name', RoleType::SUPERADMIN->value)->firstOrFail();
         $bacResoRole = Role::where('name', RoleType::BAC_RESO_ADMIN->value)->firstOrFail();
-        $budgetingAdminRole = Role::where('name', RoleType::BUDGETING_ADMIN->value)->firstOrFail();
         $canvassingAdminRole = Role::where('name', RoleType::CANVASSING_ADMIN->value)->firstOrFail();
         $documentAdminRole = Role::where('name', RoleType::DOCUMENT_ADMIN->value)->firstOrFail();
         $prAdminRole = Role::where('name', RoleType::PR_ADMIN->value)->firstOrFail();
@@ -35,15 +34,6 @@ class SystemUserSeeder extends Seeder
         ], [
             'name' => 'BAC Reso Admin',
             'role_id' => $bacResoRole->id,
-            'office_id' => null,
-            'password' => 'password',
-        ]);
-
-        User::updateOrCreate([
-            'email' => 'budgeting@procurex.com',
-        ], [
-            'name' => 'Budgeting Admin',
-            'role_id' => $budgetingAdminRole->id,
             'office_id' => null,
             'password' => 'password',
         ]);

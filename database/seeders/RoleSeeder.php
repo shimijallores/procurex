@@ -23,11 +23,6 @@ class RoleSeeder extends Seeder
         );
 
         Role::firstOrCreate(
-            ['name' => RoleType::BUDGETING_ADMIN->value],
-            ['is_system_role' => true, 'office_id' => null]
-        );
-
-        Role::firstOrCreate(
             ['name' => RoleType::CANVASSING_ADMIN->value],
             ['is_system_role' => true, 'office_id' => null]
         );

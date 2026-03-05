@@ -33,7 +33,7 @@ class UserController extends Controller
                 if ($currentUserRoleName === RoleType::SUPERADMIN->value) {
                     // Superadmin sees all users — no filter
                 } else {
-                    // BAC Reso Admin, Budgeting Admin, Canvassing Admin see only users with their own role
+                    // Non-superadmin system roles see only users with their own role
                     $builder->whereHas('role', function ($q) use ($currentUserRoleName): void {
                         $q->where('name', $currentUserRoleName);
                     });

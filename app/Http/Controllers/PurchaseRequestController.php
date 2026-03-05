@@ -195,7 +195,7 @@ class PurchaseRequestController extends Controller
             $emanating->update(['pr_no' => $generatedPrNo]);
 
             $defaultPrAdminId = $this->resolveSingleUserIdByRole(RoleType::PR_ADMIN->value);
-            $defaultBudgetingAdminId = $this->resolveSingleUserIdByRole(RoleType::BUDGETING_ADMIN->value);
+            $defaultBudgetingAdminId = $this->resolveSingleUserIdByRole(RoleType::DOCUMENT_ADMIN->value);
 
             foreach ($validated['items'] as $item) {
                 $lineTotal = (float) $item['unit_cost'] * (int) $item['quantity'];
@@ -301,7 +301,7 @@ class PurchaseRequestController extends Controller
                     ->keyBy('emanating_item_id');
 
                 $defaultPrAdminId = $this->resolveSingleUserIdByRole(RoleType::PR_ADMIN->value);
-                $defaultBudgetingAdminId = $this->resolveSingleUserIdByRole(RoleType::BUDGETING_ADMIN->value);
+                $defaultBudgetingAdminId = $this->resolveSingleUserIdByRole(RoleType::DOCUMENT_ADMIN->value);
 
                 $total = 0;
                 foreach ($validated['items'] as $item) {

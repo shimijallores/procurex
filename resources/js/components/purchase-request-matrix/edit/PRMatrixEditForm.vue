@@ -132,7 +132,7 @@ defineEmits(["submit"]);
                             v-model="form.matrix_budgeting_admin_user_id"
                             class="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
                         >
-                            <option value="">Select Budgeting Admin</option>
+                            <option value="">Select Document Admin</option>
                             <option
                                 v-for="user in budgetingAdminUsers"
                                 :key="user.id"

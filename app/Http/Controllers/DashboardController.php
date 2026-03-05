@@ -89,37 +89,6 @@ class DashboardController extends Controller
                 $this->quickLink('Notices of Award', route('noas.index'), 'lucide:file-badge'),
                 $this->quickLink('AOQ List', route('aoqs.index'), 'lucide:file-spreadsheet'),
             ];
-        } elseif ($roleName === RoleType::BUDGETING_ADMIN->value) {
-            $payload['metrics'] = [
-                $this->metric('PPMPs', PPMP::count(), 'lucide:clipboard-list', 'Annual and addendum plans'),
-                $this->metric('Emanatings', Emanating::count(), 'lucide:clipboard-minus', 'Submitted emanating requests'),
-                $this->metric('Draft PRs', PurchaseRequest::where('status', 'draft')->count(), 'lucide:file-edit', 'Awaiting approval'),
-                $this->metric('Approved PRs', PurchaseRequest::where('status', 'approved')->count(), 'lucide:check-circle', 'Ready for RFQ flow'),
-            ];
-
-            $payload['pipeline'] = [
-                $this->stage('PR Draft', PurchaseRequest::where('status', 'draft')->count()),
-                $this->stage('PR Approved', PurchaseRequest::where('status', 'approved')->count()),
-                $this->stage('PR Returned', PurchaseRequest::where('status', 'returned')->count()),
-            ];
-
-            $payload['recentActivities'] = PurchaseRequest::with('office')
-                ->latest('pr_date')
-                ->limit(6)
-                ->get()
-                ->map(fn(PurchaseRequest $item) => [
-                    'title' => $item->pr_no ?: ('PR #' . $item->id),
-                    'subtitle' => $item->office?->name ?: 'No office',
-                    'meta' => ucfirst(str_replace('_', ' ', (string) $item->status)),
-                    'date' => optional($item->pr_date)->format('M d, Y') ?: '—',
-                    'link' => route('purchase-requests.show', $item),
-                ])->values();
-
-            $payload['quickLinks'] = [
-                $this->quickLink('PPMPs', route('ppmps.index'), 'lucide:clipboard-list'),
-                $this->quickLink('Emanatings', route('emanatings.index'), 'lucide:clipboard-minus'),
-                $this->quickLink('Purchase Requests', route('purchase-requests.index'), 'lucide:file-plus-2'),
-            ];
         } elseif ($roleName === RoleType::CANVASSING_ADMIN->value) {
             $payload['metrics'] = [
                 $this->metric('Canvasses', Canvas::count(), 'lucide:shopping-cart', 'All canvassing records'),

@@ -34,7 +34,6 @@ const user = computed(() => page.props.auth?.user);
 const SYSTEM_ROLES = [
     "Superadmin",
     "BAC Reso Admin",
-    "Budgeting Admin",
     "Canvassing Admin",
     "Document Admin",
     "PR Admin",
@@ -50,11 +49,6 @@ const isSuperadmin = computed(() => userRole.value === "Superadmin");
 const isBACSAdminOrAbove = computed(
     () =>
         userRole.value === "Superadmin" || userRole.value === "BAC Reso Admin",
-);
-
-const isBudgetingAdminOrAbove = computed(
-    () =>
-        userRole.value === "Superadmin" || userRole.value === "Budgeting Admin",
 );
 
 const isCanvassingAdminOrAbove = computed(
@@ -120,28 +114,28 @@ const mainNavItems = computed(() => {
             url: route("apps.index"),
             icon: "lucide:clipboard-check",
             isActive: route().current("apps.*"),
-            roles: ["Superadmin", "BAC Reso Admin", "office"], // BAC Reso + office
+            roles: ["Superadmin", "BAC Reso Admin", "Document Admin", "office"],
         },
         {
             title: "Funds",
             url: route("funds.index"),
             icon: "lucide:wallet",
             isActive: route().current("funds.*"),
-            roles: ["Superadmin", "office"], // Superadmin + office roles
+            roles: ["Superadmin", "BAC Reso Admin", "Document Admin", "office"],
         },
         {
             title: "PPMPs",
             url: route("ppmps.index"),
             icon: "lucide:clipboard-list",
             isActive: route().current("ppmps.*"),
-            roles: ["Superadmin", "Budgeting Admin", "office"], // Budgeting + office
+            roles: ["Superadmin", "BAC Reso Admin", "Document Admin", "office"],
         },
         {
             title: "Emanatings",
             url: route("emanatings.index"),
             icon: "lucide:clipboard-minus",
             isActive: route().current("emanatings.*"),
-            roles: ["Superadmin", "Budgeting Admin", "office"], // Budgeting + office
+            roles: ["Superadmin", "BAC Reso Admin", "Document Admin", "office"],
         },
         {
             title: "Canvassing",

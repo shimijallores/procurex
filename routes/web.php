@@ -46,20 +46,21 @@ Route::middleware(['auth'])->group(function (): void {
     Route::resource('offices', OfficeController::class)->middleware('role:Superadmin');
     Route::resource('project-codes', ProjectCodeController::class)->middleware('role:Superadmin');
     Route::resource('accounts', AccountController::class)->middleware('role:Superadmin');
-    Route::resource('calendars', CalendarController::class)->only(['index', 'store', 'update', 'destroy'])->middleware('role:Superadmin,BAC Reso Admin,Budgeting Admin,office');
+    Route::resource('calendars', CalendarController::class)->only(['index', 'store', 'update', 'destroy'])->middleware('role:Superadmin,BAC Reso Admin,Document Admin,office');
     Route::post('calendars/check-date', [CalendarController::class, 'checkDate'])->middleware('auth')->name('calendars.check-date');
-    Route::resource('funds', FundController::class)->middleware('role:Superadmin,office');
-    Route::resource('apps', APPController::class)->middleware('role:Superadmin,BAC Reso Admin,office');
-    Route::post('apps/{app}/import', [APPController::class, 'import'])->middleware('role:Superadmin,BAC Reso Admin,office')->name('apps.import');
-    Route::get('apps/{app}/download', [APPController::class, 'download'])->middleware('role:Superadmin,BAC Reso Admin,office')->name('apps.download');
-    Route::resource('ppmps', PPMPController::class)->middleware('role:Superadmin,Budgeting Admin,office');
-    Route::post('ppmps/{ppmp}/import', [PPMPController::class, 'import'])->middleware('role:Superadmin,Budgeting Admin,office')->name('ppmps.import');
-    Route::get('ppmps/{ppmp}/download-xlsx', [PPMPController::class, 'downloadXlsx'])->middleware('role:Superadmin,Budgeting Admin,office')->name('ppmps.download-xlsx');
-    Route::resource('emanatings', EmanatingController::class)->middleware('role:Superadmin,Budgeting Admin,office');
-    Route::post('emanatings/{emanating}/import', [EmanatingController::class, 'import'])->middleware('role:Superadmin,Budgeting Admin,office')->name('emanatings.import');
-    Route::get('emanatings/{emanating}/download-xlsx', [EmanatingController::class, 'downloadXlsx'])->middleware('role:Superadmin,Budgeting Admin,office')->name('emanatings.download-xlsx');
-    Route::post('emanatings/{emanating}/approve', [EmanatingController::class, 'approve'])->middleware('role:Superadmin,Budgeting Admin,office')->name('emanatings.approve');
-    Route::post('emanatings/{emanating}/reject', [EmanatingController::class, 'reject'])->middleware('role:Superadmin,Budgeting Admin,office')->name('emanatings.reject');
+    $officeRelatedRoles = 'role:Superadmin,office';
+    Route::resource('funds', FundController::class)->middleware($officeRelatedRoles);
+    Route::resource('apps', APPController::class)->middleware($officeRelatedRoles);
+    Route::post('apps/{app}/import', [APPController::class, 'import'])->middleware($officeRelatedRoles)->name('apps.import');
+    Route::get('apps/{app}/download', [APPController::class, 'download'])->middleware($officeRelatedRoles)->name('apps.download');
+    Route::resource('ppmps', PPMPController::class)->middleware($officeRelatedRoles);
+    Route::post('ppmps/{ppmp}/import', [PPMPController::class, 'import'])->middleware($officeRelatedRoles)->name('ppmps.import');
+    Route::get('ppmps/{ppmp}/download-xlsx', [PPMPController::class, 'downloadXlsx'])->middleware($officeRelatedRoles)->name('ppmps.download-xlsx');
+    Route::resource('emanatings', EmanatingController::class)->middleware($officeRelatedRoles);
+    Route::post('emanatings/{emanating}/import', [EmanatingController::class, 'import'])->middleware($officeRelatedRoles)->name('emanatings.import');
+    Route::get('emanatings/{emanating}/download-xlsx', [EmanatingController::class, 'downloadXlsx'])->middleware($officeRelatedRoles)->name('emanatings.download-xlsx');
+    Route::post('emanatings/{emanating}/approve', [EmanatingController::class, 'approve'])->middleware($officeRelatedRoles)->name('emanatings.approve');
+    Route::post('emanatings/{emanating}/reject', [EmanatingController::class, 'reject'])->middleware($officeRelatedRoles)->name('emanatings.reject');
 
     // Canvassing module
     $canvassingRoles = 'role:Superadmin,Canvassing Admin';
