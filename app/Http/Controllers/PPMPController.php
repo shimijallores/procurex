@@ -26,7 +26,7 @@ class PPMPController extends Controller
 {
     public function index(Request $request): Response
     {
-        $lengthAwarePaginator = PPMP::with(['office', 'projectCode', 'fund.projectCode'])
+        $lengthAwarePaginator = PPMP::with(['office', 'projectCode'])
             ->when($request->search, function ($query, string $search): void {
                 $query->where('fiscal_year', 'like', sprintf('%%%s%%', $search))
                     ->orWhereHas('office', function ($q) use ($search): void {
@@ -201,7 +201,7 @@ class PPMPController extends Controller
 
     public function show(PPMP $ppmp): Response
     {
-        $ppmp->load(['office', 'projectCode', 'fund.projectCode', 'categories.account', 'categories.items.months']);
+        $ppmp->load(['office', 'projectCode', 'categories.account', 'categories.items.months']);
 
         return Inertia::render('PPMPs/Show', [
             'ppmp' => $ppmp,
@@ -210,7 +210,20 @@ class PPMPController extends Controller
 
     public function edit(PPMP $ppmp): Response
     {
-        $ppmp->load(['office', 'projectCode', 'fund.projectCode', 'categories.account', 'categories.items.months']);
+        $ppmp->load(['office', 'projectCode', 'categories.account', 'categories.items.months']);
+
+        $selectedFund = Fund::query()
+            ->where('office_id', $ppmp->office_id)
+            ->where('fiscal_year', $ppmp->fiscal_year)
+            ->when(
+                $ppmp->project_code_id === null,
+                fn($query) => $query->where('type', 'general')->whereNull('project_code_id'),
+                fn($query) => $query->where('project_code_id', $ppmp->project_code_id)
+            )
+            ->orderBy('id')
+            ->first(['id']);
+
+        $ppmp->setAttribute('selected_fund_id', $selectedFund?->id);
 
         return Inertia::render('PPMPs/Edit', [
             'ppmp' => $ppmp,

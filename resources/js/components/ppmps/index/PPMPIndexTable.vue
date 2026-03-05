@@ -148,8 +148,8 @@ const formatDate = (date) => {
                                         >
                                             <span
                                                 v-if="
-                                                    ppmp.fund?.type ===
-                                                    'general'
+                                                    ppmp.project_code_id ===
+                                                    null
                                                 "
                                             >
                                                 General Code:
@@ -158,15 +158,11 @@ const formatDate = (date) => {
                                             <span v-else>
                                                 Project Code:
                                                 {{
-                                                    ppmp.fund?.project_code
-                                                        ?.code ||
                                                     ppmp.project_code?.code ||
                                                     "N/A"
                                                 }}
                                                 -
                                                 {{
-                                                    ppmp.fund?.project_code
-                                                        ?.name ||
                                                     ppmp.project_code?.name ||
                                                     "N/A"
                                                 }}

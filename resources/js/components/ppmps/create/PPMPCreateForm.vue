@@ -36,7 +36,7 @@ const availableFunds = computed(() => {
 watch(
     () => props.form.office_id,
     () => {
-        const exists = availableProjectCodes.value.some(
+        const exists = availableFunds.value.some(
             (fund) => String(fund.id) === String(props.form.fund_id),
         );
 

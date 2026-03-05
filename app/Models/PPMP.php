@@ -7,7 +7,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class PPMP extends Model
 {
@@ -44,18 +43,5 @@ class PPMP extends Model
     public function categories(): HasMany
     {
         return $this->hasMany(PPMPCategory::class, 'ppmp_id');
-    }
-
-    public function fund(): HasOne
-    {
-        return $this->hasOne(Fund::class, 'office_id', 'office_id')
-            ->whereColumn('funds.fiscal_year', 'ppmps.fiscal_year')
-            ->where(function ($query): void {
-                $query->whereColumn('funds.project_code_id', 'ppmps.project_code_id')
-                    ->orWhere(function ($orQuery): void {
-                        $orQuery->whereNull('funds.project_code_id')
-                            ->whereNull('ppmps.project_code_id');
-                    });
-            });
     }
 }
