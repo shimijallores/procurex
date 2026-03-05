@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreFundRequest;
 use App\Http\Requests\UpdateFundRequest;
+use App\Imports\WorkProgramImport;
 use App\Models\Fund;
 use App\Models\Office;
 use App\Models\PPMP;
@@ -13,6 +14,7 @@ use App\Models\Project;
 use App\Models\ProjectBrief;
 use App\Models\ProjectProposal;
 use App\Models\WorkProgram;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -202,13 +204,17 @@ class FundController extends Controller
     private function storeProjectDocuments(Request $request, Project $project): void
     {
         if ($request->hasFile('work_program') && $request->file('work_program')?->isValid()) {
-            $this->replaceProjectDocument(
+            $workProgramDocument = $this->replaceProjectDocument(
                 $project,
                 'workProgram',
                 $request->file('work_program'),
                 'projects/work-programs',
                 WorkProgram::class
             );
+
+            if ($workProgramDocument instanceof WorkProgram) {
+                app(WorkProgramImport::class)->import($workProgramDocument);
+            }
         }
 
         if ($request->hasFile('project_brief') && $request->file('project_brief')?->isValid()) {
@@ -232,7 +238,7 @@ class FundController extends Controller
         }
     }
 
-    private function replaceProjectDocument(Project $project, string $relation, UploadedFile $file, string $directory, string $modelClass): void
+    private function replaceProjectDocument(Project $project, string $relation, UploadedFile $file, string $directory, string $modelClass): Model
     {
         $existingDocument = $project->{$relation};
 
@@ -243,7 +249,7 @@ class FundController extends Controller
 
         $filePath = $file->store($directory, 'public');
 
-        $modelClass::create([
+        return $modelClass::create([
             'project_id' => $project->id,
             'file_url' => $filePath,
         ]);
