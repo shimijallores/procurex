@@ -352,6 +352,88 @@ defineProps({
                         </Table>
                     </div>
                 </div>
+
+                <div v-if="comparison?.is_project_fund">
+                    <h3 class="text-lg font-semibold mb-3 flex items-center">
+                        <Icon icon="lucide:file-badge" class="mr-2 h-5 w-5" />
+                        Project Brief Items
+                    </h3>
+                    <div class="border rounded-lg overflow-hidden">
+                        <Table class="table-fixed w-full">
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead class="w-10">#</TableHead>
+                                    <TableHead class="whitespace-normal"
+                                        >Item Name</TableHead
+                                    >
+                                    <TableHead class="whitespace-normal"
+                                        >Quantity / Unit</TableHead
+                                    >
+                                    <TableHead class="text-right"
+                                        >Amount</TableHead
+                                    >
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                <TableRow
+                                    v-for="(
+                                        item, index
+                                    ) in comparison?.project_brief_items"
+                                    :key="item.id"
+                                >
+                                    <TableCell class="w-10">{{
+                                        index + 1
+                                    }}</TableCell>
+                                    <TableCell
+                                        class="font-medium whitespace-normal break-words align-top"
+                                        >{{ item.item_name }}</TableCell
+                                    >
+                                    <TableCell
+                                        class="whitespace-normal break-words align-top"
+                                        >{{
+                                            item.quantity !== null
+                                                ? `${Number(
+                                                      item.quantity,
+                                                  ).toLocaleString("en-PH", {
+                                                      minimumFractionDigits: 0,
+                                                      maximumFractionDigits: 2,
+                                                  })}${
+                                                      item.unit
+                                                          ? ` ${item.unit}`
+                                                          : ""
+                                                  }`
+                                                : item.unit || "-"
+                                        }}</TableCell
+                                    >
+                                    <TableCell class="text-right">{{
+                                        item.amount !== null
+                                            ? Number(
+                                                  item.amount,
+                                              ).toLocaleString("en-PH", {
+                                                  minimumFractionDigits: 2,
+                                                  maximumFractionDigits: 2,
+                                              })
+                                            : "-"
+                                    }}</TableCell>
+                                </TableRow>
+                                <TableRow
+                                    v-if="
+                                        !comparison?.project_brief_items ||
+                                        comparison.project_brief_items
+                                            .length === 0
+                                    "
+                                >
+                                    <TableCell
+                                        colspan="4"
+                                        class="text-center text-muted-foreground py-8"
+                                    >
+                                        No Project Brief items found
+                                    </TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
+                    </div>
+                </div>
             </div>
         </CardContent>
     </Card>

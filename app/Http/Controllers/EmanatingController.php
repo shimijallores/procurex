@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreEmanatingRequest;
 use App\Http\Requests\UpdateEmanatingRequest;
 use App\Imports\EmanatingImport;
+use App\Imports\ProjectBriefImport;
 use App\Imports\WorkProgramImport;
 use App\Models\APP;
 use App\Models\APPItem;
@@ -16,6 +17,7 @@ use App\Models\Office;
 use App\Models\PPMP;
 use App\Models\PPMPCategory;
 use App\Models\PPMPItem;
+use App\Models\ProjectBriefItem;
 use App\Models\ProjectCode;
 use App\Models\WorkProgramItem;
 use Illuminate\Support\Collection;
@@ -140,12 +142,22 @@ class EmanatingController extends Controller
             $ppmp = PPMP::findOrFail($validated['ppmp_id']);
             PPMPCategory::findOrFail($validated['ppmp_category_id']);
 
-            $fund = Fund::query()
+            $fundQuery = Fund::query()
                 ->where('office_id', $ppmp->office_id)
-                ->where('project_code_id', $ppmp->project_code_id)
                 ->where('fiscal_year', $ppmp->fiscal_year)
-                ->latest()
-                ->first();
+                ->where('project_code_id', $ppmp->project_code_id);
+
+            $fund = (clone $fundQuery)->latest()->first();
+
+            if (! $fund) {
+                $fund = Fund::query()
+                    ->where('office_id', $ppmp->office_id)
+                    ->where('fiscal_year', $ppmp->fiscal_year)
+                    ->where('type', 'general')
+                    ->whereNull('project_code_id')
+                    ->latest()
+                    ->first();
+            }
 
             $xlsxPath = $storeEmanatingRequest->file('xlsx_file')->store('emanatings', 'public');
 
@@ -208,7 +220,7 @@ class EmanatingController extends Controller
             'approvedBy',
             'fund.projectCode',
             'fund.project.workProgram.items',
-            'fund.project.projectBrief',
+            'fund.project.projectBrief.items',
             'fund.project.projectProposal',
         ]);
 
@@ -423,7 +435,7 @@ class EmanatingController extends Controller
     }
 
     /**
-     * Compare emanating items against PPMP and APP using missing/exceeds rules.
+     * Compare emanating items against PPMP, APP, Work Program, and Project Brief.
      */
     private function compareWithDocuments(Emanating $emanating): array
     {
@@ -451,6 +463,9 @@ class EmanatingController extends Controller
         $workProgramItems = $isProjectFund
             ? $this->getOrParseWorkProgramItems($emanating)
             : collect();
+        $projectBriefItems = $isProjectFund
+            ? $this->getOrParseProjectBriefItems($emanating)
+            : collect();
 
         $comparisonItems = [];
         $allMatched = true;
@@ -461,6 +476,9 @@ class EmanatingController extends Controller
             $appMatch = $this->findMatchingAppItemByName((string) $emanatingItem->name, $appItems);
             $workProgramMatch = $isProjectFund
                 ? $this->findMatchingWorkProgramItemByName((string) $emanatingItem->name, $workProgramItems)
+                : null;
+            $projectBriefMatch = $isProjectFund
+                ? $this->findMatchingProjectBriefItemByName((string) $emanatingItem->name, $projectBriefItems)
                 : null;
 
             $issues = [];
@@ -492,6 +510,23 @@ class EmanatingController extends Controller
                 );
             }
 
+            if ($isProjectFund && ! $projectBriefMatch) {
+                $issues[] = 'Missing in Project Brief';
+            }
+
+            if (
+                $isProjectFund
+                && $projectBriefMatch
+                && $projectBriefMatch->quantity !== null
+                && (float) $projectBriefMatch->quantity > (float) $emanatingItem->quantity
+            ) {
+                $issues[] = sprintf(
+                    'Project Brief quantity exceeds Emanating (%s > %s)',
+                    (int) $projectBriefMatch->quantity,
+                    (string) $emanatingItem->quantity,
+                );
+            }
+
             if ($issues !== []) {
                 $allMatched = false;
             }
@@ -501,6 +536,7 @@ class EmanatingController extends Controller
                 'ppmp_item' => $ppmpItem,
                 'app_item' => $appMatch,
                 'work_program_item' => $workProgramMatch,
+                'project_brief_item' => $projectBriefMatch,
                 'matched' => $issues === [],
                 'mismatch_reason' => $issues === [] ? null : implode(";\n", $issues),
                 'issues' => $issues,
@@ -523,28 +559,37 @@ class EmanatingController extends Controller
             ->unique('id')
             ->values();
 
+        $matchedProjectBriefItems = collect($comparisonItems)
+            ->pluck('project_brief_item')
+            ->filter()
+            ->unique('id')
+            ->values();
+
         return [
             'status' => $allMatched ? 'all_matched' : 'partial_match',
             'message' => $allMatched
                 ? ($isProjectFund
-                    ? 'All items pass PPMP, APP, and Work Program checks.'
+                    ? 'All items pass PPMP, APP, Work Program, and Project Brief checks.'
                     : 'All items pass PPMP and APP checks.')
                 : ($isProjectFund
-                    ? 'Some items are missing from PPMP/APP/Work Program or exceed PPMP/Work Program quantity.'
+                    ? 'Some items are missing from PPMP/APP/Work Program/Project Brief or exceed allowed quantity.'
                     : 'Some items are missing from PPMP/APP or exceed PPMP quantity.'),
             'items' => $comparisonItems,
             'ppmp_items' => $ppmpItems,
             'app_items' => $matchedAppItems,
             'work_program_items' => $matchedWorkProgramItems,
+            'project_brief_items' => $matchedProjectBriefItems,
             'is_project_fund' => $isProjectFund,
             'total_emanating_items' => count($emanatingItems),
             'total_ppmp_items' => $ppmpItems->count(),
             'total_app_items' => $matchedAppItems->count(),
             'total_work_program_items' => $matchedWorkProgramItems->count(),
+            'total_project_brief_items' => $matchedProjectBriefItems->count(),
             'total_matched_items' => collect($comparisonItems)->where('matched', true)->count(),
             'unmatched_ppmp_items' => collect($comparisonItems)->filter(fn($item) => in_array('Missing in PPMP', $item['issues'] ?? [], true))->count(),
             'unmatched_app_items' => collect($comparisonItems)->filter(fn($item) => in_array('Missing in APP', $item['issues'] ?? [], true))->count(),
             'unmatched_work_program_items' => collect($comparisonItems)->filter(fn($item) => in_array('Missing in Work Program', $item['issues'] ?? [], true))->count(),
+            'unmatched_project_brief_items' => collect($comparisonItems)->filter(fn($item) => in_array('Missing in Project Brief', $item['issues'] ?? [], true))->count(),
         ];
     }
 
@@ -559,6 +604,17 @@ class EmanatingController extends Controller
         return app(WorkProgramImport::class)->import($workProgram, $emanating->id);
     }
 
+    private function getOrParseProjectBriefItems(Emanating $emanating): Collection
+    {
+        $projectBrief = $emanating->fund?->project?->projectBrief;
+
+        if (! $projectBrief) {
+            return collect();
+        }
+
+        return app(ProjectBriefImport::class)->import($projectBrief, $emanating->id);
+    }
+
     private function findMatchingWorkProgramItemByName(string $name, Collection $workProgramItems): ?WorkProgramItem
     {
         if ($name === '' || $workProgramItems->isEmpty()) {
@@ -568,6 +624,19 @@ class EmanatingController extends Controller
         $normalizedName = $this->normalizeItemText($name);
 
         return $workProgramItems->first(function (WorkProgramItem $item) use ($normalizedName): bool {
+            return $this->normalizeItemText((string) $item->item_name) === $normalizedName;
+        });
+    }
+
+    private function findMatchingProjectBriefItemByName(string $name, Collection $projectBriefItems): ?ProjectBriefItem
+    {
+        if ($name === '' || $projectBriefItems->isEmpty()) {
+            return null;
+        }
+
+        $normalizedName = $this->normalizeItemText($name);
+
+        return $projectBriefItems->first(function (ProjectBriefItem $item) use ($normalizedName): bool {
             return $this->normalizeItemText((string) $item->item_name) === $normalizedName;
         });
     }

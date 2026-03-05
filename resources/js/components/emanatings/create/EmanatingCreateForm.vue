@@ -150,7 +150,9 @@ const formatPpmpLabel = (ppmp) => {
                     </div>
 
                     <div class="space-y-2">
-                        <Label for="ppmp_category_id">PPMP Category *</Label>
+                        <Label for="ppmp_category_id"
+                            >Account / PPMP Category *</Label
+                        >
                         <select
                             id="ppmp_category_id"
                             v-model="form.ppmp_category_id"
@@ -164,7 +166,9 @@ const formatPpmpLabel = (ppmp) => {
                                     : '',
                             ]"
                         >
-                            <option value="">Select a category</option>
+                            <option value="">
+                                Select an account / category
+                            </option>
                             <option
                                 v-for="category in filteredCategories"
                                 :key="category.id"

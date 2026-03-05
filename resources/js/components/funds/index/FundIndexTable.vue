@@ -170,7 +170,11 @@ const getFundTypeBadgeClass = (type) => {
                                         <div
                                             class="text-xs text-muted-foreground"
                                         >
-                                            Code: {{ fund.code }}
+                                            {{
+                                                fund.type === "general"
+                                                    ? `Office Code: ${fund.office.code}`
+                                                    : `Project Code: ${fund.project_code?.code || "N/A"}`
+                                            }}
                                         </div>
                                     </div>
                                 </div>
@@ -185,13 +189,21 @@ const getFundTypeBadgeClass = (type) => {
                                         <span>{{ fund.office.name }}</span>
                                     </div>
                                     <div class="text-xs text-muted-foreground">
-                                        {{ fund.project_code?.code }}
+                                        {{
+                                            fund.type === "general"
+                                                ? fund.office.code
+                                                : fund.project_code?.code
+                                        }}
                                     </div>
                                 </div>
                             </td>
                             <td class="p-4 align-middle">
                                 <span class="text-sm">
-                                    {{ fund.project_code?.name }}
+                                    {{
+                                        fund.type === "general"
+                                            ? "Office-Based"
+                                            : fund.project_code?.name || "N/A"
+                                    }}
                                 </span>
                             </td>
                             <td class="p-4 align-middle">

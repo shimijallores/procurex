@@ -32,10 +32,14 @@ const getFundTypeBadgeClass = (type) => {
         </CardHeader>
         <CardContent class="space-y-4">
             <div class="grid gap-1">
-                <p class="text-sm font-medium text-muted-foreground">
-                    Fund Code
+                <p class="text-sm font-medium text-muted-foreground">Code</p>
+                <p class="font-medium">
+                    {{
+                        fund.type === "general"
+                            ? fund.office.code
+                            : fund.project_code?.code || "N/A"
+                    }}
                 </p>
-                <p class="font-medium">{{ fund.code }}</p>
             </div>
             <div class="grid gap-1">
                 <p class="text-sm font-medium text-muted-foreground">
@@ -52,8 +56,11 @@ const getFundTypeBadgeClass = (type) => {
                     Project Code
                 </p>
                 <p class="font-medium">
-                    {{ fund.project_code?.code }} -
-                    {{ fund.project_code?.name }}
+                    {{
+                        fund.type === "general"
+                            ? "Not applicable for general funds"
+                            : `${fund.project_code?.code || "N/A"} - ${fund.project_code?.name || "N/A"}`
+                    }}
                 </p>
             </div>
             <div class="grid gap-1">

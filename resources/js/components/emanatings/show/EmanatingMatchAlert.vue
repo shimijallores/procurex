@@ -57,12 +57,12 @@ const alertMessage = computed(() => {
 
         if (allMatch && matchedCount === totalItems) {
             return isProjectFund
-                ? "All items passed PPMP, APP, and Work Program checks. This emanating request is ready for approval."
+                ? "All items passed PPMP, APP, Work Program, and Project Brief checks. This emanating request is ready for approval."
                 : "All items passed PPMP and APP checks. This emanating request is ready for approval.";
         }
 
         return isProjectFund
-            ? `${matchedCount} of ${totalItems} items passed PPMP/APP/Work Program checks. Review flagged items below (advisory only).`
+            ? `${matchedCount} of ${totalItems} items passed PPMP/APP/Work Program/Project Brief checks. Review flagged items below (advisory only).`
             : `${matchedCount} of ${totalItems} items passed PPMP/APP checks. Review flagged items below (advisory only).`;
     }
 

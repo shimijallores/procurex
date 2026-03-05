@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreFundRequest;
 use App\Http\Requests\UpdateFundRequest;
+use App\Imports\ProjectBriefImport;
 use App\Imports\WorkProgramImport;
 use App\Models\Fund;
 use App\Models\Office;
@@ -29,7 +30,10 @@ class FundController extends Controller
         $lengthAwarePaginator = Fund::with(['office', 'projectCode'])
             ->when($request->search, function ($query, string $search): void {
                 $query->where('name', 'like', sprintf('%%%s%%', $search))
-                    ->orWhere('code', 'like', sprintf('%%%s%%', $search));
+                    ->orWhereHas('projectCode', function ($q) use ($search): void {
+                        $q->where('code', 'like', sprintf('%%%s%%', $search))
+                            ->orWhere('name', 'like', sprintf('%%%s%%', $search));
+                    });
             })
             ->when($request->office_id, function ($query, string $officeId): void {
                 $query->where('office_id', $officeId);
@@ -83,8 +87,7 @@ class FundController extends Controller
 
         $fund = Fund::create([
             'office_id' => $validated['office_id'],
-            'project_code_id' => $validated['project_code_id'],
-            'code' => $validated['code'],
+            'project_code_id' => $validated['type'] === 'project' ? $validated['project_code_id'] : null,
             'name' => $validated['name'],
             'type' => $validated['type'],
             'fiscal_year' => $validated['fiscal_year'],
@@ -155,8 +158,7 @@ class FundController extends Controller
 
         $fund->update([
             'office_id' => $validated['office_id'],
-            'project_code_id' => $validated['project_code_id'],
-            'code' => $validated['code'],
+            'project_code_id' => $validated['type'] === 'project' ? $validated['project_code_id'] : null,
             'name' => $validated['name'],
             'type' => $validated['type'],
             'fiscal_year' => $validated['fiscal_year'],
@@ -218,13 +220,17 @@ class FundController extends Controller
         }
 
         if ($request->hasFile('project_brief') && $request->file('project_brief')?->isValid()) {
-            $this->replaceProjectDocument(
+            $projectBriefDocument = $this->replaceProjectDocument(
                 $project,
                 'projectBrief',
                 $request->file('project_brief'),
                 'projects/project-briefs',
                 ProjectBrief::class
             );
+
+            if ($projectBriefDocument instanceof ProjectBrief) {
+                app(ProjectBriefImport::class)->import($projectBriefDocument);
+            }
         }
 
         if ($request->hasFile('project_proposal') && $request->file('project_proposal')?->isValid()) {

@@ -34,7 +34,6 @@ class FundFactory extends Factory
         return [
             'office_id' => $office->id,
             'project_code_id' => $projectCode->id,
-            'code' => fake()->unique()->randomNumber(5, true),
             'name' => 'Livestock and Poultry Development Program of the Provincial Veterinary Office',
             'type' => 'project',
             'fiscal_year' => 2026,

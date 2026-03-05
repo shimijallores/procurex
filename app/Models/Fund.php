@@ -22,7 +22,6 @@ class Fund extends Model
         'office_id',
         'project_code_id',
         'name',
-        'code',
         'type',
         'fiscal_year',
         'remarks',

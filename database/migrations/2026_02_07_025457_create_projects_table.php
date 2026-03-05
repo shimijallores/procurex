@@ -54,6 +54,21 @@ return new class extends Migration
             $table->index('project_id');
         });
 
+        Schema::create('project_brief_items', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('project_brief_id')->constrained('project_briefs')->cascadeOnDelete();
+            $table->string('item_name');
+            $table->decimal('quantity', 12, 2)->nullable();
+            $table->string('unit')->nullable();
+            $table->decimal('amount', 15, 2)->nullable();
+            $table->unsignedInteger('row_order')->default(0);
+            $table->timestamps();
+
+            $table->index('project_brief_id');
+            $table->index(['project_brief_id', 'row_order']);
+            $table->index('item_name');
+        });
+
         Schema::create('project_proposals', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->constrained()->cascadeOnDelete()->unique();
@@ -70,6 +85,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('project_proposals');
+        Schema::dropIfExists('project_brief_items');
         Schema::dropIfExists('project_briefs');
         Schema::dropIfExists('work_program_items');
         Schema::dropIfExists('work_programs');

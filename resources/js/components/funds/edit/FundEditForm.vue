@@ -48,6 +48,15 @@ watch(
     },
 );
 
+watch(
+    () => props.fundType,
+    (newType) => {
+        if (newType !== "project") {
+            props.form.project_code_id = "";
+        }
+    },
+);
+
 defineEmits(["update:fundType", "submit"]);
 </script>
 
@@ -90,7 +99,7 @@ defineEmits(["update:fundType", "submit"]);
                     </p>
                 </div>
 
-                <div class="space-y-2">
+                <div v-if="showProjectFields" class="space-y-2">
                     <Label for="project_code_id">Project Code</Label>
                     <select
                         id="project_code_id"
@@ -122,54 +131,28 @@ defineEmits(["update:fundType", "submit"]);
                     </p>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-2">
-                        <Label for="code">Fund Code</Label>
-                        <input
-                            id="code"
-                            v-model="form.code"
-                            type="text"
-                            placeholder="Enter fund code"
-                            :class="[
-                                'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
-                                'ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2',
-                                'focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-                                form.errors.code ? 'border-destructive' : '',
-                            ]"
-                        />
-                        <p
-                            v-if="form.errors.code"
-                            class="text-sm text-destructive"
-                        >
-                            {{ form.errors.code }}
-                        </p>
-                    </div>
-
-                    <div class="space-y-2">
-                        <Label for="fiscal_year">Fiscal Year</Label>
-                        <input
-                            id="fiscal_year"
-                            v-model="form.fiscal_year"
-                            type="number"
-                            min="2000"
-                            max="2100"
-                            placeholder="2026"
-                            :class="[
-                                'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
-                                'ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2',
-                                'focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-                                form.errors.fiscal_year
-                                    ? 'border-destructive'
-                                    : '',
-                            ]"
-                        />
-                        <p
-                            v-if="form.errors.fiscal_year"
-                            class="text-sm text-destructive"
-                        >
-                            {{ form.errors.fiscal_year }}
-                        </p>
-                    </div>
+                <div class="space-y-2">
+                    <Label for="fiscal_year">Fiscal Year</Label>
+                    <input
+                        id="fiscal_year"
+                        v-model="form.fiscal_year"
+                        type="number"
+                        min="2000"
+                        max="2100"
+                        placeholder="2026"
+                        :class="[
+                            'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
+                            'ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2',
+                            'focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+                            form.errors.fiscal_year ? 'border-destructive' : '',
+                        ]"
+                    />
+                    <p
+                        v-if="form.errors.fiscal_year"
+                        class="text-sm text-destructive"
+                    >
+                        {{ form.errors.fiscal_year }}
+                    </p>
                 </div>
 
                 <div class="space-y-2">

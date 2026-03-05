@@ -71,12 +71,22 @@ class EmanatingImport implements ToCollection
         }
 
         if (! $this->fund && $this->ppmp) {
-            $this->fund = Fund::query()
+            $fundQuery = Fund::query()
                 ->where('office_id', $this->ppmp->office_id)
-                ->where('project_code_id', $this->ppmp->project_code_id)
                 ->where('fiscal_year', $this->ppmp->fiscal_year)
-                ->latest()
-                ->first();
+                ->where('project_code_id', $this->ppmp->project_code_id);
+
+            $this->fund = (clone $fundQuery)->latest()->first();
+
+            if (! $this->fund) {
+                $this->fund = Fund::query()
+                    ->where('office_id', $this->ppmp->office_id)
+                    ->where('fiscal_year', $this->ppmp->fiscal_year)
+                    ->where('type', 'general')
+                    ->whereNull('project_code_id')
+                    ->latest()
+                    ->first();
+            }
         }
 
         if (! $this->fund) {

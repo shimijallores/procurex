@@ -30,7 +30,6 @@ const props = defineProps({
 const form = useForm({
     office_id: props.fund.office_id,
     project_code_id: props.fund.project_code_id,
-    code: props.fund.code,
     name: props.fund.name,
     type: props.fund.type,
     fiscal_year: props.fund.fiscal_year,

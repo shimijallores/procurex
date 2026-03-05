@@ -139,8 +139,14 @@ const submit = () => {
                                 :key="fund.id"
                                 :value="fund.id"
                             >
-                                {{ fund.name
-                                }}{{ fund.code ? ` (${fund.code})` : "" }}
+                                {{ fund.name }}
+                                {{
+                                    fund.type === "general"
+                                        ? ` (${fund.office?.code || ""})`
+                                        : fund.project_code?.code
+                                          ? ` (${fund.project_code.code})`
+                                          : ""
+                                }}
                             </option>
                         </select>
                         <p
