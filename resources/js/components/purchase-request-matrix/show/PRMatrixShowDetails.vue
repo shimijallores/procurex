@@ -45,7 +45,7 @@ const formatCurrency = (value) => {
                     {{ matrixRow.office_name || "-" }}
                 </div>
                 <div>
-                    <span class="text-muted-foreground">Item:</span>
+                    <span class="text-muted-foreground">Project:</span>
                     {{ matrixRow.item_description || "-" }}
                 </div>
                 <div>

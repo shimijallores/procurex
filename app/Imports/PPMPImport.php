@@ -10,11 +10,16 @@ use App\Models\PPMPCategory;
 use App\Models\PPMPItem;
 use App\Models\PPMPItemMonth;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithStartRow;
 
 class PPMPImport implements ToCollection, WithStartRow
 {
+    private static ?bool $hasRemainingBudgetColumn = null;
+
+    private static ?bool $hasCategoryRemainingBudgetColumn = null;
+
     protected PPMP $ppmp;
 
     protected ?PPMPCategory $currentCategory = null;
@@ -116,30 +121,48 @@ class PPMPImport implements ToCollection, WithStartRow
                     $this->currentCategory = $existingCategory;
 
                     if ($estimatedBudget > 0 && (float) $existingCategory->estimated_budget === 0.0) {
-                        $existingCategory->update([
+                        $updatePayload = [
                             'estimated_budget' => $estimatedBudget,
-                        ]);
+                        ];
+
+                        if ($this->hasCategoryRemainingBudgetColumn()) {
+                            $updatePayload['remaining_budget'] = $estimatedBudget;
+                        }
+
+                        $existingCategory->update($updatePayload);
                     }
                 } else {
                     // Create category
-                    $this->currentCategory = PPMPCategory::create([
+                    $categoryPayload = [
                         'ppmp_id' => $this->ppmp->id,
                         'account_id' => $accountId,
                         'estimated_budget' => $estimatedBudget,
-                    ]);
+                    ];
+
+                    if ($this->hasCategoryRemainingBudgetColumn()) {
+                        $categoryPayload['remaining_budget'] = $estimatedBudget;
+                    }
+
+                    $this->currentCategory = PPMPCategory::create($categoryPayload);
 
                     $this->categoriesCreated++;
                 }
             } elseif ($name !== '' && $name !== '0' && $this->currentCategory && ! str_contains(strtolower($name), 'total')) {
                 // This is an item row
-                $ppmpItem = PPMPItem::create([
+                $ppmpItemPayload = [
                     'ppmp_category_id' => $this->currentCategory->id,
                     'name' => $name,
                     'quantity' => $this->parseQuantity($quantity),
                     'unit' => $unit !== '' ? $unit : 'pcs',
                     'estimated_budget' => $estimatedBudget,
                     'mode_of_procurement' => $this->normalizeModeOfProcurement($modeOfProcurement),
-                ]);
+                ];
+
+                if ($this->hasRemainingBudgetColumn()) {
+                    $ppmpItemPayload['remaining_budget'] = $estimatedBudget;
+                }
+
+                $ppmpItem = PPMPItem::create($ppmpItemPayload);
 
                 // Create month entries for this item
                 $monthsCreated = 0;
@@ -258,6 +281,24 @@ class PPMPImport implements ToCollection, WithStartRow
     private function normalizeCode(string $code): string
     {
         return preg_replace('/[^0-9]/', '', trim($code)) ?? '';
+    }
+
+    private function hasRemainingBudgetColumn(): bool
+    {
+        if (self::$hasRemainingBudgetColumn === null) {
+            self::$hasRemainingBudgetColumn = Schema::hasColumn('ppmp_items', 'remaining_budget');
+        }
+
+        return self::$hasRemainingBudgetColumn;
+    }
+
+    private function hasCategoryRemainingBudgetColumn(): bool
+    {
+        if (self::$hasCategoryRemainingBudgetColumn === null) {
+            self::$hasCategoryRemainingBudgetColumn = Schema::hasColumn('ppmp_categories', 'remaining_budget');
+        }
+
+        return self::$hasCategoryRemainingBudgetColumn;
     }
 
     /**

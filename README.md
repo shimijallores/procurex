@@ -28,7 +28,6 @@ Default password for all seeded users: `password`
 - Suppliers: supplier directory and profile details.
 - Master List: standardized item and category catalog.
 - Purchase Requests: PR drafting, review status, and printing.
-- Budgeting (Earmarks): budget certification and PR budget flow.
 - RFQs: request for quotation generation and supplier submissions.
 - AOQs: abstract of quotation and winner determination.
 - BAC Resolutions: BAC award resolutions and finalization.

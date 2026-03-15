@@ -22,7 +22,47 @@ const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-PH", {
         style: "currency",
         currency: "PHP",
-    }).format(amount);
+    }).format(amount || 0);
+};
+
+const getCategoryEstimatedBudget = (category) => {
+    const categoryBudget = Number(category?.estimated_budget || 0);
+
+    if (categoryBudget > 0) {
+        return categoryBudget;
+    }
+
+    const categoryItems = category?.items || [];
+
+    return categoryItems.reduce(
+        (total, item) => total + Number(item?.estimated_budget || 0),
+        0,
+    );
+};
+
+const getCategoryRemainingBudget = (category) => {
+    if (
+        category?.remaining_budget !== null &&
+        category?.remaining_budget !== undefined
+    ) {
+        return Number(category.remaining_budget || 0);
+    }
+
+    const categoryBudget = Number(category?.estimated_budget || 0);
+    const categoryItems = category?.items || [];
+
+    const itemsRemaining = categoryItems.reduce(
+        (total, item) =>
+            total +
+            Number(item?.remaining_budget ?? item?.estimated_budget ?? 0),
+        0,
+    );
+
+    if (categoryBudget > 0) {
+        return itemsRemaining > 0 ? itemsRemaining : categoryBudget;
+    }
+
+    return itemsRemaining;
 };
 
 const monthNames = [
@@ -109,11 +149,23 @@ const getItemMonths = (item) => {
                             </div>
                         </div>
                         <div class="text-right">
-                            <p class="text-sm text-muted-foreground">
-                                PPMP Budget
+                            <p class="text-sm text-muted-foreground">Budget</p>
+                            <p
+                                class="text-lg font-semibold text-emerald-700 dark:text-emerald-400"
+                            >
+                                {{
+                                    formatCurrency(
+                                        getCategoryRemainingBudget(category),
+                                    )
+                                }}
                             </p>
-                            <p class="text-lg font-semibold">
-                                {{ formatCurrency(category.estimated_budget) }}
+                            <p class="text-xs text-muted-foreground">
+                                Estimated:
+                                {{
+                                    formatCurrency(
+                                        getCategoryEstimatedBudget(category),
+                                    )
+                                }}
                             </p>
                             <p class="text-sm text-muted-foreground mt-2">
                                 {{ category.items?.length || 0 }} items
@@ -145,7 +197,12 @@ const getItemMonths = (item) => {
                                     <th
                                         class="px-4 py-2 text-right font-medium"
                                     >
-                                        Budget
+                                        Remaining Budget
+                                    </th>
+                                    <th
+                                        class="px-4 py-2 text-right font-medium"
+                                    >
+                                        Estimated Budget
                                     </th>
                                     <th
                                         class="px-4 py-2 text-center font-medium"
@@ -171,6 +228,16 @@ const getItemMonths = (item) => {
                                     </td>
                                     <td class="px-4 py-2 text-center">
                                         {{ item.unit }}
+                                    </td>
+                                    <td
+                                        class="px-4 py-2 text-right font-semibold text-emerald-700 dark:text-emerald-400"
+                                    >
+                                        {{
+                                            formatCurrency(
+                                                item.remaining_budget ??
+                                                    item.estimated_budget,
+                                            )
+                                        }}
                                     </td>
                                     <td
                                         class="px-4 py-2 text-right font-medium"

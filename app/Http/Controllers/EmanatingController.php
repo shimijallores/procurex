@@ -209,17 +209,6 @@ class EmanatingController extends Controller
             $emanating = Emanating::query()->latest()->first();
 
             if ($emanating) {
-                $existingEmanating = Emanating::where('ppmp_id', $ppmp->id)
-                    ->where('charged_to_code', $emanating->charged_to_code)
-                    ->where('id', '!=', $emanating->id)
-                    ->first();
-
-                $isAddendum = $validated['is_addendum'] ?? false;
-                if ($existingEmanating) {
-                    $isAddendum = true;
-                    $existingEmanating->delete();
-                }
-
                 $emanating->update([
                     'fund_id' => $fund?->id,
                     'project_id' => $fund?->project?->id,
@@ -228,7 +217,7 @@ class EmanatingController extends Controller
                     'account_id' => $ppmpCategory->account_id,
                     'pr_no' => $validated['pr_no'] ?? null,
                     'fiscal_year' => $ppmp->fiscal_year,
-                    'is_addendum' => $isAddendum,
+                    'is_addendum' => $validated['is_addendum'] ?? false,
                     'remarks' => $validated['remarks'] ?? null,
                     'reimbursement' => $validated['reimbursement'] ?? false,
                     'xlsx_path' => $xlsxPath,
@@ -554,6 +543,17 @@ class EmanatingController extends Controller
                 $issues[] = 'Missing in PPMP';
             } elseif ((int) $emanatingItem->quantity > (int) $ppmpItem->quantity) {
                 $issues[] = sprintf('Quantity exceeds PPMP (%d > %d)', (int) $emanatingItem->quantity, (int) $ppmpItem->quantity);
+            } else {
+                $availableBudget = (float) ($ppmpItem->remaining_budget ?? $ppmpItem->estimated_budget ?? 0);
+                $emanatingAmount = (float) ($emanatingItem->total_price ?? 0);
+
+                if ($emanatingAmount > $availableBudget) {
+                    $issues[] = sprintf(
+                        'Amount exceeds remaining PPMP budget (%s > %s)',
+                        number_format($emanatingAmount, 2),
+                        number_format($availableBudget, 2),
+                    );
+                }
             }
 
             if (! $appMatch) {
@@ -643,8 +643,8 @@ class EmanatingController extends Controller
                     ? 'All items pass PPMP, APP, Work Program, Project Brief, and Project Proposal checks.'
                     : 'All items pass PPMP and APP checks.')
                 : ($isProjectFund
-                    ? 'Some items are missing from PPMP/APP/Work Program/Project Brief/Project Proposal or exceed allowed quantity.'
-                    : 'Some items are missing from PPMP/APP or exceed PPMP quantity.'),
+                    ? 'Some items are missing from PPMP/APP/Work Program/Project Brief/Project Proposal or exceed PPMP quantity/budget.'
+                    : 'Some items are missing from PPMP/APP or exceed PPMP quantity/budget.'),
             'items' => $comparisonItems,
             'ppmp_items' => $ppmpItems,
             'app_items' => $matchedAppItems,
@@ -764,7 +764,20 @@ class EmanatingController extends Controller
 
     private function normalizeItemText(string $text): string
     {
-        $normalized = mb_strtolower(trim($text));
+        $decoded = trim($text);
+
+        // Handle encoded names such as "Meals &amp; Snacks" from uploaded docs.
+        for ($i = 0; $i < 2; $i++) {
+            $next = html_entity_decode($decoded, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+            if ($next === $decoded) {
+                break;
+            }
+
+            $decoded = $next;
+        }
+
+        $normalized = mb_strtolower($decoded);
         $normalized = str_replace(['’', '“', '”', "\t", "\r", "\n"], ['\'', '"', '"', ' ', ' ', ' '], $normalized);
         $normalized = preg_replace('/[^\pL\pN\s]/u', ' ', $normalized) ?? $normalized;
         $normalized = preg_replace('/\s+/u', ' ', $normalized) ?? $normalized;

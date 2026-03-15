@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('ppmp_id')->constrained()->cascadeOnDelete();
             $table->foreignId('account_id')->constrained()->cascadeOnDelete();
             $table->decimal('estimated_budget', 15, 2);
+            $table->decimal('remaining_budget', 15, 2)->nullable();
             $table->timestamps();
 
             $table->index('ppmp_id', 'idx_ppmp_category_ppmp');

@@ -12,6 +12,7 @@ use App\Models\Office;
 use App\Models\PurchaseRequest;
 use App\Models\PurchaseRequestItem;
 use App\Models\User;
+use App\Services\PpmpBudgetService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -23,6 +24,11 @@ use Spatie\LaravelPdf\Facades\Pdf;
 
 class PurchaseRequestController extends Controller
 {
+    /** @var array<int, string> */
+    private const BUDGET_COUNTED_STATUSES = ['draft', 'for_budget_review', 'approved'];
+
+    public function __construct(private readonly PpmpBudgetService $ppmpBudgetService) {}
+
     /** Common rejection/return reasons */
     private const RETURN_REASONS = [
         'Insufficient Fund',
@@ -225,6 +231,8 @@ class PurchaseRequestController extends Controller
                 ]);
             }
 
+            $this->ppmpBudgetService->recalculateForPurchaseRequest($pr);
+
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -350,7 +358,13 @@ class PurchaseRequestController extends Controller
                 }
             }
 
+            $wasBudgetCounted = in_array($purchaseRequest->status, self::BUDGET_COUNTED_STATUSES, true);
+
             $purchaseRequest->update(collect($validated)->except(['items'])->toArray());
+
+            if ($wasBudgetCounted || in_array($purchaseRequest->status, self::BUDGET_COUNTED_STATUSES, true)) {
+                $this->ppmpBudgetService->recalculateForPurchaseRequest($purchaseRequest);
+            }
 
             DB::commit();
         } catch (\Throwable $e) {
@@ -366,7 +380,46 @@ class PurchaseRequestController extends Controller
 
     public function destroy(PurchaseRequest $purchaseRequest): RedirectResponse
     {
-        $purchaseRequest->delete();
+        DB::beginTransaction();
+        try {
+            $ppmpItemIds = [];
+            $ppmpCategoryIds = [];
+
+            if (in_array($purchaseRequest->status, self::BUDGET_COUNTED_STATUSES, true)) {
+                $purchaseRequest->loadMissing('emanating:id,ppmp_category_id');
+
+                $ppmpItemIds = $purchaseRequest->items()
+                    ->with('emanatingItem:id,ppmp_item_id')
+                    ->get()
+                    ->pluck('emanatingItem.ppmp_item_id')
+                    ->filter()
+                    ->map(fn($id) => (int) $id)
+                    ->unique()
+                    ->values()
+                    ->all();
+
+                $categoryId = (int) ($purchaseRequest->emanating?->ppmp_category_id ?? 0);
+                if ($categoryId > 0) {
+                    $ppmpCategoryIds[] = $categoryId;
+                }
+            }
+
+            $purchaseRequest->delete();
+
+            if ($ppmpItemIds !== []) {
+                $this->ppmpBudgetService->recalculateForPpmpItemIds($ppmpItemIds);
+            }
+
+            if ($ppmpCategoryIds !== []) {
+                $this->ppmpBudgetService->recalculateForPpmpCategoryIds($ppmpCategoryIds);
+            }
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return redirect()->back()->with('error', 'Failed to delete Purchase Request.');
+        }
 
         return redirect()->route('purchase-requests.index')
             ->with('success', 'Purchase Request deleted.');
@@ -382,7 +435,17 @@ class PurchaseRequestController extends Controller
                 ->with('error', 'Only draft PRs can be approved.');
         }
 
-        $purchaseRequest->update(['status' => 'approved']);
+        DB::beginTransaction();
+        try {
+            $purchaseRequest->update(['status' => 'approved']);
+            $this->ppmpBudgetService->recalculateForPurchaseRequest($purchaseRequest);
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return redirect()->back()->with('error', 'Failed to approve Purchase Request.');
+        }
 
         return redirect()->route('purchase-requests.show', $purchaseRequest)
             ->with('success', 'Purchase Request approved successfully.');
@@ -406,6 +469,7 @@ class PurchaseRequestController extends Controller
         DB::beginTransaction();
         try {
             $reason = $request->reason;
+            $wasBudgetCounted = in_array($purchaseRequest->status, self::BUDGET_COUNTED_STATUSES, true);
 
             // Mark the PR as returned
             $purchaseRequest->update([
@@ -429,6 +493,10 @@ class PurchaseRequestController extends Controller
                     'rejection_reason' => $reason,
                     'status'           => 'rejected',
                 ]);
+            }
+
+            if ($wasBudgetCounted) {
+                $this->ppmpBudgetService->recalculateForPurchaseRequest($purchaseRequest);
             }
 
             DB::commit();
@@ -460,7 +528,11 @@ class PurchaseRequestController extends Controller
             $vatRate = $item->vat_applicable ? (float) ($item->vat_rate ?? 0.12) : 0.0;
             $effectiveUnitCost = $unitCost * (1 + $vatRate);
 
-            $ppmpBudget = (float) ($item->emanatingItem?->ppmpItem?->estimated_budget ?? 0);
+            $ppmpBudget = (float) (
+                $item->emanatingItem?->ppmpItem?->remaining_budget
+                ?? $item->emanatingItem?->ppmpItem?->estimated_budget
+                ?? 0
+            );
             $adjustedQuantity = $quantity;
             $adjustedLineTotal = (float) ($item->line_total ?? 0);
 

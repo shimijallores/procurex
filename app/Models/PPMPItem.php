@@ -18,12 +18,14 @@ class PPMPItem extends Model
         'quantity',
         'unit',
         'estimated_budget',
+        'remaining_budget',
         'mode_of_procurement',
     ];
 
     protected $casts = [
         'quantity' => 'integer',
         'estimated_budget' => 'decimal:2',
+        'remaining_budget' => 'decimal:2',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

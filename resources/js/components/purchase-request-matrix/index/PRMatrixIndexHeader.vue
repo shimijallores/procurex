@@ -17,7 +17,7 @@ defineProps({
                 PR Matrix
             </h1>
             <p class="text-muted-foreground">
-                Ongoing Purchase Request monitoring matrix per item line.
+                Ongoing Purchase Request monitoring matrix per approved request.
             </p>
         </div>
 

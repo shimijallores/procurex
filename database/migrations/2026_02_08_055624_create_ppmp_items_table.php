@@ -18,6 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('quantity');
             $table->string('unit');
             $table->decimal('estimated_budget', 15, 2);
+            $table->decimal('remaining_budget', 15, 2)->nullable();
             $table->enum('mode_of_procurement', ['bidding', 'small value', 'direct', 'direct_contracting']);
             $table->timestamps();
 

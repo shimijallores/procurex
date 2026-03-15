@@ -57,11 +57,6 @@ class PurchaseRequest extends Model
         return $this->hasMany(PurchaseRequestItem::class);
     }
 
-    public function earmark(): HasOne
-    {
-        return $this->hasOne(Earmark::class);
-    }
-
     public function rfq(): HasOne
     {
         return $this->hasOne(RFQ::class, 'pr_id');

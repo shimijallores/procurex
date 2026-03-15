@@ -4,7 +4,8 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 const props = defineProps({
     ppmp: Object,
-    totalBudget: Number,
+    totalRemainingBudget: Number,
+    totalEstimatedBudget: Number,
 });
 
 const formatCurrency = (amount) => {
@@ -109,10 +110,16 @@ const formatCurrency = (amount) => {
             <CardContent class="space-y-4">
                 <div class="grid gap-1">
                     <p class="text-sm font-medium text-muted-foreground">
-                        Estimated Budget
+                        Remaining Budget
                     </p>
-                    <p class="text-2xl font-bold">
-                        {{ formatCurrency(totalBudget) }}
+                    <p
+                        class="text-2xl font-bold text-emerald-700 dark:text-emerald-400"
+                    >
+                        {{ formatCurrency(totalRemainingBudget || 0) }}
+                    </p>
+                    <p class="text-xs text-muted-foreground">
+                        Original Estimated:
+                        {{ formatCurrency(totalEstimatedBudget || 0) }}
                     </p>
                 </div>
             </CardContent>

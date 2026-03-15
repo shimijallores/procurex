@@ -86,8 +86,33 @@ const isAdjustingBudget = ref(false);
 const isSuggestingPrNo = ref(false);
 
 const categoryBudget = computed(() => {
+    const categoryRemainingBudget = parseFloat(
+        selectedEmanating.value?.ppmp_category?.remaining_budget ?? 0,
+    );
+
+    if (
+        Number.isFinite(categoryRemainingBudget) &&
+        categoryRemainingBudget > 0
+    ) {
+        return categoryRemainingBudget;
+    }
+
+    const emanatingItems = selectedEmanating.value?.emanating_items || [];
+    const ppmpItemsBudget = emanatingItems.reduce((total, emanatingItem) => {
+        const ppmpItem = emanatingItem?.ppmp_item || emanatingItem?.ppmpItem;
+        const itemBudget = parseFloat(
+            ppmpItem?.remaining_budget ?? ppmpItem?.estimated_budget ?? 0,
+        );
+
+        return total + (Number.isFinite(itemBudget) ? itemBudget : 0);
+    }, 0);
+
+    if (ppmpItemsBudget > 0) {
+        return ppmpItemsBudget;
+    }
+
     return parseFloat(
-        selectedEmanating.value?.ppmp_category?.estimated_budget || 0,
+        selectedEmanating.value?.ppmp_category?.estimated_budget ?? 0,
     );
 });
 

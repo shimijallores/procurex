@@ -8,6 +8,7 @@ use App\Enums\RoleType;
 use App\Exports\PurchaseRequestMatrixExport;
 use App\Models\Account;
 use App\Models\Office;
+use App\Models\PurchaseRequest;
 use App\Models\PurchaseRequestItem;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -45,7 +46,7 @@ class PurchaseRequestMatrixController extends Controller
             ->latest('id')
             ->paginate(10)
             ->withQueryString()
-            ->through(fn(PurchaseRequestItem $item): array => $this->transformMatrixRow($item, $defaultPrAdminId, $defaultBudgetingAdminId));
+            ->through(fn(PurchaseRequest $purchaseRequest): array => $this->transformMatrixRow($purchaseRequest, $defaultPrAdminId, $defaultBudgetingAdminId));
 
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear + 1))
@@ -90,7 +91,7 @@ class PurchaseRequestMatrixController extends Controller
         $rows = $this->buildMatrixQuery($request)
             ->latest('id')
             ->get()
-            ->map(fn(PurchaseRequestItem $item): array => $this->transformMatrixRow($item, $defaultPrAdminId, $defaultBudgetingAdminId))
+            ->map(fn(PurchaseRequest $purchaseRequest): array => $this->transformMatrixRow($purchaseRequest, $defaultPrAdminId, $defaultBudgetingAdminId))
             ->all();
 
         $fileName = sprintf('pr-matrix-%s.xlsx', $selectedFiscalYear !== '' ? $selectedFiscalYear : 'all-years');
@@ -103,14 +104,22 @@ class PurchaseRequestMatrixController extends Controller
         $purchaseRequestItem->load([
             'purchaseRequest.office',
             'purchaseRequest.emanating.account',
-            'emanatingItem',
-            'matrixAccount',
-            'matrixPrAdminUser',
-            'matrixBudgetingAdminUser',
+            'purchaseRequest.emanating.project',
+            'purchaseRequest.emanating.ppmpCategory',
+            'purchaseRequest.items.emanatingItem.ppmpItem',
+            'purchaseRequest.items.matrixAccount',
+            'purchaseRequest.items.matrixPrAdminUser',
+            'purchaseRequest.items.matrixBudgetingAdminUser',
         ]);
 
+        $purchaseRequest = $purchaseRequestItem->purchaseRequest;
+
+        if (! $purchaseRequest) {
+            abort(404);
+        }
+
         return Inertia::render('PurchaseRequestMatrix/Show', [
-            'matrixRow' => $this->transformMatrixRow($purchaseRequestItem, null, null),
+            'matrixRow' => $this->transformMatrixRow($purchaseRequest, null, null),
         ]);
     }
 
@@ -136,11 +145,22 @@ class PurchaseRequestMatrixController extends Controller
         $purchaseRequestItem->load([
             'purchaseRequest.office',
             'purchaseRequest.emanating.account',
-            'emanatingItem',
+            'purchaseRequest.emanating.project',
+            'purchaseRequest.emanating.ppmpCategory',
+            'purchaseRequest.items.emanatingItem.ppmpItem',
+            'purchaseRequest.items.matrixAccount',
+            'purchaseRequest.items.matrixPrAdminUser',
+            'purchaseRequest.items.matrixBudgetingAdminUser',
         ]);
 
+        $purchaseRequest = $purchaseRequestItem->purchaseRequest;
+
+        if (! $purchaseRequest) {
+            abort(404);
+        }
+
         return Inertia::render('PurchaseRequestMatrix/Edit', [
-            'matrixRow' => $this->transformMatrixRow($purchaseRequestItem, $defaultPrAdminId, $defaultBudgetingAdminId),
+            'matrixRow' => $this->transformMatrixRow($purchaseRequest, $defaultPrAdminId, $defaultBudgetingAdminId),
             'accounts' => Account::query()->orderBy('name')->get(['id', 'name']),
             'prAdminUsers' => $prAdminUsers,
             'budgetingAdminUsers' => $budgetingAdminUsers,
@@ -163,55 +183,76 @@ class PurchaseRequestMatrixController extends Controller
 
         $purchaseRequestItem->loadMissing('purchaseRequest.emanating');
 
+        $purchaseRequest = $purchaseRequestItem->purchaseRequest;
+
+        if (! $purchaseRequest) {
+            abort(404);
+        }
+
         // Always keep account tied to the linked emanating source record.
-        $validated['matrix_account_id'] = $purchaseRequestItem->purchaseRequest?->emanating?->account_id
+        $validated['matrix_account_id'] = $purchaseRequest->emanating?->account_id
             ?? ($validated['matrix_account_id'] ?? null);
 
-        $purchaseRequestItem->update($validated);
+        $purchaseRequest->items()->update($validated);
 
-        return redirect()->route('purchase-request-matrix.show', $purchaseRequestItem)
+        $representativeItem = $purchaseRequest->items()->orderBy('id')->first();
+
+        if (! $representativeItem) {
+            abort(404);
+        }
+
+        return redirect()->route('purchase-request-matrix.show', $representativeItem)
             ->with('success', 'PR Matrix row updated successfully.');
     }
 
     private function transformMatrixRow(
-        PurchaseRequestItem $item,
+        PurchaseRequest $purchaseRequest,
         ?int $defaultPrAdminId,
         ?int $defaultBudgetingAdminId,
     ): array {
-        $sourceAmount = (float) ($item->emanatingItem?->total_price ?? 0);
-        $amountBelow = $item->matrix_amount_below_1m;
-        $amountAbove = $item->matrix_amount_above_1m;
+        $representativeItem = $purchaseRequest->items
+            ->sortBy('id')
+            ->first();
 
-        if ($amountBelow === null && $amountAbove === null && $sourceAmount > 0) {
-            if ($sourceAmount < 1000000) {
-                $amountBelow = $sourceAmount;
-            } else {
-                $amountAbove = $sourceAmount;
-            }
+        $ppmpEstimatedBudget = (float) ($purchaseRequest->emanating?->ppmpCategory?->estimated_budget ?? 0);
+        if ($ppmpEstimatedBudget <= 0) {
+            $ppmpEstimatedBudget = (float) $purchaseRequest->items
+                ->pluck('emanatingItem.ppmpItem')
+                ->filter()
+                ->unique('id')
+                ->sum(fn($ppmpItem): float => (float) ($ppmpItem->estimated_budget ?? 0));
         }
 
-        $emanatingAccountId = $item->purchaseRequest?->emanating?->account_id;
-        $emanatingAccountName = $item->purchaseRequest?->emanating?->account?->name;
+        $amountBelow = $ppmpEstimatedBudget > 0 && $ppmpEstimatedBudget < 1000000
+            ? round($ppmpEstimatedBudget, 2)
+            : null;
+        $amountAbove = $ppmpEstimatedBudget >= 1000000
+            ? round($ppmpEstimatedBudget, 2)
+            : null;
+
+        $emanatingAccountId = $purchaseRequest->emanating?->account_id;
+        $emanatingAccountName = $purchaseRequest->emanating?->account?->name;
+        $projectName = $purchaseRequest->emanating?->project?->name;
 
         return [
-            'id' => $item->id,
-            'control_no' => $item->purchaseRequest?->emanating?->emanating_no,
-            'office_name' => $item->purchaseRequest?->office?->name,
-            'item_description' => $item->emanatingItem?->name,
-            'pr_no' => $item->purchaseRequest?->pr_no,
-            'pr_date' => $item->purchaseRequest?->pr_date?->toDateString(),
+            'id' => $representativeItem?->id,
+            'control_no' => $purchaseRequest->emanating?->emanating_no,
+            'office_name' => $purchaseRequest->office?->name,
+            'item_description' => $projectName,
+            'pr_no' => $purchaseRequest->pr_no,
+            'pr_date' => $purchaseRequest->pr_date?->toDateString(),
             'amount_below_1m' => $amountBelow,
             'amount_above_1m' => $amountAbove,
-            'new_amount' => $item->matrix_new_amount ?? $item->line_total,
-            'account_id' => $emanatingAccountId ?? $item->matrix_account_id,
-            'account_name' => $emanatingAccountName ?? $item->matrixAccount?->name,
-            'pr_admin_user_id' => $item->matrix_pr_admin_user_id ?? $defaultPrAdminId,
-            'pr_admin_name' => $item->matrixPrAdminUser?->name,
-            'budgeting_admin_user_id' => $item->matrix_budgeting_admin_user_id ?? $defaultBudgetingAdminId,
-            'budgeting_admin_name' => $item->matrixBudgetingAdminUser?->name,
-            'date_release' => $item->matrix_date_release?->toDateString(),
-            'new_date_release' => $item->matrix_new_date_release?->toDateString(),
-            'remarks' => $item->matrix_remarks,
+            'new_amount' => (float) ($purchaseRequest->total_amount ?? 0),
+            'account_id' => $emanatingAccountId ?? $representativeItem?->matrix_account_id,
+            'account_name' => $emanatingAccountName ?? $representativeItem?->matrixAccount?->name,
+            'pr_admin_user_id' => $representativeItem?->matrix_pr_admin_user_id ?? $defaultPrAdminId,
+            'pr_admin_name' => $representativeItem?->matrixPrAdminUser?->name,
+            'budgeting_admin_user_id' => $representativeItem?->matrix_budgeting_admin_user_id ?? $defaultBudgetingAdminId,
+            'budgeting_admin_name' => $representativeItem?->matrixBudgetingAdminUser?->name,
+            'date_release' => $representativeItem?->matrix_date_release?->toDateString(),
+            'new_date_release' => $representativeItem?->matrix_new_date_release?->toDateString(),
+            'remarks' => $representativeItem?->matrix_remarks,
         ];
     }
 
@@ -221,49 +262,47 @@ class PurchaseRequestMatrixController extends Controller
         $selectedOfficeId = $request->input('office_id');
         $selectedAccountId = $request->input('account_id');
 
-        return PurchaseRequestItem::query()
+        return PurchaseRequest::query()
             ->with([
-                'purchaseRequest.office',
-                'purchaseRequest.emanating.account',
-                'emanatingItem',
-                'matrixAccount',
-                'matrixPrAdminUser',
-                'matrixBudgetingAdminUser',
+                'office',
+                'emanating.project',
+                'emanating.account',
+                'emanating.ppmpCategory',
+                'items.emanatingItem.ppmpItem',
+                'items.matrixAccount',
+                'items.matrixPrAdminUser',
+                'items.matrixBudgetingAdminUser',
             ])
-            ->whereHas('purchaseRequest', function ($query): void {
-                $query->whereIn('status', ['draft', 'approved', 'returned']);
-            })
+            ->whereIn('status', ['draft', 'approved', 'returned'])
+            ->whereHas('items')
             ->when($request->filled('office_id'), function (Builder $query) use ($selectedOfficeId): void {
-                $query->whereHas('purchaseRequest', function (Builder $purchaseRequestQuery) use ($selectedOfficeId): void {
-                    $purchaseRequestQuery->where('office_id', $selectedOfficeId);
-                });
+                $query->where('office_id', $selectedOfficeId);
             })
             ->when($request->filled('account_id'), function (Builder $query) use ($selectedAccountId): void {
-                $query->whereHas('purchaseRequest.emanating', function (Builder $emanatingQuery) use ($selectedAccountId): void {
+                $query->whereHas('emanating', function (Builder $emanatingQuery) use ($selectedAccountId): void {
                     $emanatingQuery->where('account_id', $selectedAccountId);
                 });
             })
             ->when($selectedFiscalYear !== '', function (Builder $query) use ($selectedFiscalYear): void {
-                $query->whereHas('purchaseRequest.emanating', function (Builder $emanatingQuery) use ($selectedFiscalYear): void {
+                $query->whereHas('emanating', function (Builder $emanatingQuery) use ($selectedFiscalYear): void {
                     $emanatingQuery->where('fiscal_year', $selectedFiscalYear);
                 });
             })
             ->when($request->search, function (Builder $query, string $search): void {
                 $query->where(function (Builder $nestedQuery) use ($search): void {
-                    $nestedQuery->whereHas('purchaseRequest', function (Builder $purchaseRequestQuery) use ($search): void {
-                        $purchaseRequestQuery->where('pr_no', 'like', sprintf('%%%s%%', $search))
-                            ->orWhereHas('emanating', function (Builder $emanatingQuery) use ($search): void {
-                                $emanatingQuery->where('emanating_no', 'like', sprintf('%%%s%%', $search))
-                                    ->orWhereHas('account', function (Builder $accountQuery) use ($search): void {
-                                        $accountQuery->where('name', 'like', sprintf('%%%s%%', $search));
-                                    });
-                            })
-                            ->orWhereHas('office', function (Builder $officeQuery) use ($search): void {
-                                $officeQuery->where('name', 'like', sprintf('%%%s%%', $search));
-                            });
-                    })->orWhereHas('emanatingItem', function (Builder $emanatingItemQuery) use ($search): void {
-                        $emanatingItemQuery->where('name', 'like', sprintf('%%%s%%', $search));
-                    });
+                    $nestedQuery->where('pr_no', 'like', sprintf('%%%s%%', $search))
+                        ->orWhereHas('office', function (Builder $officeQuery) use ($search): void {
+                            $officeQuery->where('name', 'like', sprintf('%%%s%%', $search));
+                        })
+                        ->orWhereHas('emanating', function (Builder $emanatingQuery) use ($search): void {
+                            $emanatingQuery->where('emanating_no', 'like', sprintf('%%%s%%', $search))
+                                ->orWhereHas('account', function (Builder $accountQuery) use ($search): void {
+                                    $accountQuery->where('name', 'like', sprintf('%%%s%%', $search));
+                                })
+                                ->orWhereHas('project', function (Builder $projectQuery) use ($search): void {
+                                    $projectQuery->where('name', 'like', sprintf('%%%s%%', $search));
+                                });
+                        });
                 });
             });
     }

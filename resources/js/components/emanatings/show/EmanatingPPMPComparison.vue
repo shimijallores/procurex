@@ -167,6 +167,12 @@ defineProps({
                                     <TableHead>Quantity</TableHead>
                                     <TableHead>Unit</TableHead>
                                     <TableHead>Mode of Procurement</TableHead>
+                                    <TableHead class="text-right"
+                                        >Estimated Budget</TableHead
+                                    >
+                                    <TableHead class="text-right"
+                                        >Remaining Budget</TableHead
+                                    >
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -190,6 +196,28 @@ defineProps({
                                             item.mode_of_procurement
                                         }}</Badge>
                                     </TableCell>
+                                    <TableCell class="text-right">
+                                        {{
+                                            Number(
+                                                item.estimated_budget || 0,
+                                            ).toLocaleString("en-PH", {
+                                                minimumFractionDigits: 2,
+                                                maximumFractionDigits: 2,
+                                            })
+                                        }}
+                                    </TableCell>
+                                    <TableCell class="text-right">
+                                        {{
+                                            Number(
+                                                item.remaining_budget ??
+                                                    item.estimated_budget ??
+                                                    0,
+                                            ).toLocaleString("en-PH", {
+                                                minimumFractionDigits: 2,
+                                                maximumFractionDigits: 2,
+                                            })
+                                        }}
+                                    </TableCell>
                                 </TableRow>
                                 <TableRow
                                     v-if="
@@ -198,7 +226,7 @@ defineProps({
                                     "
                                 >
                                     <TableCell
-                                        colspan="5"
+                                        colspan="7"
                                         class="text-center text-muted-foreground py-8"
                                     >
                                         No PPMP items found in this category

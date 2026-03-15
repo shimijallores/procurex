@@ -30,6 +30,43 @@ const props = defineProps({
 const showDeleteModal = ref(false);
 const searchQuery = ref("");
 
+const resolveCategoryEstimatedBudget = (category) => {
+    const categoryBudget = parseFloat(category?.estimated_budget || 0);
+
+    if (categoryBudget > 0) {
+        return categoryBudget;
+    }
+
+    const categoryItems = category?.items || [];
+    return categoryItems.reduce(
+        (total, item) => total + parseFloat(item?.estimated_budget || 0),
+        0,
+    );
+};
+
+const resolveCategoryRemainingBudget = (category) => {
+    const categoryRemaining = category?.remaining_budget;
+    if (categoryRemaining !== null && categoryRemaining !== undefined) {
+        return parseFloat(categoryRemaining || 0);
+    }
+
+    const categoryBudget = parseFloat(category?.estimated_budget || 0);
+    const categoryItems = category?.items || [];
+
+    const itemsRemainingBudget = categoryItems.reduce(
+        (total, item) =>
+            total +
+            parseFloat(item?.remaining_budget ?? item?.estimated_budget ?? 0),
+        0,
+    );
+
+    if (categoryBudget > 0) {
+        return itemsRemainingBudget > 0 ? itemsRemainingBudget : categoryBudget;
+    }
+
+    return itemsRemainingBudget;
+};
+
 // Filtered categories based on search
 const filteredCategories = computed(() => {
     if (!searchQuery.value.trim()) {
@@ -53,10 +90,15 @@ const filteredCategories = computed(() => {
     });
 });
 
-// Calculate total budget
-const totalBudget = computed(() => {
+const totalEstimatedBudget = computed(() => {
     return filteredCategories.value.reduce((total, category) => {
-        return total + parseFloat(category.estimated_budget || 0);
+        return total + resolveCategoryEstimatedBudget(category);
+    }, 0);
+});
+
+const totalRemainingBudget = computed(() => {
+    return filteredCategories.value.reduce((total, category) => {
+        return total + resolveCategoryRemainingBudget(category);
     }, 0);
 });
 </script>
@@ -67,7 +109,11 @@ const totalBudget = computed(() => {
         <PPMPShowHeader :ppmp="ppmp" @delete="showDeleteModal = true" />
 
         <!-- Summary Cards -->
-        <PPMPShowSummaryCards :ppmp="ppmp" :total-budget="totalBudget" />
+        <PPMPShowSummaryCards
+            :ppmp="ppmp"
+            :total-remaining-budget="totalRemainingBudget"
+            :total-estimated-budget="totalEstimatedBudget"
+        />
 
         <!-- Categories and Items -->
         <PPMPCategoriesTable

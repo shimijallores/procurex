@@ -16,10 +16,12 @@ class PPMPCategory extends Model
         'ppmp_id',
         'account_id',
         'estimated_budget',
+        'remaining_budget',
     ];
 
     protected $casts = [
         'estimated_budget' => 'decimal:2',
+        'remaining_budget' => 'decimal:2',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
