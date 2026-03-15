@@ -27,7 +27,7 @@ jobs:
           port: ${{ secrets.VPS_PORT || 22 }}
           script_stop: true
           script: |
-            set -e
+            set -euxo pipefail
 
             DEPLOY_PATH="${{ secrets.VPS_DEPLOY_PATH }}"
             BRANCH="${{ github.ref_name }}"
@@ -37,16 +37,29 @@ jobs:
               exit 1
             fi
 
+            echo "[1/7] Move to deploy path"
             cd "$DEPLOY_PATH"
 
+            echo "[2/7] Sync branch $BRANCH"
             git fetch --all --prune
             git reset --hard "origin/$BRANCH"
 
-            composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader
+            echo "[3/7] Install PHP dependencies"
+            export COMPOSER_NO_INTERACTION=1
+            export COMPOSER_ALLOW_SUPERUSER=1
+            composer install --no-interaction --no-ansi --prefer-dist --no-dev --optimize-autoloader --no-progress -vvv
 
+            echo "[4/7] Run migrations"
             php artisan migrate --force
+
+            echo "[5/7] Refresh caches"
             php artisan optimize:clear
             php artisan optimize
+
+            echo "[6/7] Ensure storage symlink"
             php artisan storage:link || true
 
+            echo "[7/7] Restart queue workers"
             php artisan queue:restart || true
+
+            echo "Deploy finished successfully"
