@@ -49,9 +49,4 @@ jobs:
             php artisan optimize
             php artisan storage:link || true
 
-            if [ -f package.json ]; then
-              npm ci
-              npm run build
-            fi
-
             php artisan queue:restart || true
