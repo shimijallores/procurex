@@ -67,6 +67,8 @@ Route::middleware(['auth'])->group(function (): void {
     Route::resource('suppliers', SupplierController::class)->middleware($canvassingRoles);
     Route::resource('master-list-categories', MasterListCategoryController::class)->except(['show'])->middleware($canvassingRoles);
     Route::resource('master-list-items', MasterListItemController::class)->except(['show'])->middleware($canvassingRoles);
+    Route::get('master-list-items/print/docx', [MasterListItemController::class, 'printDocx'])->middleware($canvassingRoles)->name('master-list-items.print.docx');
+    Route::get('master-list-items/print/pdf', [MasterListItemController::class, 'printPdf'])->middleware($canvassingRoles)->name('master-list-items.print.pdf');
     Route::post('master-list-items/{master_list_item}/toggle-phase-out', [MasterListItemController::class, 'togglePhaseOut'])->middleware($canvassingRoles)->name('master-list-items.toggle-phase-out');
     Route::resource('canvasses', CanvasController::class)->except(['edit', 'update'])->middleware($canvassingRoles);
     Route::post('canvasses/{canvas}/items/{canvas_item}/selections', [CanvasController::class, 'saveItemSelections'])->middleware($canvassingRoles)->name('canvasses.items.selections');

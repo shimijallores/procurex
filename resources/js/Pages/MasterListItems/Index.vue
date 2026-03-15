@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { router } from "@inertiajs/vue3";
 import { Icon } from "@iconify/vue";
 import { useDebounceFn } from "@vueuse/core";
@@ -24,6 +24,22 @@ const props = defineProps({
 const search = ref(props.filters?.search ?? "");
 const selectedCategory = ref(props.filters?.category_id ?? "");
 const phasedOut = ref(props.filters?.phased_out ?? "");
+
+const printDocxUrl = computed(() =>
+    route("master-list-items.print.docx", {
+        search: search.value || undefined,
+        category_id: selectedCategory.value || undefined,
+        phased_out: phasedOut.value || undefined,
+    }),
+);
+
+const printPdfUrl = computed(() =>
+    route("master-list-items.print.pdf", {
+        search: search.value || undefined,
+        category_id: selectedCategory.value || undefined,
+        phased_out: phasedOut.value || undefined,
+    }),
+);
 
 const applyFilters = useDebounceFn(() => {
     router.get(
@@ -72,7 +88,10 @@ const formatCurrency = (value) => {
 <template>
     <div class="space-y-6">
         <!-- Header -->
-        <ItemIndexHeader />
+        <ItemIndexHeader
+            :print-docx-url="printDocxUrl"
+            :print-pdf-url="printPdfUrl"
+        />
 
         <!-- Stats -->
         <ItemIndexStats
