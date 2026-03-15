@@ -25,14 +25,6 @@ const search = ref(props.filters?.search ?? "");
 const selectedCategory = ref(props.filters?.category_id ?? "");
 const phasedOut = ref(props.filters?.phased_out ?? "");
 
-const printDocxUrl = computed(() =>
-    route("master-list-items.print.docx", {
-        search: search.value || undefined,
-        category_id: selectedCategory.value || undefined,
-        phased_out: phasedOut.value || undefined,
-    }),
-);
-
 const printPdfUrl = computed(() =>
     route("master-list-items.print.pdf", {
         search: search.value || undefined,
@@ -88,10 +80,7 @@ const formatCurrency = (value) => {
 <template>
     <div class="space-y-6">
         <!-- Header -->
-        <ItemIndexHeader
-            :print-docx-url="printDocxUrl"
-            :print-pdf-url="printPdfUrl"
-        />
+        <ItemIndexHeader :print-pdf-url="printPdfUrl" />
 
         <!-- Stats -->
         <ItemIndexStats

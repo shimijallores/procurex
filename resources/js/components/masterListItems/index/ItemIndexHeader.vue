@@ -4,10 +4,6 @@ import { Icon } from "@iconify/vue";
 import { Button } from "@/components/ui/button";
 
 defineProps({
-    printDocxUrl: {
-        type: String,
-        required: true,
-    },
     printPdfUrl: {
         type: String,
         required: true,
@@ -26,12 +22,6 @@ defineProps({
             </p>
         </div>
         <div class="flex gap-2">
-            <a :href="printDocxUrl">
-                <Button variant="outline">
-                    <Icon icon="lucide:file-text" class="mr-2 h-4 w-4" />
-                    Print DOCX
-                </Button>
-            </a>
             <a :href="printPdfUrl" target="_blank">
                 <Button variant="outline">
                     <Icon icon="lucide:file-down" class="mr-2 h-4 w-4" />

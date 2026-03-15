@@ -37,36 +37,6 @@ class MasterListItemController extends Controller
         ]);
     }
 
-    public function printDocx(Request $request): BinaryFileResponse|RedirectResponse
-    {
-        try {
-            $this->ensurePhpWordInstalled();
-
-            $items = $this->filteredItemsQuery($request)
-                ->orderBy('master_list_category_id')
-                ->orderBy('item_name')
-                ->get();
-
-            $phpWord = $this->buildMasterListDocument($items, $request);
-            $filePath = tempnam(sys_get_temp_dir(), 'masterlist-docx-');
-            $fileName = sprintf('masterlist-%s-%04d.docx', now()->format('Ymd'), random_int(0, 9999));
-
-            $ioFactoryClass = 'PhpOffice\\PhpWord\\IOFactory';
-            $ioFactoryClass::createWriter($phpWord, 'Word2007')->save($filePath);
-
-            return response()->download($filePath, $fileName)->deleteFileAfterSend(true);
-        } catch (\Throwable $exception) {
-            Log::error('Master List DOCX export failed', [
-                'message' => $exception->getMessage(),
-                'file' => $exception->getFile(),
-                'line' => $exception->getLine(),
-                'trace' => $exception->getTraceAsString(),
-            ]);
-
-            return redirect()->route('master-list-items.index')->with('error', 'Unable to generate DOCX export at the moment.');
-        }
-    }
-
     public function printPdf(Request $request): BinaryFileResponse|RedirectResponse
     {
         try {
@@ -83,7 +53,7 @@ class MasterListItemController extends Controller
             $settingsClass::setPdfRendererName($settingsClass::PDF_RENDERER_DOMPDF);
             $settingsClass::setPdfRendererPath(base_path('vendor/dompdf/dompdf'));
 
-            $filePath = tempnam(sys_get_temp_dir(), 'masterlist-pdf-');
+            $filePath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . uniqid('masterlist-pdf-', true) . '.pdf';
             $fileName = sprintf('masterlist-%s-%04d.pdf', now()->format('Ymd'), random_int(0, 9999));
 
             $ioFactoryClass = 'PhpOffice\\PhpWord\\IOFactory';
@@ -221,19 +191,78 @@ class MasterListItemController extends Controller
             $request->phased_out === '1' ? 'Phased Out' : ($request->phased_out === '0' ? 'Active Only' : 'All')
         );
 
-        $sealSrc = is_file($sealPath) ? 'file:///' . str_replace('\\', '/', $sealPath) : null;
-        $bagongSrc = is_file($bagongPilipinasPath) ? 'file:///' . str_replace('\\', '/', $bagongPilipinasPath) : null;
+        $headerTable = $section->addTable([
+            'borderSize' => 0,
+            'borderColor' => 'FFFFFF',
+            'cellMargin' => 30,
+        ]);
+        $headerTable->addRow();
 
-        $html = view('pdf.masterlist', [
-            'generatedAt' => now()->format('F d, Y h:i A'),
-            'filterSummary' => $filterSummary,
-            'items' => $items,
-            'sealSrc' => $sealSrc,
-            'bagongSrc' => $bagongSrc,
-        ])->render();
+        $leftCell = $headerTable->addCell(1800, ['borderSize' => 0, 'valign' => 'center']);
+        if (is_file($sealPath)) {
+            $leftCell->addImage($sealPath, [
+                'width' => 58,
+                'height' => 58,
+                'alignment' => 'center',
+            ]);
+        }
 
-        $htmlClass = 'PhpOffice\\PhpWord\\Shared\\Html';
-        $htmlClass::addHtml($section, $html, false, false);
+        $centerCell = $headerTable->addCell(7200, ['borderSize' => 0, 'valign' => 'center']);
+        $centerCell->addText('Republic of the Philippines', ['bold' => true], ['alignment' => 'center']);
+        $centerCell->addText('Provincial Government of Batangas', ['bold' => true], ['alignment' => 'center']);
+        $centerCell->addText('Capitol Site, Kumintang Ibaba, Batangas City 4200', [], ['alignment' => 'center']);
+        $centerCell->addText('Master List Items', ['bold' => true], ['alignment' => 'center']);
+
+        $rightCell = $headerTable->addCell(1800, ['borderSize' => 0, 'valign' => 'center']);
+        if (is_file($bagongPilipinasPath)) {
+            $rightCell->addImage($bagongPilipinasPath, [
+                'width' => 74,
+                'height' => 58,
+                'alignment' => 'center',
+            ]);
+        }
+
+        $section->addTextBreak(1);
+        $section->addText('Generated: ' . now()->format('F d, Y h:i A'));
+        $section->addText($filterSummary);
+        $section->addTextBreak(1);
+
+        $tableStyle = [
+            'borderSize' => 6,
+            'borderColor' => '999999',
+            'cellMargin' => 60,
+        ];
+        $headerRowStyle = [
+            'bgColor' => 'F5F5F5',
+        ];
+
+        $phpWord->addTableStyle('MasterListItemsTable', $tableStyle, $headerRowStyle);
+        $table = $section->addTable('MasterListItemsTable');
+
+        $table->addRow();
+        $table->addCell(3000)->addText('Item', ['bold' => true]);
+        $table->addCell(2100)->addText('Category', ['bold' => true]);
+        $table->addCell(2100)->addText('Supplier', ['bold' => true]);
+        $table->addCell(1000)->addText('Unit', ['bold' => true]);
+        $table->addCell(1300)->addText('Default Price', ['bold' => true], ['alignment' => 'right']);
+        $table->addCell(1100)->addText('Status', ['bold' => true]);
+
+        if ($items->isEmpty()) {
+            $table->addRow();
+            $table->addCell(10600, ['gridSpan' => 6])->addText('No master list items found for the selected filters.', [], ['alignment' => 'center']);
+
+            return $phpWord;
+        }
+
+        foreach ($items as $item) {
+            $table->addRow();
+            $table->addCell(3000)->addText((string) ($item->item_name ?? '-'));
+            $table->addCell(2100)->addText((string) ($item->masterListCategory?->name ?? '-'));
+            $table->addCell(2100)->addText((string) ($item->supplier?->name ?? '-'));
+            $table->addCell(1000)->addText((string) ($item->unit ?? '-'));
+            $table->addCell(1300)->addText(number_format((float) ($item->default_unit_price ?? 0), 2), [], ['alignment' => 'right']);
+            $table->addCell(1100)->addText($item->is_phased_out ? 'Phased Out' : 'Active');
+        }
 
         return $phpWord;
     }

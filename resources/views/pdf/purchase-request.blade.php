@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Purchase Request – {{ $pr->pr_no ?? 'Draft' }}</title>
     <style>
+        @page {
+            size: A4 landscape;
+            margin: 8mm 10mm;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -17,12 +22,14 @@
             font-size: 9pt;
             color: #000;
             background: #fff;
+            margin: 0;
+            padding: 0;
         }
 
         .page {
-            width: 210mm;
-            min-height: 297mm;
-            padding: 8mm 10mm;
+            width: 100%;
+            min-height: auto;
+            padding: 0;
             position: relative;
         }
 
