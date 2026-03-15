@@ -4,7 +4,7 @@
             Create BAC Resolution
         </h1>
         <p class="text-sm text-muted-foreground mt-1">
-            Select an AOQ and initialize a BAC resolution draft.
+            Select one or more recent AOQs to create a batched BAC resolution.
         </p>
     </div>
 </template>

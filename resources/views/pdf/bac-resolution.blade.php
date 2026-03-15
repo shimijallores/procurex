@@ -14,50 +14,31 @@
 
         body {
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 11pt;
+            font-size: 10.5pt;
             color: #000;
+            line-height: 1.35;
         }
 
         .page {
             width: 210mm;
             min-height: 297mm;
-            padding: 12mm 14mm;
-        }
-
-        .page-break {
-            page-break-after: always;
-        }
-
-        .text-center {
-            text-align: center;
-        }
-
-        .underlined {
-            text-decoration: underline;
-            font-weight: bold;
-        }
-
-        .top-right-meta {
-            width: 100%;
-            text-align: right;
-            font-size: 10pt;
-            line-height: 1.3;
-            margin-bottom: 10px;
+            padding: 8mm 10mm;
         }
 
         .header-layout {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .header-layout td {
-            vertical-align: middle;
             border: none;
+            vertical-align: middle;
             padding: 0;
         }
 
-        .header-left {
+        .header-left,
+        .header-right {
             width: 18%;
             text-align: center;
         }
@@ -67,20 +48,15 @@
             text-align: center;
         }
 
-        .header-right {
-            width: 18%;
-            text-align: center;
-        }
-
         .logo-seal {
-            width: 74px;
-            height: 74px;
+            width: 60px;
+            height: 60px;
             object-fit: contain;
         }
 
         .logo-bagong {
-            width: 86px;
-            height: 74px;
+            width: 78px;
+            height: 60px;
             object-fit: contain;
         }
 
@@ -88,132 +64,155 @@
             font-size: 13pt;
             font-weight: 700;
             text-transform: uppercase;
-            line-height: 1.25;
+            line-height: 1.2;
         }
 
         .gov-sub {
-            font-size: 10.5pt;
-            line-height: 1.3;
+            font-size: 10pt;
+            line-height: 1.2;
         }
 
         .bac-title {
-            margin-top: 12px;
-            font-size: 15pt;
+            margin-top: 6px;
+            font-size: 16pt;
             font-weight: 700;
             text-decoration: underline;
             text-transform: uppercase;
         }
 
         .resolution-no {
-            margin-top: 38px;
-            font-size: 12.5pt;
+            margin-top: 14px;
+            text-align: center;
+            font-size: 12pt;
             font-weight: 700;
             text-transform: uppercase;
         }
 
-        .main-resolution {
-            margin-top: 36px;
+        .resolution-main {
+            margin-top: 12px;
             text-align: center;
-            line-height: 1.45;
-            font-size: 13pt;
+            font-size: 11pt;
             font-weight: 700;
             text-transform: uppercase;
+            line-height: 1.35;
         }
 
         .whereas {
-            margin-top: 22px;
+            margin-top: 9px;
             text-align: justify;
-            line-height: 1.5;
-            text-indent: 36px;
+            line-height: 1.35;
+            text-indent: 26px;
         }
 
-        .whereas strong {
+        .whereas strong,
+        .resolved strong {
             font-weight: 700;
         }
 
-        .bidders-table {
+        .section-title {
+            margin-top: 12px;
+            text-align: center;
+            font-size: 16pt;
+            font-weight: 700;
+            text-decoration: underline;
+            text-transform: uppercase;
+        }
+
+        .meta-line {
+            margin-top: 6px;
+            font-size: 11pt;
+        }
+
+        .meta-line strong {
+            font-weight: 700;
+        }
+
+        .block-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
-            font-size: 10.5pt;
+            margin-top: 6px;
+            font-size: 10pt;
         }
 
-        .bidders-table th,
-        .bidders-table td {
+        .block-table th,
+        .block-table td {
             border: 1px solid #000;
-            padding: 6px 8px;
+            padding: 4px 5px;
+            vertical-align: top;
         }
 
-        .bidders-table th {
+        .block-table th {
             text-align: center;
             font-weight: 700;
         }
 
-        .bidders-table td:last-child,
-        .bidders-table td:nth-child(2) {
+        .text-center {
             text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .abstract-wrap {
+            margin-top: 10px;
+            page-break-inside: avoid;
         }
 
         .resolved {
-            margin-top: 16px;
+            margin-top: 10px;
             text-align: justify;
-            line-height: 1.5;
-            text-indent: 36px;
+            line-height: 1.4;
+            text-indent: 26px;
         }
 
-        .resolved-date {
+        .approval-line {
+            margin-top: 18px;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .certification {
+            margin-top: 6px;
+            text-align: center;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .signatory-grid {
+            width: 100%;
             margin-top: 14px;
-            text-align: justify;
-            line-height: 1.5;
-            text-indent: 36px;
         }
 
-        .members {
-            margin-top: 42px;
-        }
-
-        .member-grid {
+        .signatory-row {
             width: 100%;
+            margin-top: 16px;
         }
 
-        .member-row {
-            width: 100%;
-            margin-top: 28px;
-        }
-
-        .member-cell {
+        .signatory-cell {
             display: inline-block;
             width: 49%;
             text-align: center;
             vertical-align: top;
         }
 
-        .member-name {
+        .name {
             font-weight: 700;
             text-transform: uppercase;
         }
 
-        .member-role {
+        .role {
             margin-top: 2px;
         }
 
-        .chair-wrap {
-            margin-top: 30px;
+        .chair {
+            margin-top: 20px;
             text-align: center;
         }
 
-        .approved-wrap {
-            margin-top: 70px;
+        .approved {
+            margin-top: 14px;
             text-align: center;
-        }
-
-        .approved-label {
-            margin-bottom: 24px;
-        }
-
-        .governor-name {
-            font-weight: 700;
-            text-transform: uppercase;
         }
     </style>
 </head>
@@ -244,51 +243,16 @@
     $sealLogo = $imagePath(['batangas-seal.png']);
     $bagongLogo = $imagePath(['bagong-pilipinas.png']);
 
-    $officeName = strtoupper((string) ($rfq?->purchaseRequest?->office?->name ?? 'PROVINCIAL OFFICE'));
-    $projectName = strtoupper((string) ($resolution->project_name ?? 'PROJECT'));
-    $winnerName = strtoupper((string) ($resolution->winner_supplier_name ?? 'WINNING SUPPLIER'));
-    $winnerAmount = (float) ($resolution->winner_amount ?? 0);
-    $winnerAmountFmt = number_format($winnerAmount, 2);
-    $abcAmount = (float) ($rfq?->abc_amount ?? 0);
-    $abcAmountFmt = number_format($abcAmount, 2);
-
-    $amountToWords = static function (float $amount): string {
-    $whole = (int) floor($amount);
-    $fraction = (int) round(($amount - $whole) * 100);
-
-    if (! class_exists(\NumberFormatter::class)) {
-    return 'AMOUNT IN WORDS';
-    }
-
-    $formatter = new \NumberFormatter('en', \NumberFormatter::SPELLOUT);
-    $wholeWords = strtoupper((string) $formatter->format($whole));
-    $words = $wholeWords . ' PESOS';
-
-    if ($fraction > 0) {
-    $words .= ' AND ' . strtoupper((string) $formatter->format($fraction)) . ' CENTAVOS';
-    }
-
-    return $words;
-    };
-
-    $winnerAmountWords = $amountToWords($winnerAmount);
-    $abcAmountWords = $amountToWords($abcAmount);
-    $calculationLabel = (string) ($resolution->calculation_label ?: 'Lowest Calculated');
-
+    $resolutionYear = optional($resolution->resolution_date)->format('Y') ?? now()->year;
     $meetingDate = $resolution->meeting_date ?? $resolution->resolution_date;
     @endphp
 
     <div class="page">
-        <div class="top-right-meta">
-            <div><strong>PR No.:</strong> {{ $rfq?->purchaseRequest?->pr_no }}</div>
-            <div><strong>SVP No.:</strong> {{ $rfq?->svp_no }}</div>
-        </div>
-
         <table class="header-layout">
             <tr>
                 <td class="header-left">
                     @if ($sealLogo)
-                    <img src="{{ $sealLogo }}" alt="Batangas Seal" class="logo-seal">
+                    <img src="{{ $sealLogo }}" alt="Batangas Seal" class="logo-seal" />
                     @endif
                 </td>
                 <td class="header-mid">
@@ -299,37 +263,51 @@
                 </td>
                 <td class="header-right">
                     @if ($bagongLogo)
-                    <img src="{{ $bagongLogo }}" alt="Bagong Pilipinas" class="logo-bagong">
+                    <img src="{{ $bagongLogo }}" alt="Bagong Pilipinas" class="logo-bagong" />
                     @endif
                 </td>
             </tr>
         </table>
 
-        <div class="text-center resolution-no">
-            RESOLUTION NO. {{ strtoupper((string) ($resolution->resolution_no ?? 'BAC-____')) }}, Series of {{ optional($resolution->resolution_date)->format('Y') ?? now()->year }}
+        <div class="resolution-no">
+            RESOLUTION NO. BAC - SVP - B200K - ___, Series of {{ $resolutionYear }}
         </div>
 
-        <div class="main-resolution">
-            RESOLUTION RECOMMENDING THE AWARD OF CONTRACT TO
-            <span class="underlined">{{ $winnerName }}</span>
-            FOR THE PURCHASE OF
-            <span class="underlined">{{ $projectName }}</span>
-            FOR USE OF
-            <span class="underlined">{{ $officeName }}</span>
-            IN THE AMOUNT OF
-            <span class="underlined">{{ $winnerAmountWords }} ONLY (P {{ $winnerAmountFmt }})</span>
-            THROUGH SMALL VALUE PROCUREMENT
+        <div class="resolution-main">
+            RESOLUTION RECOMMENDING THE AWARD OF CONTRACT TO THE SUPPLIERS WITH THE
+            LOWEST/SINGLE CALCULATED RESPONSIVE QUOTATIONS, THROUGH SMALL VALUE PROCUREMENT
+            (TWO HUNDRED THOUSAND PESOS AND BELOW)
         </div>
 
         <div class="whereas">
-            <strong>WHEREAS,</strong> the Provincial Government of Batangas, through its Bids and Awards Committee (BAC), is in need of a supplier for the
-            <span class="underlined">{{ strtoupper((string) ($resolution->project_name ?? 'PROJECT')) }}</span>,
-            with an Approved Budget for the Contract (ABC) in the amount of
-            <span class="underlined">{{ $abcAmountWords }} (P{{ $abcAmountFmt }})</span>;
+            <strong>WHEREAS,</strong> the Provincial Government of Batangas, through its Bids and Awards Committee (BAC), is in need of suppliers for the following:
+        </div>
+
+        <table class="block-table" style="margin-top: 8px;">
+            <thead>
+                <tr>
+                    <th style="width: 18%;">OFFICE</th>
+                    <th style="width: 56%;">NAME OF PROJECT</th>
+                    <th style="width: 26%;">APPROVED BUDGET FOR THE CONTRACT (ABC)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach(($summaryRows ?? collect()) as $row)
+                <tr>
+                    <td class="text-center">{{ strtoupper((string) ($row['office_name'] ?? 'OFFICE')) }}</td>
+                    <td>{{ $row['project_name'] ?? 'PROJECT' }}</td>
+                    <td class="text-right">{{ number_format((float) ($row['abc_amount'] ?? 0), 2) }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+
+        <div class="whereas">
+            <strong>WHEREAS,</strong> Rule IV (Mode of Procurement) of Republic Act (RA) No. 12009 or the New Government Procurement Act states that the Procuring Entity may, in order to promote economy and efficiency, resort to aforesaid method of procurement and shall ensure that it is the most advantageous price for the government;
         </div>
 
         <div class="whereas">
-            <strong>WHEREAS,</strong> Rule IV of the Implementing Rules and Regulations (IRR) of Republic Act No. 12009 provides the various Modes of Procurement consistent with the fit-for-purpose procurement approach;
+            <strong>WHEREAS,</strong> Rule IV, Section 26 of R.A. No. 12009 likewise provides for Small Value Procurement (SVP) as a mode of procurement, consistent with the Fit-for-Purpose procurement approach;
         </div>
 
         <div class="whereas">
@@ -337,102 +315,130 @@
         </div>
 
         <div class="whereas">
-            <strong>WHEREAS,</strong> the receipt of one (1) quotation is sufficient to proceed with the evaluation of bidders:
-            <em>provided</em>, that, the amount involved does not exceed Two Million Pesos (P2,000,000.00);
+            <strong>WHEREAS,</strong> under Section 34.3 b) of the same IRR, except for those with ABCs equal to Two Hundred Thousand Pesos (P200,000.00) and below which shall not require posting, RFQ or Request for Proposal (RFP) shall be posted for a period of three (3) calendar days on the PhilGEPS website, website of the Procuring Entity, if available, and at any conspicuous place reserved for this purpose in the premises of the Procuring Entity;
         </div>
 
         <div class="whereas">
-            <strong>WHEREAS,</strong> under Section 34.3 (b) of the same IRR, except for those with ABCs equal to Two Hundred Thousand Pesos (P200,000.00) and below which shall not require posting, RFQ or Request for Proposal (RFP) shall be posted for a period of three (3) calendar days on the PhilGEPS website, website of the Procuring Entity, if available, and at any conspicuous place reserved for this purpose in the premises of the Procuring Entity;
+            <strong>WHEREAS,</strong> the receipt of one (1) quotation is sufficient to proceed with the evaluation of bidders: provided, that, the amount involved does not exceed Two Million Pesos (P2,000,000.00), as detailed in the table contained in Section 34.2, and subject to the periodic review of the threshold amount and adjustments as may be deemed appropriate by the GPPB;
         </div>
 
         <div class="whereas">
-            <strong>WHEREAS,</strong> the Request for Quotation (RFQ) was prepared together with the Terms and Conditions of the Procuring Entity and sent out to the prospective suppliers;
+            <strong>WHEREAS,</strong> the General Services Office (GSO) invited prospective suppliers to furnish their quotations on the items abovementioned;
         </div>
-    </div>
-
-    <div class="page">
-        <div class="whereas" style="margin-top: 0;">
-            <strong>WHEREAS,</strong> on the deadline for the submission of RFQ, the suppliers submitted their bids, which were all found to be substantially compliant, as follows:
-        </div>
-
-        <table class="bidders-table">
-            <thead>
-                <tr>
-                    <th style="width: 62%;">Name of Prospective Bidders</th>
-                    <th style="width: 20%;">Quotation (in PhP)</th>
-                    <th style="width: 18%;">Rank/Remarks</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse(($bidderRows ?? collect()) as $row)
-                <tr>
-                    <td>{{ $row['supplier_name'] }}</td>
-                    <td>P {{ number_format((float) $row['amount'], 2) }}</td>
-                    <td>{{ $row['rank_label'] }}</td>
-                </tr>
-                @empty
-                <tr>
-                    <td>N/A</td>
-                    <td>P 0.00</td>
-                    <td>—</td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
 
         <div class="whereas">
-            <strong>WHEREAS,</strong> upon careful examination, validation and verification of all the documents submitted by the supplier with the {{ $calculationLabel }} Quotation, its price quotation has been found to be responsive;
+            <strong>WHEREAS,</strong> on the deadline for the submission of Request for Quotation (RFQ) Forms last __________________, {{ $resolutionYear }}, the GSO prepared the hereunder Abstract of Quotation from all the interested bidders within the prescribed period of posting, to wit:
+        </div>
+
+        @foreach(($abstracts ?? collect()) as $abstract)
+        <div class="abstract-wrap">
+            <div class="section-title">ABSTRACT OF QUOTATION</div>
+            <div class="meta-line">
+                <strong>DATE OF RFQ:</strong>
+                <strong>{{ $abstract['rfq_date'] ? \Carbon\Carbon::parse($abstract['rfq_date'])->format('F d, Y') : '__________' }}</strong>
+            </div>
+
+            <table class="block-table">
+                <tbody>
+                    <tr>
+                        <td style="width: 18%; font-weight: 700;">SVP NO. {{ $abstract['svp_no'] ?? 'N/A' }}</td>
+                        <td>{{ $abstract['project_name'] ?? 'PROJECT' }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <table class="block-table">
+                <thead>
+                    <tr>
+                        <th rowspan="2" style="width: 5%;">QTY</th>
+                        <th rowspan="2" style="width: 6%;">UNIT</th>
+                        <th rowspan="2" style="width: 27%;">PARTICULARS</th>
+                        <th rowspan="2" style="width: 11%;">APPROVED BUDGET FOR THE CONTRACT</th>
+                        @foreach(($abstract['suppliers'] ?? collect()) as $supplier)
+                        <th colspan="2">
+                            {{ $supplier['supplier_name'] }} ({{ $supplier['rank_label'] }})
+                        </th>
+                        @endforeach
+                    </tr>
+                    <tr>
+                        @foreach(($abstract['suppliers'] ?? collect()) as $supplier)
+                        <th>UNIT COST</th>
+                        <th>TOTAL AMOUNT</th>
+                        @endforeach
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach(($abstract['items'] ?? collect()) as $item)
+                    <tr>
+                        <td class="text-center">{{ (int) ($item['quantity'] ?? 0) }}</td>
+                        <td class="text-center">{{ $item['unit'] ?? '' }}</td>
+                        <td>{{ $item['particulars'] ?? '' }}</td>
+                        <td class="text-right">{{ number_format((float) ($item['approved_budget'] ?? 0), 2) }}</td>
+                        @foreach(($item['supplier_columns'] ?? collect()) as $column)
+                        <td class="text-right">{{ $column['unit_cost'] !== null ? number_format((float) $column['unit_cost'], 2) : '' }}</td>
+                        <td class="text-right">{{ $column['total_amount'] !== null ? number_format((float) $column['total_amount'], 2) : '' }}</td>
+                        @endforeach
+                    </tr>
+                    @endforeach
+                    <tr>
+                        <td colspan="3" class="text-right"><strong>TOTAL</strong></td>
+                        <td class="text-right"><strong>{{ number_format((float) ($abstract['abc_total'] ?? 0), 2) }}</strong></td>
+                        @foreach(($abstract['suppliers'] ?? collect()) as $supplier)
+                        <td></td>
+                        <td class="text-right"><strong>{{ number_format((float) ($supplier['total_amount'] ?? 0), 2) }}</strong></td>
+                        @endforeach
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        @endforeach
+
+        <div class="whereas">
+            <strong>WHEREAS,</strong> upon careful examination, validation and verification of all the documents submitted by the suppliers with the Lowest Calculated Quotation, their price quotations have been found to be responsive;
         </div>
 
         <div class="resolved">
-            <strong>NOW, THEREFORE,</strong> We, the members of the Bids and Awards Committee of the Provincial Government of Batangas, <strong>RESOLVE</strong>, as it is hereby <strong>RESOLVED</strong>, to recommend to HON. GOVERNOR VILMA SANTOS-RECTO, to resort to Small Value Procurement and award the contract for
-            <span class="underlined">{{ strtoupper((string) ($resolution->project_name ?? 'PROJECT')) }}</span>
-            in the amount of
-            <span class="underlined">{{ $winnerAmountWords }} (P {{ $winnerAmountFmt }})</span>
-            to
-            <span class="underlined">{{ $winnerName }}</span>
-            as the supplier with the {{ $calculationLabel }} and Responsive Quotation;
+            <strong>NOW, THEREFORE,</strong> we, the members of the Bids and Awards Committee of the Provincial Government of Batangas, acknowledging the submitted Abstract of Quotation by the GSO, <strong>RESOLVE</strong>, as it is hereby <strong>RESOLVED</strong>, to recommend to the HON. GOVERNOR VILMA SANTOS-RECTO, the approval of the aforesaid Abstract of Quotation, as conducted and submitted by the GSO Team of Canvassers, pursuant to Sections 34.1 and 34.2 of the Implementing Rules and Regulations of RA No. 12009; to declare the abovementioned suppliers as those with the Lowest Calculated Responsive Quotations for the purchase and delivery of various goods of the Provincial Government of Batangas, and to recommend the awarding of their respective Contracts, after passing the criteria set forth by the procurement law and the rules of the BAC;
         </div>
 
-        <div class="resolved-date">
-            <strong>RESOLVED,</strong> at the Batangas Provincial BAC Office, Capitol Compound, Batangas City, this
-            <span class="underlined">{{ optional($meetingDate)->format('jS') ?? '___' }}</span>
-            day of
-            <span class="underlined">{{ optional($meetingDate)->format('F Y') ?? '___________' }}</span>.
+        <div class="approval-line">
+            UNANIMOUSLY APPROVED, this ____ day of _________________________ {{ $resolutionYear }}.
         </div>
 
-        <div class="members">
-            <div class="member-row">
-                <div class="member-cell">
-                    <div class="member-name">{{ strtoupper((string) ($resolution->signatory_member_one ?: 'BAC MEMBER')) }}</div>
-                    <div class="member-role">Member</div>
+        <div class="certification">CERTIFIED TO BE DULY ATTESTED AND APPROVED:</div>
+
+        <div class="signatory-grid">
+            <div class="signatory-row">
+                <div class="signatory-cell">
+                    <div class="name">MR. NOEL R. ROCAFORT</div>
+                    <div class="role">Member</div>
                 </div>
-                <div class="member-cell">
-                    <div class="member-name">{{ strtoupper((string) ($resolution->signatory_member_two ?: 'BAC MEMBER')) }}</div>
-                    <div class="member-role">Member</div>
+                <div class="signatory-cell">
+                    <div class="name">MR. PEDRITO MARTIN M. DIJAN, JR.</div>
+                    <div class="role">Member</div>
                 </div>
             </div>
 
-            <div class="member-row">
-                <div class="member-cell">
-                    <div class="member-name">{{ strtoupper((string) ($resolution->signatory_member_three ?: 'BAC MEMBER')) }}</div>
-                    <div class="member-role">Member</div>
+            <div class="signatory-row">
+                <div class="signatory-cell">
+                    <div class="name">ENGR. NERIO L. RONQUILLO, JR.</div>
+                    <div class="role">Member</div>
                 </div>
-                <div class="member-cell">
-                    <div class="member-name">ATTY. LOUIE MARK M. DALAWAMPU</div>
-                    <div class="member-role">Member</div>
+                <div class="signatory-cell">
+                    <div class="name">ATTY. LOUIE MARK M. DALAWAMPU</div>
+                    <div class="role">Member</div>
                 </div>
             </div>
 
-            <div class="chair-wrap">
-                <div class="member-name">{{ strtoupper((string) ($resolution->signatory_chairperson ?: 'BAC CHAIRPERSON')) }}</div>
-                <div class="member-role">Chairperson</div>
+            <div class="chair">
+                <div class="name">ATTY. JOEL L. MONTEALTO</div>
+                <div class="role">Chairperson</div>
             </div>
 
-            <div class="approved-wrap">
-                <div class="approved-label">Approved by:</div>
-                <div class="governor-name">VILMA SANTOS - RECTO</div>
-                <div>Governor</div>
+            <div class="approved">
+                <div>Approved by:</div>
+                <div class="name" style="margin-top: 10px;">VILMA SANTOS - RECTO</div>
+                <div class="role">Governor</div>
             </div>
         </div>
     </div>

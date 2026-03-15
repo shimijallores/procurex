@@ -10,6 +10,7 @@ use App\Models\AOQ;
 use App\Models\BACResolution;
 use App\Models\Calendar;
 use App\Models\Office;
+use App\Models\RFQ;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -23,6 +24,7 @@ class BACResolutionController extends Controller
     public function index(Request $request): Response
     {
         $query = BACResolution::with([
+            'aoqs.rfq.purchaseRequest.office',
             'aoq.rfq.purchaseRequest.office',
         ])
             ->when($request->search, function ($q, string $search): void {
@@ -30,13 +32,19 @@ class BACResolutionController extends Controller
                     $inner->where('resolution_no', 'like', sprintf('%%%s%%', $search))
                         ->orWhere('project_name', 'like', sprintf('%%%s%%', $search))
                         ->orWhere('winner_supplier_name', 'like', sprintf('%%%s%%', $search))
+                        ->orWhereHas('aoqs.rfq', function ($rfq) use ($search): void {
+                            $rfq->where('svp_no', 'like', sprintf('%%%s%%', $search));
+                        })
                         ->orWhereHas('aoq.rfq', function ($rfq) use ($search): void {
                             $rfq->where('svp_no', 'like', sprintf('%%%s%%', $search));
                         });
                 });
             })
             ->when($request->office_id, function ($q, string $officeId): void {
-                $q->whereHas('aoq.rfq.purchaseRequest', fn($pr) => $pr->where('office_id', $officeId));
+                $q->where(function ($inner) use ($officeId): void {
+                    $inner->whereHas('aoqs.rfq.purchaseRequest', fn($pr) => $pr->where('office_id', $officeId))
+                        ->orWhereHas('aoq.rfq.purchaseRequest', fn($pr) => $pr->where('office_id', $officeId));
+                });
             })
             ->when($request->fiscal_year, function ($q, string $fiscalYear): void {
                 $q->whereYear('resolution_date', $fiscalYear);
@@ -80,6 +88,7 @@ class BACResolutionController extends Controller
             'winnerSupplier',
         ])
             ->whereDoesntHave('bacResolution')
+            ->whereDoesntHave('bacResolutions')
             ->latest('aoq_date')
             ->get()
             ->map(function (AOQ $aoq): AOQ {
@@ -124,35 +133,64 @@ class BACResolutionController extends Controller
         DB::beginTransaction();
 
         try {
-            $aoq = AOQ::with([
-                'rfq',
-                'rfq.suppliers.supplierItems',
-                'winnerSupplier',
-            ])->findOrFail($validated['aoq_id']);
+            $selectedAoqIds = collect($validated['aoq_ids'] ?? [])
+                ->map(fn($id) => (int) $id)
+                ->unique()
+                ->values();
 
-            if ($aoq->bacResolution()->exists()) {
-                return redirect()->back()->with('error', 'A BAC Resolution already exists for this AOQ.');
+            if ($selectedAoqIds->isEmpty()) {
+                return redirect()->back()->withErrors([
+                    'aoq_ids' => 'Please select at least one AOQ.',
+                ])->withInput();
             }
 
-            $winnerAmount = $this->calculateWinnerAmount($aoq);
-            $calculationLabel = $aoq->rfq?->suppliers?->filter(fn($entry) => (bool) $entry->submitted_at)->count() <= 1
-                ? 'Single Calculated'
-                : 'Lowest Calculated';
+            $aoqs = AOQ::with([
+                'rfq',
+                'rfq.purchaseRequest.office',
+                'rfq.items.purchaseRequestItem',
+                'rfq.suppliers.supplier',
+                'rfq.suppliers.supplierItems.rfqItem',
+                'rfq.suppliers.supplierItems',
+                'winnerSupplier',
+                'bacResolution',
+                'bacResolutions',
+            ])->whereIn('id', $selectedAoqIds)->get();
+
+            if ($aoqs->count() !== $selectedAoqIds->count()) {
+                return redirect()->back()->withErrors([
+                    'aoq_ids' => 'One or more selected AOQs no longer exist.',
+                ])->withInput();
+            }
+
+            $alreadyLinked = $aoqs->first(function (AOQ $aoq): bool {
+                return $aoq->bacResolution()->exists() || $aoq->bacResolutions()->exists();
+            });
+
+            if ($alreadyLinked) {
+                return redirect()->back()->with('error', 'One or more selected AOQs are already linked to an existing BAC Resolution.');
+            }
+
+            $primaryAoq = $aoqs->first();
+            $winnerAmount = $aoqs->sum(fn(AOQ $aoq) => $this->calculateWinnerAmount($aoq));
+            $calculationLabel = 'Lowest/Single Calculated';
+
+            $projectName = (string) ($validated['project_name'] ?? 'Batch of Projects');
+            $winnerSupplierName = (string) ($validated['winner_supplier_name'] ?? 'Multiple Suppliers');
 
             $resolutionDate = Carbon::parse($validated['resolution_date']);
 
             $resolution = BACResolution::create([
-                'aoq_id' => $aoq->id,
+                'aoq_id' => $primaryAoq?->id,
                 'resolution_no' => $this->generateResolutionNumber($resolutionDate),
                 'resolution_date' => $validated['resolution_date'],
                 'meeting_date' => $validated['meeting_date'] ?? null,
-                'project_name' => (string) $validated['project_name'],
-                'winner_supplier_name' => (string) $validated['winner_supplier_name'],
+                'project_name' => $projectName,
+                'winner_supplier_name' => $winnerSupplierName,
                 'winner_amount' => (float) ($validated['winner_amount'] ?? $winnerAmount),
                 'calculation_label' => (string) ($validated['calculation_label'] ?? $calculationLabel),
                 'justification' => $validated['justification']
                     ?? sprintf(
-                        'for being the supplier with the %s and Responsive Quotation which is advantageous to the Provincial Government of Batangas.',
+                        'for being the suppliers with the %s and Responsive Quotations which are advantageous to the Provincial Government of Batangas.',
                         $calculationLabel
                     ),
                 'signatory_chairperson' => $validated['signatory_chairperson'] ?? 'BAC Chairperson',
@@ -161,6 +199,13 @@ class BACResolutionController extends Controller
                 'signatory_member_three' => $validated['signatory_member_three'] ?? 'BAC Member',
                 'finalized_at' => now(),
             ]);
+
+            $syncPayload = [];
+            foreach ($selectedAoqIds as $index => $aoqId) {
+                $syncPayload[(int) $aoqId] = ['sort_order' => $index + 1];
+            }
+
+            $resolution->aoqs()->sync($syncPayload);
 
             DB::commit();
         } catch (\Throwable $e) {
@@ -176,6 +221,8 @@ class BACResolutionController extends Controller
     public function show(BACResolution $bacResolution): Response
     {
         $bacResolution->load([
+            'aoqs.rfq.purchaseRequest.office',
+            'aoqs.winnerSupplier',
             'aoq.rfq.purchaseRequest.office',
             'aoq.rfq',
             'aoq.winnerSupplier',
@@ -241,53 +288,96 @@ class BACResolutionController extends Controller
     public function printPdf(BACResolution $bacResolution)
     {
         $bacResolution->load([
+            'aoqs.rfq.purchaseRequest.office',
+            'aoqs.rfq.items.purchaseRequestItem',
+            'aoqs.rfq.suppliers.supplier',
+            'aoqs.rfq.suppliers.supplierItems.rfqItem',
+            'aoqs.winnerSupplier',
             'aoq.rfq.purchaseRequest.office',
             'aoq.rfq.items',
             'aoq.rfq.suppliers.supplier',
             'aoq.rfq.suppliers.supplierItems.rfqItem',
         ]);
 
-        $rfq = $bacResolution->aoq?->rfq;
-        $bidderRows = collect();
-
-        if ($rfq) {
-            $bidderRows = $rfq->suppliers
-                ->filter(fn($entry) => (bool) $entry->submitted_at)
-                ->map(function ($entry): array {
-                    $total = 0.0;
-
-                    foreach ($entry->supplierItems as $supplierItem) {
-                        if ($supplierItem->unit_price === null) {
-                            continue;
-                        }
-
-                        $quantity = (float) ($supplierItem->rfqItem?->quantity ?? 0);
-                        $total += $quantity * (float) $supplierItem->unit_price;
-                    }
-
-                    return [
-                        'supplier_name' => strtoupper((string) ($entry->supplier?->name ?? 'N/A')),
-                        'amount' => round($total, 2),
-                    ];
-                })
-                ->sortBy('amount')
-                ->values()
-                ->map(function (array $row, int $index): array {
-                    $rank = $index + 1;
-
-                    return [
-                        'supplier_name' => $row['supplier_name'],
-                        'amount' => $row['amount'],
-                        'rank_label' => $rank === 1 ? '1st' : ($rank === 2 ? '2nd' : ($rank === 3 ? '3rd' : $rank . 'th')),
-                    ];
-                });
+        $batchAoqs = $bacResolution->aoqs;
+        if ($batchAoqs->isEmpty() && $bacResolution->aoq) {
+            $batchAoqs = collect([$bacResolution->aoq]);
         }
+
+        $summaryRows = $batchAoqs->map(function (AOQ $aoq): array {
+            return [
+                'office_name' => (string) ($aoq->rfq?->purchaseRequest?->office?->name ?? 'OFFICE'),
+                'project_name' => (string) ($aoq->rfq?->project_name ?? 'PROJECT'),
+                'abc_amount' => (float) ($aoq->rfq?->abc_amount ?? 0),
+            ];
+        })->values();
+
+        $abstracts = $batchAoqs->map(function (AOQ $aoq): array {
+            $rfq = $aoq->rfq;
+            if (! $rfq) {
+                return [
+                    'svp_no' => 'N/A',
+                    'rfq_date' => null,
+                    'project_name' => 'PROJECT',
+                    'suppliers' => collect(),
+                    'items' => collect(),
+                    'abc_total' => 0.0,
+                ];
+            }
+
+            $supplierTotals = collect($this->calculateSupplierTotals($rfq)['supplier_totals'] ?? []);
+            $rankedSuppliers = $supplierTotals->values()->map(function (array $row, int $index): array {
+                $rank = $index + 1;
+                $rankLabel = $rank === 1 ? '1ST' : ($rank === 2 ? '2ND' : ($rank === 3 ? '3RD' : $rank . 'TH'));
+
+                return [
+                    'supplier_id' => (int) $row['supplier_id'],
+                    'supplier_name' => strtoupper((string) ($row['supplier_name'] ?? 'N/A')),
+                    'total_amount' => (float) ($row['total_amount'] ?? 0),
+                    'rank_label' => $rankLabel,
+                ];
+            });
+
+            $items = collect($rfq?->items ?? [])->map(function ($item) use ($rfq, $rankedSuppliers): array {
+                $quantity = (float) ($item->quantity ?? 0);
+                $approvedBudget = $quantity * (float) ($item->purchaseRequestItem?->unit_cost ?? 0);
+
+                $supplierColumns = $rankedSuppliers->map(function (array $supplier) use ($rfq, $item, $quantity): array {
+                    $entry = collect($rfq?->suppliers ?? [])->firstWhere('supplier_id', $supplier['supplier_id']);
+                    $supplierItem = $entry?->supplierItems?->firstWhere('rfq_item_id', $item->id);
+                    $unitCost = $supplierItem?->unit_price;
+                    $lineTotal = $unitCost !== null ? ((float) $unitCost * $quantity) : null;
+
+                    return [
+                        'unit_cost' => $unitCost !== null ? (float) $unitCost : null,
+                        'total_amount' => $lineTotal,
+                    ];
+                })->values();
+
+                return [
+                    'quantity' => $quantity,
+                    'unit' => (string) ($item->unit ?? ''),
+                    'particulars' => (string) ($item->item_name ?? ''),
+                    'approved_budget' => (float) $approvedBudget,
+                    'supplier_columns' => $supplierColumns,
+                ];
+            })->values();
+
+            return [
+                'svp_no' => (string) ($rfq?->svp_no ?? 'N/A'),
+                'rfq_date' => $rfq?->rfq_date,
+                'project_name' => (string) ($rfq?->project_name ?? 'PROJECT'),
+                'suppliers' => $rankedSuppliers,
+                'items' => $items,
+                'abc_total' => (float) ($rfq?->abc_amount ?? 0),
+            ];
+        })->values();
 
         return Pdf::view('pdf.bac-resolution', [
             'resolution' => $bacResolution,
-            'aoq' => $bacResolution->aoq,
-            'rfq' => $rfq,
-            'bidderRows' => $bidderRows,
+            'batchAoqs' => $batchAoqs,
+            'summaryRows' => $summaryRows,
+            'abstracts' => $abstracts,
         ])
             ->format('a4')
             ->name('BAC-Resolution-' . $bacResolution->resolution_no . '.pdf')
@@ -403,5 +493,60 @@ class BACResolutionController extends Controller
         }
 
         return $count;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function calculateSupplierTotals(RFQ $rfq): array
+    {
+        $rfq->loadMissing([
+            'items.purchaseRequestItem',
+            'suppliers.supplier',
+            'suppliers.supplierItems.rfqItem.purchaseRequestItem',
+        ]);
+
+        $supplierTotals = [];
+
+        foreach ($rfq->suppliers as $rfqSupplier) {
+            $total = 0.0;
+            $hasAtLeastOnePrice = false;
+
+            foreach ($rfqSupplier->supplierItems as $supplierItem) {
+                if ($supplierItem->unit_price === null) {
+                    continue;
+                }
+
+                $quantity = (float) ($supplierItem->rfqItem?->quantity ?? 0);
+                $lineTotal = $quantity * (float) $supplierItem->unit_price;
+                $total += $lineTotal;
+                $hasAtLeastOnePrice = true;
+            }
+
+            if (! $hasAtLeastOnePrice) {
+                continue;
+            }
+
+            $supplierTotals[] = [
+                'rfq_supplier_id' => $rfqSupplier->id,
+                'supplier_id' => $rfqSupplier->supplier_id,
+                'supplier_name' => $rfqSupplier->supplier?->name,
+                'total_amount' => round($total, 2),
+            ];
+        }
+
+        usort($supplierTotals, fn($left, $right) => $left['total_amount'] <=> $right['total_amount']);
+
+        $count = count($supplierTotals);
+        $winner = $count > 0 ? $supplierTotals[0] : null;
+        $calculationMode = $count >= 2 ? 'lowest_calculated' : 'single_calculated';
+
+        return [
+            'supplier_totals' => $supplierTotals,
+            'calculated_supplier_count' => $count,
+            'calculation_mode' => $calculationMode,
+            'winner_supplier_id' => $winner['supplier_id'] ?? null,
+            'winner_total_amount' => $winner['total_amount'] ?? null,
+        ];
     }
 }

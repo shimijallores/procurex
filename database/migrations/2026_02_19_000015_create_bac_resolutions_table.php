@@ -12,7 +12,7 @@ return new class extends Migration
     {
         Schema::create('bac_resolutions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('aoq_id')->constrained('aoqs')->cascadeOnDelete();
+            $table->foreignId('aoq_id')->nullable()->constrained('aoqs')->nullOnDelete();
             $table->string('resolution_no')->unique();
             $table->date('resolution_date');
             $table->date('meeting_date')->nullable();
@@ -28,16 +28,28 @@ return new class extends Migration
             $table->timestamp('finalized_at')->nullable();
             $table->timestamps();
 
-            $table->unique('aoq_id', 'uq_bac_resolution_aoq');
             $table->index('resolution_no', 'idx_bac_resolution_no');
             $table->index('resolution_date', 'idx_bac_resolution_date');
             $table->index('meeting_date', 'idx_bac_meeting_date');
             $table->index('finalized_at', 'idx_bac_finalized_at');
+            $table->index('aoq_id', 'idx_bac_primary_aoq_id');
+        });
+
+        Schema::create('bac_resolution_aoq', function (Blueprint $table) {
+            $table->foreignId('bac_resolution_id')->constrained('bac_resolutions')->cascadeOnDelete();
+            $table->foreignId('aoq_id')->constrained('aoqs')->cascadeOnDelete();
+            $table->unsignedInteger('sort_order')->default(0);
+            $table->timestamps();
+
+            $table->primary(['bac_resolution_id', 'aoq_id'], 'pk_bac_resolution_aoq');
+            $table->unique('aoq_id', 'uq_bac_resolution_aoq_batch');
+            $table->index(['bac_resolution_id', 'sort_order'], 'idx_bac_resolution_aoq_sort');
         });
     }
 
     public function down(): void
     {
+        Schema::dropIfExists('bac_resolution_aoq');
         Schema::dropIfExists('bac_resolutions');
     }
 };

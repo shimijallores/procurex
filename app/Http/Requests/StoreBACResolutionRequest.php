@@ -19,7 +19,8 @@ class StoreBACResolutionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'aoq_id' => ['required', 'integer', 'exists:aoqs,id', 'unique:bac_resolutions,aoq_id'],
+            'aoq_ids' => ['required', 'array', 'min:1'],
+            'aoq_ids.*' => ['integer', 'distinct', 'exists:aoqs,id'],
             'resolution_date' => ['required', 'date'],
             'meeting_date' => ['nullable', 'date'],
             'project_name' => ['required', 'string', 'max:255'],

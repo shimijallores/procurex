@@ -43,7 +43,8 @@ const formatDate = (date) => {
                 <div>
                     <CardTitle>All BAC Resolutions</CardTitle>
                     <CardDescription>
-                        Resolution records generated from AOQ documents
+                        Resolution records generated from one or more AOQ
+                        documents
                     </CardDescription>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
@@ -157,7 +158,17 @@ const formatDate = (date) => {
                                     {{ resolution.project_name }}
                                 </div>
                                 <div class="text-xs text-muted-foreground">
-                                    {{ resolution.aoq?.rfq?.svp_no || "—" }}
+                                    {{
+                                        resolution.aoqs?.length
+                                            ? `${resolution.aoqs.length} AOQ(s)`
+                                            : "0 AOQ"
+                                    }}
+                                    <span
+                                        v-if="resolution.aoqs?.[0]?.rfq?.svp_no"
+                                    >
+                                        •
+                                        {{ resolution.aoqs[0].rfq.svp_no }}
+                                    </span>
                                 </div>
                             </td>
                             <td class="p-4 align-middle text-center">

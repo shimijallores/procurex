@@ -29,9 +29,13 @@ watch(
     { immediate: true },
 );
 
-const selectedAoq = computed(() =>
-    props.eligibleAoqs?.find(
-        (aoq) => String(aoq.id) === String(props.form.aoq_id),
+const selectedAoqIds = computed(() =>
+    (props.form.aoq_ids || []).map((id) => String(id)),
+);
+
+const selectedAoqs = computed(() =>
+    (props.eligibleAoqs || []).filter((aoq) =>
+        selectedAoqIds.value.includes(String(aoq.id)),
     ),
 );
 
@@ -42,23 +46,37 @@ const formatCurrency = (value) =>
     }).format(value || 0);
 
 watch(
-    selectedAoq,
-    (aoq) => {
-        if (!aoq) {
+    selectedAoqs,
+    (aoqs) => {
+        if (!aoqs?.length) {
             return;
         }
 
-        const calculationLabel =
-            aoq.calculation_label ||
-            (Number(aoq.calculated_supplier_count || 0) <= 1
-                ? "Single Calculated"
-                : "Lowest Calculated");
+        const totalWinnerAmount = aoqs.reduce(
+            (sum, aoq) => sum + Number(aoq.winner_amount || 0),
+            0,
+        );
 
-        props.form.project_name = aoq.rfq?.project_name || "";
-        props.form.winner_supplier_name = aoq.winner_supplier?.name || "N/A";
-        props.form.winner_amount = String(aoq.winner_amount ?? 0);
-        props.form.calculation_label = calculationLabel;
-        props.form.justification = `for being the supplier with the ${calculationLabel} and Responsive Quotation which is advantageous to the Provincial Government of Batangas.`;
+        const supplierNames = [
+            ...new Set(
+                aoqs
+                    .map((aoq) => aoq.winner_supplier?.name)
+                    .filter((name) => Boolean(name)),
+            ),
+        ];
+
+        props.form.project_name =
+            aoqs.length === 1
+                ? aoqs[0]?.rfq?.project_name || ""
+                : `Batch of ${aoqs.length} projects`;
+        props.form.winner_supplier_name =
+            supplierNames.length === 1
+                ? supplierNames[0]
+                : `Multiple suppliers (${supplierNames.length})`;
+        props.form.winner_amount = String(totalWinnerAmount.toFixed(2));
+        props.form.calculation_label = "Lowest/Single Calculated";
+        props.form.justification =
+            "for being the suppliers with the Lowest/Single Calculated and Responsive Quotations which are advantageous to the Provincial Government of Batangas.";
         props.form.signatory_chairperson =
             props.form.signatory_chairperson || "BAC Chairperson";
         props.form.signatory_member_one =
@@ -70,6 +88,16 @@ watch(
     },
     { immediate: true },
 );
+
+const toggleAoqSelection = (aoqId) => {
+    const value = String(aoqId);
+    const current = [...selectedAoqIds.value];
+    const exists = current.includes(value);
+
+    props.form.aoq_ids = exists
+        ? current.filter((id) => id !== value)
+        : [...current, value];
+};
 </script>
 
 <template>
@@ -83,27 +111,51 @@ watch(
             </CardHeader>
             <CardContent class="space-y-3">
                 <div class="space-y-2">
-                    <Label for="aoq_id">AOQ</Label>
-                    <select
-                        id="aoq_id"
-                        :value="form.aoq_id"
-                        @change="form.aoq_id = $event.target.value"
-                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    <Label>AOQs (Batch Selection)</Label>
+                    <div
+                        class="max-h-64 space-y-2 overflow-auto rounded-md border border-input p-2"
                     >
-                        <option value="">— Select AOQ —</option>
-                        <option
+                        <label
                             v-for="aoq in eligibleAoqs"
                             :key="aoq.id"
-                            :value="aoq.id"
+                            class="flex cursor-pointer items-start gap-3 rounded-md border border-border p-2 hover:bg-muted/40"
                         >
-                            {{ aoq.rfq?.svp_no }} — {{ aoq.rfq?.project_name }}
-                        </option>
-                    </select>
+                            <input
+                                type="checkbox"
+                                :checked="
+                                    selectedAoqIds.includes(String(aoq.id))
+                                "
+                                @change="toggleAoqSelection(aoq.id)"
+                                class="mt-1"
+                            />
+                            <div class="min-w-0 text-sm">
+                                <p class="font-medium truncate">
+                                    {{ aoq.rfq?.svp_no }} —
+                                    {{ aoq.rfq?.project_name }}
+                                </p>
+                                <p class="text-xs text-muted-foreground">
+                                    {{
+                                        aoq.rfq?.purchase_request?.office
+                                            ?.name || "No Office"
+                                    }}
+                                    • AOQ Date: {{ aoq.aoq_date || "—" }}
+                                    • Winner:
+                                    {{ aoq.winner_supplier?.name || "N/A" }}
+                                </p>
+                            </div>
+                        </label>
+                    </div>
                     <p
-                        v-if="form.errors?.aoq_id"
+                        v-if="form.errors?.aoq_ids"
                         class="text-xs text-destructive"
                     >
-                        {{ form.errors.aoq_id }}
+                        {{ form.errors.aoq_ids }}
+                    </p>
+                    <p
+                        v-if="form.errors?.['aoq_ids.0']"
+                        class="text-xs text-destructive"
+                    >
+                        {{ form.errors["aoq_ids.0"] }}
                     </p>
                 </div>
 
@@ -158,43 +210,58 @@ watch(
             </CardContent>
         </Card>
 
-        <Card v-if="selectedAoq">
+        <Card v-if="selectedAoqs.length">
             <CardHeader>
-                <CardTitle class="text-base">AOQ Preview</CardTitle>
+                <CardTitle class="text-base">Selected AOQ Batch</CardTitle>
             </CardHeader>
-            <CardContent class="grid gap-3 text-sm md:grid-cols-2">
-                <div>
-                    <p class="text-muted-foreground">SVP No.</p>
-                    <p class="font-medium">
-                        {{ selectedAoq.rfq?.svp_no || "—" }}
-                    </p>
+            <CardContent class="space-y-3 text-sm">
+                <div class="text-muted-foreground">
+                    {{ selectedAoqs.length }} AOQ(s) selected for this
+                    resolution.
                 </div>
-                <div>
-                    <p class="text-muted-foreground">Project</p>
-                    <p class="font-medium">
-                        {{ selectedAoq.rfq?.project_name || "—" }}
-                    </p>
-                </div>
-                <div>
-                    <p class="text-muted-foreground">Winner Supplier</p>
-                    <p class="font-medium">
-                        {{ selectedAoq.winner_supplier?.name || "—" }}
-                    </p>
-                </div>
-                <div>
-                    <p class="text-muted-foreground">AOQ Date</p>
-                    <p class="font-medium">{{ selectedAoq.aoq_date || "—" }}</p>
-                </div>
-                <div>
-                    <p class="text-muted-foreground">RFQ ABC</p>
-                    <p class="font-medium">
-                        {{ formatCurrency(selectedAoq.rfq?.abc_amount || 0) }}
-                    </p>
+                <div class="relative w-full overflow-auto">
+                    <table class="w-full text-sm">
+                        <thead class="border-b">
+                            <tr>
+                                <th class="px-2 py-2 text-left">SVP No.</th>
+                                <th class="px-2 py-2 text-left">Office</th>
+                                <th class="px-2 py-2 text-left">Project</th>
+                                <th class="px-2 py-2 text-left">Winner</th>
+                                <th class="px-2 py-2 text-right">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr
+                                v-for="aoq in selectedAoqs"
+                                :key="aoq.id"
+                                class="border-b"
+                            >
+                                <td class="px-2 py-2">
+                                    {{ aoq.rfq?.svp_no || "—" }}
+                                </td>
+                                <td class="px-2 py-2">
+                                    {{
+                                        aoq.rfq?.purchase_request?.office
+                                            ?.name || "—"
+                                    }}
+                                </td>
+                                <td class="px-2 py-2">
+                                    {{ aoq.rfq?.project_name || "—" }}
+                                </td>
+                                <td class="px-2 py-2">
+                                    {{ aoq.winner_supplier?.name || "—" }}
+                                </td>
+                                <td class="px-2 py-2 text-right">
+                                    {{ formatCurrency(aoq.winner_amount || 0) }}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </CardContent>
         </Card>
 
-        <Card v-if="selectedAoq">
+        <Card v-if="selectedAoqs.length">
             <CardHeader>
                 <CardTitle class="text-base flex items-center gap-2">
                     <Icon

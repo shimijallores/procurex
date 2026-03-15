@@ -28,7 +28,7 @@ const props = defineProps({
 });
 
 const form = useForm({
-    aoq_id: "",
+    aoq_ids: [],
     resolution_date: props.defaultResolutionDate || "",
     meeting_date: props.defaultMeetingDate || "",
     project_name: "",

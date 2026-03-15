@@ -79,9 +79,45 @@ const formatCurrency = (value) =>
                     </p>
                     <p class="font-medium">
                         {{
-                            formatCurrency(resolution.aoq?.rfq?.abc_amount || 0)
+                            formatCurrency(
+                                (resolution.aoqs || []).reduce(
+                                    (sum, aoq) =>
+                                        sum + Number(aoq?.rfq?.abc_amount || 0),
+                                    0,
+                                ),
+                            )
                         }}
                     </p>
+                </div>
+
+                <div>
+                    <p class="text-muted-foreground text-sm">Selected AOQs</p>
+                    <div
+                        class="mt-2 rounded-md border border-border p-3 text-sm space-y-1"
+                    >
+                        <div
+                            v-for="aoq in resolution.aoqs || []"
+                            :key="aoq.id"
+                            class="flex items-center justify-between gap-3"
+                        >
+                            <span>
+                                {{ aoq?.rfq?.svp_no || "—" }} —
+                                {{ aoq?.rfq?.project_name || "Project" }}
+                            </span>
+                            <span class="text-muted-foreground">
+                                {{
+                                    aoq?.rfq?.purchase_request?.office?.name ||
+                                    "—"
+                                }}
+                            </span>
+                        </div>
+                        <p
+                            v-if="!(resolution.aoqs || []).length"
+                            class="text-muted-foreground"
+                        >
+                            No AOQ batch entries found.
+                        </p>
+                    </div>
                 </div>
 
                 <div>

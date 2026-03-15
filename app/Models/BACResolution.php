@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class BACResolution extends Model
@@ -41,6 +42,14 @@ class BACResolution extends Model
     public function aoq(): BelongsTo
     {
         return $this->belongsTo(AOQ::class, 'aoq_id');
+    }
+
+    public function aoqs(): BelongsToMany
+    {
+        return $this->belongsToMany(AOQ::class, 'bac_resolution_aoq', 'bac_resolution_id', 'aoq_id')
+            ->withPivot(['sort_order'])
+            ->withTimestamps()
+            ->orderBy('bac_resolution_aoq.sort_order');
     }
 
     public function noa(): HasOne
