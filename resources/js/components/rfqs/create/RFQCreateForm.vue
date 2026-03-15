@@ -1,5 +1,5 @@
 <script setup>
-import { computed, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { Icon } from "@iconify/vue";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,37 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["submit"]);
+const selectedOfficeId = ref("");
+
+const officeOptions = computed(() => {
+    const map = new Map();
+
+    for (const pr of props.eligiblePurchaseRequests || []) {
+        const officeId = pr?.office?.id;
+        const officeName = pr?.office?.name || "Unknown Office";
+
+        if (!officeId || map.has(String(officeId))) {
+            continue;
+        }
+
+        map.set(String(officeId), {
+            id: String(officeId),
+            name: officeName,
+        });
+    }
+
+    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
+});
+
+const filteredPurchaseRequests = computed(() => {
+    if (!selectedOfficeId.value) {
+        return [];
+    }
+
+    return (props.eligiblePurchaseRequests || []).filter(
+        (pr) => String(pr?.office?.id || "") === selectedOfficeId.value,
+    );
+});
 
 const selectedPurchaseRequest = computed(() => {
     if (props.form.pr_id) {
@@ -70,11 +101,39 @@ watch(
 
 const onPrDropdownChange = (value) => {
     props.form.pr_id = value;
-    const selected = props.eligiblePurchaseRequests?.find(
+    const selected = filteredPurchaseRequests.value?.find(
         (pr) => String(pr.id) === String(value),
     );
     props.form.pr_no = selected?.pr_no || "";
 };
+
+watch(selectedOfficeId, (officeId) => {
+    if (!officeId) {
+        props.form.pr_id = "";
+        props.form.pr_no = "";
+        props.form.project_name = "";
+        props.form.abc_amount = "";
+        props.form.items = [];
+
+        return;
+    }
+
+    if (!props.form.pr_id) {
+        return;
+    }
+
+    const stillValid = filteredPurchaseRequests.value.some(
+        (pr) => String(pr.id) === String(props.form.pr_id),
+    );
+
+    if (!stillValid) {
+        props.form.pr_id = "";
+        props.form.pr_no = "";
+        props.form.project_name = "";
+        props.form.abc_amount = "";
+        props.form.items = [];
+    }
+});
 </script>
 
 <template>
@@ -89,18 +148,41 @@ const onPrDropdownChange = (value) => {
             <CardContent class="space-y-4">
                 <div class="grid gap-4 sm:grid-cols-2">
                     <div class="space-y-2">
+                        <Label for="office_filter_id">Office</Label>
+                        <select
+                            id="office_filter_id"
+                            v-model="selectedOfficeId"
+                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        >
+                            <option value="">— Select office first —</option>
+                            <option
+                                v-for="office in officeOptions"
+                                :key="office.id"
+                                :value="office.id"
+                            >
+                                {{ office.name }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-2">
                         <Label for="pr_id">Approved Purchase Request</Label>
                         <select
                             id="pr_id"
                             :value="form.pr_id"
                             @change="onPrDropdownChange($event.target.value)"
+                            :disabled="!selectedOfficeId"
                             class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                         >
                             <option value="">
-                                — Select Purchase Request —
+                                {{
+                                    selectedOfficeId
+                                        ? "— Select Purchase Request —"
+                                        : "— Select office first —"
+                                }}
                             </option>
                             <option
-                                v-for="pr in eligiblePurchaseRequests"
+                                v-for="pr in filteredPurchaseRequests"
                                 :key="pr.id"
                                 :value="pr.id"
                             >
@@ -117,6 +199,7 @@ const onPrDropdownChange = (value) => {
                             v-model="form.pr_no"
                             type="text"
                             placeholder="e.g. 0226-0001"
+                            :disabled="!selectedOfficeId"
                             class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                         />
                     </div>

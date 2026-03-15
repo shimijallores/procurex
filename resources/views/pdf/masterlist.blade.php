@@ -1,18 +1,18 @@
-<table style="width: 100%; border-collapse: collapse;">
+<table border="0" cellspacing="0" cellpadding="0" style="width: 100%; border: none; border-collapse: collapse; margin: 0;">
     <tbody>
         <tr>
-            <td style="width: 15%; text-align: center; vertical-align: middle;">
+            <td style="width: 15%; border: none; text-align: center; vertical-align: middle;">
                 @if (!empty($sealSrc))
                 <img src="{{ $sealSrc }}" width="58" height="58" alt="Batangas Seal" />
                 @endif
             </td>
-            <td style="width: 70%; text-align: center; vertical-align: middle;">
+            <td style="width: 70%; border: none; text-align: center; vertical-align: middle; line-height: 1.2;">
                 <strong>Republic of the Philippines</strong><br />
                 <strong>Provincial Government of Batangas</strong><br />
                 Capitol Site, Kumintang Ibaba, Batangas City 4200<br />
                 <strong>Master List Items</strong>
             </td>
-            <td style="width: 15%; text-align: center; vertical-align: middle;">
+            <td style="width: 15%; border: none; text-align: center; vertical-align: middle;">
                 @if (!empty($bagongSrc))
                 <img src="{{ $bagongSrc }}" width="74" height="58" alt="Bagong Pilipinas" />
                 @endif
@@ -21,15 +21,9 @@
     </tbody>
 </table>
 
-<table style="width: 100%; border-collapse: collapse; margin-top: 6px;">
-    <tbody>
-        <tr>
-            <td>Generated: {{ $generatedAt }}</td>
-        </tr>
-    </tbody>
-</table>
+<p style="margin: 0; line-height: 1;">&nbsp;</p>
 
-<table style="width: 100%; border-collapse: collapse; margin-top: 8px;">
+<table style="width: 100%; border: 0; border-collapse: collapse; margin-top: 8px;">
     <thead>
         <tr>
             <th style="border: 0.5px solid #999; padding: 6px; text-align: left;">Item</th>

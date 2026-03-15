@@ -21,6 +21,38 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["submit"]);
+const selectedOfficeId = ref("");
+
+const officeOptions = computed(() => {
+    const map = new Map();
+
+    for (const emanating of props.eligibleEmanatings || []) {
+        const officeId = getOfficeId(emanating);
+        const officeName = getOfficeName(emanating);
+
+        if (!officeId || map.has(String(officeId))) {
+            continue;
+        }
+
+        map.set(String(officeId), {
+            id: String(officeId),
+            name: officeName,
+        });
+    }
+
+    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
+});
+
+const filteredEligibleEmanatings = computed(() => {
+    if (!selectedOfficeId.value) {
+        return [];
+    }
+
+    return (props.eligibleEmanatings || []).filter(
+        (emanating) =>
+            String(getOfficeId(emanating)) === selectedOfficeId.value,
+    );
+});
 
 // Autocomplete UI state
 const showPurposeSuggestions = ref(false);
@@ -124,6 +156,7 @@ watch(
         if (!em) return;
 
         props.form.office_id = getOfficeId(em);
+        selectedOfficeId.value = String(getOfficeId(em) || "");
         props.form.fund_id = getFundId(em);
         props.form.requested_by_name =
             props.form.requested_by_name || em.requesting_officer_name || "";
@@ -155,6 +188,34 @@ watch(
         }
     },
 );
+
+watch(selectedOfficeId, (officeId) => {
+    if (!officeId) {
+        if (props.form.emanating_id) {
+            props.form.emanating_id = "";
+            props.form.office_id = "";
+            props.form.fund_id = "";
+            props.form.items = [];
+        }
+
+        return;
+    }
+
+    if (!props.form.emanating_id) {
+        return;
+    }
+
+    const stillValid = (filteredEligibleEmanatings.value || []).some(
+        (emanating) => String(emanating.id) === String(props.form.emanating_id),
+    );
+
+    if (!stillValid) {
+        props.form.emanating_id = "";
+        props.form.office_id = "";
+        props.form.fund_id = "";
+        props.form.items = [];
+    }
+});
 
 const effectiveUnitCost = (item) => {
     const unitCost = parseFloat(item.unit_cost || 0);
@@ -390,37 +451,66 @@ watch(
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <div class="space-y-2">
-                    <Label for="emanating_id"
-                        >Approved & Canvassed Emanating
-                        <span class="text-destructive">*</span></Label
-                    >
-                    <select
-                        id="emanating_id"
-                        :value="form.emanating_id"
-                        :disabled="isEdit"
-                        @change="form.emanating_id = $event.target.value"
-                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-60"
-                    >
-                        <option value="">
-                            — Select an emanating request —
-                        </option>
-                        <option
-                            v-for="em in eligibleEmanatings"
-                            :key="em.id"
-                            :value="em.id"
+                <div class="space-y-4">
+                    <div class="space-y-2">
+                        <Label for="office_filter_id"
+                            >Office
+                            <span class="text-destructive">*</span></Label
                         >
-                            {{ getOfficeName(em) }} —
-                            {{ getProjectName(em) }} (FY {{ em.fiscal_year }})
-                            {{ em.pr_no ? `· ${em.pr_no}` : "" }}
-                        </option>
-                    </select>
-                    <p
-                        v-if="form.errors?.emanating_id"
-                        class="text-xs text-destructive"
-                    >
-                        {{ form.errors.emanating_id }}
-                    </p>
+                        <select
+                            id="office_filter_id"
+                            v-model="selectedOfficeId"
+                            :disabled="isEdit"
+                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-60"
+                        >
+                            <option value="">— Select office first —</option>
+                            <option
+                                v-for="office in officeOptions"
+                                :key="office.id"
+                                :value="office.id"
+                            >
+                                {{ office.name }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-2">
+                        <Label for="emanating_id"
+                            >Approved & Canvassed Emanating
+                            <span class="text-destructive">*</span></Label
+                        >
+                        <select
+                            id="emanating_id"
+                            :value="form.emanating_id"
+                            :disabled="isEdit || !selectedOfficeId"
+                            @change="form.emanating_id = $event.target.value"
+                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-60"
+                        >
+                            <option value="">
+                                {{
+                                    selectedOfficeId
+                                        ? "— Select an emanating request —"
+                                        : "— Select office first —"
+                                }}
+                            </option>
+                            <option
+                                v-for="em in filteredEligibleEmanatings"
+                                :key="em.id"
+                                :value="em.id"
+                            >
+                                {{ getOfficeName(em) }} —
+                                {{ getProjectName(em) }} (FY
+                                {{ em.fiscal_year }})
+                                {{ em.pr_no ? `· ${em.pr_no}` : "" }}
+                            </option>
+                        </select>
+                        <p
+                            v-if="form.errors?.emanating_id"
+                            class="text-xs text-destructive"
+                        >
+                            {{ form.errors.emanating_id }}
+                        </p>
+                    </div>
                 </div>
 
                 <!-- Auto-populated office/fund info -->

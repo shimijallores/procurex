@@ -492,6 +492,7 @@ class PurchaseRequestController extends Controller
             'requestedByDesig' => $purchaseRequest->requested_by_designation ?: ($purchaseRequest->emanating?->requesting_officer_title ?? ''),
         ])
             ->format('a4')
+            ->landscape()
             ->name('PR-' . ($purchaseRequest->pr_no ?? $purchaseRequest->id) . '.pdf')
             ->inline();
     }

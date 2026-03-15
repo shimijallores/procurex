@@ -1,5 +1,5 @@
 <script setup>
-import { computed, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { Icon } from "@iconify/vue";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,40 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["submit"]);
+const selectedOfficeId = ref("");
+
+const officeOptions = computed(() => {
+    const map = new Map();
+
+    for (const rfq of props.eligibleRfqs || []) {
+        const officeId = rfq?.purchase_request?.office?.id;
+        const officeName =
+            rfq?.purchase_request?.office?.name || "Unknown Office";
+
+        if (!officeId || map.has(String(officeId))) {
+            continue;
+        }
+
+        map.set(String(officeId), {
+            id: String(officeId),
+            name: officeName,
+        });
+    }
+
+    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
+});
+
+const filteredRfqs = computed(() => {
+    if (!selectedOfficeId.value) {
+        return [];
+    }
+
+    return (props.eligibleRfqs || []).filter(
+        (rfq) =>
+            String(rfq?.purchase_request?.office?.id || "") ===
+            selectedOfficeId.value,
+    );
+});
 
 const selectedRfq = computed(() =>
     props.eligibleRfqs?.find(
@@ -66,6 +100,28 @@ watch(
     },
     { immediate: true },
 );
+
+watch(selectedOfficeId, (officeId) => {
+    if (!officeId) {
+        props.form.rfq_id = "";
+        props.form.quotations = [];
+
+        return;
+    }
+
+    if (!props.form.rfq_id) {
+        return;
+    }
+
+    const stillValid = filteredRfqs.value.some(
+        (rfq) => String(rfq.id) === String(props.form.rfq_id),
+    );
+
+    if (!stillValid) {
+        props.form.rfq_id = "";
+        props.form.quotations = [];
+    }
+});
 
 const addQuotation = () => {
     const itemIds = selectedItems.value.map((item) => item.id);
@@ -139,16 +195,41 @@ const calculationMessage = computed(() => {
             </CardHeader>
             <CardContent class="grid gap-4 sm:grid-cols-2">
                 <div class="space-y-2">
+                    <Label for="office_filter_id">Office</Label>
+                    <select
+                        id="office_filter_id"
+                        v-model="selectedOfficeId"
+                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                        <option value="">— Select office first —</option>
+                        <option
+                            v-for="office in officeOptions"
+                            :key="office.id"
+                            :value="office.id"
+                        >
+                            {{ office.name }}
+                        </option>
+                    </select>
+                </div>
+
+                <div class="space-y-2">
                     <Label for="rfq_id">RFQ</Label>
                     <select
                         id="rfq_id"
                         :value="form.rfq_id"
                         @change="form.rfq_id = $event.target.value"
+                        :disabled="!selectedOfficeId"
                         class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     >
-                        <option value="">— Select RFQ —</option>
+                        <option value="">
+                            {{
+                                selectedOfficeId
+                                    ? "— Select RFQ —"
+                                    : "— Select office first —"
+                            }}
+                        </option>
                         <option
-                            v-for="rfq in eligibleRfqs"
+                            v-for="rfq in filteredRfqs"
                             :key="rfq.id"
                             :value="rfq.id"
                         >

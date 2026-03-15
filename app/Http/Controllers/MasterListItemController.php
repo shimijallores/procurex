@@ -48,8 +48,8 @@ class MasterListItemController extends Controller
                 ->get();
 
             $phpWord = $this->buildMasterListDocument($items, $request);
-            $filePath = tempnam(sys_get_temp_dir(), 'master-list-docx-');
-            $fileName = sprintf('master-list-%s.docx', now()->format('Ymd-His'));
+            $filePath = tempnam(sys_get_temp_dir(), 'masterlist-docx-');
+            $fileName = sprintf('masterlist-%s-%04d.docx', now()->format('Ymd'), random_int(0, 9999));
 
             $ioFactoryClass = 'PhpOffice\\PhpWord\\IOFactory';
             $ioFactoryClass::createWriter($phpWord, 'Word2007')->save($filePath);
@@ -83,8 +83,8 @@ class MasterListItemController extends Controller
             $settingsClass::setPdfRendererName($settingsClass::PDF_RENDERER_DOMPDF);
             $settingsClass::setPdfRendererPath(base_path('vendor/dompdf/dompdf'));
 
-            $filePath = tempnam(sys_get_temp_dir(), 'master-list-pdf-');
-            $fileName = sprintf('master-list-%s.pdf', now()->format('Ymd-His'));
+            $filePath = tempnam(sys_get_temp_dir(), 'masterlist-pdf-');
+            $fileName = sprintf('masterlist-%s-%04d.pdf', now()->format('Ymd'), random_int(0, 9999));
 
             $ioFactoryClass = 'PhpOffice\\PhpWord\\IOFactory';
             $ioFactoryClass::createWriter($phpWord, 'PDF')->save($filePath);
@@ -224,7 +224,7 @@ class MasterListItemController extends Controller
         $sealSrc = is_file($sealPath) ? 'file:///' . str_replace('\\', '/', $sealPath) : null;
         $bagongSrc = is_file($bagongPilipinasPath) ? 'file:///' . str_replace('\\', '/', $bagongPilipinasPath) : null;
 
-        $html = view('exports.master-list-phpword', [
+        $html = view('pdf.masterlist', [
             'generatedAt' => now()->format('F d, Y h:i A'),
             'filterSummary' => $filterSummary,
             'items' => $items,
