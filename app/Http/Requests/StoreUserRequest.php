@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
-use App\Enums\RoleType;
+use App\Models\Role;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Password;
 
@@ -25,15 +25,19 @@ class StoreUserRequest extends FormRequest
      */
     public function rules(): array
     {
-        $role = \App\Models\Role::find($this->input('role_id'));
-        $isSystemRole = $role && RoleType::isSystemRole($role->name);
+        $roleIds = array_map('intval', (array) $this->input('role_ids', []));
+        $hasOfficeRole = Role::query()
+            ->whereIn('id', $roleIds)
+            ->where('is_system_role', false)
+            ->exists();
 
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::defaults()],
-            'role_id' => ['required', 'exists:roles,id'],
-            'office_id' => $isSystemRole ? ['nullable'] : ['required', 'exists:offices,id'],
+            'role_ids' => ['required', 'array', 'min:1'],
+            'role_ids.*' => ['integer', 'exists:roles,id'],
+            'office_id' => $hasOfficeRole ? ['required', 'exists:offices,id'] : ['nullable'],
         ];
     }
 
@@ -49,8 +53,10 @@ class StoreUserRequest extends FormRequest
             'email.required' => 'The email field is required.',
             'email.unique' => 'This email address is already taken.',
             'password.required' => 'The password field is required.',
-            'role_id.required' => 'Please select a role.',
-            'role_id.exists' => 'The selected role is invalid.',
+            'role_ids.required' => 'Please select at least one role.',
+            'role_ids.array' => 'Roles must be sent as a list.',
+            'role_ids.min' => 'Please select at least one role.',
+            'role_ids.*.exists' => 'One or more selected roles are invalid.',
             'office_id.required' => 'Please select an office for office roles.',
             'office_id.exists' => 'The selected office is invalid.',
         ];

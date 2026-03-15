@@ -119,7 +119,10 @@ const openDeleteModal = (user) => {
                 </CardHeader>
                 <CardContent>
                     <div class="text-2xl font-bold">
-                        {{ users.data.filter((u) => u.role).length }}
+                        {{
+                            users.data.filter((u) => (u.roles?.length ?? 0) > 0)
+                                .length
+                        }}
                     </div>
                     <p class="text-xs text-muted-foreground">
                         Users with assigned roles
@@ -245,14 +248,20 @@ const openDeleteModal = (user) => {
                                 </td>
                                 <td class="p-4 align-middle">
                                     <div
-                                        v-if="user.role"
-                                        class="flex items-center gap-2"
+                                        v-if="(user.roles?.length ?? 0) > 0"
+                                        class="flex flex-wrap items-center gap-2"
                                     >
-                                        <Icon
-                                            icon="lucide:shield"
-                                            class="h-4 w-4 text-muted-foreground"
-                                        />
-                                        <span>{{ user.role.name }}</span>
+                                        <span
+                                            v-for="role in user.roles"
+                                            :key="role.id"
+                                            class="inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs"
+                                        >
+                                            <Icon
+                                                icon="lucide:shield"
+                                                class="h-3 w-3 text-muted-foreground"
+                                            />
+                                            {{ role.name }}
+                                        </span>
                                     </div>
                                     <span v-else class="text-muted-foreground"
                                         >—</span

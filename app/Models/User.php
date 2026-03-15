@@ -7,6 +7,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -21,7 +22,6 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'role_id',
         'name',
         'email',
         'password',
@@ -51,13 +51,23 @@ class User extends Authenticatable
         ];
     }
 
-    public function role(): BelongsTo
+    public function roles(): BelongsToMany
     {
-        return $this->belongsTo(Role::class);
+        return $this->belongsToMany(Role::class);
     }
 
     public function office(): BelongsTo
     {
         return $this->belongsTo(Office::class);
+    }
+
+    public function hasRole(string $roleName): bool
+    {
+        return $this->roles->contains(fn(Role $role) => $role->name === $roleName);
+    }
+
+    public function hasAnyRole(array $roleNames): bool
+    {
+        return $this->roles->contains(fn(Role $role) => in_array($role->name, $roleNames, true));
     }
 }

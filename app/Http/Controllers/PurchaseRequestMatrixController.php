@@ -26,15 +26,15 @@ class PurchaseRequestMatrixController extends Controller
         $selectedFiscalYear = (string) $request->input('fiscal_year', (string) now()->year);
 
         $prAdminUsers = User::query()
-            ->whereHas('role', function ($query): void {
+            ->whereHas('roles', function ($query): void {
                 $query->where('name', RoleType::PR_ADMIN->value);
             })
             ->orderBy('name')
             ->get(['id', 'name']);
 
         $budgetingAdminUsers = User::query()
-            ->whereHas('role', function ($query): void {
-                $query->where('name', RoleType::DOCUMENT_ADMIN->value);
+            ->whereHas('roles', function ($query): void {
+                $query->where('name', RoleType::PO_ADMIN->value);
             })
             ->orderBy('name')
             ->get(['id', 'name']);
@@ -72,15 +72,15 @@ class PurchaseRequestMatrixController extends Controller
         $selectedFiscalYear = (string) $request->input('fiscal_year', (string) now()->year);
 
         $prAdminUsers = User::query()
-            ->whereHas('role', function ($query): void {
+            ->whereHas('roles', function ($query): void {
                 $query->where('name', RoleType::PR_ADMIN->value);
             })
             ->orderBy('name')
             ->get(['id']);
 
         $budgetingAdminUsers = User::query()
-            ->whereHas('role', function ($query): void {
-                $query->where('name', RoleType::DOCUMENT_ADMIN->value);
+            ->whereHas('roles', function ($query): void {
+                $query->where('name', RoleType::PO_ADMIN->value);
             })
             ->orderBy('name')
             ->get(['id']);
@@ -126,15 +126,15 @@ class PurchaseRequestMatrixController extends Controller
     public function edit(PurchaseRequestItem $purchaseRequestItem): Response
     {
         $prAdminUsers = User::query()
-            ->whereHas('role', function ($query): void {
+            ->whereHas('roles', function ($query): void {
                 $query->where('name', RoleType::PR_ADMIN->value);
             })
             ->orderBy('name')
             ->get(['id', 'name']);
 
         $budgetingAdminUsers = User::query()
-            ->whereHas('role', function ($query): void {
-                $query->where('name', RoleType::DOCUMENT_ADMIN->value);
+            ->whereHas('roles', function ($query): void {
+                $query->where('name', RoleType::PO_ADMIN->value);
             })
             ->orderBy('name')
             ->get(['id', 'name']);

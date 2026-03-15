@@ -24,6 +24,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
+use App\Enums\RoleType;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function (): \Illuminate\Http\RedirectResponse {
@@ -41,14 +42,22 @@ Route::middleware(['auth'])->group(function (): void {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
 
     // Define all resources once, authorization will be handled in controllers/policies
-    Route::resource('users', UserController::class);
-    Route::resource('roles', RoleController::class)->middleware('role:Superadmin');
-    Route::resource('offices', OfficeController::class)->middleware('role:Superadmin');
-    Route::resource('project-codes', ProjectCodeController::class)->middleware('role:Superadmin');
-    Route::resource('accounts', AccountController::class)->middleware('role:Superadmin');
-    Route::resource('calendars', CalendarController::class)->only(['index', 'store', 'update', 'destroy'])->middleware('role:Superadmin,BAC Reso Admin,Document Admin,office');
+    Route::resource('users', UserController::class)->middleware('role:' . RoleType::SUPERADMIN->value);
+    Route::resource('roles', RoleController::class)->middleware('role:' . RoleType::SUPERADMIN->value);
+    Route::resource('offices', OfficeController::class)->middleware('role:' . RoleType::SUPERADMIN->value);
+    Route::resource('project-codes', ProjectCodeController::class)->middleware('role:' . RoleType::SUPERADMIN->value);
+    Route::resource('accounts', AccountController::class)->middleware('role:' . RoleType::SUPERADMIN->value);
+    Route::resource('calendars', CalendarController::class)->only(['index', 'store', 'update', 'destroy'])->middleware('role:' . implode(',', [
+        RoleType::SUPERADMIN->value,
+        RoleType::CHECKING_ADMIN->value,
+        RoleType::RESOLUTION_ADMIN->value,
+        RoleType::NOA_ADMIN->value,
+        RoleType::PO_ADMIN->value,
+        RoleType::INSPECTION_ADMIN->value,
+        'office',
+    ]));
     Route::post('calendars/check-date', [CalendarController::class, 'checkDate'])->middleware('auth')->name('calendars.check-date');
-    $officeRelatedRoles = 'role:Superadmin,office';
+    $officeRelatedRoles = 'role:' . implode(',', RoleType::officeSubmissionRoles());
     Route::resource('funds', FundController::class)->middleware($officeRelatedRoles);
     Route::resource('apps', APPController::class)->middleware($officeRelatedRoles);
     Route::post('apps/{app}/import', [APPController::class, 'import'])->middleware($officeRelatedRoles)->name('apps.import');
@@ -63,7 +72,7 @@ Route::middleware(['auth'])->group(function (): void {
     Route::post('emanatings/{emanating}/reject', [EmanatingController::class, 'reject'])->middleware($officeRelatedRoles)->name('emanatings.reject');
 
     // Canvassing module
-    $canvassingRoles = 'role:Superadmin,Canvassing Admin';
+    $canvassingRoles = 'role:' . implode(',', [RoleType::SUPERADMIN->value, RoleType::CANVASSING_ADMIN->value]);
     Route::resource('suppliers', SupplierController::class)->middleware($canvassingRoles);
     Route::resource('master-list-categories', MasterListCategoryController::class)->except(['show'])->middleware($canvassingRoles);
     Route::resource('master-list-items', MasterListItemController::class)->except(['show'])->middleware($canvassingRoles);
@@ -75,7 +84,7 @@ Route::middleware(['auth'])->group(function (): void {
     Route::post('canvasses/{canvas}/delete', [CanvasController::class, 'delete'])->middleware($canvassingRoles)->name('canvasses.delete');
 
     // Purchase Request module
-    $prRoles = 'role:Superadmin,PR Admin';
+    $prRoles = 'role:' . implode(',', [RoleType::SUPERADMIN->value, RoleType::PR_ADMIN->value]);
     Route::resource('purchase-requests', PurchaseRequestController::class)->middleware($prRoles);
     Route::get('purchase-request-matrix', [PurchaseRequestMatrixController::class, 'index'])->middleware($prRoles)->name('purchase-request-matrix.index');
     Route::get('purchase-request-matrix/export/xlsx', [PurchaseRequestMatrixController::class, 'exportXlsx'])->middleware($prRoles)->name('purchase-request-matrix.export-xlsx');
@@ -88,31 +97,34 @@ Route::middleware(['auth'])->group(function (): void {
     Route::get('purchase-requests/{purchase_request}/pdf', [PurchaseRequestController::class, 'printPdf'])->middleware($prRoles)->name('purchase-requests.pdf');
 
     // RFQ module
-    $rfqRoles = 'role:Superadmin,Quotation Admin';
+    $rfqRoles = 'role:' . implode(',', [RoleType::SUPERADMIN->value, RoleType::RFQ_ADMIN->value]);
     Route::resource('rfqs', RFQController::class)->only(['index', 'create', 'store', 'show', 'destroy'])->middleware($rfqRoles);
     Route::get('rfqs/suggest-date', [RFQController::class, 'suggestRfqDate'])->middleware($rfqRoles)->name('rfqs.suggest-date');
     Route::get('rfqs/{rfq}/pdf', [RFQController::class, 'printPdf'])->middleware($rfqRoles)->name('rfqs.pdf');
 
     // AOQ module
-    Route::resource('aoqs', AOQController::class)->only(['index', 'create', 'store', 'show', 'destroy'])->middleware($rfqRoles);
-    Route::get('aoqs/{aoq}/pdf', [AOQController::class, 'printPdf'])->middleware($rfqRoles)->name('aoqs.pdf');
+    $aoqRoles = 'role:' . implode(',', [RoleType::SUPERADMIN->value, RoleType::ABSTRACT_ADMIN->value]);
+    Route::resource('aoqs', AOQController::class)->only(['index', 'create', 'store', 'show', 'destroy'])->middleware($aoqRoles);
+    Route::get('aoqs/{aoq}/pdf', [AOQController::class, 'printPdf'])->middleware($aoqRoles)->name('aoqs.pdf');
 
     // BAC Resolution module
-    $bacResolutionRoles = 'role:Superadmin,BAC Reso Admin';
+    $bacResolutionRoles = 'role:' . implode(',', [RoleType::SUPERADMIN->value, RoleType::RESOLUTION_ADMIN->value]);
     Route::resource('bac-resolutions', BACResolutionController::class)->only(['index', 'create', 'store', 'show', 'destroy'])->middleware($bacResolutionRoles);
     Route::get('bac-resolutions/{bac_resolution}/pdf', [BACResolutionController::class, 'printPdf'])->middleware($bacResolutionRoles)->name('bac-resolutions.pdf');
 
     // Notice of Award module
-    $documentRoles = 'role:Superadmin,Document Admin';
-    Route::resource('noas', NOAController::class)->only(['index', 'create', 'store', 'show', 'destroy'])->middleware($documentRoles);
-    Route::get('noas/{noa}/pdf', [NOAController::class, 'printPdf'])->middleware($documentRoles)->name('noas.pdf');
+    $noaRoles = 'role:' . implode(',', [RoleType::SUPERADMIN->value, RoleType::NOA_ADMIN->value]);
+    Route::resource('noas', NOAController::class)->only(['index', 'create', 'store', 'show', 'destroy'])->middleware($noaRoles);
+    Route::get('noas/{noa}/pdf', [NOAController::class, 'printPdf'])->middleware($noaRoles)->name('noas.pdf');
 
     // Purchase Order module
-    Route::resource('purchase-orders', PurchaseOrderController::class)->only(['index', 'create', 'store', 'show', 'destroy'])->middleware($documentRoles);
-    Route::post('purchase-orders/suggest-po-no', [PurchaseOrderController::class, 'suggestPoNo'])->middleware($documentRoles)->name('purchase-orders.suggest-po-no');
-    Route::get('purchase-orders/{purchase_order}/pdf', [PurchaseOrderController::class, 'printPdf'])->middleware($documentRoles)->name('purchase-orders.pdf');
+    $poRoles = 'role:' . implode(',', [RoleType::SUPERADMIN->value, RoleType::PO_ADMIN->value]);
+    Route::resource('purchase-orders', PurchaseOrderController::class)->only(['index', 'create', 'store', 'show', 'destroy'])->middleware($poRoles);
+    Route::post('purchase-orders/suggest-po-no', [PurchaseOrderController::class, 'suggestPoNo'])->middleware($poRoles)->name('purchase-orders.suggest-po-no');
+    Route::get('purchase-orders/{purchase_order}/pdf', [PurchaseOrderController::class, 'printPdf'])->middleware($poRoles)->name('purchase-orders.pdf');
 
     // PO Transmittal module
-    Route::resource('po-transmittals', POTransmittalController::class)->only(['index', 'create', 'store', 'show', 'update', 'destroy'])->middleware($documentRoles);
-    Route::get('po-transmittals/{po_transmittal}/pdf', [POTransmittalController::class, 'printPdf'])->middleware($documentRoles)->name('po-transmittals.pdf');
+    $inspectionRoles = 'role:' . implode(',', [RoleType::SUPERADMIN->value, RoleType::PO_ADMIN->value]);
+    Route::resource('po-transmittals', POTransmittalController::class)->only(['index', 'create', 'store', 'show', 'update', 'destroy'])->middleware($inspectionRoles);
+    Route::get('po-transmittals/{po_transmittal}/pdf', [POTransmittalController::class, 'printPdf'])->middleware($inspectionRoles)->name('po-transmittals.pdf');
 });

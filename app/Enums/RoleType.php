@@ -6,12 +6,16 @@ namespace App\Enums;
 
 enum RoleType: string
 {
-    case SUPERADMIN = 'Superadmin';
-    case BAC_RESO_ADMIN = 'BAC Reso Admin';
+    case SUPERADMIN = 'SuperAdmin';
+    case CHECKING_ADMIN = 'Checking Admin';
     case CANVASSING_ADMIN = 'Canvassing Admin';
-    case DOCUMENT_ADMIN = 'Document Admin';
     case PR_ADMIN = 'PR Admin';
-    case QUOTATION_ADMIN = 'Quotation Admin';
+    case RFQ_ADMIN = 'RFQ Admin';
+    case ABSTRACT_ADMIN = 'Abstract Admin';
+    case RESOLUTION_ADMIN = 'Resolution Admin';
+    case NOA_ADMIN = 'NOA Admin';
+    case PO_ADMIN = 'PO Admin';
+    case INSPECTION_ADMIN = 'Inspection Admin';
 
     public static function isSystemRole(string $roleName): bool
     {
@@ -24,5 +28,17 @@ enum RoleType: string
     public static function systemRoles(): array
     {
         return array_column(self::cases(), 'value');
+    }
+
+    /**
+     * @return array<string>
+     */
+    public static function officeSubmissionRoles(): array
+    {
+        return [
+            self::SUPERADMIN->value,
+            self::CHECKING_ADMIN->value,
+            'office',
+        ];
     }
 }

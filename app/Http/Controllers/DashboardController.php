@@ -27,14 +27,29 @@ class DashboardController extends Controller
 {
     public function index(Request $request): Response
     {
-        $user = $request->user()?->loadMissing(['role', 'office']);
-        $roleName = $user?->role?->name;
+        $user = $request->user()?->loadMissing(['roles', 'office']);
+        $roleNames = $user?->roles?->pluck('name')->all() ?? [];
+        $rolePriority = [
+            RoleType::SUPERADMIN->value,
+            RoleType::CHECKING_ADMIN->value,
+            RoleType::CANVASSING_ADMIN->value,
+            RoleType::PR_ADMIN->value,
+            RoleType::RFQ_ADMIN->value,
+            RoleType::ABSTRACT_ADMIN->value,
+            RoleType::RESOLUTION_ADMIN->value,
+            RoleType::NOA_ADMIN->value,
+            RoleType::PO_ADMIN->value,
+            RoleType::INSPECTION_ADMIN->value,
+        ];
+
+        $roleName = collect($rolePriority)->first(fn(string $role): bool => in_array($role, $roleNames, true));
+        $scopeLabel = $roleName
+            ? 'System-wide'
+            : ($user?->office?->name ?? 'Office');
 
         $payload = [
             'roleName' => $roleName,
-            'scopeLabel' => RoleType::isSystemRole((string) $roleName)
-                ? 'System-wide'
-                : ($user?->office?->name ?? 'Office'),
+            'scopeLabel' => $scopeLabel,
             'metrics' => [],
             'pipeline' => [],
             'recentActivities' => [],
@@ -57,7 +72,7 @@ class DashboardController extends Controller
                 $this->quickLink('Purchase Orders', route('purchase-orders.index'), 'lucide:file-signature'),
                 $this->quickLink('PO Transmittals', route('po-transmittals.index'), 'lucide:files'),
             ];
-        } elseif ($roleName === RoleType::BAC_RESO_ADMIN->value) {
+        } elseif ($roleName === RoleType::RESOLUTION_ADMIN->value) {
             $payload['metrics'] = [
                 $this->metric('BAC Resolutions', BACResolution::count(), 'lucide:files', 'Total drafted and finalized'),
                 $this->metric('Finalized', BACResolution::whereNotNull('finalized_at')->count(), 'lucide:check-circle', 'Ready for NOA generation'),
@@ -88,6 +103,37 @@ class DashboardController extends Controller
                 $this->quickLink('BAC Resolutions', route('bac-resolutions.index'), 'lucide:files'),
                 $this->quickLink('Notices of Award', route('noas.index'), 'lucide:file-badge'),
                 $this->quickLink('AOQ List', route('aoqs.index'), 'lucide:file-spreadsheet'),
+            ];
+        } elseif ($roleName === RoleType::CHECKING_ADMIN->value) {
+            $payload['metrics'] = [
+                $this->metric('APPs', APP::count(), 'lucide:layout-grid', 'All annual procurement plans'),
+                $this->metric('PPMPs', PPMP::count(), 'lucide:clipboard-list', 'All project procurement plans'),
+                $this->metric('Emanatings', Emanating::count(), 'lucide:clipboard-minus', 'All emanating requests'),
+                $this->metric('Purchase Requests', PurchaseRequest::count(), 'lucide:file-plus-2', 'PRs generated from submissions'),
+            ];
+
+            $payload['pipeline'] = [
+                $this->stage('PR Draft', PurchaseRequest::where('status', 'draft')->count()),
+                $this->stage('PR Approved', PurchaseRequest::where('status', 'approved')->count()),
+                $this->stage('PR Returned', PurchaseRequest::where('status', 'returned')->count()),
+            ];
+
+            $payload['recentActivities'] = PurchaseRequest::with('office')
+                ->latest('pr_date')
+                ->limit(6)
+                ->get()
+                ->map(fn(PurchaseRequest $item) => [
+                    'title' => $item->pr_no ?: ('PR #' . $item->id),
+                    'subtitle' => $item->office?->name ?: 'No office',
+                    'meta' => ucfirst(str_replace('_', ' ', (string) $item->status)),
+                    'date' => optional($item->pr_date)->format('M d, Y') ?: '—',
+                    'link' => route('purchase-requests.show', $item),
+                ])->values();
+
+            $payload['quickLinks'] = [
+                $this->quickLink('APPs', route('apps.index'), 'lucide:layout-grid'),
+                $this->quickLink('PPMPs', route('ppmps.index'), 'lucide:clipboard-list'),
+                $this->quickLink('Emanatings', route('emanatings.index'), 'lucide:clipboard-minus'),
             ];
         } elseif ($roleName === RoleType::CANVASSING_ADMIN->value) {
             $payload['metrics'] = [
@@ -149,7 +195,7 @@ class DashboardController extends Controller
                 $this->quickLink('Purchase Requests', route('purchase-requests.index'), 'lucide:file-plus-2'),
                 $this->quickLink('Create PR', route('purchase-requests.create'), 'lucide:plus-circle'),
             ];
-        } elseif ($roleName === RoleType::QUOTATION_ADMIN->value) {
+        } elseif ($roleName === RoleType::RFQ_ADMIN->value || $roleName === RoleType::ABSTRACT_ADMIN->value) {
             $payload['metrics'] = [
                 $this->metric('RFQs', RFQ::count(), 'lucide:file-text', 'Quotation requests created'),
                 $this->metric('Due This Week', RFQ::whereBetween('submission_deadline', [now()->toDateString(), now()->addWeek()->toDateString()])->count(), 'lucide:calendar-days', 'Submission deadlines approaching'),
@@ -179,7 +225,7 @@ class DashboardController extends Controller
                 $this->quickLink('RFQs', route('rfqs.index'), 'lucide:file-text'),
                 $this->quickLink('AOQs', route('aoqs.index'), 'lucide:file-spreadsheet'),
             ];
-        } elseif ($roleName === RoleType::DOCUMENT_ADMIN->value) {
+        } elseif ($roleName === RoleType::NOA_ADMIN->value || $roleName === RoleType::PO_ADMIN->value || $roleName === RoleType::INSPECTION_ADMIN->value) {
             $payload['metrics'] = [
                 $this->metric('Notices of Award', NOA::count(), 'lucide:file-badge', 'Issued NOA records'),
                 $this->metric('Purchase Orders', PurchaseOrder::count(), 'lucide:file-signature', 'Generated POs'),

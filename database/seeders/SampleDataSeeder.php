@@ -25,15 +25,16 @@ class SampleDataSeeder extends Seeder
             ['is_system_role' => false, 'office_id' => $veterinaryOffice->id]
         );
 
-        User::updateOrCreate(
+        $officeUser = User::updateOrCreate(
             ['email' => 'veterenaryadmin@procurex.com'],
             [
                 'name' => 'Veterinary Admin',
-                'role_id' => $veterinaryRole->id,
                 'office_id' => $veterinaryOffice->id,
                 'password' => 'password',
             ]
         );
+
+        $officeUser->roles()->sync([$veterinaryRole->id]);
 
         if (Fund::query()->doesntExist()) {
             Fund::factory()->create();

@@ -12,6 +12,7 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -20,28 +21,12 @@ class UserController extends Controller
 {
     public function index(Request $request): Response
     {
-        $builder = User::with(['role', 'office']);
+        $builder = User::with(['roles', 'office']);
 
-        // Filter based on current user's role
-        $currentUser = $request->user();
+        $currentUser = $request->user()?->loadMissing('roles');
 
-        if ($currentUser && $currentUser->role) {
-            $currentUserRoleName = $currentUser->role->name;
-
-            // Superadmin can see all users
-            if (RoleType::isSystemRole($currentUserRoleName)) {
-                if ($currentUserRoleName === RoleType::SUPERADMIN->value) {
-                    // Superadmin sees all users — no filter
-                } else {
-                    // Non-superadmin system roles see only users with their own role
-                    $builder->whereHas('role', function ($q) use ($currentUserRoleName): void {
-                        $q->where('name', $currentUserRoleName);
-                    });
-                }
-            } else {
-                // Office role users see only their office's users
-                $builder->where('office_id', $currentUser->role->office_id);
-            }
+        if ($currentUser && ! $currentUser->hasRole(RoleType::SUPERADMIN->value)) {
+            $builder->where('office_id', $currentUser->office_id);
         }
 
         $lengthAwarePaginator = $builder
@@ -65,8 +50,8 @@ class UserController extends Controller
 
     public function create(): Response|RedirectResponse
     {
-        $user = auth()->user();
-        if ($user && $user->role && ! RoleType::isSystemRole($user->role->name)) {
+        $user = Auth::user()?->loadMissing('roles');
+        if ($user && ! $user->hasRole(RoleType::SUPERADMIN->value)) {
             return redirect()->route('users.index')
                 ->with('error', 'You do not have permission to create users.');
         }
@@ -80,16 +65,19 @@ class UserController extends Controller
 
     public function store(StoreUserRequest $storeUserRequest): RedirectResponse
     {
-        $user = auth()->user();
-        if ($user && $user->role && ! RoleType::isSystemRole($user->role->name)) {
+        $user = Auth::user()?->loadMissing('roles');
+        if ($user && ! $user->hasRole(RoleType::SUPERADMIN->value)) {
             return redirect()->route('users.index')
                 ->with('error', 'You do not have permission to create users.');
         }
 
         $validated = $storeUserRequest->validated();
+        $roleIds = $validated['role_ids'];
+        unset($validated['role_ids']);
         $validated['password'] = Hash::make($validated['password']);
 
-        User::create($validated);
+        $createdUser = User::create($validated);
+        $createdUser->roles()->sync($roleIds);
 
         return redirect()->route('users.index')
             ->with('success', 'User created successfully.');
@@ -97,7 +85,7 @@ class UserController extends Controller
 
     public function show(User $user): Response
     {
-        $user->load(['role', 'office']);
+        $user->load(['roles', 'office']);
 
         return Inertia::render('User/Show', [
             'user' => $user,
@@ -106,11 +94,13 @@ class UserController extends Controller
 
     public function edit(User $user): Response|RedirectResponse
     {
-        $authUser = auth()->user();
-        if ($authUser && $authUser->role && ! RoleType::isSystemRole($authUser->role->name)) {
+        $authUser = Auth::user()?->loadMissing('roles');
+        if ($authUser && ! $authUser->hasRole(RoleType::SUPERADMIN->value)) {
             return redirect()->route('users.index')
                 ->with('error', 'You do not have permission to edit users.');
         }
+
+        $user->load('roles');
 
         return Inertia::render('User/Edit', [
             'user' => $user,
@@ -122,13 +112,15 @@ class UserController extends Controller
 
     public function update(UpdateUserRequest $updateUserRequest, User $user): RedirectResponse
     {
-        $authUser = auth()->user();
-        if ($authUser && $authUser->role && ! RoleType::isSystemRole($authUser->role->name)) {
+        $authUser = Auth::user()?->loadMissing('roles');
+        if ($authUser && ! $authUser->hasRole(RoleType::SUPERADMIN->value)) {
             return redirect()->route('users.index')
                 ->with('error', 'You do not have permission to edit users.');
         }
 
         $validated = $updateUserRequest->validated();
+        $roleIds = $validated['role_ids'];
+        unset($validated['role_ids']);
 
         if (! empty($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
@@ -137,6 +129,7 @@ class UserController extends Controller
         }
 
         $user->update($validated);
+        $user->roles()->sync($roleIds);
 
         return redirect()->route('users.index')
             ->with('success', 'User updated successfully.');
@@ -144,8 +137,8 @@ class UserController extends Controller
 
     public function destroy(User $user): RedirectResponse
     {
-        $authUser = auth()->user();
-        if ($authUser && $authUser->role && ! RoleType::isSystemRole($authUser->role->name)) {
+        $authUser = Auth::user()?->loadMissing('roles');
+        if ($authUser && ! $authUser->hasRole(RoleType::SUPERADMIN->value)) {
             return redirect()->route('users.index')
                 ->with('error', 'You do not have permission to delete users.');
         }

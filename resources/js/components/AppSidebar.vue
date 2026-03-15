@@ -32,34 +32,37 @@ const user = computed(() => page.props.auth?.user);
 
 // System role names
 const SYSTEM_ROLES = [
-    "Superadmin",
-    "BAC Reso Admin",
+    "SuperAdmin",
+    "Checking Admin",
     "Canvassing Admin",
-    "Document Admin",
     "PR Admin",
-    "Quotation Admin",
+    "RFQ Admin",
+    "Abstract Admin",
+    "Resolution Admin",
+    "NOA Admin",
+    "PO Admin",
+    "Inspection Admin",
 ];
 
-const userRole = computed(() => user.value?.role?.name || "");
-
-const isSystemRole = computed(() => SYSTEM_ROLES.includes(userRole.value));
-
-const isSuperadmin = computed(() => userRole.value === "Superadmin");
-
-const isBACSAdminOrAbove = computed(
-    () =>
-        userRole.value === "Superadmin" || userRole.value === "BAC Reso Admin",
+const userRoles = computed(() =>
+    (user.value?.roles ?? []).map((role) => role.name),
 );
 
-const isCanvassingAdminOrAbove = computed(
-    () =>
-        userRole.value === "Superadmin" ||
-        userRole.value === "Canvassing Admin",
+const isSystemRole = computed(() =>
+    userRoles.value.some((roleName) => SYSTEM_ROLES.includes(roleName)),
 );
 
-const isPRAdminOrAbove = computed(
-    () => userRole.value === "Superadmin" || userRole.value === "PR Admin",
-);
+const hasAccess = (allowedRoles) => {
+    if (allowedRoles.includes("all")) {
+        return true;
+    }
+
+    if (allowedRoles.includes("office") && !isSystemRole.value) {
+        return true;
+    }
+
+    return userRoles.value.some((roleName) => allowedRoles.includes(roleName));
+};
 
 // Navigation items
 const mainNavItems = computed(() => {
@@ -79,77 +82,77 @@ const mainNavItems = computed(() => {
             url: route("users.index"),
             icon: "lucide:users",
             isActive: route().current("users.*"),
-            roles: ["all"], // Available to all
+            roles: ["SuperAdmin"], // Available to all
         },
         {
             title: "Roles",
             url: route("roles.index"),
             icon: "lucide:shield",
             isActive: route().current("roles.*"),
-            roles: ["Superadmin"], // Superadmin only
+            roles: ["SuperAdmin"], // Superadmin only
         },
         {
             title: "Offices & General Codes",
             url: route("offices.index"),
             icon: "lucide:building-2",
             isActive: route().current("offices.*"),
-            roles: ["Superadmin"], // Superadmin only
+            roles: ["SuperAdmin"], // Superadmin only
         },
         {
             title: "Project Codes",
             url: route("project-codes.index"),
             icon: "lucide:tags",
             isActive: route().current("project-codes.*"),
-            roles: ["Superadmin"],
+            roles: ["SuperAdmin"],
         },
         {
             title: "Accounts",
             url: route("accounts.index"),
             icon: "lucide:book-marked",
             isActive: route().current("accounts.*"),
-            roles: ["Superadmin"],
+            roles: ["SuperAdmin"],
         },
         {
             title: "APPs",
             url: route("apps.index"),
             icon: "lucide:clipboard-check",
             isActive: route().current("apps.*"),
-            roles: ["Superadmin", "BAC Reso Admin", "Document Admin", "office"],
+            roles: ["SuperAdmin", "Checking Admin", "office"],
         },
         {
             title: "Funds",
             url: route("funds.index"),
             icon: "lucide:wallet",
             isActive: route().current("funds.*"),
-            roles: ["Superadmin", "BAC Reso Admin", "Document Admin", "office"],
+            roles: ["SuperAdmin", "Checking Admin", "office"],
         },
         {
             title: "PPMPs",
             url: route("ppmps.index"),
             icon: "lucide:clipboard-list",
             isActive: route().current("ppmps.*"),
-            roles: ["Superadmin", "BAC Reso Admin", "Document Admin", "office"],
+            roles: ["SuperAdmin", "Checking Admin", "office"],
         },
         {
             title: "Emanatings",
             url: route("emanatings.index"),
             icon: "lucide:clipboard-minus",
             isActive: route().current("emanatings.*"),
-            roles: ["Superadmin", "BAC Reso Admin", "Document Admin", "office"],
+            roles: ["SuperAdmin", "Checking Admin", "office"],
         },
         {
             title: "Canvassing",
             url: route("canvasses.index"),
             icon: "lucide:shopping-cart",
             isActive: route().current("canvasses.*"),
-            roles: ["Superadmin", "Canvassing Admin"],
+            roles: ["SuperAdmin", "Canvassing Admin"],
         },
         {
             title: "Suppliers",
             url: route("suppliers.index"),
             icon: "lucide:truck",
             isActive: route().current("suppliers.*"),
-            roles: ["Superadmin", "Canvassing Admin"],
+            roles: ["SuperAdmin", "Canvassing Admin"],
         },
         {
             title: "Master List",
@@ -158,73 +161,68 @@ const mainNavItems = computed(() => {
             isActive:
                 route().current("master-list-items.*") ||
                 route().current("master-list-categories.*"),
-            roles: ["Superadmin", "Canvassing Admin"],
+            roles: ["SuperAdmin", "Canvassing Admin"],
         },
         {
             title: "Purchase Requests",
             url: route("purchase-requests.index"),
             icon: "lucide:file-plus-2",
             isActive: route().current("purchase-requests.*"),
-            roles: ["Superadmin", "PR Admin"],
+            roles: ["SuperAdmin", "PR Admin"],
         },
         {
             title: "PR Matrix",
             url: route("purchase-request-matrix.index"),
             icon: "lucide:table-properties",
             isActive: route().current("purchase-request-matrix.*"),
-            roles: ["Superadmin", "PR Admin"],
+            roles: ["SuperAdmin", "PR Admin"],
         },
         {
             title: "Request for Quotation",
             url: route("rfqs.index"),
             icon: "lucide:file-text",
             isActive: route().current("rfqs.*"),
-            roles: ["Superadmin", "Quotation Admin"],
+            roles: ["SuperAdmin", "RFQ Admin"],
         },
         {
             title: "Abstract of Quotation",
             url: route("aoqs.index"),
             icon: "lucide:file-spreadsheet",
             isActive: route().current("aoqs.*"),
-            roles: ["Superadmin", "Quotation Admin"],
+            roles: ["SuperAdmin", "Abstract Admin"],
         },
         {
             title: "BAC Resolutions",
             url: route("bac-resolutions.index"),
             icon: "lucide:files",
             isActive: route().current("bac-resolutions.*"),
-            roles: ["Superadmin", "BAC Reso Admin"],
+            roles: ["SuperAdmin", "Resolution Admin"],
         },
         {
             title: "Notice of Award",
             url: route("noas.index"),
             icon: "lucide:file-badge",
             isActive: route().current("noas.*"),
-            roles: ["Superadmin", "Document Admin"],
+            roles: ["SuperAdmin", "NOA Admin"],
         },
         {
             title: "Purchase Order",
             url: route("purchase-orders.index"),
             icon: "lucide:file-signature",
             isActive: route().current("purchase-orders.*"),
-            roles: ["Superadmin", "Document Admin"],
+            roles: ["SuperAdmin", "PO Admin"],
         },
         {
             title: "PO Transmittal",
             url: route("po-transmittals.index"),
             icon: "lucide:files",
             isActive: route().current("po-transmittals.*"),
-            roles: ["Superadmin", "Document Admin"],
+            roles: ["SuperAdmin", "PO Admin"],
         },
     ];
 
     // Filter items based on user role
-    return items.filter((item) => {
-        if (item.roles.includes("all")) return true;
-        if (item.roles.includes("office") && !isSystemRole.value) return true;
-        if (item.roles.includes(userRole.value)) return true;
-        return false;
-    });
+    return items.filter((item) => hasAccess(item.roles));
 });
 
 const secondaryNavItems = computed(() => {
@@ -239,12 +237,7 @@ const secondaryNavItems = computed(() => {
     ];
 
     // Filter items based on user role
-    return items.filter((item) => {
-        if (item.roles.includes("all")) return true;
-        if (item.roles.includes("office") && !isSystemRole.value) return true;
-        if (item.roles.includes(userRole.value)) return true;
-        return false;
-    });
+    return items.filter((item) => hasAccess(item.roles));
 });
 
 // Get user initials for avatar fallback

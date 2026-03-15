@@ -12,34 +12,16 @@ class RoleSeeder extends Seeder
 {
     public function run(): void
     {
-        Role::firstOrCreate(
-            ['name' => RoleType::SUPERADMIN->value],
-            ['is_system_role' => true, 'office_id' => null]
-        );
+        foreach (RoleType::cases() as $systemRole) {
+            Role::updateOrCreate(
+                ['name' => $systemRole->value],
+                ['is_system_role' => true, 'office_id' => null]
+            );
+        }
 
-        Role::firstOrCreate(
-            ['name' => RoleType::BAC_RESO_ADMIN->value],
-            ['is_system_role' => true, 'office_id' => null]
-        );
-
-        Role::firstOrCreate(
-            ['name' => RoleType::CANVASSING_ADMIN->value],
-            ['is_system_role' => true, 'office_id' => null]
-        );
-
-        Role::firstOrCreate(
-            ['name' => RoleType::DOCUMENT_ADMIN->value],
-            ['is_system_role' => true, 'office_id' => null]
-        );
-
-        Role::firstOrCreate(
-            ['name' => RoleType::PR_ADMIN->value],
-            ['is_system_role' => true, 'office_id' => null]
-        );
-
-        Role::firstOrCreate(
-            ['name' => RoleType::QUOTATION_ADMIN->value],
-            ['is_system_role' => true, 'office_id' => null]
-        );
+        Role::query()
+            ->where('is_system_role', true)
+            ->whereNotIn('name', RoleType::systemRoles())
+            ->delete();
     }
 }

@@ -34,17 +34,16 @@ const props = defineProps({
     systemRoles: Array,
 });
 
-const selectedRoleId = ref(props.user.role_id);
+const selectedRoleIds = ref(
+    props.user.roles?.map((role) => String(role.id)) ?? [],
+);
 
-const selectedRole = computed(() => {
-    return props.roles?.find((role) => role.id == selectedRoleId.value);
-});
-
-const isSystemRole = computed(() => {
-    return (
-        selectedRole.value &&
-        props.systemRoles?.includes(selectedRole.value.name)
+const requiresOffice = computed(() => {
+    const selectedRoles = props.roles?.filter((role) =>
+        selectedRoleIds.value.includes(String(role.id)),
     );
+
+    return selectedRoles?.some((role) => !role.is_system_role);
 });
 </script>
 
@@ -124,37 +123,54 @@ const isSystemRole = computed(() => {
                     </div>
 
                     <div class="space-y-2">
-                        <Label for="role_id">Role</Label>
+                        <Label for="role_ids">Roles</Label>
                         <select
-                            id="role_id"
-                            name="role_id"
-                            @change="(e) => (selectedRoleId = e.target.value)"
+                            id="role_ids"
+                            name="role_ids[]"
+                            multiple
+                            @change="
+                                (event) =>
+                                    (selectedRoleIds = Array.from(
+                                        event.target.selectedOptions,
+                                        (option) => option.value,
+                                    ))
+                            "
                             :class="[
-                                'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
+                                'flex min-h-28 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
                                 'ring-offset-background focus-visible:outline-none focus-visible:ring-2',
                                 'focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-                                errors.role_id ? 'border-destructive' : '',
+                                errors.role_ids ? 'border-destructive' : '',
                             ]"
                         >
-                            <option value="">Select a role</option>
                             <option
                                 v-for="role in roles"
                                 :key="role.id"
                                 :value="role.id"
-                                :selected="user.role_id === role.id"
+                                :selected="
+                                    selectedRoleIds.includes(String(role.id))
+                                "
                             >
                                 {{ role.name }}
                             </option>
                         </select>
+                        <p class="text-xs text-muted-foreground">
+                            Hold Ctrl or Cmd to select multiple roles.
+                        </p>
                         <p
-                            v-if="errors.role_id"
+                            v-if="errors.role_ids"
                             class="text-sm text-destructive"
                         >
-                            {{ errors.role_id }}
+                            {{ errors.role_ids }}
+                        </p>
+                        <p
+                            v-if="errors['role_ids.0']"
+                            class="text-sm text-destructive"
+                        >
+                            {{ errors["role_ids.0"] }}
                         </p>
                     </div>
 
-                    <div v-if="!isSystemRole" class="space-y-2">
+                    <div v-if="requiresOffice" class="space-y-2">
                         <Label for="office_id">Office</Label>
                         <select
                             id="office_id"

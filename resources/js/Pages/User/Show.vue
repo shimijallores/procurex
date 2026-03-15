@@ -1,40 +1,47 @@
 <script setup>
-import { ref } from 'vue'
-import { Link } from '@inertiajs/vue3'
-import { Icon } from '@iconify/vue'
-import Layout from '@/Layout/Layout.vue'
+import { ref } from "vue";
+import { Link } from "@inertiajs/vue3";
+import { Icon } from "@iconify/vue";
+import Layout from "@/Layout/Layout.vue";
 import {
     Card,
     CardContent,
     CardDescription,
     CardHeader,
     CardTitle,
-} from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import DeleteModal from '@/components/DeleteModal.vue'
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import DeleteModal from "@/components/DeleteModal.vue";
 
 defineOptions({
-    layout: (h, page) => h(Layout, { breadcrumbs: [
-        { label: 'Users', href: route('users.index') },
-        { label: 'Details' }
-    ] }, () => page),
-})
+    layout: (h, page) =>
+        h(
+            Layout,
+            {
+                breadcrumbs: [
+                    { label: "Users", href: route("users.index") },
+                    { label: "Details" },
+                ],
+            },
+            () => page,
+        ),
+});
 
 const props = defineProps({
     user: Object,
-})
+});
 
 const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-    })
-}
+    return new Date(date).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+};
 
-const showDeleteModal = ref(false)
+const showDeleteModal = ref(false);
 </script>
 
 <template>
@@ -86,24 +93,38 @@ const showDeleteModal = ref(false)
                 </CardHeader>
                 <CardContent class="space-y-4">
                     <div class="grid gap-1">
-                        <p class="text-sm font-medium text-muted-foreground">User ID</p>
+                        <p class="text-sm font-medium text-muted-foreground">
+                            User ID
+                        </p>
                         <p class="font-medium">{{ user.id }}</p>
                     </div>
                     <div class="grid gap-1">
-                        <p class="text-sm font-medium text-muted-foreground">Name</p>
+                        <p class="text-sm font-medium text-muted-foreground">
+                            Name
+                        </p>
                         <p class="font-medium">{{ user.name }}</p>
                     </div>
                     <div class="grid gap-1">
-                        <p class="text-sm font-medium text-muted-foreground">Email</p>
+                        <p class="text-sm font-medium text-muted-foreground">
+                            Email
+                        </p>
                         <p class="font-medium">{{ user.email }}</p>
                     </div>
                     <div class="grid gap-1">
-                        <p class="text-sm font-medium text-muted-foreground">Created At</p>
-                        <p class="font-medium">{{ formatDate(user.created_at) }}</p>
+                        <p class="text-sm font-medium text-muted-foreground">
+                            Created At
+                        </p>
+                        <p class="font-medium">
+                            {{ formatDate(user.created_at) }}
+                        </p>
                     </div>
                     <div class="grid gap-1">
-                        <p class="text-sm font-medium text-muted-foreground">Last Updated</p>
-                        <p class="font-medium">{{ formatDate(user.updated_at) }}</p>
+                        <p class="text-sm font-medium text-muted-foreground">
+                            Last Updated
+                        </p>
+                        <p class="font-medium">
+                            {{ formatDate(user.updated_at) }}
+                        </p>
                     </div>
                 </CardContent>
             </Card>
@@ -121,24 +142,54 @@ const showDeleteModal = ref(false)
                 </CardHeader>
                 <CardContent class="space-y-4">
                     <div class="flex items-center gap-4 rounded-lg border p-4">
-                        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                            <Icon icon="lucide:shield" class="h-6 w-6 text-primary" />
+                        <div
+                            class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10"
+                        >
+                            <Icon
+                                icon="lucide:shield"
+                                class="h-6 w-6 text-primary"
+                            />
                         </div>
                         <div>
-                            <p class="text-sm font-medium text-muted-foreground">Role</p>
-                            <p class="text-lg font-bold">
-                                {{ user.role?.name || 'No role assigned' }}
+                            <p
+                                class="text-sm font-medium text-muted-foreground"
+                            >
+                                Roles
+                            </p>
+                            <div
+                                v-if="(user.roles?.length ?? 0) > 0"
+                                class="mt-1 flex flex-wrap items-center gap-2"
+                            >
+                                <span
+                                    v-for="role in user.roles"
+                                    :key="role.id"
+                                    class="inline-flex items-center rounded-full border px-2 py-1 text-xs font-medium"
+                                >
+                                    {{ role.name }}
+                                </span>
+                            </div>
+                            <p v-else class="text-lg font-bold">
+                                No roles assigned
                             </p>
                         </div>
                     </div>
                     <div class="flex items-center gap-4 rounded-lg border p-4">
-                        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                            <Icon icon="lucide:building-2" class="h-6 w-6 text-primary" />
+                        <div
+                            class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10"
+                        >
+                            <Icon
+                                icon="lucide:building-2"
+                                class="h-6 w-6 text-primary"
+                            />
                         </div>
                         <div>
-                            <p class="text-sm font-medium text-muted-foreground">Office</p>
+                            <p
+                                class="text-sm font-medium text-muted-foreground"
+                            >
+                                Office
+                            </p>
                             <p class="text-lg font-bold">
-                                {{ user.office?.name || 'No office assigned' }}
+                                {{ user.office?.name || "No office assigned" }}
                             </p>
                         </div>
                     </div>
