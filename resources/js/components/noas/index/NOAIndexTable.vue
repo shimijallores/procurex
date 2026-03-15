@@ -164,8 +164,11 @@ const formatDate = (date) => {
                             </td>
                             <td class="p-4 align-middle">
                                 {{
+                                    noa.aoq?.rfq?.purchase_request?.office
+                                        ?.name ||
                                     noa.bac_resolution?.aoq?.rfq
-                                        ?.purchase_request?.office?.name || "—"
+                                        ?.purchase_request?.office?.name ||
+                                    "—"
                                 }}
                             </td>
                             <td class="p-4 align-middle text-right">

@@ -13,14 +13,16 @@ return new class extends Migration
         Schema::create('noas', function (Blueprint $table) {
             $table->id();
             $table->foreignId('bac_resolution_id')->constrained('bac_resolutions')->cascadeOnDelete();
+            $table->foreignId('aoq_id')->nullable()->constrained('aoqs')->nullOnDelete();
             $table->string('noa_no')->unique();
             $table->date('noa_date');
             $table->string('recipient_name')->nullable();
             $table->string('recipient_title')->nullable();
             $table->timestamps();
 
-            $table->unique('bac_resolution_id', 'uq_noa_bac_resolution');
             $table->index('bac_resolution_id', 'idx_noa_bac_resolution');
+            $table->unique('aoq_id', 'uq_noa_aoq');
+            $table->index('aoq_id', 'idx_noa_aoq');
             $table->index('noa_date', 'idx_noa_date');
         });
     }

@@ -22,7 +22,8 @@ class StoreNOARequest extends FormRequest
         $resolutionId = (int) $this->input('bac_resolution_id');
 
         return [
-            'bac_resolution_id' => ['required', 'integer', 'exists:bac_resolutions,id', 'unique:noas,bac_resolution_id'],
+            'bac_resolution_id' => ['required', 'integer', 'exists:bac_resolutions,id'],
+            'selected_aoq_id' => ['required', 'integer', 'exists:aoqs,id', 'unique:noas,aoq_id'],
             'noa_no' => ['nullable', 'string', 'max:255'],
             'noa_date' => ['required', 'date', 'after_or_equal:resolution_date'],
             'resolution_no' => [

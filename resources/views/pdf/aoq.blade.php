@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AOQ - {{ $rfq->svp_no }}</title>
     <style>
+        @page {
+            size: A4 landscape;
+            margin: 8mm;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -16,12 +21,14 @@
             font-family: Arial, Helvetica, sans-serif;
             font-size: 9pt;
             color: #000;
+            margin: 0;
+            padding: 0;
         }
 
         .page {
-            width: 210mm;
-            min-height: 297mm;
-            padding: 8mm;
+            width: 100%;
+            min-height: auto;
+            padding: 0;
         }
 
         .text-center {

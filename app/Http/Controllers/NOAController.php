@@ -23,6 +23,7 @@ class NOAController extends Controller
     public function index(Request $request): Response
     {
         $query = NOA::with([
+            'aoq.rfq.purchaseRequest.office',
             'bacResolution.aoq.rfq.purchaseRequest.office',
         ])
             ->when($request->search, function ($q, string $search): void {
@@ -31,12 +32,20 @@ class NOAController extends Controller
                         $br->where('resolution_no', 'like', sprintf('%%%s%%', $search))
                             ->orWhere('project_name', 'like', sprintf('%%%s%%', $search));
                     })
+                    ->orWhereHas('aoq.rfq', function ($rfq) use ($search): void {
+                        $rfq->where('project_name', 'like', sprintf('%%%s%%', $search))
+                            ->orWhere('svp_no', 'like', sprintf('%%%s%%', $search));
+                    })
                     ->orWhereHas('bacResolution.aoq.rfq', function ($rfq) use ($search): void {
                         $rfq->where('svp_no', 'like', sprintf('%%%s%%', $search));
                     });
             })
             ->when($request->office_id, function ($q, string $officeId): void {
-                $q->whereHas('bacResolution.aoq.rfq.purchaseRequest', fn($pr) => $pr->where('office_id', $officeId));
+                $q->where(function ($officeQuery) use ($officeId): void {
+                    $officeQuery
+                        ->whereHas('aoq.rfq.purchaseRequest', fn($pr) => $pr->where('office_id', $officeId))
+                        ->orWhereHas('bacResolution.aoq.rfq.purchaseRequest', fn($pr) => $pr->where('office_id', $officeId));
+                });
             })
             ->when($request->fiscal_year, function ($q, string $fiscalYear): void {
                 $q->whereYear('noa_date', $fiscalYear);
@@ -80,12 +89,37 @@ class NOAController extends Controller
     public function create(): Response
     {
         $eligibleResolutions = BACResolution::with([
+            'noas:bac_resolution_id,aoq_id',
+            'aoqs.rfq.purchaseRequest.office',
+            'aoqs.rfq.suppliers.supplierItems.rfqItem',
+            'aoqs.winnerSupplier',
             'aoq.rfq.purchaseRequest.office',
             'aoq.winnerSupplier',
         ])
-            ->whereDoesntHave('noa')
             ->latest('resolution_date')
-            ->get();
+            ->get()
+            ->map(function (BACResolution $resolution): BACResolution {
+                $allAoqs = $resolution->aoqs;
+                if ($allAoqs->isEmpty() && $resolution->aoq) {
+                    $allAoqs = collect([$resolution->aoq]);
+                }
+
+                $usedAoqIds = $resolution->noas
+                    ->pluck('aoq_id')
+                    ->filter()
+                    ->map(fn($id) => (int) $id)
+                    ->all();
+
+                $remainingAoqs = $allAoqs
+                    ->filter(fn($aoq) => ! in_array((int) $aoq->id, $usedAoqIds, true))
+                    ->values();
+
+                $resolution->setAttribute('remaining_aoqs', $remainingAoqs);
+
+                return $resolution;
+            })
+            ->filter(fn(BACResolution $resolution) => collect($resolution->remaining_aoqs)->isNotEmpty())
+            ->values();
 
         $suppliers = Supplier::query()
             ->where('is_active', true)
@@ -127,15 +161,35 @@ class NOAController extends Controller
         DB::beginTransaction();
         try {
             $resolution = BACResolution::with([
+                'noas:bac_resolution_id,aoq_id',
+                'aoqs.rfq',
+                'aoqs.rfq.suppliers.supplierItems.rfqItem',
+                'aoqs.winnerSupplier',
                 'aoq.rfq',
+                'aoq.rfq.suppliers.supplierItems.rfqItem',
                 'aoq.winnerSupplier',
             ])->findOrFail($validated['bac_resolution_id']);
 
-            if ($resolution->noa()->exists()) {
-                return redirect()->back()->with('error', 'A Notice of Award already exists for this BAC Resolution.');
+            $selectedAoqId = (int) ($validated['selected_aoq_id'] ?? 0);
+            $selectedAoq = $resolution->aoqs->firstWhere('id', $selectedAoqId);
+
+            if (! $selectedAoq && $resolution->aoq && (int) $resolution->aoq->id === $selectedAoqId) {
+                $selectedAoq = $resolution->aoq;
             }
 
-            $rfq = $resolution->aoq?->rfq;
+            if (! $selectedAoq) {
+                return redirect()->back()->withErrors([
+                    'selected_aoq_id' => 'The selected project does not belong to this BAC Resolution.',
+                ])->withInput();
+            }
+
+            if (NOA::where('aoq_id', $selectedAoqId)->exists()) {
+                return redirect()->back()->withErrors([
+                    'selected_aoq_id' => 'A Notice of Award already exists for the selected project.',
+                ])->withInput();
+            }
+
+            $rfq = $selectedAoq->rfq;
             if (! $rfq) {
                 return redirect()->back()->with('error', 'The selected BAC Resolution has no linked RFQ.');
             }
@@ -149,16 +203,9 @@ class NOAController extends Controller
                 ])->withInput();
             }
 
-            $supplierName = trim((string) ($validated['winner_supplier_name'] ?? ''));
-            if ($supplierName === '') {
-                $supplierName = (string) ($resolution->aoq?->winnerSupplier?->name ?? $resolution->winner_supplier_name ?? 'N/A');
-            }
-
             $resolution->update([
                 'resolution_no' => (string) ($validated['resolution_no'] ?? $resolution->resolution_no),
                 'resolution_date' => $resolutionDate->toDateString(),
-                'project_name' => (string) ($rfq->project_name ?? $resolution->project_name),
-                'winner_supplier_name' => $supplierName,
                 'calculation_label' => (string) ($validated['calculation_label'] ?? $resolution->calculation_label),
             ]);
 
@@ -169,6 +216,7 @@ class NOAController extends Controller
 
             $noa = NOA::create([
                 'bac_resolution_id' => $resolution->id,
+                'aoq_id' => $selectedAoq->id,
                 'noa_no' => $noaNo,
                 'noa_date' => $noaDate->toDateString(),
                 'recipient_name' => (string) ($validated['recipient_name'] ?? ''),
@@ -189,6 +237,8 @@ class NOAController extends Controller
     public function show(NOA $noa): Response
     {
         $noa->load([
+            'aoq.rfq.purchaseRequest.office',
+            'aoq.winnerSupplier',
             'bacResolution.aoq.rfq.purchaseRequest.office',
             'bacResolution.aoq.winnerSupplier',
         ]);
@@ -209,12 +259,16 @@ class NOAController extends Controller
     public function printPdf(NOA $noa)
     {
         $noa->load([
+            'aoq.rfq.purchaseRequest.office',
+            'aoq.winnerSupplier',
             'bacResolution.aoq.rfq.purchaseRequest.office',
             'bacResolution.aoq.winnerSupplier',
         ]);
 
         $resolution = $noa->bacResolution;
-        $supplierName = (string) ($resolution?->winner_supplier_name ?? $resolution?->aoq?->winnerSupplier?->name ?? '');
+        $aoq = $noa->aoq ?: $resolution?->aoq;
+        $rfq = $aoq?->rfq;
+        $supplierName = (string) ($aoq?->winnerSupplier?->name ?? $resolution?->winner_supplier_name ?? '');
         $addressedSupplier = null;
 
         if ($supplierName !== '') {
@@ -244,9 +298,9 @@ class NOAController extends Controller
         return Pdf::view('pdf.noa', [
             'noa' => $noa,
             'resolution' => $resolution,
-            'aoq' => $resolution?->aoq,
-            'rfq' => $resolution?->aoq?->rfq,
-            'winnerSupplier' => $resolution?->aoq?->winnerSupplier,
+            'aoq' => $aoq,
+            'rfq' => $rfq,
+            'winnerSupplier' => $aoq?->winnerSupplier,
             'addressedSupplier' => $addressedSupplier,
             'recipientTitle' => $recipientTitle,
         ])

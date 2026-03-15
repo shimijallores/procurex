@@ -284,6 +284,7 @@ class AOQController extends Controller
             'calculation' => $calculation,
         ])
             ->format('a4')
+            ->landscape()
             ->name('AOQ-' . ($aoq->rfq?->svp_no ?? $aoq->id) . '.pdf')
             ->inline();
     }

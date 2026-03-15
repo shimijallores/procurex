@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class BACResolution extends Model
@@ -55,6 +56,11 @@ class BACResolution extends Model
     public function noa(): HasOne
     {
         return $this->hasOne(NOA::class, 'bac_resolution_id');
+    }
+
+    public function noas(): HasMany
+    {
+        return $this->hasMany(NOA::class, 'bac_resolution_id');
     }
 
     public function isFinalized(): bool

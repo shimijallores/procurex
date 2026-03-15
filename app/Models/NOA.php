@@ -14,6 +14,7 @@ class NOA extends Model
 
     protected $fillable = [
         'bac_resolution_id',
+        'aoq_id',
         'noa_no',
         'noa_date',
         'recipient_name',
@@ -29,6 +30,11 @@ class NOA extends Model
     public function bacResolution(): BelongsTo
     {
         return $this->belongsTo(BACResolution::class, 'bac_resolution_id');
+    }
+
+    public function aoq(): BelongsTo
+    {
+        return $this->belongsTo(AOQ::class, 'aoq_id');
     }
 
     public function purchaseOrder(): HasOne

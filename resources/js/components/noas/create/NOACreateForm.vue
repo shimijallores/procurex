@@ -22,6 +22,33 @@ const selectedResolution = computed(() =>
     ),
 );
 
+const resolutionAoqOptions = computed(() => {
+    const resolution = selectedResolution.value;
+    if (!resolution) {
+        return [];
+    }
+
+    const remainingAoqs = Array.isArray(resolution.remaining_aoqs)
+        ? resolution.remaining_aoqs
+        : [];
+    if (remainingAoqs.length > 0) {
+        return remainingAoqs;
+    }
+
+    const aoqs = Array.isArray(resolution.aoqs) ? resolution.aoqs : [];
+    if (aoqs.length > 0) {
+        return aoqs;
+    }
+
+    return resolution.aoq ? [resolution.aoq] : [];
+});
+
+const selectedProjectAoq = computed(() =>
+    resolutionAoqOptions.value.find(
+        (aoq) => String(aoq.id) === String(props.form.selected_aoq_id),
+    ),
+);
+
 const showRepresentativeSuggestions = ref(false);
 const showRecipientTitleSuggestions = ref(false);
 
@@ -194,6 +221,10 @@ watch(
         );
 
         if (!resolution) {
+            props.form.selected_aoq_id = "";
+            props.form.noa_no = "";
+            props.form.winner_supplier_name = "";
+
             if (!props.form.resolution_date) {
                 props.form.resolution_date = suggestedDefaultResolutionDate;
             }
@@ -209,15 +240,28 @@ watch(
             normalizeDate(resolution.resolution_date) ||
             suggestedDefaultResolutionDate;
 
-        props.form.noa_no = resolution.aoq?.rfq?.svp_no || "";
+        const projectOptions =
+            Array.isArray(resolution.aoqs) && resolution.aoqs.length > 0
+                ? resolution.aoqs
+                : resolution.aoq
+                  ? [resolution.aoq]
+                  : [];
+
+        const hasSelectedProject = projectOptions.some(
+            (aoq) => String(aoq.id) === String(props.form.selected_aoq_id),
+        );
+
+        if (!hasSelectedProject) {
+            props.form.selected_aoq_id = projectOptions[0]?.id
+                ? String(projectOptions[0].id)
+                : "";
+        }
+
         props.form.noa_date = suggestNoaDate(suggestedResolutionDate);
         props.form.resolution_no = resolution.resolution_no || "";
         props.form.resolution_date = suggestedResolutionDate;
         props.form.calculation_label = resolution.calculation_label || "";
-        props.form.winner_supplier_name =
-            resolution.winner_supplier_name ||
-            resolution.aoq?.winner_supplier?.name ||
-            "";
+        props.form.winner_supplier_name = resolution.winner_supplier_name || "";
 
         if (!props.form.recipient_name) {
             const supplier =
@@ -245,6 +289,20 @@ watch(
                 props.form.recipient_title = "Owner";
             }
         }
+    },
+    { immediate: true },
+);
+
+watch(
+    selectedProjectAoq,
+    (aoq) => {
+        if (!aoq) {
+            return;
+        }
+
+        props.form.noa_no = aoq.rfq?.svp_no || "";
+        props.form.winner_supplier_name =
+            aoq.winner_supplier?.name || props.form.winner_supplier_name || "";
     },
     { immediate: true },
 );
@@ -316,6 +374,33 @@ watch(representativeSuggestions, (suggestions) => {
                         class="text-xs text-destructive"
                     >
                         {{ form.errors.bac_resolution_id }}
+                    </p>
+                </div>
+
+                <div class="space-y-2">
+                    <Label for="selected_aoq_id">Project in Selected BAC</Label>
+                    <select
+                        id="selected_aoq_id"
+                        :value="form.selected_aoq_id"
+                        :disabled="!selectedResolution"
+                        @change="form.selected_aoq_id = $event.target.value"
+                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                        <option value="">— Select Project —</option>
+                        <option
+                            v-for="aoq in resolutionAoqOptions"
+                            :key="aoq.id"
+                            :value="aoq.id"
+                        >
+                            {{ aoq.rfq?.svp_no || "No SVP" }} —
+                            {{ aoq.rfq?.project_name || "Project" }}
+                        </option>
+                    </select>
+                    <p
+                        v-if="form.errors?.selected_aoq_id"
+                        class="text-xs text-destructive"
+                    >
+                        {{ form.errors.selected_aoq_id }}
                     </p>
                 </div>
 
@@ -522,13 +607,13 @@ watch(representativeSuggestions, (suggestions) => {
                 <div>
                     <p class="text-muted-foreground">SVP No.</p>
                     <p class="font-medium">
-                        {{ selectedResolution.aoq?.rfq?.svp_no || "—" }}
+                        {{ selectedProjectAoq?.rfq?.svp_no || "—" }}
                     </p>
                 </div>
                 <div>
                     <p class="text-muted-foreground">RFQ Date</p>
                     <p class="font-medium">
-                        {{ selectedResolution.aoq?.rfq?.rfq_date || "—" }}
+                        {{ selectedProjectAoq?.rfq?.rfq_date || "—" }}
                     </p>
                 </div>
                 <div>
@@ -541,7 +626,7 @@ watch(representativeSuggestions, (suggestions) => {
                     <p class="text-muted-foreground">Project</p>
                     <p class="font-medium">
                         {{
-                            selectedResolution.aoq?.rfq?.project_name ||
+                            selectedProjectAoq?.rfq?.project_name ||
                             selectedResolution.project_name ||
                             "—"
                         }}

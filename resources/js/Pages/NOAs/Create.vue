@@ -27,6 +27,7 @@ const props = defineProps({
 
 const form = useForm({
     bac_resolution_id: "",
+    selected_aoq_id: "",
     noa_no: "",
     noa_date: props.defaultNoaDate || "",
     resolution_no: "",

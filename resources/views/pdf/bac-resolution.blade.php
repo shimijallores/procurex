@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BAC Resolution - {{ $resolution->resolution_no }}</title>
     <style>
+        @page {
+            size: A4;
+            margin: 1in;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -17,12 +22,14 @@
             font-size: 10.5pt;
             color: #000;
             line-height: 1.35;
+            margin: 0;
+            padding: 0;
         }
 
         .page {
-            width: 210mm;
-            min-height: 297mm;
-            padding: 8mm 10mm;
+            width: 100%;
+            min-height: auto;
+            padding: 0;
         }
 
         .header-layout {
@@ -296,7 +303,7 @@
                 <tr>
                     <td class="text-center">{{ strtoupper((string) ($row['office_name'] ?? 'OFFICE')) }}</td>
                     <td>{{ $row['project_name'] ?? 'PROJECT' }}</td>
-                    <td class="text-right">{{ number_format((float) ($row['abc_amount'] ?? 0), 2) }}</td>
+                    <td class="text-center">{{ number_format((float) ($row['abc_amount'] ?? 0), 2) }}</td>
                 </tr>
                 @endforeach
             </tbody>
