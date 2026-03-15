@@ -144,7 +144,7 @@ const formatCurrency = (value) => {
                             <th
                                 class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground whitespace-normal break-words"
                             >
-                                ITEM DESCRIPTION (PROJECT NAME)
+                                PROJECT NAME
                             </th>
                             <th
                                 class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground whitespace-normal break-words"
