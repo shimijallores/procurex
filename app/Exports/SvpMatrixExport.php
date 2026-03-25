@@ -17,26 +17,29 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class PurchaseRequestMatrixExport implements FromArray, ShouldAutoSize, WithColumnFormatting, WithEvents, WithHeadings, WithStyles
+class SvpMatrixExport implements FromArray, ShouldAutoSize, WithColumnFormatting, WithEvents, WithHeadings, WithStyles
 {
     public function __construct(private readonly array $rows) {}
 
     public function headings(): array
     {
         return [
-            'CONTROL NO. / EMANATING NO.',
-            'OFFICES / HOSPITALS',
-            'ITEM DESCRIPTION',
+            '#',
+            'OFFICE',
+            'PO NO.',
+            'MODE OF PROCUREMENT',
             'PR NO.',
-            'PR DATE',
-            'AMOUNT BELOW 1M',
-            'AMOUNT ABOVE 1M',
-            'NEW AMOUNT',
-            'ACCOUNT / CHARGED TO',
-            'PERSON IN CHARGE (PR SECTION)',
-            'PERSON IN CHARGE (BUDGETING)',
-            'DATE RELEASE',
-            'NEW DATE RELEASE',
+            'ABC',
+            'SUPPLIER',
+            'PARTICULARS',
+            'AMOUNT',
+            'RFQ',
+            'ABSTRACT',
+            'RESOLUTION',
+            'NOA & PO',
+            'TRANSMITTAL FORM',
+            'ADMIN',
+            'FRONTDESK',
             'REMARKS',
         ];
     }
@@ -46,19 +49,22 @@ class PurchaseRequestMatrixExport implements FromArray, ShouldAutoSize, WithColu
         return collect($this->rows)
             ->map(function (array $row): array {
                 return [
-                    $row['control_no'] ?? '',
-                    $row['office_name'] ?? '',
-                    $row['item_description'] ?? '',
+                    $row['row_no'] ?? '',
+                    $row['office'] ?? '',
+                    $row['po_no'] ?? '',
+                    $row['mode_of_procurement'] ?? '',
                     $row['pr_no'] ?? '',
-                    $row['pr_date'] ?? '',
-                    $row['amount_below_1m'] ?? '',
-                    $row['amount_above_1m'] ?? '',
-                    $row['new_amount'] ?? '',
-                    $row['account_name'] ?? '',
-                    $row['pr_admin_name'] ?? '',
-                    $row['budgeting_admin_name'] ?? '',
-                    $row['date_release'] ?? '',
-                    $row['new_date_release'] ?? '',
+                    $row['abc'] ?? '',
+                    $row['supplier'] ?? '',
+                    $row['particulars'] ?? '',
+                    $row['amount'] ?? '',
+                    $row['rfq'] ?? '',
+                    $row['abstract'] ?? '',
+                    $row['resolution'] ?? '',
+                    $row['noa_po'] ?? '',
+                    $row['transmittal_form'] ?? '',
+                    $row['admin'] ?? '',
+                    $row['frontdesk'] ?? '',
                     $row['remarks'] ?? '',
                 ];
             })
@@ -70,8 +76,7 @@ class PurchaseRequestMatrixExport implements FromArray, ShouldAutoSize, WithColu
     {
         return [
             'F' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1,
-            'G' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1,
-            'H' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1,
+            'I' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1,
         ];
     }
 

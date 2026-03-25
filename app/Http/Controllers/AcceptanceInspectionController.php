@@ -83,8 +83,8 @@ class AcceptanceInspectionController extends Controller
         return Inertia::render('AcceptanceInspections/Create', [
             'purchaseOrders' => $purchaseOrders,
             'defaults' => [
-                'acceptance_date_received' => now()->toDateString(),
-                'inspection_date_inspected' => now()->toDateString(),
+                'acceptance_date_received' => null,
+                'inspection_date_inspected' => null,
                 'inspection_findings_text' => null,
                 'inspection_status_ok' => null,
                 'property_officer_title' => 'Property Officer',

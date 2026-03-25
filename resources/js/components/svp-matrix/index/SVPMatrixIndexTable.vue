@@ -13,38 +13,27 @@ import { Button } from "@/components/ui/button";
 defineProps({
     matrixRows: Object,
     offices: Array,
-    accounts: Array,
     fiscalYears: Object,
     search: String,
     selectedOffice: String,
-    selectedAccount: String,
     selectedFiscalYear: String,
 });
 
 defineEmits([
     "update:search",
     "update:selected-office",
-    "update:selected-account",
     "update:selected-fiscal-year",
 ]);
 
-const formatDate = (date) => {
-    if (!date) {
+const formatCurrency = (value) => {
+    if (value === null || value === undefined || value === "") {
         return "-";
     }
 
-    return new Date(date).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-    });
-};
-
-const formatCurrency = (value) => {
     return new Intl.NumberFormat("en-PH", {
-        style: "currency",
-        currency: "PHP",
-    }).format(value || 0);
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    }).format(value);
 };
 </script>
 
@@ -55,9 +44,9 @@ const formatCurrency = (value) => {
                 class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
             >
                 <div>
-                    <CardTitle>Ongoing Purchase Request Matrix</CardTitle>
+                    <CardTitle>Ongoing SVP Matrix</CardTitle>
                     <CardDescription>
-                        14-column matrix for PR item-level tracking.
+                        Overview of procurement stages from RFQ to transmittal.
                     </CardDescription>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
@@ -75,26 +64,6 @@ const formatCurrency = (value) => {
                             :value="office.id"
                         >
                             {{ office.name }}
-                        </option>
-                    </select>
-
-                    <select
-                        :value="selectedAccount"
-                        @change="
-                            $emit(
-                                'update:selected-account',
-                                $event.target.value,
-                            )
-                        "
-                        class="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    >
-                        <option value="">All Accounts</option>
-                        <option
-                            v-for="account in accounts"
-                            :key="account.id"
-                            :value="account.id"
-                        >
-                            {{ account.name }}
                         </option>
                     </select>
 
@@ -132,77 +101,92 @@ const formatCurrency = (value) => {
                             class="border-b transition-colors hover:bg-muted/50"
                         >
                             <th
-                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground whitespace-normal break-words"
+                                class="h-11 px-2 py-2 text-center align-middle font-medium text-muted-foreground"
                             >
-                                CONTROL NO. / EMANATING NO.
+                                #
                             </th>
                             <th
-                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground whitespace-normal break-words"
+                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground"
                             >
-                                OFFICES / HOSPITALS
+                                OFFICE
                             </th>
                             <th
-                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground whitespace-normal break-words"
+                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground"
                             >
-                                PROJECT NAME
+                                PO NO.
                             </th>
                             <th
-                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground whitespace-normal break-words"
+                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground"
+                            >
+                                MODE OF PROCUREMENT
+                            </th>
+                            <th
+                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground"
                             >
                                 PR NO.
                             </th>
                             <th
-                                class="h-11 px-2 py-2 text-center align-middle font-medium text-muted-foreground whitespace-normal break-words"
+                                class="h-11 px-2 py-2 text-right align-middle font-medium text-muted-foreground"
                             >
-                                PR DATE
+                                ABC
                             </th>
                             <th
-                                class="h-11 px-2 py-2 text-right align-middle font-medium text-muted-foreground whitespace-normal break-words"
+                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground"
                             >
-                                AMOUNT BELOW 1M
+                                SUPPLIER
                             </th>
                             <th
-                                class="h-11 px-2 py-2 text-right align-middle font-medium text-muted-foreground whitespace-normal break-words"
+                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground"
                             >
-                                AMOUNT ABOVE 1M
+                                PARTICULARS
                             </th>
                             <th
-                                class="h-11 px-2 py-2 text-right align-middle font-medium text-muted-foreground whitespace-normal break-words"
+                                class="h-11 px-2 py-2 text-right align-middle font-medium text-muted-foreground"
                             >
-                                NEW AMOUNT
+                                AMOUNT
                             </th>
                             <th
-                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground whitespace-normal break-words"
+                                class="h-11 px-2 py-2 text-center align-middle font-medium text-muted-foreground"
                             >
-                                ACCOUNT / CHARGED TO
+                                RFQ (PABS)
                             </th>
                             <th
-                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground whitespace-normal break-words"
+                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground"
                             >
-                                PERSON IN CHARGE (PR SECTION)
+                                ABSTRACT
                             </th>
                             <th
-                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground whitespace-normal break-words"
+                                class="h-11 px-2 py-2 text-center align-middle font-medium text-muted-foreground"
                             >
-                                PERSON IN CHARGE (BUDGETING)
+                                RESOLUTION
                             </th>
                             <th
-                                class="h-11 px-2 py-2 text-center align-middle font-medium text-muted-foreground whitespace-normal break-words"
+                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground"
                             >
-                                DATE RELEASE
+                                NOA & PO
                             </th>
                             <th
-                                class="h-11 px-2 py-2 text-center align-middle font-medium text-muted-foreground whitespace-normal break-words"
+                                class="h-11 px-2 py-2 text-center align-middle font-medium text-muted-foreground"
                             >
-                                NEW DATE RELEASE
+                                TRANSMITTAL FORM
                             </th>
                             <th
-                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground whitespace-normal break-words"
+                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground"
+                            >
+                                ADMIN
+                            </th>
+                            <th
+                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground"
+                            >
+                                FRONTDESK
+                            </th>
+                            <th
+                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground"
                             >
                                 REMARKS
                             </th>
                             <th
-                                class="h-11 px-2 py-2 text-right align-middle font-medium text-muted-foreground whitespace-normal break-words"
+                                class="h-11 px-2 py-2 text-right align-middle font-medium text-muted-foreground"
                             >
                                 ACTIONS
                             </th>
@@ -212,77 +196,71 @@ const formatCurrency = (value) => {
                     <tbody class="[&_tr:last-child]:border-0">
                         <tr v-if="!matrixRows?.data?.length">
                             <td
-                                colspan="15"
+                                colspan="18"
                                 class="p-8 text-center text-muted-foreground"
                             >
                                 <Icon
                                     icon="lucide:table"
                                     class="mx-auto mb-2 h-8 w-8 opacity-50"
                                 />
-                                No ongoing PR matrix rows found.
+                                No SVP matrix rows found.
                             </td>
                         </tr>
 
                         <tr
-                            v-for="row in matrixRows?.data"
+                            v-for="(row, idx) in matrixRows.data"
                             :key="row.id"
                             class="border-b transition-colors hover:bg-muted/50"
                         >
-                            <td class="p-2 align-middle font-medium">
-                                {{ row.control_no || "-" }}
+                            <td
+                                class="p-2 align-middle text-center font-medium"
+                            >
+                                {{ (matrixRows.from || 1) + idx }}
                             </td>
                             <td class="p-2 align-middle">
-                                {{ row.office_name || "-" }}
+                                {{ row.office || "-" }}
                             </td>
-                            <td class="p-2 align-middle max-w-[180px]">
-                                <p
-                                    class="truncate"
-                                    :title="row.item_description || '-'"
-                                >
-                                    {{ row.item_description || "-" }}
-                                </p>
+                            <td class="p-2 align-middle font-medium">
+                                {{ row.po_no || "-" }}
+                            </td>
+                            <td class="p-2 align-middle">
+                                {{ row.mode_of_procurement || "-" }}
                             </td>
                             <td class="p-2 align-middle">
                                 {{ row.pr_no || "-" }}
                             </td>
-                            <td class="p-2 align-middle text-center">
-                                {{ formatDate(row.pr_date) }}
-                            </td>
                             <td class="p-2 align-middle text-right">
-                                {{
-                                    row.amount_below_1m
-                                        ? formatCurrency(row.amount_below_1m)
-                                        : "-"
-                                }}
-                            </td>
-                            <td class="p-2 align-middle text-right">
-                                {{
-                                    row.amount_above_1m
-                                        ? formatCurrency(row.amount_above_1m)
-                                        : "-"
-                                }}
-                            </td>
-                            <td class="p-2 align-middle text-right">
-                                {{
-                                    row.new_amount
-                                        ? formatCurrency(row.new_amount)
-                                        : "-"
-                                }}
+                                {{ formatCurrency(row.abc) }}
                             </td>
                             <td class="p-2 align-middle">
-                                {{ row.account_name || "-" }}
+                                {{ row.supplier || "-" }}
                             </td>
                             <td class="p-2 align-middle">
-                                {{ row.pr_admin_name || "-" }}
+                                {{ row.particulars || "-" }}
+                            </td>
+                            <td class="p-2 align-middle text-right">
+                                {{ formatCurrency(row.amount) }}
+                            </td>
+                            <td class="p-2 align-middle text-center">
+                                {{ row.rfq || "-" }}
                             </td>
                             <td class="p-2 align-middle">
-                                {{ row.budgeting_admin_name || "-" }}
+                                {{ row.abstract || "-" }}
                             </td>
                             <td class="p-2 align-middle text-center">
-                                {{ formatDate(row.date_release) }}
+                                {{ row.resolution || "-" }}
+                            </td>
+                            <td class="p-2 align-middle">
+                                {{ row.noa_po || "-" }}
                             </td>
                             <td class="p-2 align-middle text-center">
-                                {{ formatDate(row.new_date_release) }}
+                                {{ row.transmittal_form || "-" }}
+                            </td>
+                            <td class="p-2 align-middle">
+                                {{ row.admin || "-" }}
+                            </td>
+                            <td class="p-2 align-middle">
+                                {{ row.frontdesk || "-" }}
                             </td>
                             <td class="p-2 align-middle">
                                 {{ row.remarks || "-" }}
@@ -292,32 +270,24 @@ const formatCurrency = (value) => {
                                     class="flex items-center justify-end gap-2"
                                 >
                                     <Link
-                                        :href="
-                                            route(
-                                                'purchase-request-matrix.show',
-                                                row.id,
-                                            )
-                                        "
+                                        :href="route('svp-matrix.show', row.id)"
                                     >
-                                        <Button variant="ghost" size="sm"
-                                            ><Icon
+                                        <Button variant="ghost" size="sm">
+                                            <Icon
                                                 icon="lucide:eye"
                                                 class="h-4 w-4"
-                                        /></Button>
+                                            />
+                                        </Button>
                                     </Link>
                                     <Link
-                                        :href="
-                                            route(
-                                                'purchase-request-matrix.edit',
-                                                row.id,
-                                            )
-                                        "
+                                        :href="route('svp-matrix.edit', row.id)"
                                     >
-                                        <Button variant="ghost" size="sm"
-                                            ><Icon
+                                        <Button variant="ghost" size="sm">
+                                            <Icon
                                                 icon="lucide:pencil"
                                                 class="h-4 w-4"
-                                        /></Button>
+                                            />
+                                        </Button>
                                     </Link>
                                 </div>
                             </td>

@@ -24,6 +24,7 @@ use App\Http\Controllers\PurchaseRequestMatrixController;
 use App\Http\Controllers\RFQController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SessionController;
+use App\Http\Controllers\SvpMatrixController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
 use App\Enums\RoleType;
@@ -93,6 +94,20 @@ Route::middleware(['auth'])->group(function (): void {
     Route::get('purchase-request-matrix/{purchase_request_item}', [PurchaseRequestMatrixController::class, 'show'])->middleware($prRoles)->name('purchase-request-matrix.show');
     Route::get('purchase-request-matrix/{purchase_request_item}/edit', [PurchaseRequestMatrixController::class, 'edit'])->middleware($prRoles)->name('purchase-request-matrix.edit');
     Route::put('purchase-request-matrix/{purchase_request_item}', [PurchaseRequestMatrixController::class, 'update'])->middleware($prRoles)->name('purchase-request-matrix.update');
+    $svpMatrixRoles = 'role:' . implode(',', [
+        RoleType::SUPERADMIN->value,
+        RoleType::PO_ADMIN->value,
+        RoleType::INSPECTION_ADMIN->value,
+        RoleType::RFQ_ADMIN->value,
+        RoleType::ABSTRACT_ADMIN->value,
+        RoleType::RESOLUTION_ADMIN->value,
+        RoleType::NOA_ADMIN->value,
+    ]);
+    Route::get('svp-matrix', [SvpMatrixController::class, 'index'])->middleware($svpMatrixRoles)->name('svp-matrix.index');
+    Route::get('svp-matrix/export/xlsx', [SvpMatrixController::class, 'exportXlsx'])->middleware($svpMatrixRoles)->name('svp-matrix.export-xlsx');
+    Route::get('svp-matrix/{svp_matrix}', [SvpMatrixController::class, 'show'])->middleware($svpMatrixRoles)->name('svp-matrix.show');
+    Route::get('svp-matrix/{svp_matrix}/edit', [SvpMatrixController::class, 'edit'])->middleware($svpMatrixRoles)->name('svp-matrix.edit');
+    Route::put('svp-matrix/{svp_matrix}', [SvpMatrixController::class, 'update'])->middleware($svpMatrixRoles)->name('svp-matrix.update');
     Route::post('purchase-requests/suggest-pr-no', [PurchaseRequestController::class, 'suggestPrNo'])->middleware($prRoles)->name('purchase-requests.suggest-pr-no');
     Route::post('purchase-requests/{purchase_request}/approve', [PurchaseRequestController::class, 'approve'])->middleware($prRoles)->name('purchase-requests.approve');
     Route::post('purchase-requests/{purchase_request}/return', [PurchaseRequestController::class, 'returnToOffice'])->middleware($prRoles)->name('purchase-requests.return');

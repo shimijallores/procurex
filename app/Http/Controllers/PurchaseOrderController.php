@@ -9,6 +9,7 @@ use App\Models\Calendar;
 use App\Models\NOA;
 use App\Models\Office;
 use App\Models\PurchaseOrder;
+use App\Models\SvpMatrix;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -160,6 +161,10 @@ class PurchaseOrderController extends Controller
                     'amount_snapshot' => $item['amount_snapshot'],
                 ]);
             }
+
+            SvpMatrix::query()->firstOrCreate([
+                'purchase_order_id' => $purchaseOrder->id,
+            ]);
 
             DB::commit();
         } catch (\Throwable $e) {

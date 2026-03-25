@@ -70,7 +70,7 @@ const getTransmittalByType = (entry, type) => {
                         @change="
                             $emit('update:selected-office', $event.target.value)
                         "
-                        class="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        class="flex h-10 w-40 rounded-md border border-input bg-background px-3 py-2 text-sm"
                     >
                         <option value="">All Offices</option>
                         <option

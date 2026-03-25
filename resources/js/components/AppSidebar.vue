@@ -178,6 +178,21 @@ const mainNavItems = computed(() => {
             roles: ["SuperAdmin", "PR Admin"],
         },
         {
+            title: "SVP Matrix",
+            url: route("svp-matrix.index"),
+            icon: "lucide:grid-2x2",
+            isActive: route().current("svp-matrix.*"),
+            roles: [
+                "SuperAdmin",
+                "PO Admin",
+                "Inspection Admin",
+                "RFQ Admin",
+                "Abstract Admin",
+                "Resolution Admin",
+                "NOA Admin",
+            ],
+        },
+        {
             title: "Request for Quotation",
             url: route("rfqs.index"),
             icon: "lucide:file-text",
@@ -283,7 +298,13 @@ const canvassingItems = computed(() => {
 
 const purchaseRequestBudgetingItems = computed(() => {
     return mainNavItems.value.filter((item) =>
-        ["Purchase Requests", "PR Matrix"].includes(item.title),
+        ["Purchase Requests"].includes(item.title),
+    );
+});
+
+const matrixItems = computed(() => {
+    return mainNavItems.value.filter((item) =>
+        ["PR Matrix", "SVP Matrix"].includes(item.title),
     );
 });
 
@@ -432,6 +453,29 @@ const userInitials = computed(() => {
                     <SidebarMenu>
                         <SidebarMenuItem
                             v-for="item in purchaseRequestBudgetingItems"
+                            :key="item.title"
+                        >
+                            <SidebarMenuButton
+                                as-child
+                                :is-active="item.isActive"
+                            >
+                                <Link :href="item.url">
+                                    <Icon :icon="item.icon" class="size-4" />
+                                    <span>{{ item.title }}</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarGroupContent>
+            </SidebarGroup>
+
+            <!-- Matrix Group -->
+            <SidebarGroup v-if="matrixItems.length > 0">
+                <SidebarGroupLabel>Matrix</SidebarGroupLabel>
+                <SidebarGroupContent>
+                    <SidebarMenu>
+                        <SidebarMenuItem
+                            v-for="item in matrixItems"
                             :key="item.title"
                         >
                             <SidebarMenuButton

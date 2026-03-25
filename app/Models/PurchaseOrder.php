@@ -58,4 +58,9 @@ class PurchaseOrder extends Model
     {
         return $this->hasOne(COAInspection::class, 'purchase_order_id');
     }
+
+    public function svpMatrix(): HasOne
+    {
+        return $this->hasOne(SvpMatrix::class, 'purchase_order_id');
+    }
 }
