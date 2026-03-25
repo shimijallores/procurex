@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class PurchaseOrder extends Model
 {
@@ -46,5 +47,10 @@ class PurchaseOrder extends Model
     public function poTransmittals(): HasMany
     {
         return $this->hasMany(POTransmittal::class, 'purchase_order_id');
+    }
+
+    public function acceptanceInspection(): HasOne
+    {
+        return $this->hasOne(AcceptanceInspection::class, 'purchase_order_id');
     }
 }

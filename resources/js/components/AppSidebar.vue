@@ -219,6 +219,13 @@ const mainNavItems = computed(() => {
             isActive: route().current("po-transmittals.*"),
             roles: ["SuperAdmin", "PO Admin"],
         },
+        {
+            title: "Acceptance & Inspection",
+            url: route("acceptance-inspections.index"),
+            icon: "lucide:clipboard-check",
+            isActive: route().current("acceptance-inspections.*"),
+            roles: ["SuperAdmin", "PO Admin", "Inspection Admin"],
+        },
     ];
 
     // Filter items based on user role
@@ -287,6 +294,12 @@ const documentItems = computed(() => {
             "Purchase Order",
             "PO Transmittal",
         ].includes(item.title),
+    );
+});
+
+const inspectionItems = computed(() => {
+    return mainNavItems.value.filter((item) =>
+        ["Acceptance & Inspection"].includes(item.title),
     );
 });
 
@@ -458,6 +471,29 @@ const userInitials = computed(() => {
                     <SidebarMenu>
                         <SidebarMenuItem
                             v-for="item in documentItems"
+                            :key="item.title"
+                        >
+                            <SidebarMenuButton
+                                as-child
+                                :is-active="item.isActive"
+                            >
+                                <Link :href="item.url">
+                                    <Icon :icon="item.icon" class="size-4" />
+                                    <span>{{ item.title }}</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarGroupContent>
+            </SidebarGroup>
+
+            <!-- Inspection Group -->
+            <SidebarGroup v-if="inspectionItems.length > 0">
+                <SidebarGroupLabel>Inspection</SidebarGroupLabel>
+                <SidebarGroupContent>
+                    <SidebarMenu>
+                        <SidebarMenuItem
+                            v-for="item in inspectionItems"
                             :key="item.title"
                         >
                             <SidebarMenuButton

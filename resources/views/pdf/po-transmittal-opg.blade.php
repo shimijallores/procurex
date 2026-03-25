@@ -31,6 +31,7 @@
 
         .header td {
             vertical-align: top;
+            border: none;
         }
 
         .logo-cell {
@@ -73,19 +74,19 @@
             margin-top: 18px;
         }
 
-        table {
+        .table-wrap table {
             width: 100%;
             border-collapse: collapse;
         }
 
-        th,
-        td {
+        .table-wrap th,
+        .table-wrap td {
             border: 1px solid #000;
             padding: 8px 8px;
             vertical-align: middle;
         }
 
-        th {
+        .table-wrap th {
             text-align: center;
             font-weight: 700;
         }

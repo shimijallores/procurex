@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\AcceptanceInspectionController;
 use App\Http\Controllers\AOQController;
 use App\Http\Controllers\APPController;
 use App\Http\Controllers\BACResolutionController;
@@ -127,4 +128,13 @@ Route::middleware(['auth'])->group(function (): void {
     $inspectionRoles = 'role:' . implode(',', [RoleType::SUPERADMIN->value, RoleType::PO_ADMIN->value]);
     Route::resource('po-transmittals', POTransmittalController::class)->only(['index', 'create', 'store', 'show', 'update', 'destroy'])->middleware($inspectionRoles);
     Route::get('po-transmittals/{po_transmittal}/pdf', [POTransmittalController::class, 'printPdf'])->middleware($inspectionRoles)->name('po-transmittals.pdf');
+
+    // Acceptance & Inspection module
+    $acceptanceInspectionRoles = 'role:' . implode(',', [RoleType::SUPERADMIN->value, RoleType::INSPECTION_ADMIN->value, RoleType::PO_ADMIN->value]);
+    Route::resource('acceptance-inspections', AcceptanceInspectionController::class)
+        ->only(['index', 'create', 'store', 'show', 'update', 'destroy'])
+        ->middleware($acceptanceInspectionRoles);
+    Route::get('acceptance-inspections/{acceptance_inspection}/pdf', [AcceptanceInspectionController::class, 'printPdf'])
+        ->middleware($acceptanceInspectionRoles)
+        ->name('acceptance-inspections.pdf');
 });
