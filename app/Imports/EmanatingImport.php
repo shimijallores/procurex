@@ -280,6 +280,14 @@ class EmanatingImport implements ToCollection
             $columnA = trim((string) ($row[0] ?? ''));
             $columnB = trim((string) ($row[1] ?? ''));
             $columnC = trim((string) ($row[2] ?? ''));
+            $columnD = trim((string) ($row[3] ?? ''));
+
+            [$quantity, $unit, $description, $rawAmount] = $this->resolveItemFields(
+                $columnA,
+                $columnB,
+                $columnC,
+                $columnD,
+            );
 
             if ($columnA !== '' && str_contains(mb_strtoupper($columnA), 'CHARGE TO:')) {
                 $breakReason = 'charge_to_marker';
@@ -296,16 +304,15 @@ class EmanatingImport implements ToCollection
                 break;
             }
 
-            if ($columnB === '') {
+            if ($description === '') {
                 $skippedMissingDescription++;
                 continue;
             }
 
             $hasStartedItemSection = true;
 
-            [$quantity, $unit] = $this->parseQuantityAndUnit($columnA);
-            $ppmpItem = $this->findMatchingPPMPItem($columnB, $ppmpItems);
-            $appItem = $this->findMatchingAPPItem($columnB, $appItems);
+            $ppmpItem = $this->findMatchingPPMPItem($description, $ppmpItems);
+            $appItem = $this->findMatchingAPPItem($description, $appItems);
 
             $exceedsPPMPQuantity = $ppmpItem && $quantity > ((int) $ppmpItem->quantity);
             $missingInPpmp = ! $ppmpItem;
@@ -327,7 +334,7 @@ class EmanatingImport implements ToCollection
             }
 
             $this->matchingResults[] = [
-                'description' => $columnB,
+                'description' => $description,
                 'quantity' => $quantity,
                 'unit' => $unit,
                 'matched' => $messages === [],
@@ -337,10 +344,10 @@ class EmanatingImport implements ToCollection
             $emanatingItem = EmanatingItem::create([
                 'emanating_id' => $emanating->id,
                 'ppmp_item_id' => $ppmpItem?->id,
-                'name' => $columnB,
+                'name' => $description,
                 'quantity' => $quantity,
                 'unit' => $unit,
-                'total_price' => $this->parseAmount($columnC),
+                'total_price' => $this->parseAmount($rawAmount),
             ]);
 
             $items[] = $emanatingItem;
@@ -422,6 +429,82 @@ class EmanatingImport implements ToCollection
         }
 
         return [0, 'pcs'];
+    }
+
+    private function resolveItemFields(string $columnA, string $columnB, string $columnC, string $columnD): array
+    {
+        $isSplitQuantityAndUnit = $this->looksNumericQuantity($columnA)
+            && $this->looksLikeUnit($columnB)
+            && $columnC !== '';
+
+        if ($isSplitQuantityAndUnit) {
+            $quantity = (int) $columnA;
+            $unit = trim($columnB) !== '' ? trim($columnB) : 'pcs';
+            $description = trim($columnC);
+            $amount = $columnD !== '' ? $columnD : (string) 0;
+
+            return [$quantity, $unit, $description, $amount];
+        }
+
+        [$quantity, $unit] = $this->parseQuantityAndUnit($columnA);
+
+        return [$quantity, $unit, trim($columnB), $columnC];
+    }
+
+    private function looksNumericQuantity(string $value): bool
+    {
+        return preg_match('/^\d+$/', trim($value)) === 1;
+    }
+
+    private function looksLikeUnit(string $value): bool
+    {
+        $normalized = mb_strtolower(trim($value));
+
+        if ($normalized === '' || preg_match('/\d/', $normalized) === 1) {
+            return false;
+        }
+
+        $knownUnits = [
+            'pc',
+            'pcs',
+            'piece',
+            'pieces',
+            'set',
+            'sets',
+            'lot',
+            'lots',
+            'box',
+            'boxes',
+            'pack',
+            'packs',
+            'ream',
+            'reams',
+            'bottle',
+            'bottles',
+            'unit',
+            'units',
+            'kg',
+            'g',
+            'gram',
+            'grams',
+            'l',
+            'liter',
+            'liters',
+            'meter',
+            'meters',
+            'm',
+            'pair',
+            'pairs',
+            'roll',
+            'rolls',
+        ];
+
+        if (in_array($normalized, $knownUnits, true)) {
+            return true;
+        }
+
+        // Fallback for uncommon units while still avoiding long descriptions.
+        return mb_strlen($normalized) <= 12 && preg_match('/^[a-z\s\.-]+$/i', $normalized) === 1;
     }
 
     /**
