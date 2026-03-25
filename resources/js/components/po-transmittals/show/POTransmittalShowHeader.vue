@@ -10,14 +10,7 @@ const props = defineProps({
 defineEmits(["delete"]);
 
 const openPdf = () => {
-    const targets =
-        props.relatedTransmittals?.length > 0
-            ? props.relatedTransmittals
-            : [props.poTransmittal];
-
-    targets.forEach((entry) => {
-        window.open(route("po-transmittals.pdf", entry.id), "_blank");
-    });
+    window.open(route("po-transmittals.pdf", props.poTransmittal.id), "_blank");
 };
 </script>
 
@@ -28,13 +21,12 @@ const openPdf = () => {
         <div>
             <h1 class="text-2xl font-semibold tracking-tight">
                 {{
-                    poTransmittal.transmittal_no ||
+                    poTransmittal.purchase_order?.po_no ||
                     `Transmittal #${poTransmittal.id}`
                 }}
             </h1>
             <p class="text-sm text-muted-foreground mt-1">
-                {{ poTransmittal.type?.toUpperCase() }} transmittal details and
-                print preview.
+                Combined COA and OPG transmittal details and print preview.
             </p>
         </div>
 

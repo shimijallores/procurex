@@ -23,17 +23,23 @@ class POTransmittalController extends Controller
         $query = POTransmittal::with([
             'purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest.office',
             'purchaseOrder.noa.bacResolution.aoq.winnerSupplier',
+            'purchaseOrder.poTransmittals',
         ])
+            ->where('type', 'coa')
             ->when($request->search, function ($q, string $search): void {
-                $q->where('transmittal_no', 'like', sprintf('%%%s%%', $search))
-                    ->orWhereHas('purchaseOrder', function ($po) use ($search): void {
-                        $po->where('po_no', 'like', sprintf('%%%s%%', $search));
-                    })
-                    ->orWhereHas('purchaseOrder.noa.bacResolution', function ($resolution) use ($search): void {
-                        $resolution->where('project_name', 'like', sprintf('%%%s%%', $search));
-                    });
+                $q->where(function ($searchQuery) use ($search): void {
+                    $searchQuery->where('transmittal_no', 'like', sprintf('%%%s%%', $search))
+                        ->orWhereHas('purchaseOrder', function ($po) use ($search): void {
+                            $po->where('po_no', 'like', sprintf('%%%s%%', $search));
+                        })
+                        ->orWhereHas('purchaseOrder.poTransmittals', function ($transmittalQuery) use ($search): void {
+                            $transmittalQuery->where('transmittal_no', 'like', sprintf('%%%s%%', $search));
+                        })
+                        ->orWhereHas('purchaseOrder.noa.bacResolution', function ($resolution) use ($search): void {
+                            $resolution->where('project_name', 'like', sprintf('%%%s%%', $search));
+                        });
+                });
             })
-            ->when($request->type, fn($q, string $type) => $q->where('type', $type))
             ->when($request->office_id, function ($q, string $officeId): void {
                 $q->whereHas('purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest', fn($pr) => $pr->where('office_id', $officeId));
             })
@@ -45,8 +51,8 @@ class POTransmittalController extends Controller
 
         $stats = [
             'total' => (clone $query)->count(),
-            'coa_count' => (clone $query)->where('type', 'coa')->count(),
-            'opg_count' => (clone $query)->where('type', 'opg')->count(),
+            'with_opg_count' => (clone $query)->whereHas('purchaseOrder.poTransmittals', fn($q) => $q->where('type', 'opg'))->count(),
+            'missing_opg_count' => (clone $query)->whereDoesntHave('purchaseOrder.poTransmittals', fn($q) => $q->where('type', 'opg'))->count(),
         ];
 
         $offices = Office::orderBy('name')->get(['id', 'name']);
@@ -62,7 +68,6 @@ class POTransmittalController extends Controller
             'fiscalYears' => $fiscalYears,
             'filters' => [
                 'search' => $request->search,
-                'type' => $request->type,
                 'office_id' => $request->office_id,
                 'fiscal_year' => $request->fiscal_year,
             ],
@@ -153,33 +158,73 @@ class POTransmittalController extends Controller
 
     public function show(POTransmittal $poTransmittal): Response
     {
-        $poTransmittal->load([
+        $relatedTransmittals = POTransmittal::query()
+            ->where('purchase_order_id', $poTransmittal->purchase_order_id)
+            ->orderByRaw("case when type = 'coa' then 1 else 2 end")
+            ->get();
+
+        $coaTransmittal = $relatedTransmittals->firstWhere('type', 'coa') ?? $poTransmittal;
+        $opgTransmittal = $relatedTransmittals->firstWhere('type', 'opg');
+
+        $coaTransmittal->load([
             'purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest.office',
             'purchaseOrder.noa.bacResolution.aoq.winnerSupplier',
         ]);
 
-        $relatedTransmittals = POTransmittal::query()
-            ->where('purchase_order_id', $poTransmittal->purchase_order_id)
-            ->orderByRaw("case when type = 'coa' then 1 else 2 end")
-            ->get(['id', 'type', 'transmittal_no']);
-
         return Inertia::render('POTransmittals/Show', [
-            'poTransmittal' => $poTransmittal,
-            'relatedTransmittals' => $relatedTransmittals,
+            'poTransmittal' => $coaTransmittal,
+            'coaTransmittal' => $coaTransmittal,
+            'opgTransmittal' => $opgTransmittal,
+            'relatedTransmittals' => $relatedTransmittals->map(fn(POTransmittal $entry): array => [
+                'id' => $entry->id,
+                'type' => $entry->type,
+                'transmittal_no' => $entry->transmittal_no,
+            ])->values(),
         ]);
     }
 
     public function update(UpdatePOTransmittalRequest $request, POTransmittal $poTransmittal): RedirectResponse
     {
-        $poTransmittal->update($request->validated());
+        $validated = $request->validated();
 
-        return redirect()->route('po-transmittals.show', $poTransmittal)
+        $relatedTransmittals = POTransmittal::query()
+            ->where('purchase_order_id', $poTransmittal->purchase_order_id)
+            ->get();
+
+        $coaTransmittal = $relatedTransmittals->firstWhere('type', 'coa') ?? $poTransmittal;
+        $opgTransmittal = $relatedTransmittals->firstWhere('type', 'opg');
+
+        DB::transaction(function () use ($validated, $coaTransmittal, $opgTransmittal): void {
+            $coaTransmittal->update([
+                'transmittal_no' => $validated['coa']['transmittal_no'] ?? null,
+                'transmittal_date' => $validated['coa']['transmittal_date'],
+                'header_text' => $validated['coa']['header_text'] ?? null,
+                'signatory_name' => $validated['coa']['signatory_name'] ?? null,
+                'signatory_title' => $validated['coa']['signatory_title'] ?? null,
+                'coa_circular_no' => $validated['coa']['coa_circular_no'] ?? null,
+            ]);
+
+            if ($opgTransmittal) {
+                $opgTransmittal->update([
+                    'transmittal_no' => $validated['opg']['transmittal_no'] ?? null,
+                    'transmittal_date' => $validated['opg']['transmittal_date'],
+                    'header_text' => $validated['opg']['header_text'] ?? null,
+                    'signatory_name' => $validated['opg']['signatory_name'] ?? null,
+                    'signatory_title' => $validated['opg']['signatory_title'] ?? null,
+                    'coa_circular_no' => $validated['opg']['coa_circular_no'] ?? null,
+                ]);
+            }
+        });
+
+        return redirect()->route('po-transmittals.show', $coaTransmittal)
             ->with('success', 'PO Transmittal updated successfully.');
     }
 
     public function destroy(POTransmittal $poTransmittal): RedirectResponse
     {
-        $poTransmittal->delete();
+        POTransmittal::query()
+            ->where('purchase_order_id', $poTransmittal->purchase_order_id)
+            ->delete();
 
         return redirect()->route('po-transmittals.index')
             ->with('success', 'PO Transmittal deleted successfully.');
@@ -192,12 +237,16 @@ class POTransmittalController extends Controller
             'purchaseOrder.noa.bacResolution.aoq.winnerSupplier',
         ]);
 
-        $view = $poTransmittal->type === 'opg'
-            ? 'pdf.po-transmittal-opg'
-            : 'pdf.po-transmittal-coa';
+        $relatedTransmittals = POTransmittal::query()
+            ->where('purchase_order_id', $poTransmittal->purchase_order_id)
+            ->get();
 
-        return Pdf::view($view, [
-            'poTransmittal' => $poTransmittal,
+        $coaTransmittal = $relatedTransmittals->firstWhere('type', 'coa') ?? $poTransmittal;
+        $opgTransmittal = $relatedTransmittals->firstWhere('type', 'opg');
+
+        return Pdf::view('pdf.po-transmittal-combined', [
+            'coaTransmittal' => $coaTransmittal,
+            'opgTransmittal' => $opgTransmittal,
             'purchaseOrder' => $poTransmittal->purchaseOrder,
             'noa' => $poTransmittal->purchaseOrder?->noa,
             'resolution' => $poTransmittal->purchaseOrder?->noa?->bacResolution,
@@ -206,7 +255,7 @@ class POTransmittalController extends Controller
             'winnerSupplier' => $poTransmittal->purchaseOrder?->noa?->bacResolution?->aoq?->winnerSupplier,
         ])
             ->format('a4')
-            ->name('PO-Transmittal-' . ($poTransmittal->transmittal_no ?: $poTransmittal->id) . '.pdf')
+            ->name('PO-Transmittal-' . ($poTransmittal->purchaseOrder?->po_no ?: $poTransmittal->id) . '.pdf')
             ->inline();
     }
 

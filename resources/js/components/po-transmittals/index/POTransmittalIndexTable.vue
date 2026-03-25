@@ -15,13 +15,11 @@ defineProps({
     poTransmittals: Object,
     offices: Array,
     fiscalYears: Object,
-    selectedType: String,
     selectedOffice: String,
     selectedFiscalYear: String,
 });
 
 defineEmits([
-    "update:selected-type",
     "update:selected-office",
     "update:selected-fiscal-year",
     "delete-click",
@@ -35,6 +33,22 @@ const formatDate = (date) => {
         day: "numeric",
     });
 };
+
+const getTransmittalByType = (entry, type) => {
+    const matched = entry.purchase_order?.po_transmittals?.find(
+        (item) => item.type === type,
+    );
+
+    if (matched) {
+        return matched;
+    }
+
+    if (entry.type === type) {
+        return entry;
+    }
+
+    return null;
+};
 </script>
 
 <template>
@@ -46,23 +60,11 @@ const formatDate = (date) => {
                 <div>
                     <CardTitle>All PO Transmittals</CardTitle>
                     <CardDescription
-                        >Generated transmittal records for COA and OPG
-                        printing</CardDescription
+                        >One entry per PO with paired COA and OPG
+                        transmittals</CardDescription
                     >
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
-                    <select
-                        :value="selectedType"
-                        @change="
-                            $emit('update:selected-type', $event.target.value)
-                        "
-                        class="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    >
-                        <option value="">All Types</option>
-                        <option value="coa">COA</option>
-                        <option value="opg">OPG</option>
-                    </select>
-
                     <select
                         :value="selectedOffice"
                         @change="
@@ -115,12 +117,12 @@ const formatDate = (date) => {
                             <th
                                 class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
                             >
-                                Type
+                                COA / OPG No.
                             </th>
                             <th
                                 class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
                             >
-                                Transmittal No.
+                                Documents
                             </th>
                             <th
                                 class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
@@ -130,12 +132,12 @@ const formatDate = (date) => {
                             <th
                                 class="h-12 px-4 text-center align-middle font-medium text-muted-foreground"
                             >
-                                Date
+                                COA Date / OPG Date
                             </th>
                             <th
                                 class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
                             >
-                                Signatory
+                                COA Signatory / OPG Signatory
                             </th>
                             <th
                                 class="h-12 px-4 text-right align-middle font-medium text-muted-foreground"
@@ -163,12 +165,37 @@ const formatDate = (date) => {
                             class="border-b transition-colors hover:bg-muted/50"
                         >
                             <td class="p-4 align-middle">
-                                <Badge variant="outline" class="uppercase">{{
-                                    entry.type
-                                }}</Badge>
+                                <div class="font-medium">
+                                    {{
+                                        getTransmittalByType(entry, "coa")
+                                            ?.transmittal_no || "—"
+                                    }}
+                                </div>
+                                <div class="text-xs text-muted-foreground">
+                                    {{
+                                        getTransmittalByType(entry, "opg")
+                                            ?.transmittal_no || "—"
+                                    }}
+                                </div>
                             </td>
-                            <td class="p-4 align-middle font-medium">
-                                {{ entry.transmittal_no || "—" }}
+                            <td class="p-4 align-middle">
+                                <div class="flex flex-wrap gap-1">
+                                    <Badge variant="outline" class="uppercase"
+                                        >COA</Badge
+                                    >
+                                    <Badge
+                                        variant="secondary"
+                                        class="uppercase"
+                                        :class="{
+                                            'opacity-60': !getTransmittalByType(
+                                                entry,
+                                                'opg',
+                                            ),
+                                        }"
+                                    >
+                                        OPG
+                                    </Badge>
+                                </div>
                             </td>
                             <td class="p-4 align-middle">
                                 <div class="font-medium">
@@ -185,14 +212,47 @@ const formatDate = (date) => {
                                 </div>
                             </td>
                             <td class="p-4 align-middle text-center">
-                                {{ formatDate(entry.transmittal_date) }}
+                                <div>
+                                    {{
+                                        formatDate(
+                                            getTransmittalByType(entry, "coa")
+                                                ?.transmittal_date,
+                                        )
+                                    }}
+                                </div>
+                                <div class="text-xs text-muted-foreground">
+                                    {{
+                                        formatDate(
+                                            getTransmittalByType(entry, "opg")
+                                                ?.transmittal_date,
+                                        )
+                                    }}
+                                </div>
                             </td>
                             <td class="p-4 align-middle">
                                 <div class="font-medium">
-                                    {{ entry.signatory_name || "—" }}
+                                    {{
+                                        getTransmittalByType(entry, "coa")
+                                            ?.signatory_name || "—"
+                                    }}
                                 </div>
                                 <div class="text-xs text-muted-foreground">
-                                    {{ entry.signatory_title || "—" }}
+                                    {{
+                                        getTransmittalByType(entry, "coa")
+                                            ?.signatory_title || "—"
+                                    }}
+                                </div>
+                                <div class="mt-2 font-medium">
+                                    {{
+                                        getTransmittalByType(entry, "opg")
+                                            ?.signatory_name || "—"
+                                    }}
+                                </div>
+                                <div class="text-xs text-muted-foreground">
+                                    {{
+                                        getTransmittalByType(entry, "opg")
+                                            ?.signatory_title || "—"
+                                    }}
                                 </div>
                             </td>
                             <td class="p-4 align-middle text-right">

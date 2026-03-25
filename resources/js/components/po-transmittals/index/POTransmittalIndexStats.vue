@@ -14,7 +14,7 @@ defineProps({
                 class="flex flex-row items-center justify-between space-y-0 pb-2"
             >
                 <CardTitle class="text-sm font-medium"
-                    >Total Transmittals</CardTitle
+                    >Total PO Entries</CardTitle
                 >
                 <Icon
                     icon="lucide:files"
@@ -30,7 +30,9 @@ defineProps({
             <CardHeader
                 class="flex flex-row items-center justify-between space-y-0 pb-2"
             >
-                <CardTitle class="text-sm font-medium">COA Type</CardTitle>
+                <CardTitle class="text-sm font-medium"
+                    >With COA + OPG</CardTitle
+                >
                 <Icon
                     icon="lucide:file-check"
                     class="h-4 w-4 text-muted-foreground"
@@ -38,7 +40,7 @@ defineProps({
             </CardHeader>
             <CardContent>
                 <div class="text-2xl font-bold">
-                    {{ stats?.coa_count || 0 }}
+                    {{ stats?.with_opg_count || 0 }}
                 </div>
             </CardContent>
         </Card>
@@ -47,7 +49,7 @@ defineProps({
             <CardHeader
                 class="flex flex-row items-center justify-between space-y-0 pb-2"
             >
-                <CardTitle class="text-sm font-medium">OPG Type</CardTitle>
+                <CardTitle class="text-sm font-medium">Missing OPG</CardTitle>
                 <Icon
                     icon="lucide:file-text"
                     class="h-4 w-4 text-muted-foreground"
@@ -55,7 +57,7 @@ defineProps({
             </CardHeader>
             <CardContent>
                 <div class="text-2xl font-bold">
-                    {{ stats?.opg_count || 0 }}
+                    {{ stats?.missing_opg_count || 0 }}
                 </div>
             </CardContent>
         </Card>

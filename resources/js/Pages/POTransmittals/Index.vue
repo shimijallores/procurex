@@ -23,7 +23,6 @@ const props = defineProps({
 });
 
 const search = ref(props.filters?.search ?? "");
-const selectedType = ref(props.filters?.type ?? "");
 const selectedOffice = ref(props.filters?.office_id ?? "");
 const selectedFiscalYear = ref(props.filters?.fiscal_year ?? "");
 
@@ -32,7 +31,6 @@ const applyFilters = useDebounceFn(() => {
         route("po-transmittals.index"),
         {
             search: search.value,
-            type: selectedType.value,
             office_id: selectedOffice.value,
             fiscal_year: selectedFiscalYear.value,
         },
@@ -40,9 +38,7 @@ const applyFilters = useDebounceFn(() => {
     );
 }, 300);
 
-watch([search, selectedType, selectedOffice, selectedFiscalYear], () =>
-    applyFilters(),
-);
+watch([search, selectedOffice, selectedFiscalYear], () => applyFilters());
 
 const showDeleteModal = ref(false);
 const poTransmittalToDelete = ref(null);
@@ -63,11 +59,9 @@ const openDeleteModal = (poTransmittal) => {
             :po-transmittals="poTransmittals"
             :offices="offices"
             :fiscal-years="fiscalYears"
-            :selected-type="selectedType"
             :selected-office="selectedOffice"
             :selected-fiscal-year="selectedFiscalYear"
             @delete-click="openDeleteModal"
-            @update:selected-type="selectedType = $event"
             @update:selected-office="selectedOffice = $event"
             @update:selected-fiscal-year="selectedFiscalYear = $event"
         >
@@ -98,7 +92,7 @@ const openDeleteModal = (poTransmittal) => {
         <DeleteModal
             v-model:open="showDeleteModal"
             title="Delete PO Transmittal"
-            :description="`Are you sure you want to delete this ${poTransmittalToDelete?.type?.toUpperCase() || ''} transmittal? This action cannot be undone.`"
+            :description="'Are you sure you want to delete this PO transmittal set (COA + OPG)? This action cannot be undone.'"
             :delete-url="
                 poTransmittalToDelete
                     ? route('po-transmittals.destroy', poTransmittalToDelete.id)
