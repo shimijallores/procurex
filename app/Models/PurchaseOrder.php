@@ -53,4 +53,9 @@ class PurchaseOrder extends Model
     {
         return $this->hasOne(AcceptanceInspection::class, 'purchase_order_id');
     }
+
+    public function coaInspection(): HasOne
+    {
+        return $this->hasOne(COAInspection::class, 'purchase_order_id');
+    }
 }

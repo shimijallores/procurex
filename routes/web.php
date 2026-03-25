@@ -7,6 +7,7 @@ use App\Http\Controllers\APPController;
 use App\Http\Controllers\BACResolutionController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CanvasController;
+use App\Http\Controllers\COAInspectionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmanatingController;
 use App\Http\Controllers\FundController;
@@ -137,4 +138,14 @@ Route::middleware(['auth'])->group(function (): void {
     Route::get('acceptance-inspections/{acceptance_inspection}/pdf', [AcceptanceInspectionController::class, 'printPdf'])
         ->middleware($acceptanceInspectionRoles)
         ->name('acceptance-inspections.pdf');
+
+    // COA Inspection module
+    $coaInspectionRoles = 'role:' . implode(',', [RoleType::SUPERADMIN->value, RoleType::INSPECTION_ADMIN->value, RoleType::PO_ADMIN->value]);
+    Route::resource('coa-inspections', COAInspectionController::class)
+        ->parameters(['coa-inspections' => 'coa_inspection'])
+        ->only(['index', 'create', 'store', 'show', 'update', 'destroy'])
+        ->middleware($coaInspectionRoles);
+    Route::get('coa-inspections/{coa_inspection}/pdf', [COAInspectionController::class, 'printPdf'])
+        ->middleware($coaInspectionRoles)
+        ->name('coa-inspections.pdf');
 });

@@ -226,6 +226,13 @@ const mainNavItems = computed(() => {
             isActive: route().current("acceptance-inspections.*"),
             roles: ["SuperAdmin", "PO Admin", "Inspection Admin"],
         },
+        {
+            title: "COA Inspection",
+            url: route("coa-inspections.index"),
+            icon: "lucide:file-check-2",
+            isActive: route().current("coa-inspections.*"),
+            roles: ["SuperAdmin", "PO Admin", "Inspection Admin"],
+        },
     ];
 
     // Filter items based on user role
@@ -299,7 +306,7 @@ const documentItems = computed(() => {
 
 const inspectionItems = computed(() => {
     return mainNavItems.value.filter((item) =>
-        ["Acceptance & Inspection"].includes(item.title),
+        ["Acceptance & Inspection", "COA Inspection"].includes(item.title),
     );
 });
 
