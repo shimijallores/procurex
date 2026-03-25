@@ -30,6 +30,8 @@ use App\Http\Controllers\UserController;
 use App\Enums\RoleType;
 use Illuminate\Support\Facades\Route;
 
+require __DIR__ . '/templates.php';
+
 Route::get('/', function (): \Illuminate\Http\RedirectResponse {
     return redirect(route('login'));
 });
