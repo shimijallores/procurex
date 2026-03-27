@@ -79,6 +79,10 @@ class PurchaseOrderController extends Controller
     public function create(): Response
     {
         $eligibleNoas = NOA::with([
+            'aoq.rfq.purchaseRequest.office',
+            'aoq.rfq.items.purchaseRequestItem',
+            'aoq.rfq.suppliers.supplierItems.rfqItem',
+            'aoq.winnerSupplier',
             'bacResolution.aoq.rfq.purchaseRequest.office',
             'bacResolution.aoq.rfq.items.purchaseRequestItem',
             'bacResolution.aoq.rfq.suppliers.supplier',
@@ -119,8 +123,25 @@ class PurchaseOrderController extends Controller
         $validated = $request->validated();
 
         $noa = NOA::with([
-            'bacResolution.aoq.rfq.items',
+            'aoq.rfq.purchaseRequest.office',
+            'aoq.rfq.items.purchaseRequestItem',
+            'aoq.rfq.suppliers.supplierItems.rfqItem',
+            'aoq.winnerSupplier',
+            'bacResolution.aoq.rfq.purchaseRequest.office',
+            'bacResolution.aoq.rfq.items.purchaseRequestItem',
+            'bacResolution.aoq.rfq.suppliers.supplierItems.rfqItem',
+            'bacResolution.aoq.winnerSupplier',
         ])->findOrFail($validated['noa_id']);
+
+        $aoq = $noa->aoq ?: $noa->bacResolution?->aoq;
+        $rfq = $aoq?->rfq;
+        $winnerSupplierId = $aoq?->winner_supplier_id;
+
+        if (! $rfq || ! $winnerSupplierId) {
+            return redirect()->back()->withErrors([
+                'noa_id' => 'Selected NOA has incomplete AOQ/RFQ data.',
+            ]);
+        }
 
         if ($noa->purchaseOrder()->exists()) {
             return redirect()->back()->withErrors([
@@ -128,13 +149,58 @@ class PurchaseOrderController extends Controller
             ]);
         }
 
-        $allowedRfqItemIds = $noa->bacResolution?->aoq?->rfq?->items?->pluck('id')?->map(fn($id) => (int) $id)?->all() ?? [];
+        $allowedRfqItemIds = $rfq->items->pluck('id')->map(fn($id) => (int) $id)->all();
         $submittedRfqItemIds = collect($validated['items'])->pluck('rfq_item_id')->map(fn($id) => (int) $id)->all();
         $hasInvalidItems = collect($submittedRfqItemIds)->diff($allowedRfqItemIds)->isNotEmpty();
+        $hasMissingItems = collect($allowedRfqItemIds)->diff($submittedRfqItemIds)->isNotEmpty();
 
-        if ($hasInvalidItems) {
+        if ($hasInvalidItems || $hasMissingItems) {
             return redirect()->back()->withErrors([
-                'items' => 'One or more selected items are invalid for the chosen NOA.',
+                'items' => 'PO item set must exactly match the AOQ-awarded item list for the selected NOA.',
+            ]);
+        }
+
+        $winnerQuote = $rfq->suppliers
+            ->firstWhere('supplier_id', (int) $winnerSupplierId);
+
+        if (! $winnerQuote) {
+            return redirect()->back()->withErrors([
+                'noa_id' => 'Unable to locate winner quotation details for this NOA.',
+            ]);
+        }
+
+        $winnerSupplierItems = $winnerQuote->supplierItems
+            ->keyBy(fn($item) => (int) $item->rfq_item_id);
+
+        $rfqItemsById = $rfq->items->keyBy(fn($item) => (int) $item->id);
+
+        $computedItems = collect($validated['items'])
+            ->map(function (array $item) use ($winnerSupplierItems, $rfqItemsById): array {
+                $rfqItemId = (int) $item['rfq_item_id'];
+                $supplierItem = $winnerSupplierItems->get($rfqItemId);
+                $rfqItem = $rfqItemsById->get($rfqItemId);
+
+                $quantity = (int) ($rfqItem?->purchaseRequestItem?->quantity ?? 0);
+                $unitCost = (float) ($supplierItem?->unit_price ?? 0);
+                $amount = $quantity * $unitCost;
+
+                return [
+                    'rfq_item_id' => $rfqItemId,
+                    'quantity_snapshot' => $quantity,
+                    'unit_cost_snapshot' => $unitCost,
+                    'amount_snapshot' => $amount,
+                ];
+            })
+            ->values();
+
+        $computedTotalAmount = (float) $computedItems->sum('amount_snapshot');
+        $computedTotalAmountWords = $this->convertAmountToWords($computedTotalAmount);
+
+        $officeName = $rfq->purchaseRequest?->office?->name;
+
+        if (! $officeName) {
+            return redirect()->back()->withErrors([
+                'noa_id' => 'Unable to determine office/place of delivery from the selected NOA.',
             ]);
         }
 
@@ -145,15 +211,15 @@ class PurchaseOrderController extends Controller
                 'po_no' => $this->generatePoNumber($validated['po_date']),
                 'po_date' => $validated['po_date'],
                 'mode_of_procurement' => $validated['mode_of_procurement'],
-                'place_of_delivery' => $validated['place_of_delivery'],
-                'delivery_term_days' => $validated['delivery_term_days'] ?? null,
+                'place_of_delivery' => $officeName,
+                'delivery_term_days' => $validated['delivery_term_days'] ?? 15,
                 'payment_term' => $validated['payment_term'] ?? null,
-                'total_amount' => $validated['total_amount'],
-                'total_amount_words' => $validated['total_amount_words'] ?? null,
+                'total_amount' => $computedTotalAmount,
+                'total_amount_words' => $computedTotalAmountWords,
                 'remarks' => $validated['remarks'] ?? null,
             ]);
 
-            foreach ($validated['items'] as $item) {
+            foreach ($computedItems as $item) {
                 $purchaseOrder->items()->create([
                     'rfq_item_id' => $item['rfq_item_id'],
                     'quantity_snapshot' => $item['quantity_snapshot'],
@@ -274,5 +340,26 @@ class PurchaseOrderController extends Controller
         }
 
         return $date;
+    }
+
+    private function convertAmountToWords(float $amount): string
+    {
+        $amount = max(0, round($amount, 2));
+
+        $whole = (int) floor($amount);
+        $cents = (int) round(($amount - $whole) * 100);
+
+        $wholeWords = 'Zero';
+
+        if (class_exists(\NumberFormatter::class)) {
+            $formatter = new \NumberFormatter('en', \NumberFormatter::SPELLOUT);
+            $wholeWords = ucfirst((string) $formatter->format($whole));
+        }
+
+        if ($cents > 0) {
+            return sprintf('%s Pesos and %02d/100 Only', $wholeWords, $cents);
+        }
+
+        return sprintf('%s Pesos Only', $wholeWords);
     }
 }

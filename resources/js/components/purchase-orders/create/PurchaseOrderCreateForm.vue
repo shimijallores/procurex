@@ -14,18 +14,19 @@ const props = defineProps({
 
 defineEmits(["submit"]);
 
-const amountWordsTouched = ref(false);
-
 const selectedNoa = computed(() =>
     props.eligibleNoas?.find(
         (noa) => String(noa.id) === String(props.form.noa_id),
     ),
 );
 
+const selectedAoq = computed(
+    () => selectedNoa.value?.aoq || selectedNoa.value?.bac_resolution?.aoq,
+);
+
 const winnerSupplierQuote = computed(() => {
-    const winnerSupplierId =
-        selectedNoa.value?.bac_resolution?.aoq?.winner_supplier_id;
-    return selectedNoa.value?.bac_resolution?.aoq?.rfq?.suppliers?.find(
+    const winnerSupplierId = selectedAoq.value?.winner_supplier_id;
+    return selectedAoq.value?.rfq?.suppliers?.find(
         (supplier) => String(supplier.supplier_id) === String(winnerSupplierId),
     );
 });
@@ -132,13 +133,16 @@ watch(
                 "upon 100% completion /delivery";
         }
 
-        const officeName =
-            noa.bac_resolution?.aoq?.rfq?.purchase_request?.office?.name;
-        if (!props.form.place_of_delivery && officeName) {
-            props.form.place_of_delivery = officeName;
+        if (!props.form.delivery_term_days) {
+            props.form.delivery_term_days =
+                props.defaults?.delivery_term_days || 15;
         }
 
-        const rfqItems = noa.bac_resolution?.aoq?.rfq?.items || [];
+        const officeName =
+            selectedAoq.value?.rfq?.purchase_request?.office?.name || "";
+        props.form.place_of_delivery = officeName;
+
+        const rfqItems = selectedAoq.value?.rfq?.items || [];
         const supplierItems = winnerSupplierQuote.value?.supplier_items || [];
 
         props.form.items = rfqItems.map((rfqItem) => {
@@ -167,11 +171,7 @@ watch(
             0,
         );
 
-        if (!amountWordsTouched.value) {
-            props.form.total_amount_words = numberToWords(
-                props.form.total_amount,
-            );
-        }
+        props.form.total_amount_words = numberToWords(props.form.total_amount);
 
         await refreshPoNo();
     },
@@ -192,20 +192,10 @@ watch(
             0,
         );
 
-        if (!amountWordsTouched.value) {
-            props.form.total_amount_words = numberToWords(
-                props.form.total_amount,
-            );
-        }
+        props.form.total_amount_words = numberToWords(props.form.total_amount);
     },
     { deep: true },
 );
-
-const updateLineAmount = (item) => {
-    item.amount_snapshot =
-        Number(item.quantity_snapshot || 0) *
-        Number(item.unit_cost_snapshot || 0);
-};
 
 const formatCurrency = (value) =>
     new Intl.NumberFormat("en-PH", {
@@ -318,18 +308,19 @@ const formatCurrency = (value) =>
 
                 <div class="space-y-2">
                     <Label for="mode_of_procurement">Mode of Procurement</Label>
-                    <input
+                    <select
                         id="mode_of_procurement"
                         v-model="form.mode_of_procurement"
-                        list="mode-options"
                         class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    />
-                    <datalist id="mode-options">
-                        <option value="Small Value" />
-                        <option value="Public Bidding" />
-                        <option value="Shopping" />
-                        <option value="Direct Contracting" />
-                    </datalist>
+                    >
+                        <option value="Small Value">Small Value</option>
+                        <option value="Direct Contracting">
+                            Direct Contracting
+                        </option>
+                        <option value="Direct Acquisition">
+                            Direct Acquisition
+                        </option>
+                    </select>
                     <p
                         v-if="form.errors?.mode_of_procurement"
                         class="text-xs text-destructive"
@@ -343,7 +334,8 @@ const formatCurrency = (value) =>
                     <input
                         id="place_of_delivery"
                         v-model="form.place_of_delivery"
-                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        readonly
+                        class="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm"
                     />
                     <p
                         v-if="form.errors?.place_of_delivery"
@@ -355,14 +347,17 @@ const formatCurrency = (value) =>
 
                 <div class="space-y-2">
                     <Label for="delivery_term_days">Delivery Term (days)</Label>
-                    <select
+                    <input
                         id="delivery_term_days"
-                        v-model="form.delivery_term_days"
+                        v-model.number="form.delivery_term_days"
+                        type="number"
+                        min="1"
+                        max="30"
                         class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    >
-                        <option :value="15">15</option>
-                        <option :value="30">30</option>
-                    </select>
+                    />
+                    <p class="text-xs text-muted-foreground">
+                        Default is 15. Allowed range is 1 to 30 days.
+                    </p>
                     <p
                         v-if="form.errors?.delivery_term_days"
                         class="text-xs text-destructive"
@@ -396,7 +391,7 @@ const formatCurrency = (value) =>
 
         <Card>
             <CardHeader>
-                <CardTitle class="text-base">PO Line Items</CardTitle>
+                <CardTitle class="text-base">Purchase Order Items</CardTitle>
             </CardHeader>
             <CardContent class="space-y-4">
                 <div class="overflow-auto">
@@ -437,26 +432,15 @@ const formatCurrency = (value) =>
                             >
                                 <td class="px-3 py-2">{{ item._name }}</td>
                                 <td class="px-3 py-2 text-center">
-                                    <input
-                                        v-model.number="item.quantity_snapshot"
-                                        type="number"
-                                        min="1"
-                                        class="h-9 w-24 rounded-md border border-input bg-background px-2 text-center"
-                                        @input="updateLineAmount(item)"
-                                    />
+                                    {{ item.quantity_snapshot }}
                                 </td>
                                 <td class="px-3 py-2">
                                     {{ item._unit || "—" }}
                                 </td>
                                 <td class="px-3 py-2 text-right">
-                                    <input
-                                        v-model.number="item.unit_cost_snapshot"
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        class="h-9 w-32 rounded-md border border-input bg-background px-2 text-right"
-                                        @input="updateLineAmount(item)"
-                                    />
+                                    {{
+                                        formatCurrency(item.unit_cost_snapshot)
+                                    }}
                                 </td>
                                 <td class="px-3 py-2 text-right font-medium">
                                     {{ formatCurrency(item.amount_snapshot) }}
@@ -471,14 +455,15 @@ const formatCurrency = (value) =>
 
                 <div class="grid gap-4 md:grid-cols-2">
                     <div class="space-y-2">
-                        <Label for="total_amount">Total Amount</Label>
+                        <Label for="total_amount">Total Amount (PHP)</Label>
                         <input
                             id="total_amount"
                             v-model.number="form.total_amount"
                             type="number"
                             min="0"
                             step="0.01"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            readonly
+                            class="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm"
                         />
                         <p
                             v-if="form.errors?.total_amount"
@@ -489,13 +474,15 @@ const formatCurrency = (value) =>
                     </div>
 
                     <div class="space-y-2">
-                        <Label for="total_amount_words">Amount in Words</Label>
+                        <Label for="total_amount_words"
+                            >Total Amount in Words</Label
+                        >
                         <textarea
                             id="total_amount_words"
                             v-model="form.total_amount_words"
                             rows="2"
-                            class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            @input="amountWordsTouched = true"
+                            readonly
+                            class="w-full rounded-md border border-input bg-muted px-3 py-2 text-sm"
                         />
                         <p
                             v-if="form.errors?.total_amount_words"

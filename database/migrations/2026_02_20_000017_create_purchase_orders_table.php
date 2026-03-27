@@ -17,7 +17,7 @@ return new class extends Migration
             $table->date('po_date');
             $table->string('mode_of_procurement')->default('Small Value');
             $table->string('place_of_delivery');
-            $table->smallInteger('delivery_term_days')->nullable();
+            $table->smallInteger('delivery_term_days')->default(15);
             $table->string('payment_term')->nullable();
             $table->decimal('total_amount', 15, 2)->default(0);
             $table->text('total_amount_words')->nullable();
