@@ -336,6 +336,34 @@ defineEmits(["update:fundType", "submit"]);
                     </p>
                 </div>
 
+                <div
+                    v-if="showProjectFields && form.processing"
+                    class="space-y-2 rounded-lg border border-border/60 bg-muted/40 p-3"
+                >
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="font-medium"
+                            >Uploading project documents...</span
+                        >
+                        <span class="text-muted-foreground">
+                            {{ form.progress?.percentage ?? 0 }}%
+                        </span>
+                    </div>
+                    <div
+                        class="h-2 w-full overflow-hidden rounded-full bg-muted"
+                    >
+                        <div
+                            class="h-full rounded-full bg-primary transition-all duration-300"
+                            :style="{
+                                width: `${form.progress?.percentage ?? 0}%`,
+                            }"
+                        />
+                    </div>
+                    <p class="text-xs text-muted-foreground">
+                        Please keep this page open while files are being
+                        uploaded.
+                    </p>
+                </div>
+
                 <div class="flex items-center gap-4">
                     <Button type="submit" :disabled="form.processing">
                         <Icon

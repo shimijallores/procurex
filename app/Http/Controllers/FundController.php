@@ -6,8 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreFundRequest;
 use App\Http\Requests\UpdateFundRequest;
-use App\Imports\ProjectBriefImport;
-use App\Imports\WorkProgramImport;
+use App\Jobs\ProcessFundDocumentImportJob;
 use App\Models\Fund;
 use App\Models\Office;
 use App\Models\PPMP;
@@ -215,7 +214,7 @@ class FundController extends Controller
             );
 
             if ($workProgramDocument instanceof WorkProgram) {
-                app(WorkProgramImport::class)->import($workProgramDocument);
+                ProcessFundDocumentImportJob::dispatch('work_program', (int) $workProgramDocument->id);
             }
         }
 
@@ -229,18 +228,22 @@ class FundController extends Controller
             );
 
             if ($projectBriefDocument instanceof ProjectBrief) {
-                app(ProjectBriefImport::class)->import($projectBriefDocument);
+                ProcessFundDocumentImportJob::dispatch('project_brief', (int) $projectBriefDocument->id);
             }
         }
 
         if ($request->hasFile('project_proposal') && $request->file('project_proposal')?->isValid()) {
-            $this->replaceProjectDocument(
+            $projectProposalDocument = $this->replaceProjectDocument(
                 $project,
                 'projectProposal',
                 $request->file('project_proposal'),
                 'projects/project-proposals',
                 ProjectProposal::class
             );
+
+            if ($projectProposalDocument instanceof ProjectProposal) {
+                ProcessFundDocumentImportJob::dispatch('project_proposal', (int) $projectProposalDocument->id);
+            }
         }
     }
 
