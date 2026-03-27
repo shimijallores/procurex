@@ -19,21 +19,12 @@ class StoreNOARequest extends FormRequest
      */
     public function rules(): array
     {
-        $resolutionId = (int) $this->input('bac_resolution_id');
-
         return [
             'bac_resolution_id' => ['required', 'integer', 'exists:bac_resolutions,id'],
             'selected_aoq_id' => ['required', 'integer', 'exists:aoqs,id', 'unique:noas,aoq_id'],
             'noa_no' => ['nullable', 'string', 'max:255'],
-            'noa_date' => ['required', 'date', 'after_or_equal:resolution_date'],
-            'resolution_no' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('bac_resolutions', 'resolution_no')->ignore($resolutionId),
-            ],
-            'resolution_date' => ['required', 'date'],
-            'calculation_label' => ['nullable', 'string', 'max:255'],
+            'noa_date' => ['required', 'date'],
+            'calculation_label' => ['nullable', 'string', 'max:100', Rule::in(['Lowest Calculated', 'Single Calculated'])],
             'winner_supplier_name' => ['required', 'string', 'max:255'],
             'recipient_name' => ['nullable', 'string', 'max:255'],
             'recipient_title' => ['nullable', 'string', 'max:255'],

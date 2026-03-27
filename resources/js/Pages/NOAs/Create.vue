@@ -31,7 +31,7 @@ const form = useForm({
     noa_no: "",
     noa_date: props.defaultNoaDate || "",
     resolution_no: "",
-    resolution_date: props.defaultResolutionDate || "",
+    resolution_date: "",
     calculation_label: "",
     winner_supplier_name: "",
     recipient_name: "",

@@ -58,6 +58,24 @@ const recipientTitleSuggestions = [
     "Owner",
 ];
 
+const calculationLabelOptions = ["Lowest Calculated", "Single Calculated"];
+
+const normalizeCalculationLabel = (value) => {
+    const normalized = String(value || "")
+        .trim()
+        .toLowerCase();
+
+    if (normalized.includes("lowest")) {
+        return "Lowest Calculated";
+    }
+
+    if (normalized.includes("single")) {
+        return "Single Calculated";
+    }
+
+    return "";
+};
+
 const normalizeName = (value) =>
     String(value || "")
         .trim()
@@ -224,10 +242,9 @@ watch(
             props.form.selected_aoq_id = "";
             props.form.noa_no = "";
             props.form.winner_supplier_name = "";
-
-            if (!props.form.resolution_date) {
-                props.form.resolution_date = suggestedDefaultResolutionDate;
-            }
+            props.form.resolution_no = "";
+            props.form.resolution_date = "";
+            props.form.calculation_label = "";
 
             if (!props.form.noa_date) {
                 props.form.noa_date = suggestedDefaultNoaDate;
@@ -260,7 +277,9 @@ watch(
         props.form.noa_date = suggestNoaDate(suggestedResolutionDate);
         props.form.resolution_no = resolution.resolution_no || "";
         props.form.resolution_date = suggestedResolutionDate;
-        props.form.calculation_label = resolution.calculation_label || "";
+        props.form.calculation_label = normalizeCalculationLabel(
+            resolution.calculation_label,
+        );
         props.form.winner_supplier_name = resolution.winner_supplier_name || "";
 
         if (!props.form.recipient_name) {
@@ -450,8 +469,12 @@ watch(representativeSuggestions, (suggestions) => {
                         <input
                             id="resolution_no"
                             v-model="form.resolution_no"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            readonly
+                            class="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm"
                         />
+                        <p class="text-xs text-muted-foreground">
+                            Fetched from selected BAC Resolution.
+                        </p>
                         <p
                             v-if="form.errors?.resolution_no"
                             class="text-xs text-destructive"
@@ -466,8 +489,12 @@ watch(representativeSuggestions, (suggestions) => {
                             id="resolution_date"
                             v-model="form.resolution_date"
                             type="date"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            readonly
+                            class="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm"
                         />
+                        <p class="text-xs text-muted-foreground">
+                            Fetched from selected BAC Resolution.
+                        </p>
                         <p
                             v-if="form.errors?.resolution_date"
                             class="text-xs text-destructive"
@@ -479,11 +506,20 @@ watch(representativeSuggestions, (suggestions) => {
 
                 <div class="space-y-2">
                     <Label for="calculation_label">Calculated Label</Label>
-                    <input
+                    <select
                         id="calculation_label"
                         v-model="form.calculation_label"
                         class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    />
+                    >
+                        <option value="">— Select Calculated Label —</option>
+                        <option
+                            v-for="option in calculationLabelOptions"
+                            :key="option"
+                            :value="option"
+                        >
+                            {{ option }}
+                        </option>
+                    </select>
                     <p
                         v-if="form.errors?.calculation_label"
                         class="text-xs text-destructive"

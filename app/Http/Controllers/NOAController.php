@@ -146,12 +146,6 @@ class NOAController extends Controller
     {
         $validated = $request->validated();
 
-        if (! $this->isWorkingDay($validated['resolution_date'] ?? null)) {
-            return redirect()->back()->withErrors([
-                'resolution_date' => 'Resolution date must be a working day (not weekend/holiday).',
-            ])->withInput();
-        }
-
         if (! $this->isWorkingDay($validated['noa_date'] ?? null)) {
             return redirect()->back()->withErrors([
                 'noa_date' => 'NOA date must be a working day (not weekend/holiday).',
@@ -194,7 +188,7 @@ class NOAController extends Controller
                 return redirect()->back()->with('error', 'The selected BAC Resolution has no linked RFQ.');
             }
 
-            $resolutionDate = Carbon::parse($validated['resolution_date'] ?? $resolution->resolution_date);
+            $resolutionDate = Carbon::parse((string) $resolution->resolution_date);
             $noaDate = Carbon::parse($validated['noa_date']);
 
             if ($noaDate->lt($resolutionDate)) {
@@ -203,11 +197,11 @@ class NOAController extends Controller
                 ])->withInput();
             }
 
-            $resolution->update([
-                'resolution_no' => (string) ($validated['resolution_no'] ?? $resolution->resolution_no),
-                'resolution_date' => $resolutionDate->toDateString(),
-                'calculation_label' => (string) ($validated['calculation_label'] ?? $resolution->calculation_label),
-            ]);
+            if (array_key_exists('calculation_label', $validated) && $validated['calculation_label']) {
+                $resolution->update([
+                    'calculation_label' => (string) $validated['calculation_label'],
+                ]);
+            }
 
             $noaNo = (string) ($rfq->svp_no ?? '');
             if ($noaNo === '') {
