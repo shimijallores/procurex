@@ -386,34 +386,6 @@ defineEmits(["update:fundType", "submit"]);
                     </p>
                 </div>
 
-                <div
-                    v-if="showProjectFields && form.processing"
-                    class="space-y-2 rounded-lg border border-border/60 bg-muted/40 p-3"
-                >
-                    <div class="flex items-center justify-between text-sm">
-                        <span class="font-medium"
-                            >Uploading project documents...</span
-                        >
-                        <span class="text-muted-foreground">
-                            {{ form.progress?.percentage ?? 0 }}%
-                        </span>
-                    </div>
-                    <div
-                        class="h-2 w-full overflow-hidden rounded-full bg-muted"
-                    >
-                        <div
-                            class="h-full rounded-full bg-primary transition-all duration-300"
-                            :style="{
-                                width: `${form.progress?.percentage ?? 0}%`,
-                            }"
-                        />
-                    </div>
-                    <p class="text-xs text-muted-foreground">
-                        Please keep this page open while files are being
-                        uploaded.
-                    </p>
-                </div>
-
                 <div class="flex items-center gap-4">
                     <Button type="submit" :disabled="form.processing">
                         <Icon
@@ -431,6 +403,46 @@ defineEmits(["update:fundType", "submit"]);
                     </Link>
                 </div>
             </form>
+
+            <div
+                v-if="
+                    showProjectFields &&
+                    form.processing &&
+                    (form.progress ||
+                        form.work_program ||
+                        form.project_brief ||
+                        form.project_proposal)
+                "
+                class="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4 backdrop-blur-[1px]"
+            >
+                <div
+                    class="w-full max-w-md rounded-xl border border-border bg-background p-5 shadow-xl"
+                >
+                    <div class="mb-1 text-base font-semibold">
+                        Uploading project documents
+                    </div>
+                    <p class="mb-4 text-sm text-muted-foreground">
+                        Please keep this page open while files are uploading.
+                    </p>
+
+                    <div class="mb-2 flex items-center justify-between text-sm">
+                        <span>Progress</span>
+                        <span class="font-medium"
+                            >{{ form.progress?.percentage ?? 0 }}%</span
+                        >
+                    </div>
+                    <div
+                        class="h-2 w-full overflow-hidden rounded-full bg-muted"
+                    >
+                        <div
+                            class="h-full rounded-full bg-primary transition-all duration-300"
+                            :style="{
+                                width: `${form.progress?.percentage ?? 0}%`,
+                            }"
+                        />
+                    </div>
+                </div>
+            </div>
         </CardContent>
     </Card>
 </template>
