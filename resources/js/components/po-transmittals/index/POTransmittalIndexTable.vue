@@ -202,7 +202,7 @@ const getTransmittalByType = (entry, type) => {
                                     {{ entry.purchase_order?.po_no || "—" }}
                                 </div>
                                 <div
-                                    class="text-xs text-muted-foreground truncate max-w-[340px]"
+                                    class="text-xs text-muted-foreground truncate max-w-85"
                                 >
                                     {{
                                         entry.purchase_order?.noa

@@ -132,77 +132,77 @@ const formatCurrency = (value) => {
                             class="border-b transition-colors hover:bg-muted/50"
                         >
                             <th
-                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground whitespace-normal break-words"
+                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground whitespace-normal wrap-break-word"
                             >
                                 CONTROL NO. / EMANATING NO.
                             </th>
                             <th
-                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground whitespace-normal break-words"
+                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground whitespace-normal wrap-break-word"
                             >
                                 OFFICES / HOSPITALS
                             </th>
                             <th
-                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground whitespace-normal break-words"
+                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground whitespace-normal wrap-break-word"
                             >
                                 PROJECT NAME
                             </th>
                             <th
-                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground whitespace-normal break-words"
+                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground whitespace-normal wrap-break-word"
                             >
                                 PR NO.
                             </th>
                             <th
-                                class="h-11 px-2 py-2 text-center align-middle font-medium text-muted-foreground whitespace-normal break-words"
+                                class="h-11 px-2 py-2 text-center align-middle font-medium text-muted-foreground whitespace-normal wrap-break-word"
                             >
                                 PR DATE
                             </th>
                             <th
-                                class="h-11 px-2 py-2 text-right align-middle font-medium text-muted-foreground whitespace-normal break-words"
+                                class="h-11 px-2 py-2 text-right align-middle font-medium text-muted-foreground whitespace-normal wrap-break-word"
                             >
                                 AMOUNT BELOW 1M
                             </th>
                             <th
-                                class="h-11 px-2 py-2 text-right align-middle font-medium text-muted-foreground whitespace-normal break-words"
+                                class="h-11 px-2 py-2 text-right align-middle font-medium text-muted-foreground whitespace-normal wrap-break-word"
                             >
                                 AMOUNT ABOVE 1M
                             </th>
                             <th
-                                class="h-11 px-2 py-2 text-right align-middle font-medium text-muted-foreground whitespace-normal break-words"
+                                class="h-11 px-2 py-2 text-right align-middle font-medium text-muted-foreground whitespace-normal wrap-break-word"
                             >
                                 NEW AMOUNT
                             </th>
                             <th
-                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground whitespace-normal break-words"
+                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground whitespace-normal wrap-break-word"
                             >
                                 ACCOUNT / CHARGED TO
                             </th>
                             <th
-                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground whitespace-normal break-words"
+                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground whitespace-normal wrap-break-word"
                             >
                                 PERSON IN CHARGE (PR SECTION)
                             </th>
                             <th
-                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground whitespace-normal break-words"
+                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground whitespace-normal wrap-break-word"
                             >
                                 PERSON IN CHARGE (BUDGETING)
                             </th>
                             <th
-                                class="h-11 px-2 py-2 text-center align-middle font-medium text-muted-foreground whitespace-normal break-words"
+                                class="h-11 px-2 py-2 text-center align-middle font-medium text-muted-foreground whitespace-normal wrap-break-word"
                             >
                                 DATE RELEASE
                             </th>
                             <th
-                                class="h-11 px-2 py-2 text-center align-middle font-medium text-muted-foreground whitespace-normal break-words"
+                                class="h-11 px-2 py-2 text-center align-middle font-medium text-muted-foreground whitespace-normal wrap-break-word"
                             >
                                 NEW DATE RELEASE
                             </th>
                             <th
-                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground whitespace-normal break-words"
+                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground whitespace-normal wrap-break-word"
                             >
                                 REMARKS
                             </th>
                             <th
-                                class="h-11 px-2 py-2 text-right align-middle font-medium text-muted-foreground whitespace-normal break-words"
+                                class="h-11 px-2 py-2 text-right align-middle font-medium text-muted-foreground whitespace-normal wrap-break-word"
                             >
                                 ACTIONS
                             </th>
@@ -234,7 +234,7 @@ const formatCurrency = (value) => {
                             <td class="p-2 align-middle">
                                 {{ row.office_name || "-" }}
                             </td>
-                            <td class="p-2 align-middle max-w-[180px]">
+                            <td class="p-2 align-middle max-w-45">
                                 <p
                                     class="truncate"
                                     :title="row.item_description || '-'"

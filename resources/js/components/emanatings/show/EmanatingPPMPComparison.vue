@@ -88,7 +88,7 @@ defineProps({
                                         index + 1
                                     }}</TableCell>
                                     <TableCell
-                                        class="font-medium whitespace-normal break-words align-top"
+                                        class="font-medium whitespace-normal wrap-break-word align-top"
                                     >
                                         {{ item.emanating_item?.name || "N/A" }}
                                     </TableCell>
@@ -124,8 +124,8 @@ defineProps({
                                     <TableCell
                                         :class="
                                             item.matched
-                                                ? 'w-72 text-sm whitespace-pre-line break-words align-top font-semibold text-green-700 dark:text-green-300'
-                                                : 'w-72 text-sm whitespace-pre-line break-words align-top font-semibold text-orange-700 dark:text-orange-300'
+                                                ? 'w-72 text-sm whitespace-pre-line wrap-break-word align-top font-semibold text-green-700 dark:text-green-300'
+                                                : 'w-72 text-sm whitespace-pre-line wrap-break-word align-top font-semibold text-orange-700 dark:text-orange-300'
                                         "
                                     >
                                         {{
@@ -186,7 +186,7 @@ defineProps({
                                         index + 1
                                     }}</TableCell>
                                     <TableCell
-                                        class="font-medium whitespace-normal break-words align-top"
+                                        class="font-medium whitespace-normal wrap-break-word align-top"
                                         >{{ item.name }}</TableCell
                                     >
                                     <TableCell>{{ item.quantity }}</TableCell>
@@ -266,7 +266,7 @@ defineProps({
                                         index + 1
                                     }}</TableCell>
                                     <TableCell
-                                        class="font-medium whitespace-normal break-words align-top"
+                                        class="font-medium whitespace-normal wrap-break-word align-top"
                                         >{{ item.name }}</TableCell
                                     >
                                     <TableCell class="text-right">{{
@@ -331,11 +331,11 @@ defineProps({
                                         index + 1
                                     }}</TableCell>
                                     <TableCell
-                                        class="font-medium whitespace-normal break-words align-top"
+                                        class="font-medium whitespace-normal wrap-break-word align-top"
                                         >{{ item.item_name }}</TableCell
                                     >
                                     <TableCell
-                                        class="whitespace-normal break-words align-top"
+                                        class="whitespace-normal wrap-break-word align-top"
                                         >{{
                                             item.quantity !== null
                                                 ? `${Number(
@@ -413,11 +413,11 @@ defineProps({
                                         index + 1
                                     }}</TableCell>
                                     <TableCell
-                                        class="font-medium whitespace-normal break-words align-top"
+                                        class="font-medium whitespace-normal wrap-break-word align-top"
                                         >{{ item.item_name }}</TableCell
                                     >
                                     <TableCell
-                                        class="whitespace-normal break-words align-top"
+                                        class="whitespace-normal wrap-break-word align-top"
                                         >{{
                                             item.quantity !== null
                                                 ? `${Number(
