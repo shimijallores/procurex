@@ -27,7 +27,7 @@ const getMonthName = (month) => {
 </script>
 
 <template>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <!-- Basic Info -->
         <Card>
             <CardHeader>
@@ -150,7 +150,7 @@ const getMonthName = (month) => {
         </Card>
 
         <!-- Approval Info -->
-        <Card v-if="emanating.approved_by" class="md:col-span-2 lg:col-span-3">
+        <Card v-if="emanating.approved_by" class="md:col-span-2 xl:col-span-4">
             <CardHeader>
                 <CardTitle class="text-base flex items-center">
                     <Icon icon="lucide:user" class="mr-2 h-5 w-5" />

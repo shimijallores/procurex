@@ -106,7 +106,7 @@ const formatFundLabel = (fund) => {
 </script>
 
 <template>
-    <Card class="max-w-4xl">
+    <Card class="w-full">
         <CardHeader>
             <CardTitle>Upload Emanating Request XLSX</CardTitle>
             <CardDescription>
@@ -116,7 +116,7 @@ const formatFundLabel = (fund) => {
         </CardHeader>
         <CardContent>
             <form @submit.prevent="handleSubmit" class="space-y-6">
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div class="space-y-2">
                         <Label for="office_id">Office *</Label>
                         <select
@@ -235,12 +235,19 @@ const formatFundLabel = (fund) => {
                 <!-- XLSX Upload (Required) -->
                 <div class="space-y-2">
                     <Label for="xlsx_file">XLSX File *</Label>
-                    <Input
-                        id="xlsx_file"
-                        type="file"
-                        accept=".xlsx"
-                        @change="handleFileChange"
-                    />
+                    <div
+                        class="rounded-lg border-2 border-dashed border-primary/30 bg-background p-4"
+                    >
+                        <Input
+                            id="xlsx_file"
+                            type="file"
+                            accept=".xlsx"
+                            @change="handleFileChange"
+                        />
+                        <p class="mt-2 text-xs text-muted-foreground">
+                            Supported format: <strong>.xlsx</strong>
+                        </p>
+                    </div>
                     <p
                         v-if="xlsxFileName"
                         class="text-sm text-muted-foreground"
@@ -268,16 +275,6 @@ const formatFundLabel = (fund) => {
 
                 <!-- Checkboxes -->
                 <div class="flex gap-6">
-                    <div class="flex items-center space-x-2">
-                        <input
-                            id="is_addendum"
-                            v-model="form.is_addendum"
-                            type="checkbox"
-                            class="h-4 w-4 rounded border border-input"
-                        />
-                        <Label for="is_addendum">This is an addendum</Label>
-                    </div>
-
                     <div class="flex items-center space-x-2">
                         <input
                             id="reimbursement"

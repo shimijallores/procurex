@@ -60,7 +60,7 @@ defineEmits(["update:fundType", "submit"]);
 </script>
 
 <template>
-    <Card class="max-w-2xl">
+    <Card class="w-full">
         <CardHeader>
             <CardTitle>Fund Details</CardTitle>
             <CardDescription>
@@ -234,7 +234,9 @@ defineEmits(["update:fundType", "submit"]);
                         Upload all three project documents together.
                     </p>
 
-                    <div class="space-y-2">
+                    <div
+                        class="space-y-2 rounded-lg border-2 border-dashed border-primary/30 bg-background p-3"
+                    >
                         <Label for="work_program">Work Program (DOCX)</Label>
                         <input
                             id="work_program"
@@ -257,9 +259,17 @@ defineEmits(["update:fundType", "submit"]);
                         >
                             {{ form.errors.work_program }}
                         </p>
+                        <p
+                            v-else-if="form.work_program"
+                            class="text-xs text-muted-foreground"
+                        >
+                            Selected: {{ form.work_program.name }}
+                        </p>
                     </div>
 
-                    <div class="space-y-2">
+                    <div
+                        class="space-y-2 rounded-lg border-2 border-dashed border-primary/30 bg-background p-3"
+                    >
                         <Label for="project_brief">Project Brief (DOCX)</Label>
                         <input
                             id="project_brief"
@@ -282,9 +292,17 @@ defineEmits(["update:fundType", "submit"]);
                         >
                             {{ form.errors.project_brief }}
                         </p>
+                        <p
+                            v-else-if="form.project_brief"
+                            class="text-xs text-muted-foreground"
+                        >
+                            Selected: {{ form.project_brief.name }}
+                        </p>
                     </div>
 
-                    <div class="space-y-2">
+                    <div
+                        class="space-y-2 rounded-lg border-2 border-dashed border-primary/30 bg-background p-3"
+                    >
                         <Label for="project_proposal"
                             >Project Proposal (DOCX)</Label
                         >
@@ -310,6 +328,12 @@ defineEmits(["update:fundType", "submit"]);
                             class="text-sm text-destructive"
                         >
                             {{ form.errors.project_proposal }}
+                        </p>
+                        <p
+                            v-else-if="form.project_proposal"
+                            class="text-xs text-muted-foreground"
+                        >
+                            Selected: {{ form.project_proposal.name }}
                         </p>
                     </div>
                 </div>

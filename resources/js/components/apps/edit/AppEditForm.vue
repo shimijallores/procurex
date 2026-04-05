@@ -21,7 +21,7 @@ defineEmits(["submit"]);
 </script>
 
 <template>
-    <Card class="max-w-2xl">
+    <Card class="w-full">
         <CardHeader>
             <CardTitle>APP Details</CardTitle>
             <CardDescription>

@@ -58,7 +58,7 @@ const handleFileChange = (event) => {
 </script>
 
 <template>
-    <Card class="max-w-2xl">
+    <Card class="w-full">
         <CardHeader>
             <CardTitle>PPMP Details</CardTitle>
             <CardDescription>
@@ -164,22 +164,6 @@ const handleFileChange = (event) => {
                         {{ form.errors.fund_id }}
                     </p>
                 </div>
-
-                <div class="flex items-center space-x-2">
-                    <input
-                        id="is_addendum"
-                        v-model="form.is_addendum"
-                        type="checkbox"
-                        class="h-4 w-4 rounded border border-input"
-                    />
-                    <Label
-                        for="is_addendum"
-                        class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                        This is an addendum (extension only)
-                    </Label>
-                </div>
-
                 <div class="space-y-2">
                     <Label for="remarks">Remarks (Optional)</Label>
                     <textarea

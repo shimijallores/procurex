@@ -1,5 +1,4 @@
 <script setup>
-import { ref } from "vue";
 import { Icon } from "@iconify/vue";
 import { Label } from "@/components/ui/label";
 
@@ -23,13 +22,17 @@ const handleFileChange = (event) => {
         </div>
 
         <p class="text-sm text-muted-foreground">
-            Upload an XLSX file to automatically populate categories and items.
-            You can also create an empty PPMP and import the XLSX later.
+            Upload an XLSX file to create the PPMP and automatically populate
+            categories and items.
         </p>
 
         <div class="space-y-2">
-            <Label for="xlsx_file">XLSX File (Optional)</Label>
-            <div class="flex items-center gap-2">
+            <Label for="xlsx_file"
+                >XLSX File <span class="text-destructive">*</span></Label
+            >
+            <div
+                class="rounded-lg border-2 border-dashed border-primary/30 bg-background p-4"
+            >
                 <input
                     id="xlsx_file"
                     type="file"
@@ -43,6 +46,9 @@ const handleFileChange = (event) => {
                         errors?.xlsx_file ? 'border-destructive' : '',
                     ]"
                 />
+                <p class="mt-2 text-xs text-muted-foreground">
+                    Supported format: <strong>.xlsx</strong>
+                </p>
             </div>
             <p
                 v-if="xlsxFileName"

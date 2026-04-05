@@ -61,7 +61,7 @@ defineEmits(["update:fundType", "submit"]);
 </script>
 
 <template>
-    <Card class="max-w-2xl">
+    <Card class="w-full">
         <CardHeader>
             <CardTitle>Fund Details</CardTitle>
             <CardDescription>
@@ -236,7 +236,9 @@ defineEmits(["update:fundType", "submit"]);
                         project proposal.
                     </p>
 
-                    <div class="space-y-2">
+                    <div
+                        class="space-y-2 rounded-lg border-2 border-dashed border-primary/30 bg-background p-3"
+                    >
                         <Label for="work_program">Work Program (DOCX)</Label>
                         <div
                             v-if="fund.project?.work_program"
@@ -270,6 +272,12 @@ defineEmits(["update:fundType", "submit"]);
                             Upload a new file to replace the current one
                         </p>
                         <p
+                            v-if="form.work_program"
+                            class="text-xs text-muted-foreground"
+                        >
+                            Selected: {{ form.work_program.name }}
+                        </p>
+                        <p
                             v-if="form.errors.work_program"
                             class="text-sm text-destructive"
                         >
@@ -277,7 +285,9 @@ defineEmits(["update:fundType", "submit"]);
                         </p>
                     </div>
 
-                    <div class="space-y-2">
+                    <div
+                        class="space-y-2 rounded-lg border-2 border-dashed border-primary/30 bg-background p-3"
+                    >
                         <Label for="project_brief">Project Brief (DOCX)</Label>
                         <div
                             v-if="fund.project?.project_brief"
@@ -311,6 +321,12 @@ defineEmits(["update:fundType", "submit"]);
                             Upload a new file to replace the current one
                         </p>
                         <p
+                            v-if="form.project_brief"
+                            class="text-xs text-muted-foreground"
+                        >
+                            Selected: {{ form.project_brief.name }}
+                        </p>
+                        <p
                             v-if="form.errors.project_brief"
                             class="text-sm text-destructive"
                         >
@@ -318,7 +334,9 @@ defineEmits(["update:fundType", "submit"]);
                         </p>
                     </div>
 
-                    <div class="space-y-2">
+                    <div
+                        class="space-y-2 rounded-lg border-2 border-dashed border-primary/30 bg-background p-3"
+                    >
                         <Label for="project_proposal"
                             >Project Proposal (DOCX)</Label
                         >
@@ -354,6 +372,12 @@ defineEmits(["update:fundType", "submit"]);
                         />
                         <p class="text-xs text-muted-foreground">
                             Upload a new file to replace the current one
+                        </p>
+                        <p
+                            v-if="form.project_proposal"
+                            class="text-xs text-muted-foreground"
+                        >
+                            Selected: {{ form.project_proposal.name }}
                         </p>
                         <p
                             v-if="form.errors.project_proposal"

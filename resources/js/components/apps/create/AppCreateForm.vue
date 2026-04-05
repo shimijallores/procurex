@@ -21,7 +21,7 @@ defineEmits(["submit", "fileChange"]);
 </script>
 
 <template>
-    <Card class="max-w-2xl">
+    <Card class="w-full">
         <CardHeader>
             <CardTitle>APP Details</CardTitle>
             <CardDescription>
@@ -103,7 +103,9 @@ defineEmits(["submit", "fileChange"]);
                             >XLSX File
                             <span class="text-destructive">*</span></Label
                         >
-                        <div class="flex items-center gap-2">
+                        <div
+                            class="rounded-lg border-2 border-dashed border-primary/30 bg-background p-4"
+                        >
                             <input
                                 id="csv_file"
                                 type="file"
@@ -119,6 +121,9 @@ defineEmits(["submit", "fileChange"]);
                                         : '',
                                 ]"
                             />
+                            <p class="mt-2 text-xs text-muted-foreground">
+                                Supported format: <strong>.xlsx</strong>
+                            </p>
                         </div>
                         <p
                             v-if="csvFileName"

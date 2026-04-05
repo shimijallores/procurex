@@ -74,7 +74,7 @@ const formatPpmpLabel = (ppmp) => {
 </script>
 
 <template>
-    <Card class="max-w-4xl">
+    <Card class="w-full">
         <CardHeader>
             <CardTitle>Edit Emanating Request</CardTitle>
             <CardDescription>
@@ -215,16 +215,6 @@ const formatPpmpLabel = (ppmp) => {
                 </div>
 
                 <div class="flex gap-6">
-                    <div class="flex items-center space-x-2">
-                        <input
-                            id="is_addendum"
-                            v-model="form.is_addendum"
-                            type="checkbox"
-                            class="h-4 w-4 rounded border border-input"
-                        />
-                        <Label for="is_addendum">This is an addendum</Label>
-                    </div>
-
                     <div class="flex items-center space-x-2">
                         <input
                             id="reimbursement"
