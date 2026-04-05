@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreRFQRequest;
+use App\Models\Calendar;
 use App\Models\PurchaseRequest;
 use App\Models\RFQ;
 use App\Models\RFQItem;
@@ -85,10 +86,12 @@ class RFQController extends Controller
             ->latest()
             ->get();
 
+        $defaultRfqDate = $this->suggestNextRfqDate();
+
         return Inertia::render('RFQs/Create', [
             'eligiblePurchaseRequests' => $eligiblePurchaseRequests,
-            'defaultRfqDate' => $this->suggestNextRfqDate()->toDateString(),
-            'defaultSubmissionDeadline' => now()->addWeek()->toDateString(),
+            'defaultRfqDate' => $defaultRfqDate->toDateString(),
+            'defaultSubmissionDeadline' => $this->suggestSubmissionDeadline($defaultRfqDate)->toDateString(),
         ]);
     }
 
@@ -128,7 +131,7 @@ class RFQController extends Controller
             $rfqDate = Carbon::parse($validated['rfq_date']);
             $submissionDeadline = ! empty($validated['submission_deadline'])
                 ? Carbon::parse($validated['submission_deadline'])
-                : $rfqDate->copy()->addWeek();
+                : $this->suggestSubmissionDeadline($rfqDate);
 
             $allowedPrItemIds = $purchaseRequest->items->pluck('id')->map(fn($id) => (int) $id)->all();
 
@@ -230,12 +233,36 @@ class RFQController extends Controller
 
     private function suggestNextRfqDate(): Carbon
     {
-        $date = now()->addDay()->startOfDay();
+        return $this->suggestNextWorkingDay(now()->startOfDay());
+    }
 
-        while ($date->isWeekend()) {
+    private function suggestSubmissionDeadline(Carbon $rfqDate): Carbon
+    {
+        return $this->suggestNextWorkingDay($rfqDate->copy()->addWeek());
+    }
+
+    private function suggestNextWorkingDay(Carbon $startDate): Carbon
+    {
+        $date = $startDate->copy()->startOfDay();
+
+        while (! $this->isWorkingDay($date->toDateString())) {
             $date->addDay();
         }
 
         return $date;
+    }
+
+    private function isWorkingDay(?string $date): bool
+    {
+        if (! $date) {
+            return true;
+        }
+
+        $calendarEntry = Calendar::whereDate('date', $date)->first();
+        if ($calendarEntry) {
+            return (bool) $calendarEntry->is_working_day;
+        }
+
+        return ! Carbon::parse($date)->isWeekend();
     }
 }

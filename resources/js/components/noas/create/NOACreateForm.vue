@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref, watch } from "vue";
 import { Icon } from "@iconify/vue";
+import { useWorkingDayInputGuard } from "@/composables/useWorkingDayInputGuard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -14,6 +15,8 @@ const props = defineProps({
 });
 
 defineEmits(["submit"]);
+const { enforceWorkingDay, getDateNotice, getDateNoticeClass } =
+    useWorkingDayInputGuard(props.form);
 
 const selectedResolution = computed(() =>
     props.eligibleResolutions?.find(
@@ -125,7 +128,6 @@ const representativeSuggestions = computed(() => {
         );
 });
 
-const todayDate = new Date().toISOString().slice(0, 10);
 const normalizeDate = (dateValue) => {
     if (!dateValue) {
         return "";
@@ -146,13 +148,16 @@ const normalizeDate = (dateValue) => {
 };
 
 const suggestedDefaultResolutionDate =
-    normalizeDate(props.defaultResolutionDate) || todayDate;
-const suggestedDefaultNoaDate =
-    normalizeDate(props.defaultNoaDate) || todayDate;
+    normalizeDate(props.defaultResolutionDate) || "";
+const suggestedDefaultNoaDate = normalizeDate(props.defaultNoaDate) || "";
 
 const suggestNoaDate = (resolutionDate) => {
     if (!resolutionDate) {
         return suggestedDefaultNoaDate;
+    }
+
+    if (!suggestedDefaultNoaDate) {
+        return resolutionDate;
     }
 
     return resolutionDate > suggestedDefaultNoaDate
@@ -358,6 +363,20 @@ watch(representativeSuggestions, (suggestions) => {
         showRepresentativeSuggestions.value = false;
     }
 });
+
+watch(
+    () => props.form.noa_date,
+    async (date) => {
+        await enforceWorkingDay({
+            dateValue: date,
+            errorKey: "noa_date",
+            statusKey: "noa_date",
+            clearDate: () => {
+                props.form.noa_date = "";
+            },
+        });
+    },
+);
 </script>
 
 <template>
@@ -451,8 +470,8 @@ watch(representativeSuggestions, (suggestions) => {
                             type="date"
                             class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                         />
-                        <p class="text-xs text-muted-foreground">
-                            Must be on or after the BAC Resolution date.
+                        <p :class="getDateNoticeClass('noa_date')">
+                            {{ getDateNotice("noa_date") }}
                         </p>
                         <p
                             v-if="form.errors?.noa_date"

@@ -4,7 +4,7 @@ import { Icon } from "@iconify/vue";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { useCalendarCheck } from "@/composables/useCalendarCheck";
+import { useWorkingDayInputGuard } from "@/composables/useWorkingDayInputGuard";
 
 const props = defineProps({
     form: Object,
@@ -13,18 +13,43 @@ const props = defineProps({
 
 defineEmits(["submit"]);
 
-const { checkDate } = useCalendarCheck();
-const meetingDateStatus = ref(null);
+const { enforceWorkingDay, getDateNotice, getDateNoticeClass } =
+    useWorkingDayInputGuard(props.form);
+
+watch(
+    () => props.form.resolution_date,
+    async (date) => {
+        if (!date) {
+            return;
+        }
+
+        const isValid = await enforceWorkingDay({
+            dateValue: date,
+            errorKey: "resolution_date",
+            statusKey: "resolution_date",
+            clearDate: () => {
+                props.form.resolution_date = "";
+            },
+        });
+
+        if (!isValid) {
+            return;
+        }
+    },
+    { immediate: true },
+);
 
 watch(
     () => props.form.meeting_date,
     async (date) => {
-        if (!date) {
-            meetingDateStatus.value = null;
-            return;
-        }
-
-        meetingDateStatus.value = await checkDate(date);
+        await enforceWorkingDay({
+            dateValue: date,
+            errorKey: "meeting_date",
+            statusKey: "meeting_date",
+            clearDate: () => {
+                props.form.meeting_date = "";
+            },
+        });
     },
     { immediate: true },
 );
@@ -168,6 +193,9 @@ const toggleAoqSelection = (aoqId) => {
                             type="date"
                             class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         />
+                        <p :class="getDateNoticeClass('resolution_date')">
+                            {{ getDateNotice("resolution_date") }}
+                        </p>
                         <p
                             v-if="form.errors?.resolution_date"
                             class="text-xs text-destructive"
@@ -186,18 +214,8 @@ const toggleAoqSelection = (aoqId) => {
                             type="date"
                             class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         />
-                        <p
-                            class="text-xs"
-                            :class="
-                                meetingDateStatus?.is_available === false
-                                    ? 'text-destructive'
-                                    : 'text-muted-foreground'
-                            "
-                        >
-                            {{
-                                meetingDateStatus?.message ||
-                                "Meeting date must be a working day (not weekend/holiday)."
-                            }}
+                        <p :class="getDateNoticeClass('meeting_date')">
+                            {{ getDateNotice("meeting_date") }}
                         </p>
                         <p
                             v-if="form.errors?.meeting_date"

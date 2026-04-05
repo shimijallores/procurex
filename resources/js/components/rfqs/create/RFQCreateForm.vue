@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref, watch } from "vue";
 import { Icon } from "@iconify/vue";
+import { useWorkingDayInputGuard } from "@/composables/useWorkingDayInputGuard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -10,8 +11,10 @@ const props = defineProps({
     eligiblePurchaseRequests: Array,
 });
 
-const emit = defineEmits(["submit"]);
+defineEmits(["submit"]);
 const selectedOfficeId = ref("");
+const { enforceWorkingDay, getDateNotice, getDateNoticeClass } =
+    useWorkingDayInputGuard(props.form);
 
 const officeOptions = computed(() => {
     const map = new Map();
@@ -134,6 +137,34 @@ watch(selectedOfficeId, (officeId) => {
         props.form.items = [];
     }
 });
+
+watch(
+    () => props.form.rfq_date,
+    async (date) => {
+        await enforceWorkingDay({
+            dateValue: date,
+            errorKey: "rfq_date",
+            statusKey: "rfq_date",
+            clearDate: () => {
+                props.form.rfq_date = "";
+            },
+        });
+    },
+);
+
+watch(
+    () => props.form.submission_deadline,
+    async (date) => {
+        await enforceWorkingDay({
+            dateValue: date,
+            errorKey: "submission_deadline",
+            statusKey: "submission_deadline",
+            clearDate: () => {
+                props.form.submission_deadline = "";
+            },
+        });
+    },
+);
 </script>
 
 <template>
@@ -249,13 +280,16 @@ watch(selectedOfficeId, (officeId) => {
             </CardHeader>
             <CardContent class="grid gap-4 sm:grid-cols-2">
                 <div class="space-y-2">
-                    <Label for="rfq_date">RFQ Date (Workday)</Label>
+                    <Label for="rfq_date">RFQ Date</Label>
                     <input
                         id="rfq_date"
                         v-model="form.rfq_date"
                         type="date"
                         class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     />
+                    <p :class="getDateNoticeClass('rfq_date')">
+                        {{ getDateNotice("rfq_date") }}
+                    </p>
                     <p
                         v-if="form.errors?.rfq_date"
                         class="text-xs text-destructive"
@@ -272,6 +306,9 @@ watch(selectedOfficeId, (officeId) => {
                         type="date"
                         class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     />
+                    <p :class="getDateNoticeClass('submission_deadline')">
+                        {{ getDateNotice("submission_deadline") }}
+                    </p>
                     <p
                         v-if="form.errors?.submission_deadline"
                         class="text-xs text-destructive"

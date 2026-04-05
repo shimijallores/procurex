@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Enums\RoleType;
 use App\Http\Requests\StorePurchaseRequestRequest;
 use App\Http\Requests\UpdatePurchaseRequestRequest;
+use App\Models\Calendar;
 use App\Models\Emanating;
 use App\Models\Office;
 use App\Models\PurchaseRequest;
@@ -127,11 +128,13 @@ class PurchaseRequestController extends Controller
             ->latest()
             ->get();
 
+        $suggestedPrDate = $this->suggestNextPrDate();
+
         return Inertia::render('PurchaseRequests/Create', [
             'eligibleEmanatings' => $eligibleEmanatings,
             'commonPurposes'     => self::COMMON_PURPOSES,
-            'suggestedPrDate'    => $this->suggestNextPrDate()->toDateString(),
-            'suggestedPrNo'      => $this->previewNextPrNo($this->suggestNextPrDate()),
+            'suggestedPrDate'    => $suggestedPrDate->toDateString(),
+            'suggestedPrNo'      => $this->previewNextPrNo($suggestedPrDate),
             'returnReasons'      => self::RETURN_REASONS,
         ]);
     }
@@ -571,13 +574,27 @@ class PurchaseRequestController extends Controller
 
     private function suggestNextPrDate(): Carbon
     {
-        $date = now()->addDay()->startOfDay();
+        $date = now()->startOfDay();
 
-        while ($date->isWeekend()) {
+        while (! $this->isWorkingDay($date->toDateString())) {
             $date->addDay();
         }
 
         return $date;
+    }
+
+    private function isWorkingDay(?string $date): bool
+    {
+        if (! $date) {
+            return true;
+        }
+
+        $calendarEntry = Calendar::whereDate('date', $date)->first();
+        if ($calendarEntry) {
+            return (bool) $calendarEntry->is_working_day;
+        }
+
+        return ! Carbon::parse($date)->isWeekend();
     }
 
     private function generateNextPrNo(Carbon $prDate): string

@@ -309,22 +309,17 @@ class NOAController extends Controller
             return true;
         }
 
-        $carbonDate = Carbon::parse($date);
-        if ($carbonDate->isWeekend()) {
-            return false;
+        $calendarEntry = Calendar::whereDate('date', $date)->first();
+        if ($calendarEntry) {
+            return (bool) $calendarEntry->is_working_day;
         }
 
-        $calendarEntry = Calendar::where('date', $date)->first();
-        if (! $calendarEntry) {
-            return true;
-        }
-
-        return (bool) $calendarEntry->is_working_day;
+        return ! Carbon::parse($date)->isWeekend();
     }
 
     private function suggestNextWorkingDay(): Carbon
     {
-        $date = now()->addDay()->startOfDay();
+        $date = now()->startOfDay();
 
         while (! $this->isWorkingDay($date->toDateString())) {
             $date->addDay();

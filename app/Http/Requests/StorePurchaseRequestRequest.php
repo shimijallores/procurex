@@ -26,7 +26,7 @@ class StorePurchaseRequestRequest extends FormRequest
             'pr_no'                 => ['nullable', 'string', 'max:50'],
             'pr_date'               => [
                 'required',
-                Rule::date()->afterToday(),
+                Rule::date()->afterOrEqual(today()),
                 function (string $attribute, mixed $value, \Closure $fail): void {
                     if (! is_string($value)) {
                         return;

@@ -7,10 +7,12 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreAcceptanceInspectionRequest;
 use App\Http\Requests\UpdateAcceptanceInspectionRequest;
 use App\Models\AcceptanceInspection;
+use App\Models\Calendar;
 use App\Models\Office;
 use App\Models\PurchaseOrder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\LaravelPdf\Facades\Pdf;
@@ -80,11 +82,13 @@ class AcceptanceInspectionController extends Controller
             ->latest('po_date')
             ->get();
 
+        $suggestedDate = $this->suggestNextWorkingDay()->toDateString();
+
         return Inertia::render('AcceptanceInspections/Create', [
             'purchaseOrders' => $purchaseOrders,
             'defaults' => [
-                'acceptance_date_received' => null,
-                'inspection_date_inspected' => null,
+                'acceptance_date_received' => $suggestedDate,
+                'inspection_date_inspected' => $suggestedDate,
                 'inspection_findings_text' => null,
                 'inspection_status_ok' => null,
                 'property_officer_title' => 'Property Officer',
@@ -147,5 +151,30 @@ class AcceptanceInspectionController extends Controller
             ->format('a4')
             ->name('Acceptance-Inspection-' . ($acceptanceInspection->purchaseOrder?->po_no ?: $acceptanceInspection->id) . '.pdf')
             ->inline();
+    }
+
+    private function isWorkingDay(?string $date): bool
+    {
+        if (! $date) {
+            return true;
+        }
+
+        $calendarEntry = Calendar::whereDate('date', $date)->first();
+        if ($calendarEntry) {
+            return (bool) $calendarEntry->is_working_day;
+        }
+
+        return ! Carbon::parse($date)->isWeekend();
+    }
+
+    private function suggestNextWorkingDay(): Carbon
+    {
+        $date = now()->startOfDay();
+
+        while (! $this->isWorkingDay($date->toDateString())) {
+            $date->addDay();
+        }
+
+        return $date;
     }
 }

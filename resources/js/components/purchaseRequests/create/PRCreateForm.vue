@@ -3,7 +3,7 @@ import { ref, computed, watch } from "vue";
 import { router } from "@inertiajs/vue3";
 import { Icon } from "@iconify/vue";
 import axios from "axios";
-import { useCalendarCheck } from "@/composables/useCalendarCheck";
+import { useWorkingDayInputGuard } from "@/composables/useWorkingDayInputGuard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -68,19 +68,8 @@ const onPurposeBlur = () => {
 };
 
 // Calendar check
-const { checkDate, isChecking } = useCalendarCheck();
-const prDateCheck = ref(null);
-const saiDateCheck = ref(null);
-
-const checkPRDate = async (date) => {
-    if (!date) return;
-    prDateCheck.value = await checkDate(date);
-};
-
-const checkSAIDate = async (date) => {
-    if (!date) return;
-    saiDateCheck.value = await checkDate(date);
-};
+const { enforceWorkingDay, getDateNotice, getDateNoticeClass } =
+    useWorkingDayInputGuard(props.form);
 
 const isAdjustingBudget = ref(false);
 const isSuggestingPrNo = ref(false);
@@ -163,12 +152,30 @@ const getAccountName = (emanating) => {
 // When emanating changes, auto-populate office/fund and build items list
 watch(
     () => props.form.pr_date,
-    (newDate) => checkPRDate(newDate),
+    async (date) => {
+        await enforceWorkingDay({
+            dateValue: date,
+            errorKey: "pr_date",
+            statusKey: "pr_date",
+            clearDate: () => {
+                props.form.pr_date = "";
+            },
+        });
+    },
 );
 
 watch(
     () => props.form.sai_date,
-    (newDate) => checkSAIDate(newDate),
+    async (date) => {
+        await enforceWorkingDay({
+            dateValue: date,
+            errorKey: "sai_date",
+            statusKey: "sai_date",
+            clearDate: () => {
+                props.form.sai_date = "";
+            },
+        });
+    },
 );
 
 watch(
@@ -414,14 +421,10 @@ const prNoPlaceholder = computed(() => {
     return `${m}${y}-0001`;
 });
 
-const tomorrowDate = computed(() => {
-    const date = new Date();
-    date.setDate(date.getDate() + 1);
-    return date.toISOString().slice(0, 10);
-});
+const minPrDate = computed(() => props.suggestedPrDate || "");
 
 if (!props.isEdit && !props.form.pr_date) {
-    props.form.pr_date = props.suggestedPrDate || tomorrowDate.value;
+    props.form.pr_date = props.suggestedPrDate || "";
 }
 
 const suggestPrNo = async () => {
@@ -620,40 +623,22 @@ watch(
                         <Label for="pr_date">
                             PR Date
                             <span class="text-destructive">*</span>
-                            <Icon
-                                v-if="isChecking && form.pr_date"
-                                icon="lucide:loader-2"
-                                class="ml-1 inline h-4 w-4 animate-spin text-muted-foreground"
-                            />
                         </Label>
                         <input
                             id="pr_date"
                             v-model="form.pr_date"
                             type="date"
-                            :min="tomorrowDate"
+                            :min="minPrDate"
                             class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         />
-                        <p class="text-xs text-muted-foreground">
-                            Date availability is checked against calendar events
-                            and holidays.
+                        <p :class="getDateNoticeClass('pr_date')">
+                            {{ getDateNotice("pr_date") }}
                         </p>
                         <p
                             v-if="form.errors?.pr_date"
                             class="text-xs text-destructive"
                         >
                             {{ form.errors.pr_date }}
-                        </p>
-                        <!-- Calendar Warning -->
-                        <p
-                            v-if="prDateCheck && !prDateCheck.is_available"
-                            class="mt-1 text-xs text-red-600"
-                        >
-                            Non-working day —
-                            <strong>{{ prDateCheck.type }}:</strong>
-                            {{ prDateCheck.name
-                            }}<span v-if="prDateCheck.message">
-                                ({{ prDateCheck.message }})</span
-                            >
                         </p>
                     </div>
 
@@ -677,37 +662,21 @@ watch(
 
                     <!-- SAI Date -->
                     <div class="space-y-2">
-                        <Label for="sai_date">
-                            SAI Date
-                            <Icon
-                                v-if="isChecking && form.sai_date"
-                                icon="lucide:loader-2"
-                                class="ml-1 inline h-4 w-4 animate-spin text-muted-foreground"
-                            />
-                        </Label>
+                        <Label for="sai_date"> SAI Date </Label>
                         <input
                             id="sai_date"
                             v-model="form.sai_date"
                             type="date"
                             class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         />
+                        <p :class="getDateNoticeClass('sai_date')">
+                            {{ getDateNotice("sai_date") }}
+                        </p>
                         <p
                             v-if="form.errors?.sai_date"
                             class="text-xs text-destructive"
                         >
                             {{ form.errors.sai_date }}
-                        </p>
-                        <!-- Calendar Warning -->
-                        <p
-                            v-if="saiDateCheck && !saiDateCheck.is_available"
-                            class="mt-1 text-xs text-red-600"
-                        >
-                            Non-working day —
-                            <strong>{{ saiDateCheck.type }}:</strong>
-                            {{ saiDateCheck.name
-                            }}<span v-if="saiDateCheck.message">
-                                ({{ saiDateCheck.message }})</span
-                            >
                         </p>
                     </div>
                 </div>
@@ -998,7 +967,7 @@ watch(
             </Button>
             <Button
                 type="submit"
-                :disabled="form.processing || isChecking || !form.emanating_id"
+                :disabled="form.processing || !form.emanating_id"
             >
                 <Icon icon="lucide:save" class="mr-1.5 h-4 w-4" />
                 {{

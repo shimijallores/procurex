@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref, watch } from "vue";
 import { Icon } from "@iconify/vue";
+import { useWorkingDayInputGuard } from "@/composables/useWorkingDayInputGuard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -11,8 +12,10 @@ const props = defineProps({
     suppliers: Array,
 });
 
-const emit = defineEmits(["submit"]);
+defineEmits(["submit"]);
 const selectedOfficeId = ref("");
+const { enforceWorkingDay, getDateNotice, getDateNoticeClass } =
+    useWorkingDayInputGuard(props.form);
 
 const officeOptions = computed(() => {
     const map = new Map();
@@ -122,6 +125,47 @@ watch(selectedOfficeId, (officeId) => {
         props.form.quotations = [];
     }
 });
+
+watch(
+    () => props.form.aoq_date,
+    async (date) => {
+        await enforceWorkingDay({
+            dateValue: date,
+            errorKey: "aoq_date",
+            statusKey: "aoq_date",
+            clearDate: () => {
+                props.form.aoq_date = "";
+            },
+        });
+    },
+);
+
+watch(
+    () =>
+        (props.form.quotations || []).map(
+            (quotation) => quotation.submitted_at,
+        ),
+    async () => {
+        const quotations = props.form.quotations || [];
+
+        for (const [index, quotation] of quotations.entries()) {
+            const submittedAt = quotation.submitted_at;
+            if (!submittedAt) {
+                continue;
+            }
+
+            await enforceWorkingDay({
+                dateValue: submittedAt,
+                errorKey: `quotations.${index}.submitted_at`,
+                statusKey: `quotations.${index}.submitted_at`,
+                clearDate: () => {
+                    quotation.submitted_at = "";
+                },
+            });
+        }
+    },
+    { deep: false },
+);
 
 const addQuotation = () => {
     const itemIds = selectedItems.value.map((item) => item.id);
@@ -252,6 +296,9 @@ const calculationMessage = computed(() => {
                         type="date"
                         class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     />
+                    <p :class="getDateNoticeClass('aoq_date')">
+                        {{ getDateNotice("aoq_date") }}
+                    </p>
                     <p
                         v-if="form.errors?.aoq_date"
                         class="text-xs text-destructive"
@@ -344,6 +391,19 @@ const calculationMessage = computed(() => {
                                 type="date"
                                 class="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
                             />
+                            <p
+                                :class="
+                                    getDateNoticeClass(
+                                        `quotations.${quotationIndex}.submitted_at`,
+                                    )
+                                "
+                            >
+                                {{
+                                    getDateNotice(
+                                        `quotations.${quotationIndex}.submitted_at`,
+                                    )
+                                }}
+                            </p>
                         </div>
 
                         <div class="space-y-2 lg:col-span-5">
@@ -410,7 +470,7 @@ const calculationMessage = computed(() => {
                                         quotation, quotationIndex
                                     ) in form.quotations"
                                     :key="`header-${quotationIndex}`"
-                                    class="px-3 py-2 text-right min-w-[180px]"
+                                    class="px-3 py-2 text-right min-w-45"
                                 >
                                     {{ supplierName(quotation.supplier_id) }}
                                 </th>

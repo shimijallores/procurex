@@ -2,6 +2,7 @@
 import { computed, ref, watch } from "vue";
 import axios from "axios";
 import { Icon } from "@iconify/vue";
+import { useWorkingDayInputGuard } from "@/composables/useWorkingDayInputGuard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -13,6 +14,8 @@ const props = defineProps({
 });
 
 defineEmits(["submit"]);
+const { enforceWorkingDay, getDateNotice, getDateNoticeClass } =
+    useWorkingDayInputGuard(props.form);
 
 const selectedNoa = computed(() =>
     props.eligibleNoas?.find(
@@ -185,6 +188,21 @@ watch(
 );
 
 watch(
+    () => props.form.po_date,
+    async (date) => {
+        await enforceWorkingDay({
+            dateValue: date,
+            errorKey: "po_date",
+            statusKey: "po_date",
+            clearDate: () => {
+                props.form.po_date = "";
+                props.form.po_no = "";
+            },
+        });
+    },
+);
+
+watch(
     () => props.form.items,
     (items) => {
         props.form.total_amount = (items || []).reduce(
@@ -298,6 +316,9 @@ const formatCurrency = (value) =>
                         type="date"
                         class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     />
+                    <p :class="getDateNoticeClass('po_date')">
+                        {{ getDateNotice("po_date") }}
+                    </p>
                     <p
                         v-if="form.errors?.po_date"
                         class="text-xs text-destructive"

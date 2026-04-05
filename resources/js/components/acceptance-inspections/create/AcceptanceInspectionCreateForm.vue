@@ -1,6 +1,7 @@
 <script setup>
-import { computed } from "vue";
+import { computed, watch } from "vue";
 import { Icon } from "@iconify/vue";
+import { useWorkingDayInputGuard } from "@/composables/useWorkingDayInputGuard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -11,6 +12,8 @@ const props = defineProps({
 });
 
 defineEmits(["submit"]);
+const { enforceWorkingDay, getDateNotice, getDateNoticeClass } =
+    useWorkingDayInputGuard(props.form);
 
 const selectedPurchaseOrder = computed(() =>
     props.purchaseOrders?.find(
@@ -19,6 +22,34 @@ const selectedPurchaseOrder = computed(() =>
 );
 
 const poItems = computed(() => selectedPurchaseOrder.value?.items || []);
+
+watch(
+    () => props.form.acceptance_date_received,
+    async (date) => {
+        await enforceWorkingDay({
+            dateValue: date,
+            errorKey: "acceptance_date_received",
+            statusKey: "acceptance_date_received",
+            clearDate: () => {
+                props.form.acceptance_date_received = "";
+            },
+        });
+    },
+);
+
+watch(
+    () => props.form.inspection_date_inspected,
+    async (date) => {
+        await enforceWorkingDay({
+            dateValue: date,
+            errorKey: "inspection_date_inspected",
+            statusKey: "inspection_date_inspected",
+            clearDate: () => {
+                props.form.inspection_date_inspected = "";
+            },
+        });
+    },
+);
 </script>
 
 <template>
@@ -111,6 +142,9 @@ const poItems = computed(() => selectedPurchaseOrder.value?.items || []);
                         type="date"
                         class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     />
+                    <p :class="getDateNoticeClass('acceptance_date_received')">
+                        {{ getDateNotice("acceptance_date_received") }}
+                    </p>
                 </div>
 
                 <div class="space-y-2">
@@ -123,6 +157,9 @@ const poItems = computed(() => selectedPurchaseOrder.value?.items || []);
                         type="date"
                         class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     />
+                    <p :class="getDateNoticeClass('inspection_date_inspected')">
+                        {{ getDateNotice("inspection_date_inspected") }}
+                    </p>
                 </div>
 
                 <div class="space-y-2">

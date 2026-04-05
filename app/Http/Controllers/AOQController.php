@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreAOQRequest;
 use App\Models\AOQ;
+use App\Models\Calendar;
 use App\Models\RFQ;
 use App\Models\RFQSupplier;
 use App\Models\RFQSupplierItem;
@@ -112,7 +113,7 @@ class AOQController extends Controller
         return Inertia::render('AOQs/Create', [
             'eligibleRfqs' => $eligibleRfqs,
             'suppliers' => $suppliers,
-            'defaultAoqDate' => now()->toDateString(),
+            'defaultAoqDate' => $this->suggestNextWorkingDay()->toDateString(),
         ]);
     }
 
@@ -346,5 +347,30 @@ class AOQController extends Controller
             'winner_supplier_id' => $winner['supplier_id'] ?? null,
             'winner_total_amount' => $winner['total_amount'] ?? null,
         ];
+    }
+
+    private function isWorkingDay(?string $date): bool
+    {
+        if (! $date) {
+            return true;
+        }
+
+        $calendarEntry = Calendar::whereDate('date', $date)->first();
+        if ($calendarEntry) {
+            return (bool) $calendarEntry->is_working_day;
+        }
+
+        return ! Carbon::parse($date)->isWeekend();
+    }
+
+    private function suggestNextWorkingDay(): Carbon
+    {
+        $date = now()->startOfDay();
+
+        while (! $this->isWorkingDay($date->toDateString())) {
+            $date->addDay();
+        }
+
+        return $date;
     }
 }

@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref, watch } from "vue";
 import { Icon } from "@iconify/vue";
+import { useWorkingDayInputGuard } from "@/composables/useWorkingDayInputGuard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -11,6 +12,8 @@ const props = defineProps({
 });
 
 defineEmits(["submit"]);
+const { enforceWorkingDay, getDateNotice, getDateNoticeClass } =
+    useWorkingDayInputGuard(props.form);
 
 const headerTouched = ref(false);
 const signatoryTouched = ref(false);
@@ -64,6 +67,34 @@ watch(
         }
     },
     { immediate: true },
+);
+
+watch(
+    () => props.form.coa.transmittal_date,
+    async (date) => {
+        await enforceWorkingDay({
+            dateValue: date,
+            errorKey: "coa.transmittal_date",
+            statusKey: "coa.transmittal_date",
+            clearDate: () => {
+                props.form.coa.transmittal_date = "";
+            },
+        });
+    },
+);
+
+watch(
+    () => props.form.opg.transmittal_date,
+    async (date) => {
+        await enforceWorkingDay({
+            dateValue: date,
+            errorKey: "opg.transmittal_date",
+            statusKey: "opg.transmittal_date",
+            clearDate: () => {
+                props.form.opg.transmittal_date = "";
+            },
+        });
+    },
 );
 </script>
 
@@ -157,6 +188,9 @@ watch(
                             type="date"
                             class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                         />
+                        <p :class="getDateNoticeClass('coa.transmittal_date')">
+                            {{ getDateNotice("coa.transmittal_date") }}
+                        </p>
                         <p
                             v-if="form.errors?.['coa.transmittal_date']"
                             class="text-xs text-destructive"
@@ -261,6 +295,9 @@ watch(
                             type="date"
                             class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                         />
+                        <p :class="getDateNoticeClass('opg.transmittal_date')">
+                            {{ getDateNotice("opg.transmittal_date") }}
+                        </p>
                         <p
                             v-if="form.errors?.['opg.transmittal_date']"
                             class="text-xs text-destructive"

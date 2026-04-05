@@ -86,7 +86,7 @@ class CalendarController extends Controller
         ]);
 
         $date = \Carbon\Carbon::parse($request->date);
-        $calendarEntry = Calendar::where('date', $request->date)->first();
+        $calendarEntry = Calendar::whereDate('date', (string) $request->date)->first();
 
         // Check if it's a weekend (Saturday = 6, Sunday = 0)
         $isWeekend = $date->dayOfWeek == 0 || $date->dayOfWeek == 6;

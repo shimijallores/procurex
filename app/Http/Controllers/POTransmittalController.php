@@ -6,11 +6,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePOTransmittalRequest;
 use App\Http\Requests\UpdatePOTransmittalRequest;
+use App\Models\Calendar;
 use App\Models\Office;
 use App\Models\POTransmittal;
 use App\Models\PurchaseOrder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -81,10 +83,12 @@ class POTransmittalController extends Controller
             'noa.bacResolution.aoq.winnerSupplier',
         ])->latest('po_date')->get();
 
+        $suggestedDate = $this->suggestNextWorkingDay()->toDateString();
+
         return Inertia::render('POTransmittals/Create', [
             'purchaseOrders' => $purchaseOrders,
             'defaults' => [
-                'transmittal_date' => now()->toDateString(),
+                'transmittal_date' => $suggestedDate,
                 'coa' => [
                     'type' => 'coa',
                     'header_text' => $this->defaultHeaderText('coa'),
@@ -266,5 +270,30 @@ class POTransmittalController extends Controller
         }
 
         return "MARIA VANESSA C. BRIONES - VEGAS\nOIC – SUPERVISING AUDITOR\nCOMMISSION ON AUDIT\nCapitol Site, Batangas City\n\nMa’am,";
+    }
+
+    private function isWorkingDay(?string $date): bool
+    {
+        if (! $date) {
+            return true;
+        }
+
+        $calendarEntry = Calendar::whereDate('date', $date)->first();
+        if ($calendarEntry) {
+            return (bool) $calendarEntry->is_working_day;
+        }
+
+        return ! Carbon::parse($date)->isWeekend();
+    }
+
+    private function suggestNextWorkingDay(): Carbon
+    {
+        $date = now()->startOfDay();
+
+        while (! $this->isWorkingDay($date->toDateString())) {
+            $date->addDay();
+        }
+
+        return $date;
     }
 }
