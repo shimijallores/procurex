@@ -70,13 +70,13 @@ class ProcurementMapController extends Controller
             ->get();
 
         $filteredEmanatings = $selectedStatus !== ''
-            ? $emanatings->filter(fn(Emanating $emanating): bool => $this->deriveOverallStatus($emanating) === $selectedStatus)->values()
+            ? $emanatings->filter(fn (Emanating $emanating): bool => $this->deriveOverallStatus($emanating) === $selectedStatus)->values()
             : $emanatings;
 
         $apps = APP::query()
             ->with('office')
-            ->when($selectedOfficeId !== null, fn(Builder $query) => $query->where('office_id', $selectedOfficeId))
-            ->when($selectedFiscalYear !== '', fn(Builder $query) => $query->where('fiscal_year', (int) $selectedFiscalYear))
+            ->when($selectedOfficeId !== null, fn (Builder $query) => $query->where('office_id', $selectedOfficeId))
+            ->when($selectedFiscalYear !== '', fn (Builder $query) => $query->where('fiscal_year', (int) $selectedFiscalYear))
             ->when($search !== '', function (Builder $query) use ($search): void {
                 $query->where(function (Builder $nestedQuery) use ($search): void {
                     $nestedQuery
@@ -88,12 +88,12 @@ class ProcurementMapController extends Controller
                 });
             })
             ->get()
-            ->keyBy(fn(APP $app): string => sprintf('%d-%d', (int) $app->office_id, (int) $app->fiscal_year));
+            ->keyBy(fn (APP $app): string => sprintf('%d-%d', (int) $app->office_id, (int) $app->fiscal_year));
 
         $funds = Fund::query()
             ->with('office')
-            ->when($selectedOfficeId !== null, fn(Builder $query) => $query->where('office_id', $selectedOfficeId))
-            ->when($selectedFiscalYear !== '', fn(Builder $query) => $query->where('fiscal_year', (int) $selectedFiscalYear))
+            ->when($selectedOfficeId !== null, fn (Builder $query) => $query->where('office_id', $selectedOfficeId))
+            ->when($selectedFiscalYear !== '', fn (Builder $query) => $query->where('fiscal_year', (int) $selectedFiscalYear))
             ->when($search !== '', function (Builder $query) use ($search): void {
                 $query->where(function (Builder $nestedQuery) use ($search): void {
                     $nestedQuery
@@ -130,7 +130,7 @@ class ProcurementMapController extends Controller
             ->merge($fundFiscalYears)
             ->unique()
             ->sortDesc()
-            ->mapWithKeys(fn(int $year): array => [(string) $year => (string) $year]);
+            ->mapWithKeys(fn (int $year): array => [(string) $year => (string) $year]);
 
         return Inertia::render('ProcurementMap/Index', [
             'graph' => $graph,
@@ -144,9 +144,9 @@ class ProcurementMapController extends Controller
             ],
             'stats' => [
                 'total_flows' => $filteredEmanatings->count(),
-                'pending' => $filteredEmanatings->filter(fn(Emanating $emanating): bool => $this->deriveOverallStatus($emanating) === 'pending')->count(),
-                'ongoing' => $filteredEmanatings->filter(fn(Emanating $emanating): bool => $this->deriveOverallStatus($emanating) === 'ongoing')->count(),
-                'completed' => $filteredEmanatings->filter(fn(Emanating $emanating): bool => $this->deriveOverallStatus($emanating) === 'completed')->count(),
+                'pending' => $filteredEmanatings->filter(fn (Emanating $emanating): bool => $this->deriveOverallStatus($emanating) === 'pending')->count(),
+                'ongoing' => $filteredEmanatings->filter(fn (Emanating $emanating): bool => $this->deriveOverallStatus($emanating) === 'ongoing')->count(),
+                'completed' => $filteredEmanatings->filter(fn (Emanating $emanating): bool => $this->deriveOverallStatus($emanating) === 'completed')->count(),
             ],
             'statusOptions' => [
                 ['value' => '', 'label' => 'All Statuses'],

@@ -38,7 +38,7 @@ class AcceptanceInspectionController extends Controller
                 });
             })
             ->when($request->office_id, function ($q, string $officeId): void {
-                $q->whereHas('purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest', fn($pr) => $pr->where('office_id', $officeId));
+                $q->whereHas('purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest', fn ($pr) => $pr->where('office_id', $officeId));
             })
             ->when($request->fiscal_year, function ($q, string $fiscalYear): void {
                 $q->whereYear('created_at', $fiscalYear);
@@ -55,7 +55,7 @@ class AcceptanceInspectionController extends Controller
         $offices = Office::orderBy('name')->get(['id', 'name']);
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear + 1))
-            ->mapWithKeys(fn($year) => [$year => $year])
+            ->mapWithKeys(fn ($year) => [$year => $year])
             ->reverse();
 
         return Inertia::render('AcceptanceInspections/Index', [
@@ -149,7 +149,7 @@ class AcceptanceInspectionController extends Controller
             'office' => $acceptanceInspection->purchaseOrder?->noa?->bacResolution?->aoq?->rfq?->purchaseRequest?->office,
         ])
             ->format('a4')
-            ->name('Acceptance-Inspection-' . ($acceptanceInspection->purchaseOrder?->po_no ?: $acceptanceInspection->id) . '.pdf')
+            ->name('Acceptance-Inspection-'.($acceptanceInspection->purchaseOrder?->po_no ?: $acceptanceInspection->id).'.pdf')
             ->inline();
     }
 

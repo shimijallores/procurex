@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\RoleType;
-use App\Models\APP;
 use App\Models\AOQ;
+use App\Models\APP;
 use App\Models\BACResolution;
 use App\Models\Canvas;
 use App\Models\Emanating;
@@ -42,7 +42,7 @@ class DashboardController extends Controller
             RoleType::INSPECTION_ADMIN->value,
         ];
 
-        $roleName = collect($rolePriority)->first(fn(string $role): bool => in_array($role, $roleNames, true));
+        $roleName = collect($rolePriority)->first(fn (string $role): bool => in_array($role, $roleNames, true));
         $scopeLabel = $roleName
             ? 'System-wide'
             : ($user?->office?->name ?? 'Office');
@@ -91,8 +91,8 @@ class DashboardController extends Controller
                 ->latest('resolution_date')
                 ->limit(6)
                 ->get()
-                ->map(fn(BACResolution $item) => [
-                    'title' => $item->resolution_no ?: ('BAC #' . $item->id),
+                ->map(fn (BACResolution $item) => [
+                    'title' => $item->resolution_no ?: ('BAC #'.$item->id),
                     'subtitle' => $item->project_name ?: 'No project name',
                     'meta' => $item->isFinalized() ? 'Finalized' : 'Draft',
                     'date' => optional($item->resolution_date)->format('M d, Y') ?: '—',
@@ -122,8 +122,8 @@ class DashboardController extends Controller
                 ->latest('pr_date')
                 ->limit(6)
                 ->get()
-                ->map(fn(PurchaseRequest $item) => [
-                    'title' => $item->pr_no ?: ('PR #' . $item->id),
+                ->map(fn (PurchaseRequest $item) => [
+                    'title' => $item->pr_no ?: ('PR #'.$item->id),
                     'subtitle' => $item->office?->name ?: 'No office',
                     'meta' => ucfirst(str_replace('_', ' ', (string) $item->status)),
                     'date' => optional($item->pr_date)->format('M d, Y') ?: '—',
@@ -152,8 +152,8 @@ class DashboardController extends Controller
                 ->latest()
                 ->limit(6)
                 ->get()
-                ->map(fn(Canvas $item) => [
-                    'title' => 'Canvas #' . $item->id,
+                ->map(fn (Canvas $item) => [
+                    'title' => 'Canvas #'.$item->id,
                     'subtitle' => $item->emanating?->project?->name ?: 'No project',
                     'meta' => ucfirst((string) $item->status),
                     'date' => optional($item->created_at)->format('M d, Y') ?: '—',
@@ -183,8 +183,8 @@ class DashboardController extends Controller
                 ->latest('pr_date')
                 ->limit(6)
                 ->get()
-                ->map(fn(PurchaseRequest $item) => [
-                    'title' => $item->pr_no ?: ('PR #' . $item->id),
+                ->map(fn (PurchaseRequest $item) => [
+                    'title' => $item->pr_no ?: ('PR #'.$item->id),
                     'subtitle' => $item->office?->name ?: 'No office',
                     'meta' => ucfirst(str_replace('_', ' ', (string) $item->status)),
                     'date' => optional($item->pr_date)->format('M d, Y') ?: '—',
@@ -213,8 +213,8 @@ class DashboardController extends Controller
                 ->latest('rfq_date')
                 ->limit(6)
                 ->get()
-                ->map(fn(RFQ $item) => [
-                    'title' => $item->svp_no ?: ('RFQ #' . $item->id),
+                ->map(fn (RFQ $item) => [
+                    'title' => $item->svp_no ?: ('RFQ #'.$item->id),
                     'subtitle' => $item->project_name ?: 'No project name',
                     'meta' => $item->purchaseRequest?->office?->name ?: 'No office',
                     'date' => optional($item->rfq_date)->format('M d, Y') ?: '—',
@@ -243,8 +243,8 @@ class DashboardController extends Controller
                 ->latest('transmittal_date')
                 ->limit(6)
                 ->get()
-                ->map(fn(POTransmittal $item) => [
-                    'title' => strtoupper((string) $item->type) . ' - ' . ($item->transmittal_no ?: ('#' . $item->id)),
+                ->map(fn (POTransmittal $item) => [
+                    'title' => strtoupper((string) $item->type).' - '.($item->transmittal_no ?: ('#'.$item->id)),
                     'subtitle' => $item->purchaseOrder?->po_no ?: 'No PO',
                     'meta' => $item->signatory_name ?: 'No signatory',
                     'date' => optional($item->transmittal_date)->format('M d, Y') ?: '—',
@@ -259,7 +259,7 @@ class DashboardController extends Controller
         } else {
             $officeId = $user?->office_id;
 
-            $emanatingQuery = Emanating::whereHas('project.fund', fn($fund) => $fund->where('office_id', $officeId));
+            $emanatingQuery = Emanating::whereHas('project.fund', fn ($fund) => $fund->where('office_id', $officeId));
             $prQuery = PurchaseRequest::where('office_id', $officeId);
 
             $payload['metrics'] = [
@@ -280,8 +280,8 @@ class DashboardController extends Controller
                 ->latest('pr_date')
                 ->limit(6)
                 ->get()
-                ->map(fn(PurchaseRequest $item) => [
-                    'title' => $item->pr_no ?: ('PR #' . $item->id),
+                ->map(fn (PurchaseRequest $item) => [
+                    'title' => $item->pr_no ?: ('PR #'.$item->id),
                     'subtitle' => $item->purpose ?: 'No purpose provided',
                     'meta' => ucfirst(str_replace('_', ' ', (string) $item->status)),
                     'date' => optional($item->pr_date)->format('M d, Y') ?: '—',
@@ -345,10 +345,10 @@ class DashboardController extends Controller
             ->latest('po_date')
             ->limit(6)
             ->get()
-            ->map(fn(PurchaseOrder $item) => [
+            ->map(fn (PurchaseOrder $item) => [
                 'title' => $item->po_no,
                 'subtitle' => $item->noa?->bacResolution?->project_name ?: 'No project name',
-                'meta' => 'PO Amount: ₱' . number_format((float) $item->total_amount, 2),
+                'meta' => 'PO Amount: ₱'.number_format((float) $item->total_amount, 2),
                 'date' => optional($item->po_date)->format('M d, Y') ?: '—',
                 'link' => route('purchase-orders.show', $item),
             ])->values();

@@ -162,7 +162,7 @@ class SystemUserSeeder extends Seeder
             ]);
 
             $roleIds = collect($seedUser['role_names'])
-                ->map(fn(string $roleName): int => $rolesByName->get($roleName)->id)
+                ->map(fn (string $roleName): int => $rolesByName->get($roleName)->id)
                 ->all();
 
             $systemUser->roles()->sync($roleIds);

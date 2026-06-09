@@ -43,7 +43,7 @@ class POTransmittalController extends Controller
                 });
             })
             ->when($request->office_id, function ($q, string $officeId): void {
-                $q->whereHas('purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest', fn($pr) => $pr->where('office_id', $officeId));
+                $q->whereHas('purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest', fn ($pr) => $pr->where('office_id', $officeId));
             })
             ->when($request->fiscal_year, function ($q, string $fiscalYear): void {
                 $q->whereYear('transmittal_date', $fiscalYear);
@@ -53,14 +53,14 @@ class POTransmittalController extends Controller
 
         $stats = [
             'total' => (clone $query)->count(),
-            'with_opg_count' => (clone $query)->whereHas('purchaseOrder.poTransmittals', fn($q) => $q->where('type', 'opg'))->count(),
-            'missing_opg_count' => (clone $query)->whereDoesntHave('purchaseOrder.poTransmittals', fn($q) => $q->where('type', 'opg'))->count(),
+            'with_opg_count' => (clone $query)->whereHas('purchaseOrder.poTransmittals', fn ($q) => $q->where('type', 'opg'))->count(),
+            'missing_opg_count' => (clone $query)->whereDoesntHave('purchaseOrder.poTransmittals', fn ($q) => $q->where('type', 'opg'))->count(),
         ];
 
         $offices = Office::orderBy('name')->get(['id', 'name']);
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear + 1))
-            ->mapWithKeys(fn($year) => [$year => $year])
+            ->mapWithKeys(fn ($year) => [$year => $year])
             ->reverse();
 
         return Inertia::render('POTransmittals/Index', [
@@ -179,7 +179,7 @@ class POTransmittalController extends Controller
             'poTransmittal' => $coaTransmittal,
             'coaTransmittal' => $coaTransmittal,
             'opgTransmittal' => $opgTransmittal,
-            'relatedTransmittals' => $relatedTransmittals->map(fn(POTransmittal $entry): array => [
+            'relatedTransmittals' => $relatedTransmittals->map(fn (POTransmittal $entry): array => [
                 'id' => $entry->id,
                 'type' => $entry->type,
                 'transmittal_no' => $entry->transmittal_no,
@@ -259,7 +259,7 @@ class POTransmittalController extends Controller
             'winnerSupplier' => $poTransmittal->purchaseOrder?->noa?->bacResolution?->aoq?->winnerSupplier,
         ])
             ->format('a4')
-            ->name('PO-Transmittal-' . ($poTransmittal->purchaseOrder?->po_no ?: $poTransmittal->id) . '.pdf')
+            ->name('PO-Transmittal-'.($poTransmittal->purchaseOrder?->po_no ?: $poTransmittal->id).'.pdf')
             ->inline();
     }
 

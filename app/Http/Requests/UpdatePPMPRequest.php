@@ -30,7 +30,7 @@ class UpdatePPMPRequest extends FormRequest
             'office_id' => ['required', 'exists:offices,id'],
             'fund_id' => [
                 'required',
-                Rule::exists('funds', 'id')->where(fn($query) => $query->where('office_id', $this->office_id)),
+                Rule::exists('funds', 'id')->where(fn ($query) => $query->where('office_id', $this->office_id)),
             ],
             'fiscal_year' => ['required', 'integer', 'min:2000', 'max:2100'],
             'is_addendum' => ['nullable', 'boolean'],
@@ -96,11 +96,11 @@ class UpdatePPMPRequest extends FormRequest
                     ->where('fiscal_year', $this->fiscal_year)
                     ->when(
                         $projectCodeId === null,
-                        fn($query) => $query->whereNull('project_code_id'),
-                        fn($query) => $query->where('project_code_id', $projectCodeId)
+                        fn ($query) => $query->whereNull('project_code_id'),
+                        fn ($query) => $query->where('project_code_id', $projectCodeId)
                     )
                     ->where('is_addendum', false)
-                    ->when($currentPpmp, fn($query) => $query->where('id', '!=', $currentPpmp->id))
+                    ->when($currentPpmp, fn ($query) => $query->where('id', '!=', $currentPpmp->id))
                     ->exists();
 
                 if (! $existingBasePpmp) {

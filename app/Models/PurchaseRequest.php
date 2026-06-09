@@ -30,11 +30,11 @@ class PurchaseRequest extends Model
     ];
 
     protected $casts = [
-        'pr_date'      => 'date',
-        'sai_date'     => 'date',
+        'pr_date' => 'date',
+        'sai_date' => 'date',
         'total_amount' => 'decimal:2',
-        'created_at'   => 'datetime',
-        'updated_at'   => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function emanating(): BelongsTo

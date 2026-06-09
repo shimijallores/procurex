@@ -43,8 +43,8 @@ class NOAController extends Controller
             ->when($request->office_id, function ($q, string $officeId): void {
                 $q->where(function ($officeQuery) use ($officeId): void {
                     $officeQuery
-                        ->whereHas('aoq.rfq.purchaseRequest', fn($pr) => $pr->where('office_id', $officeId))
-                        ->orWhereHas('bacResolution.aoq.rfq.purchaseRequest', fn($pr) => $pr->where('office_id', $officeId));
+                        ->whereHas('aoq.rfq.purchaseRequest', fn ($pr) => $pr->where('office_id', $officeId))
+                        ->orWhereHas('bacResolution.aoq.rfq.purchaseRequest', fn ($pr) => $pr->where('office_id', $officeId));
                 });
             })
             ->when($request->fiscal_year, function ($q, string $fiscalYear): void {
@@ -70,7 +70,7 @@ class NOAController extends Controller
         $offices = Office::orderBy('name')->get(['id', 'name']);
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear + 1))
-            ->mapWithKeys(fn($year) => [$year => $year])
+            ->mapWithKeys(fn ($year) => [$year => $year])
             ->reverse();
 
         return Inertia::render('NOAs/Index', [
@@ -107,18 +107,18 @@ class NOAController extends Controller
                 $usedAoqIds = $resolution->noas
                     ->pluck('aoq_id')
                     ->filter()
-                    ->map(fn($id) => (int) $id)
+                    ->map(fn ($id) => (int) $id)
                     ->all();
 
                 $remainingAoqs = $allAoqs
-                    ->filter(fn($aoq) => ! in_array((int) $aoq->id, $usedAoqIds, true))
+                    ->filter(fn ($aoq) => ! in_array((int) $aoq->id, $usedAoqIds, true))
                     ->values();
 
                 $resolution->setAttribute('remaining_aoqs', $remainingAoqs);
 
                 return $resolution;
             })
-            ->filter(fn(BACResolution $resolution) => collect($resolution->remaining_aoqs)->isNotEmpty())
+            ->filter(fn (BACResolution $resolution) => collect($resolution->remaining_aoqs)->isNotEmpty())
             ->values();
 
         $suppliers = Supplier::query()
@@ -299,7 +299,7 @@ class NOAController extends Controller
             'recipientTitle' => $recipientTitle,
         ])
             ->format('a4')
-            ->name('NOA-' . $noa->noa_no . '.pdf')
+            ->name('NOA-'.$noa->noa_no.'.pdf')
             ->inline();
     }
 

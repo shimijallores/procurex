@@ -30,11 +30,11 @@ class SvpMatrixController extends Controller
             ->latest('id')
             ->paginate(10)
             ->withQueryString()
-            ->through(fn(SvpMatrix $row): array => $this->transformMatrixRow($row));
+            ->through(fn (SvpMatrix $row): array => $this->transformMatrixRow($row));
 
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear + 1))
-            ->mapWithKeys(fn(int $year): array => [(string) $year => (string) $year])
+            ->mapWithKeys(fn (int $year): array => [(string) $year => (string) $year])
             ->reverse();
 
         return Inertia::render('SVPMatrix/Index', [

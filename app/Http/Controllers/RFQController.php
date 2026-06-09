@@ -31,11 +31,11 @@ class RFQController extends Controller
                     ->orWhere('project_name', 'like', sprintf('%%%s%%', $search))
                     ->orWhereHas('purchaseRequest', function ($pr) use ($search): void {
                         $pr->where('pr_no', 'like', sprintf('%%%s%%', $search))
-                            ->orWhereHas('office', fn($o) => $o->where('name', 'like', sprintf('%%%s%%', $search)));
+                            ->orWhereHas('office', fn ($o) => $o->where('name', 'like', sprintf('%%%s%%', $search)));
                     });
             })
             ->when($request->office_id, function ($q, string $officeId): void {
-                $q->whereHas('purchaseRequest', fn($pr) => $pr->where('office_id', $officeId));
+                $q->whereHas('purchaseRequest', fn ($pr) => $pr->where('office_id', $officeId));
             })
             ->when($request->fiscal_year, function ($q, string $fiscalYear): void {
                 $q->whereYear('rfq_date', $fiscalYear);
@@ -57,7 +57,7 @@ class RFQController extends Controller
 
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear + 1))
-            ->mapWithKeys(fn($year) => [$year => $year])
+            ->mapWithKeys(fn ($year) => [$year => $year])
             ->reverse();
 
         return Inertia::render('RFQs/Index', [
@@ -133,7 +133,7 @@ class RFQController extends Controller
                 ? Carbon::parse($validated['submission_deadline'])
                 : $this->suggestSubmissionDeadline($rfqDate);
 
-            $allowedPrItemIds = $purchaseRequest->items->pluck('id')->map(fn($id) => (int) $id)->all();
+            $allowedPrItemIds = $purchaseRequest->items->pluck('id')->map(fn ($id) => (int) $id)->all();
 
             foreach ($validated['items'] as $itemPayload) {
                 if (! in_array((int) $itemPayload['pr_item_id'], $allowedPrItemIds, true)) {
@@ -204,17 +204,17 @@ class RFQController extends Controller
             'rfq' => $rfq,
         ])
             ->format('a4')
-            ->name('RFQ-' . $rfq->svp_no . '.pdf')
+            ->name('RFQ-'.$rfq->svp_no.'.pdf')
             ->inline();
     }
 
     private function generateSvpNo(Carbon $rfqDate): string
     {
         $year = $rfqDate->format('Y');
-        $prefix = $year . '-';
+        $prefix = $year.'-';
 
         $latest = RFQ::query()
-            ->where('svp_no', 'like', $prefix . '%')
+            ->where('svp_no', 'like', $prefix.'%')
             ->orderByDesc('svp_no')
             ->value('svp_no');
 

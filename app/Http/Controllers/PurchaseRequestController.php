@@ -84,28 +84,28 @@ class PurchaseRequestController extends Controller
             ->withQueryString();
 
         $stats = [
-            'total'             => (clone $query)->count(),
-            'draft'             => (clone $query)->where('status', 'draft')->count(),
-            'approved'          => (clone $query)->where('status', 'approved')->count(),
-            'returned'          => (clone $query)->where('status', 'returned')->count(),
+            'total' => (clone $query)->count(),
+            'draft' => (clone $query)->where('status', 'draft')->count(),
+            'approved' => (clone $query)->where('status', 'approved')->count(),
+            'returned' => (clone $query)->where('status', 'returned')->count(),
         ];
 
         $offices = Office::orderBy('name')->get(['id', 'name']);
 
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear + 1))
-            ->mapWithKeys(fn($year) => [$year => $year])
+            ->mapWithKeys(fn ($year) => [$year => $year])
             ->reverse();
 
         return Inertia::render('PurchaseRequests/Index', [
             'purchaseRequests' => $paginator,
-            'stats'            => $stats,
-            'offices'          => $offices,
-            'fiscalYears'      => $fiscalYears,
-            'filters'          => [
-                'search'      => $request->search,
-                'office_id'   => $request->office_id,
-                'status'      => $request->status,
+            'stats' => $stats,
+            'offices' => $offices,
+            'fiscalYears' => $fiscalYears,
+            'filters' => [
+                'search' => $request->search,
+                'office_id' => $request->office_id,
+                'status' => $request->status,
                 'fiscal_year' => $request->fiscal_year,
             ],
         ]);
@@ -132,10 +132,10 @@ class PurchaseRequestController extends Controller
 
         return Inertia::render('PurchaseRequests/Create', [
             'eligibleEmanatings' => $eligibleEmanatings,
-            'commonPurposes'     => self::COMMON_PURPOSES,
-            'suggestedPrDate'    => $suggestedPrDate->toDateString(),
-            'suggestedPrNo'      => $this->previewNextPrNo($suggestedPrDate),
-            'returnReasons'      => self::RETURN_REASONS,
+            'commonPurposes' => self::COMMON_PURPOSES,
+            'suggestedPrDate' => $suggestedPrDate->toDateString(),
+            'suggestedPrNo' => $this->previewNextPrNo($suggestedPrDate),
+            'returnReasons' => self::RETURN_REASONS,
         ]);
     }
 
@@ -187,18 +187,18 @@ class PurchaseRequestController extends Controller
 
             $pr = PurchaseRequest::create([
                 'emanating_id' => $validated['emanating_id'],
-                'office_id'    => $officeId,
-                'fund_id'      => $fundId,
-                'pr_no'        => $generatedPrNo,
-                'pr_date'      => $prDate->toDateString(),
-                'sai_no'       => $validated['sai_no'] ?? null,
-                'sai_date'     => $validated['sai_date'] ?? null,
+                'office_id' => $officeId,
+                'fund_id' => $fundId,
+                'pr_no' => $generatedPrNo,
+                'pr_date' => $prDate->toDateString(),
+                'sai_no' => $validated['sai_no'] ?? null,
+                'sai_date' => $validated['sai_date'] ?? null,
                 'requested_by_name' => $requestedByName !== '' ? $requestedByName : $emanating->requesting_officer_name,
                 'requested_by_designation' => $requestedByDesignation !== '' ? $requestedByDesignation : $emanating->requesting_officer_title,
-                'purpose'      => $validated['purpose'] ?? null,
+                'purpose' => $validated['purpose'] ?? null,
                 'total_amount' => round($total, 2),
-                'status'       => $validated['status'] ?? 'draft',
-                'remarks'      => $validated['remarks'] ?? null,
+                'status' => $validated['status'] ?? 'draft',
+                'remarks' => $validated['remarks'] ?? null,
             ]);
 
             $emanating->update(['pr_no' => $generatedPrNo]);
@@ -208,7 +208,7 @@ class PurchaseRequestController extends Controller
 
             foreach ($validated['items'] as $item) {
                 $lineTotal = (float) $item['unit_cost'] * (int) $item['quantity'];
-                $vatRate   = ! empty($item['vat_applicable']) ? (float) ($item['vat_rate'] ?? 0.12) : 0;
+                $vatRate = ! empty($item['vat_applicable']) ? (float) ($item['vat_rate'] ?? 0.12) : 0;
                 if (! empty($item['vat_applicable'])) {
                     $lineTotal = $lineTotal * (1 + $vatRate);
                 }
@@ -218,13 +218,13 @@ class PurchaseRequestController extends Controller
 
                 PurchaseRequestItem::create([
                     'purchase_request_id' => $pr->id,
-                    'emanating_item_id'   => $item['emanating_item_id'],
-                    'quantity'            => $item['quantity'],
-                    'unit_cost'           => $item['unit_cost'],
-                    'line_total'          => round($lineTotal, 2),
-                    'vat_applicable'      => ! empty($item['vat_applicable']),
-                    'vat_rate'            => ! empty($item['vat_applicable']) ? $vatRate : 0,
-                    'remarks'             => $item['remarks'] ?? null,
+                    'emanating_item_id' => $item['emanating_item_id'],
+                    'quantity' => $item['quantity'],
+                    'unit_cost' => $item['unit_cost'],
+                    'line_total' => round($lineTotal, 2),
+                    'vat_applicable' => ! empty($item['vat_applicable']),
+                    'vat_rate' => ! empty($item['vat_applicable']) ? $vatRate : 0,
+                    'remarks' => $item['remarks'] ?? null,
                     'matrix_amount_below_1m' => $sourceAmount > 0 && $sourceAmount < 1000000 ? round($sourceAmount, 2) : null,
                     'matrix_amount_above_1m' => $sourceAmount >= 1000000 ? round($sourceAmount, 2) : null,
                     'matrix_new_amount' => round($lineTotal, 2),
@@ -263,7 +263,7 @@ class PurchaseRequestController extends Controller
 
         return Inertia::render('PurchaseRequests/Show', [
             'purchaseRequest' => $purchaseRequest,
-            'returnReasons'   => self::RETURN_REASONS,
+            'returnReasons' => self::RETURN_REASONS,
         ]);
     }
 
@@ -282,7 +282,7 @@ class PurchaseRequestController extends Controller
 
         return Inertia::render('PurchaseRequests/Edit', [
             'purchaseRequest' => $purchaseRequest,
-            'commonPurposes'  => self::COMMON_PURPOSES,
+            'commonPurposes' => self::COMMON_PURPOSES,
         ]);
     }
 
@@ -318,7 +318,7 @@ class PurchaseRequestController extends Controller
                 foreach ($validated['items'] as $item) {
                     $lineTotal = (float) $item['unit_cost'] * (int) $item['quantity'];
                     if (! empty($item['vat_applicable'])) {
-                        $vatRate   = (float) ($item['vat_rate'] ?? 0.12);
+                        $vatRate = (float) ($item['vat_rate'] ?? 0.12);
                         $lineTotal = $lineTotal * (1 + $vatRate);
                     }
                     $total += $lineTotal;
@@ -329,7 +329,7 @@ class PurchaseRequestController extends Controller
                 $purchaseRequest->items()->delete();
                 foreach ($validated['items'] as $item) {
                     $lineTotal = (float) $item['unit_cost'] * (int) $item['quantity'];
-                    $vatRate   = ! empty($item['vat_applicable']) ? (float) ($item['vat_rate'] ?? 0.12) : 0;
+                    $vatRate = ! empty($item['vat_applicable']) ? (float) ($item['vat_rate'] ?? 0.12) : 0;
                     if (! empty($item['vat_applicable'])) {
                         $lineTotal = $lineTotal * (1 + $vatRate);
                     }
@@ -341,13 +341,13 @@ class PurchaseRequestController extends Controller
 
                     PurchaseRequestItem::create([
                         'purchase_request_id' => $purchaseRequest->id,
-                        'emanating_item_id'   => $item['emanating_item_id'],
-                        'quantity'            => $item['quantity'],
-                        'unit_cost'           => $item['unit_cost'],
-                        'line_total'          => round($lineTotal, 2),
-                        'vat_applicable'      => ! empty($item['vat_applicable']),
-                        'vat_rate'            => ! empty($item['vat_applicable']) ? $vatRate : 0,
-                        'remarks'             => $item['remarks'] ?? null,
+                        'emanating_item_id' => $item['emanating_item_id'],
+                        'quantity' => $item['quantity'],
+                        'unit_cost' => $item['unit_cost'],
+                        'line_total' => round($lineTotal, 2),
+                        'vat_applicable' => ! empty($item['vat_applicable']),
+                        'vat_rate' => ! empty($item['vat_applicable']) ? $vatRate : 0,
+                        'remarks' => $item['remarks'] ?? null,
                         'matrix_amount_below_1m' => $existingMatrix?->matrix_amount_below_1m ?? ($sourceAmount > 0 && $sourceAmount < 1000000 ? round($sourceAmount, 2) : null),
                         'matrix_amount_above_1m' => $existingMatrix?->matrix_amount_above_1m ?? ($sourceAmount >= 1000000 ? round($sourceAmount, 2) : null),
                         'matrix_new_amount' => $existingMatrix?->matrix_new_amount ?? round($lineTotal, 2),
@@ -396,7 +396,7 @@ class PurchaseRequestController extends Controller
                     ->get()
                     ->pluck('emanatingItem.ppmp_item_id')
                     ->filter()
-                    ->map(fn($id) => (int) $id)
+                    ->map(fn ($id) => (int) $id)
                     ->unique()
                     ->values()
                     ->all();
@@ -476,25 +476,25 @@ class PurchaseRequestController extends Controller
 
             // Mark the PR as returned
             $purchaseRequest->update([
-                'status'  => 'returned',
+                'status' => 'returned',
                 'remarks' => $reason,
             ]);
 
             // Set the emanating back to pending (not rejected)
             $emanating = $purchaseRequest->emanating;
             $emanating->update([
-                'is_approved'      => false,
+                'is_approved' => false,
                 'rejection_reason' => $reason,
-                'status'           => 'pending',  // Reset to pending
+                'status' => 'pending',  // Reset to pending
             ]);
 
             // Reject the PPMP
             $ppmp = $emanating->ppmp;
             if ($ppmp) {
                 $ppmp->update([
-                    'is_approved'      => false,
+                    'is_approved' => false,
                     'rejection_reason' => $reason,
-                    'status'           => 'rejected',
+                    'status' => 'rejected',
                 ]);
             }
 
@@ -558,17 +558,17 @@ class PurchaseRequestController extends Controller
         $printTotal = (float) $printItems->sum('line_total');
 
         return Pdf::view('pdf.purchase-request', [
-            'pr'               => $purchaseRequest,
-            'printItems'       => $printItems,
-            'printTotal'       => $printTotal,
-            'approvedBy'       => 'VILMA SANTOS-RECTO',
-            'approvedByDesig'  => 'Governor',
-            'requestedBy'      => $purchaseRequest->requested_by_name ?: ($purchaseRequest->emanating?->requesting_officer_name ?? ''),
+            'pr' => $purchaseRequest,
+            'printItems' => $printItems,
+            'printTotal' => $printTotal,
+            'approvedBy' => 'VILMA SANTOS-RECTO',
+            'approvedByDesig' => 'Governor',
+            'requestedBy' => $purchaseRequest->requested_by_name ?: ($purchaseRequest->emanating?->requesting_officer_name ?? ''),
             'requestedByDesig' => $purchaseRequest->requested_by_designation ?: ($purchaseRequest->emanating?->requesting_officer_title ?? ''),
         ])
             ->format('a4')
             ->landscape()
-            ->name('PR-' . ($purchaseRequest->pr_no ?? $purchaseRequest->id) . '.pdf')
+            ->name('PR-'.($purchaseRequest->pr_no ?? $purchaseRequest->id).'.pdf')
             ->inline();
     }
 
@@ -611,7 +611,7 @@ class PurchaseRequestController extends Controller
     {
         $monthPrefix = $prDate->format('m');
         $yearPrefix = $prDate->format('y');
-        $prefix = $monthPrefix . $yearPrefix;
+        $prefix = $monthPrefix.$yearPrefix;
 
         $query = PurchaseRequest::query()
             ->whereYear('pr_date', (int) $prDate->format('Y'))

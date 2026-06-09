@@ -32,12 +32,12 @@ class AOQController extends Controller
                 $q->whereHas('rfq', function ($rfq) use ($search): void {
                     $rfq->where('svp_no', 'like', sprintf('%%%s%%', $search))
                         ->orWhere('project_name', 'like', sprintf('%%%s%%', $search))
-                        ->orWhereHas('purchaseRequest', fn($pr) => $pr->where('pr_no', 'like', sprintf('%%%s%%', $search))
-                            ->orWhereHas('office', fn($o) => $o->where('name', 'like', sprintf('%%%s%%', $search))));
-                })->orWhereHas('winnerSupplier', fn($s) => $s->where('name', 'like', sprintf('%%%s%%', $search)));
+                        ->orWhereHas('purchaseRequest', fn ($pr) => $pr->where('pr_no', 'like', sprintf('%%%s%%', $search))
+                            ->orWhereHas('office', fn ($o) => $o->where('name', 'like', sprintf('%%%s%%', $search))));
+                })->orWhereHas('winnerSupplier', fn ($s) => $s->where('name', 'like', sprintf('%%%s%%', $search)));
             })
             ->when($request->office_id, function ($q, string $officeId): void {
-                $q->whereHas('rfq.purchaseRequest', fn($pr) => $pr->where('office_id', $officeId));
+                $q->whereHas('rfq.purchaseRequest', fn ($pr) => $pr->where('office_id', $officeId));
             })
             ->when($request->fiscal_year, function ($q, string $fiscalYear): void {
                 $q->whereYear('aoq_date', $fiscalYear);
@@ -78,7 +78,7 @@ class AOQController extends Controller
         $offices = \App\Models\Office::orderBy('name')->get(['id', 'name']);
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear + 1))
-            ->mapWithKeys(fn($year) => [$year => $year])
+            ->mapWithKeys(fn ($year) => [$year => $year])
             ->reverse();
 
         return Inertia::render('AOQs/Index', [
@@ -137,7 +137,7 @@ class AOQController extends Controller
                 return redirect()->back()->with('error', 'An AOQ already exists for this RFQ.');
             }
 
-            $rfqItemIds = $rfq->items->pluck('id')->map(fn($id) => (int) $id)->all();
+            $rfqItemIds = $rfq->items->pluck('id')->map(fn ($id) => (int) $id)->all();
             if (count($rfqItemIds) === 0) {
                 return redirect()->back()->with('error', 'This RFQ has no items to evaluate.');
             }
@@ -173,7 +173,7 @@ class AOQController extends Controller
                 return redirect()->back()->with('error', 'Please enter at least one supplier quotation with unit prices.');
             }
 
-            usort($supplierTotals, fn($a, $b) => $a['total_amount'] <=> $b['total_amount']);
+            usort($supplierTotals, fn ($a, $b) => $a['total_amount'] <=> $b['total_amount']);
             $winnerSupplierId = $supplierTotals[0]['supplier_id'];
 
             // Reset previous RFQ quotation records so recreated AOQs don't reuse stale supplier items.
@@ -286,7 +286,7 @@ class AOQController extends Controller
         ])
             ->format('a4')
             ->landscape()
-            ->name('AOQ-' . ($aoq->rfq?->svp_no ?? $aoq->id) . '.pdf')
+            ->name('AOQ-'.($aoq->rfq?->svp_no ?? $aoq->id).'.pdf')
             ->inline();
     }
 
@@ -330,7 +330,7 @@ class AOQController extends Controller
             ];
         }
 
-        usort($supplierTotals, fn($a, $b) => $a['total_amount'] <=> $b['total_amount']);
+        usort($supplierTotals, fn ($a, $b) => $a['total_amount'] <=> $b['total_amount']);
 
         $count = count($supplierTotals);
         $winner = $count > 0 ? $supplierTotals[0] : null;

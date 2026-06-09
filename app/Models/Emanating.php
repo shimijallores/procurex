@@ -71,13 +71,13 @@ class Emanating extends Model
 
         $numbers = self::query()
             ->where('fiscal_year', $year)
-            ->where('emanating_no', 'like', $prefix . '%')
+            ->where('emanating_no', 'like', $prefix.'%')
             ->lockForUpdate()
             ->pluck('emanating_no');
 
         $maxSequence = $numbers
             ->map(function (string $emanatingNo) use ($year): int {
-                if (preg_match('/^' . preg_quote((string) $year, '/') . '-(\d+)$/', $emanatingNo, $matches) !== 1) {
+                if (preg_match('/^'.preg_quote((string) $year, '/').'-(\d+)$/', $emanatingNo, $matches) !== 1) {
                     return 0;
                 }
 

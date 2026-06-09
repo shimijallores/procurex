@@ -66,7 +66,7 @@ class PPMPImport implements ToCollection, WithStartRow
             }
 
             // Skip completely empty rows
-            if (array_filter($rowData, fn($val): bool => ! empty($val)) === []) {
+            if (array_filter($rowData, fn ($val): bool => ! empty($val)) === []) {
                 continue;
             }
 

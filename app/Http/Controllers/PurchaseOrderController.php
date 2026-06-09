@@ -37,7 +37,7 @@ class PurchaseOrderController extends Controller
                     });
             })
             ->when($request->office_id, function ($q, string $officeId): void {
-                $q->whereHas('noa.bacResolution.aoq.rfq.purchaseRequest', fn($pr) => $pr->where('office_id', $officeId));
+                $q->whereHas('noa.bacResolution.aoq.rfq.purchaseRequest', fn ($pr) => $pr->where('office_id', $officeId));
             })
             ->when($request->fiscal_year, function ($q, string $fiscalYear): void {
                 $q->whereYear('po_date', $fiscalYear);
@@ -60,7 +60,7 @@ class PurchaseOrderController extends Controller
         $offices = Office::orderBy('name')->get(['id', 'name']);
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear + 1))
-            ->mapWithKeys(fn($year) => [$year => $year])
+            ->mapWithKeys(fn ($year) => [$year => $year])
             ->reverse();
 
         return Inertia::render('PurchaseOrders/Index', [
@@ -149,8 +149,8 @@ class PurchaseOrderController extends Controller
             ]);
         }
 
-        $allowedRfqItemIds = $rfq->items->pluck('id')->map(fn($id) => (int) $id)->all();
-        $submittedRfqItemIds = collect($validated['items'])->pluck('rfq_item_id')->map(fn($id) => (int) $id)->all();
+        $allowedRfqItemIds = $rfq->items->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $submittedRfqItemIds = collect($validated['items'])->pluck('rfq_item_id')->map(fn ($id) => (int) $id)->all();
         $hasInvalidItems = collect($submittedRfqItemIds)->diff($allowedRfqItemIds)->isNotEmpty();
         $hasMissingItems = collect($allowedRfqItemIds)->diff($submittedRfqItemIds)->isNotEmpty();
 
@@ -170,9 +170,9 @@ class PurchaseOrderController extends Controller
         }
 
         $winnerSupplierItems = $winnerQuote->supplierItems
-            ->keyBy(fn($item) => (int) $item->rfq_item_id);
+            ->keyBy(fn ($item) => (int) $item->rfq_item_id);
 
-        $rfqItemsById = $rfq->items->keyBy(fn($item) => (int) $item->id);
+        $rfqItemsById = $rfq->items->keyBy(fn ($item) => (int) $item->id);
 
         $computedItems = collect($validated['items'])
             ->map(function (array $item) use ($winnerSupplierItems, $rfqItemsById): array {
@@ -281,14 +281,14 @@ class PurchaseOrderController extends Controller
             'winnerSupplier' => $purchaseOrder->noa?->bacResolution?->aoq?->winnerSupplier,
         ])
             ->format('a4')
-            ->name('PO-' . $purchaseOrder->po_no . '.pdf')
+            ->name('PO-'.$purchaseOrder->po_no.'.pdf')
             ->inline();
     }
 
     private function generatePoNumber(string $poDate): string
     {
         $date = Carbon::parse($poDate);
-        $prefix = $date->format('my') . '-';
+        $prefix = $date->format('my').'-';
 
         $currentYearSequenceMax = PurchaseOrder::query()
             ->whereYear('po_date', $date->year)
@@ -305,7 +305,7 @@ class PurchaseOrderController extends Controller
         $next = ((int) $currentYearSequenceMax) + 1;
 
         do {
-            $poNo = $prefix . str_pad((string) $next, 4, '0', STR_PAD_LEFT);
+            $poNo = $prefix.str_pad((string) $next, 4, '0', STR_PAD_LEFT);
             $next++;
         } while (PurchaseOrder::where('po_no', $poNo)->exists());
 

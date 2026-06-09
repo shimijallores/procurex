@@ -56,7 +56,7 @@ class PPMPController extends Controller
 
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear))
-            ->mapWithKeys(fn($year) => [$year => $year])
+            ->mapWithKeys(fn ($year) => [$year => $year])
             ->reverse();
 
         return Inertia::render('PPMPs/Index', [
@@ -75,7 +75,7 @@ class PPMPController extends Controller
     {
         return Inertia::render('PPMPs/Create', [
             'offices' => Office::with([
-                'funds' => fn($query) => $query
+                'funds' => fn ($query) => $query
                     ->select(['id', 'office_id', 'name', 'type', 'project_code_id', 'fiscal_year'])
                     ->with('projectCode:id,code,name'),
             ])->get(['id', 'name', 'code']),
@@ -124,8 +124,8 @@ class PPMPController extends Controller
                 ->where('fiscal_year', $validated['fiscal_year'])
                 ->when(
                     $resolvedProjectCodeId === null,
-                    fn($query) => $query->whereNull('project_code_id'),
-                    fn($query) => $query->where('project_code_id', $resolvedProjectCodeId)
+                    fn ($query) => $query->whereNull('project_code_id'),
+                    fn ($query) => $query->where('project_code_id', $resolvedProjectCodeId)
                 )
                 ->orderBy('id')
                 ->first();
@@ -195,7 +195,7 @@ class PPMPController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to create PPMP: ' . $exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to create PPMP: '.$exception->getMessage()]);
         }
     }
 
@@ -217,8 +217,8 @@ class PPMPController extends Controller
             ->where('fiscal_year', $ppmp->fiscal_year)
             ->when(
                 $ppmp->project_code_id === null,
-                fn($query) => $query->where('type', 'general')->whereNull('project_code_id'),
-                fn($query) => $query->where('project_code_id', $ppmp->project_code_id)
+                fn ($query) => $query->where('type', 'general')->whereNull('project_code_id'),
+                fn ($query) => $query->where('project_code_id', $ppmp->project_code_id)
             )
             ->orderBy('id')
             ->first(['id']);
@@ -228,7 +228,7 @@ class PPMPController extends Controller
         return Inertia::render('PPMPs/Edit', [
             'ppmp' => $ppmp,
             'offices' => Office::with([
-                'funds' => fn($query) => $query
+                'funds' => fn ($query) => $query
                     ->select(['id', 'office_id', 'name', 'type', 'project_code_id', 'fiscal_year'])
                     ->with('projectCode:id,code,name'),
             ])->get(['id', 'name', 'code']),
@@ -264,7 +264,7 @@ class PPMPController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to update PPMP: ' . $exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to update PPMP: '.$exception->getMessage()]);
         }
     }
 
@@ -280,7 +280,7 @@ class PPMPController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to delete PPMP: ' . $exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to delete PPMP: '.$exception->getMessage()]);
         }
     }
 
@@ -326,7 +326,7 @@ class PPMPController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to import XLSX: ' . $exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to import XLSX: '.$exception->getMessage()]);
         }
     }
 
@@ -359,7 +359,7 @@ class PPMPController extends Controller
 
         $projectCode = ProjectCode::query()
             ->where('office_id', $officeId)
-            ->where(function ($query) use ($candidate, $candidateLower): void {
+            ->where(function ($query) use ($candidateLower): void {
                 $query->whereRaw('LOWER(name) = ?', [$candidateLower])
                     ->orWhereRaw('LOWER(code) = ?', [$candidateLower]);
             })

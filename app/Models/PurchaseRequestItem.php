@@ -33,18 +33,18 @@ class PurchaseRequestItem extends Model
     ];
 
     protected $casts = [
-        'quantity'       => 'integer',
-        'unit_cost'      => 'decimal:2',
-        'line_total'     => 'decimal:2',
+        'quantity' => 'integer',
+        'unit_cost' => 'decimal:2',
+        'line_total' => 'decimal:2',
         'vat_applicable' => 'boolean',
-        'vat_rate'       => 'decimal:4',
+        'vat_rate' => 'decimal:4',
         'matrix_amount_below_1m' => 'decimal:2',
         'matrix_amount_above_1m' => 'decimal:2',
         'matrix_new_amount' => 'decimal:2',
         'matrix_date_release' => 'date',
         'matrix_new_date_release' => 'date',
-        'created_at'     => 'datetime',
-        'updated_at'     => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     protected $appends = [

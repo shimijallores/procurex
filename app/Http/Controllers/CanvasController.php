@@ -114,14 +114,14 @@ class CanvasController extends Controller
 
                 if (! $matchedMasterListItem) {
                     $allItemsAutoPriced = false;
-                    $missingItems[] = (string) ($emanatingItem->name ?: $emanatingItem->ppmpItem?->name ?: ('Item #' . $emanatingItem->id));
+                    $missingItems[] = (string) ($emanatingItem->name ?: $emanatingItem->ppmpItem?->name ?: ('Item #'.$emanatingItem->id));
 
                     continue;
                 }
 
                 if ($matchedMasterListItem->default_unit_price === null) {
                     $allItemsAutoPriced = false;
-                    $itemsWithoutDefaultPrice[] = (string) ($emanatingItem->name ?: $emanatingItem->ppmpItem?->name ?: ('Item #' . $emanatingItem->id));
+                    $itemsWithoutDefaultPrice[] = (string) ($emanatingItem->name ?: $emanatingItem->ppmpItem?->name ?: ('Item #'.$emanatingItem->id));
 
                     continue;
                 }
@@ -526,7 +526,7 @@ class CanvasController extends Controller
         }
 
         if (str_ends_with($token, 'ies')) {
-            return substr($token, 0, -3) . 'y';
+            return substr($token, 0, -3).'y';
         }
 
         if (str_ends_with($token, 'ses')) {

@@ -42,8 +42,8 @@ class BACResolutionController extends Controller
             })
             ->when($request->office_id, function ($q, string $officeId): void {
                 $q->where(function ($inner) use ($officeId): void {
-                    $inner->whereHas('aoqs.rfq.purchaseRequest', fn($pr) => $pr->where('office_id', $officeId))
-                        ->orWhereHas('aoq.rfq.purchaseRequest', fn($pr) => $pr->where('office_id', $officeId));
+                    $inner->whereHas('aoqs.rfq.purchaseRequest', fn ($pr) => $pr->where('office_id', $officeId))
+                        ->orWhereHas('aoq.rfq.purchaseRequest', fn ($pr) => $pr->where('office_id', $officeId));
                 });
             })
             ->when($request->fiscal_year, function ($q, string $fiscalYear): void {
@@ -64,7 +64,7 @@ class BACResolutionController extends Controller
         $offices = Office::orderBy('name')->get(['id', 'name']);
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear + 1))
-            ->mapWithKeys(fn($year) => [$year => $year])
+            ->mapWithKeys(fn ($year) => [$year => $year])
             ->reverse();
 
         return Inertia::render('BACResolutions/Index', [
@@ -134,7 +134,7 @@ class BACResolutionController extends Controller
 
         try {
             $selectedAoqIds = collect($validated['aoq_ids'] ?? [])
-                ->map(fn($id) => (int) $id)
+                ->map(fn ($id) => (int) $id)
                 ->unique()
                 ->values();
 
@@ -171,7 +171,7 @@ class BACResolutionController extends Controller
             }
 
             $primaryAoq = $aoqs->first();
-            $winnerAmount = $aoqs->sum(fn(AOQ $aoq) => $this->calculateWinnerAmount($aoq));
+            $winnerAmount = $aoqs->sum(fn (AOQ $aoq) => $this->calculateWinnerAmount($aoq));
             $calculationLabel = 'Lowest/Single Calculated';
 
             $projectName = (string) ($validated['project_name'] ?? 'Batch of Projects');
@@ -328,7 +328,7 @@ class BACResolutionController extends Controller
             $supplierTotals = collect($this->calculateSupplierTotals($rfq)['supplier_totals'] ?? []);
             $rankedSuppliers = $supplierTotals->values()->map(function (array $row, int $index): array {
                 $rank = $index + 1;
-                $rankLabel = $rank === 1 ? '1ST' : ($rank === 2 ? '2ND' : ($rank === 3 ? '3RD' : $rank . 'TH'));
+                $rankLabel = $rank === 1 ? '1ST' : ($rank === 2 ? '2ND' : ($rank === 3 ? '3RD' : $rank.'TH'));
 
                 return [
                     'supplier_id' => (int) $row['supplier_id'],
@@ -380,17 +380,17 @@ class BACResolutionController extends Controller
             'abstracts' => $abstracts,
         ])
             ->format('a4')
-            ->name('BAC-Resolution-' . $bacResolution->resolution_no . '.pdf')
+            ->name('BAC-Resolution-'.$bacResolution->resolution_no.'.pdf')
             ->inline();
     }
 
     private function generateResolutionNumber(Carbon $resolutionDate): string
     {
         $year = $resolutionDate->format('Y');
-        $prefix = $year . '-';
+        $prefix = $year.'-';
 
         $latest = BACResolution::query()
-            ->where('resolution_no', 'like', $prefix . '%')
+            ->where('resolution_no', 'like', $prefix.'%')
             ->orderByDesc('resolution_no')
             ->value('resolution_no');
 
@@ -530,7 +530,7 @@ class BACResolutionController extends Controller
             ];
         }
 
-        usort($supplierTotals, fn($left, $right) => $left['total_amount'] <=> $right['total_amount']);
+        usort($supplierTotals, fn ($left, $right) => $left['total_amount'] <=> $right['total_amount']);
 
         $count = count($supplierTotals);
         $winner = $count > 0 ? $supplierTotals[0] : null;

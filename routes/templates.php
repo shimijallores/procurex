@@ -28,7 +28,7 @@ Route::get('/templates/{template}', function (int $template): BinaryFileResponse
 
     abort_unless(array_key_exists($template, $templates), 404);
 
-    $filePath = base_path('documents/' . $templates[$template]);
+    $filePath = base_path('documents/'.$templates[$template]);
     abort_unless(is_file($filePath), 404);
 
     return response()->download($filePath, basename($templates[$template]));

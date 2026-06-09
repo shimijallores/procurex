@@ -20,9 +20,9 @@ use App\Models\PPMPItem;
 use App\Models\ProjectBriefItem;
 use App\Models\ProjectCode;
 use App\Models\WorkProgramItem;
-use Illuminate\Support\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -102,11 +102,11 @@ class EmanatingController extends Controller
             ->pluck('fund.office')
             ->unique('id')
             ->sortBy('name')
-            ->mapWithKeys(fn($office) => [$office->id => $office->name]);
+            ->mapWithKeys(fn ($office) => [$office->id => $office->name]);
 
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear))
-            ->mapWithKeys(fn($year) => [$year => $year])
+            ->mapWithKeys(fn ($year) => [$year => $year])
             ->reverse();
 
         return Inertia::render('Emanatings/Index', [
@@ -139,7 +139,7 @@ class EmanatingController extends Controller
                     ->with('account:id,code,name')
                     ->where('ppmp_id', $ppmp->id)
                     ->get(['id', 'ppmp_id', 'account_id'])
-                    ->map(fn(PPMPCategory $category): array => [
+                    ->map(fn (PPMPCategory $category): array => [
                         'id' => $category->id,
                         'ppmp_id' => $category->ppmp_id,
                         'code' => $category->account?->code,
@@ -237,7 +237,7 @@ class EmanatingController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to create Emanating Request: ' . $exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to create Emanating Request: '.$exception->getMessage()]);
         }
     }
 
@@ -336,7 +336,7 @@ class EmanatingController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to update Emanating Request: ' . $exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to update Emanating Request: '.$exception->getMessage()]);
         }
     }
 
@@ -352,7 +352,7 @@ class EmanatingController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to delete Emanating Request: ' . $exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to delete Emanating Request: '.$exception->getMessage()]);
         }
     }
 
@@ -400,7 +400,7 @@ class EmanatingController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to import XLSX: ' . $exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to import XLSX: '.$exception->getMessage()]);
         }
     }
 
@@ -448,7 +448,7 @@ class EmanatingController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to approve Emanating Request: ' . $exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to approve Emanating Request: '.$exception->getMessage()]);
         }
     }
 
@@ -483,7 +483,7 @@ class EmanatingController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to reject Emanating Request: ' . $exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to reject Emanating Request: '.$exception->getMessage()]);
         }
     }
 
@@ -509,7 +509,7 @@ class EmanatingController extends Controller
             ->first();
 
         $appItems = $app
-            ? APPItem::query()->whereHas('appCategory', fn($query) => $query->where('app_id', $app->id))->get()
+            ? APPItem::query()->whereHas('appCategory', fn ($query) => $query->where('app_id', $app->id))->get()
             : collect();
 
         $isProjectFund = strtolower((string) ($emanating->fund?->type ?? '')) === 'project';
@@ -658,11 +658,11 @@ class EmanatingController extends Controller
             'total_project_brief_items' => $matchedProjectBriefItems->count(),
             'project_proposal_present' => $hasProjectProposal,
             'total_matched_items' => collect($comparisonItems)->where('matched', true)->count(),
-            'unmatched_ppmp_items' => collect($comparisonItems)->filter(fn($item) => in_array('Missing in PPMP', $item['issues'] ?? [], true))->count(),
-            'unmatched_app_items' => collect($comparisonItems)->filter(fn($item) => in_array('Missing in APP', $item['issues'] ?? [], true))->count(),
-            'unmatched_work_program_items' => collect($comparisonItems)->filter(fn($item) => in_array('Missing in Work Program', $item['issues'] ?? [], true))->count(),
-            'unmatched_project_brief_items' => collect($comparisonItems)->filter(fn($item) => in_array('Missing in Project Brief', $item['issues'] ?? [], true))->count(),
-            'unmatched_project_proposal_items' => collect($comparisonItems)->filter(fn($item) => in_array('Missing in Project Proposal', $item['issues'] ?? [], true))->count(),
+            'unmatched_ppmp_items' => collect($comparisonItems)->filter(fn ($item) => in_array('Missing in PPMP', $item['issues'] ?? [], true))->count(),
+            'unmatched_app_items' => collect($comparisonItems)->filter(fn ($item) => in_array('Missing in APP', $item['issues'] ?? [], true))->count(),
+            'unmatched_work_program_items' => collect($comparisonItems)->filter(fn ($item) => in_array('Missing in Work Program', $item['issues'] ?? [], true))->count(),
+            'unmatched_project_brief_items' => collect($comparisonItems)->filter(fn ($item) => in_array('Missing in Project Brief', $item['issues'] ?? [], true))->count(),
+            'unmatched_project_proposal_items' => collect($comparisonItems)->filter(fn ($item) => in_array('Missing in Project Proposal', $item['issues'] ?? [], true))->count(),
         ];
     }
 

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Imports;
 
+use App\Models\Account;
 use App\Models\APP;
 use App\Models\APPItem;
-use App\Models\Account;
 use App\Models\Emanating;
 use App\Models\EmanatingItem;
 use App\Models\Fund;
@@ -58,7 +58,7 @@ class EmanatingImport implements ToCollection
 
         if (! $this->ppmp && isset($metadata['office_name'], $metadata['fiscal_year'])) {
             $office = Office::query()
-                ->where('name', 'like', '%' . $metadata['office_name'] . '%')
+                ->where('name', 'like', '%'.$metadata['office_name'].'%')
                 ->first();
 
             if ($office) {
@@ -139,7 +139,7 @@ class EmanatingImport implements ToCollection
         foreach ($rows as $index => $row) {
             $columnA = trim((string) ($row[0] ?? ''));
             $columnB = trim((string) ($row[1] ?? ''));
-            $combinedText = trim($columnA . ' ' . $columnB);
+            $combinedText = trim($columnA.' '.$columnB);
 
             if ($columnA !== '' && preg_match('/PR\s*NO\.?/i', $columnA) === 1 && $columnB !== '') {
                 $metadata['pr_no'] = $columnB;
@@ -162,7 +162,7 @@ class EmanatingImport implements ToCollection
 
             if (! isset($metadata['month']) && preg_match('/quarter\s*\/\s*month\s+of\s+([A-Za-z]+)/i', $combinedText, $monthMatches) === 1) {
                 try {
-                    $metadata['month'] = Carbon::parse('1 ' . $monthMatches[1])->month;
+                    $metadata['month'] = Carbon::parse('1 '.$monthMatches[1])->month;
                     $detectedMarkers[] = [
                         'row' => $index + 1,
                         'marker' => 'month',
@@ -217,6 +217,7 @@ class EmanatingImport implements ToCollection
 
                 if (! $name) {
                     $name = $candidate;
+
                     continue;
                 }
 
@@ -266,7 +267,7 @@ class EmanatingImport implements ToCollection
 
             if ($app) {
                 $appItems = APPItem::query()
-                    ->whereHas('appCategory', fn($query) => $query->where('app_id', $app->id))
+                    ->whereHas('appCategory', fn ($query) => $query->where('app_id', $app->id))
                     ->get();
             }
         }
@@ -296,6 +297,7 @@ class EmanatingImport implements ToCollection
 
             if (! $hasStartedItemSection && ($columnA === '' || preg_match('/\d/', $columnA) !== 1)) {
                 $skippedBeforeStart++;
+
                 continue;
             }
 
@@ -306,6 +308,7 @@ class EmanatingImport implements ToCollection
 
             if ($description === '') {
                 $skippedMissingDescription++;
+
                 continue;
             }
 
@@ -525,13 +528,13 @@ class EmanatingImport implements ToCollection
     private function normalizeAccountCodeForMatch(string $code): string
     {
         $parts = preg_split('/[^0-9]+/', $code) ?: [];
-        $filtered = array_values(array_filter($parts, static fn(string $part): bool => $part !== ''));
+        $filtered = array_values(array_filter($parts, static fn (string $part): bool => $part !== ''));
 
         if ($filtered === []) {
             return '';
         }
 
-        $normalizedParts = array_map(static fn(string $part): string => (string) ((int) $part), $filtered);
+        $normalizedParts = array_map(static fn (string $part): string => (string) ((int) $part), $filtered);
 
         return implode('-', $normalizedParts);
     }

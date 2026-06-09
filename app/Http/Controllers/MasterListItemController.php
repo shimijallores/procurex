@@ -53,7 +53,7 @@ class MasterListItemController extends Controller
             $settingsClass::setPdfRendererName($settingsClass::PDF_RENDERER_DOMPDF);
             $settingsClass::setPdfRendererPath(base_path('vendor/dompdf/dompdf'));
 
-            $filePath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . uniqid('masterlist-pdf-', true) . '.pdf';
+            $filePath = sys_get_temp_dir().DIRECTORY_SEPARATOR.uniqid('masterlist-pdf-', true).'.pdf';
             $fileName = sprintf('masterlist-%s-%04d.pdf', now()->format('Ymd'), random_int(0, 9999));
 
             $ioFactoryClass = 'PhpOffice\\PhpWord\\IOFactory';
@@ -166,7 +166,7 @@ class MasterListItemController extends Controller
     private function buildMasterListDocument($items, Request $request)
     {
         $phpWordClass = 'PhpOffice\\PhpWord\\PhpWord';
-        $phpWord = new $phpWordClass();
+        $phpWord = new $phpWordClass;
         $section = $phpWord->addSection([
             'marginTop' => 900,
             'marginBottom' => 900,
@@ -223,7 +223,7 @@ class MasterListItemController extends Controller
         }
 
         $section->addTextBreak(1);
-        $section->addText('Generated: ' . now()->format('F d, Y h:i A'));
+        $section->addText('Generated: '.now()->format('F d, Y h:i A'));
         $section->addText($filterSummary);
         $section->addTextBreak(1);
 

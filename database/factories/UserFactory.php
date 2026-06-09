@@ -25,7 +25,7 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'office_id' => fn() => Office::firstOrCreate(
+            'office_id' => fn () => Office::firstOrCreate(
                 ['name' => 'Governing Office'],
                 ['code' => 'GOV-001']
             )->id,
@@ -42,7 +42,7 @@ class UserFactory extends Factory
      */
     public function unverified(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
         ]);
     }

@@ -95,6 +95,7 @@ class CalendarController extends Controller
             // If no entry exists, check if it's a weekend
             if ($isWeekend) {
                 $dayName = $date->format('l');
+
                 return response()->json([
                     'is_available' => false,
                     'is_working_day' => false,

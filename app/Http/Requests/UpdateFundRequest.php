@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use App\Models\Fund;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class UpdateFundRequest extends FormRequest
@@ -29,7 +29,7 @@ class UpdateFundRequest extends FormRequest
             'office_id' => ['required', 'exists:offices,id'],
             'project_code_id' => [
                 'nullable',
-                Rule::exists('project_codes', 'id')->where(fn($query) => $query->where('office_id', $this->office_id)),
+                Rule::exists('project_codes', 'id')->where(fn ($query) => $query->where('office_id', $this->office_id)),
             ],
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', 'in:general,project'],

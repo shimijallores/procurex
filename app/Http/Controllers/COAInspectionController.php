@@ -36,7 +36,7 @@ class COAInspectionController extends Controller
                 });
             })
             ->when($request->office_id, function ($q, string $officeId): void {
-                $q->whereHas('purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest', fn($pr) => $pr->where('office_id', $officeId));
+                $q->whereHas('purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest', fn ($pr) => $pr->where('office_id', $officeId));
             })
             ->when($request->fiscal_year, function ($q, string $fiscalYear): void {
                 $q->whereYear('created_at', $fiscalYear);
@@ -53,7 +53,7 @@ class COAInspectionController extends Controller
         $offices = Office::orderBy('name')->get(['id', 'name']);
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear + 1))
-            ->mapWithKeys(fn($year) => [$year => $year])
+            ->mapWithKeys(fn ($year) => [$year => $year])
             ->reverse();
 
         return Inertia::render('COAInspections/Index', [
@@ -172,7 +172,7 @@ class COAInspectionController extends Controller
             'itemSummary' => $this->buildItemSummary($purchaseOrder),
         ])
             ->format('a4')
-            ->name('COA-Inspection-' . ($purchaseOrder?->po_no ?: $coaInspection->id) . '.pdf')
+            ->name('COA-Inspection-'.($purchaseOrder?->po_no ?: $coaInspection->id).'.pdf')
             ->inline();
     }
 
@@ -199,7 +199,7 @@ class COAInspectionController extends Controller
 
                 $quantityText = rtrim(rtrim(number_format($quantity, 2, '.', ''), '0'), '.');
 
-                return trim($quantityText . ' ' . $unit . ' of ' . $name);
+                return trim($quantityText.' '.$unit.' of '.$name);
             })
             ->filter()
             ->values();
@@ -214,6 +214,6 @@ class COAInspectionController extends Controller
 
         $last = $items->pop();
 
-        return $items->implode(', ') . ' and ' . $last;
+        return $items->implode(', ').' and '.$last;
     }
 }

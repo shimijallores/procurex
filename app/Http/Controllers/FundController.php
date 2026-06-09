@@ -57,7 +57,7 @@ class FundController extends Controller
 
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear))
-            ->mapWithKeys(fn($year) => [$year => $year])
+            ->mapWithKeys(fn ($year) => [$year => $year])
             ->reverse();
 
         return Inertia::render('Funds/Index', [

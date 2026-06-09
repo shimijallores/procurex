@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Schema;
 class PpmpBudgetService
 {
     private static ?bool $hasRemainingBudgetColumn = null;
+
     private static ?bool $hasCategoryRemainingBudgetColumn = null;
 
     /** @var array<int, string> */
@@ -27,7 +28,7 @@ class PpmpBudgetService
             ->get()
             ->pluck('emanatingItem.ppmp_item_id')
             ->filter()
-            ->map(fn($id) => (int) $id)
+            ->map(fn ($id) => (int) $id)
             ->unique()
             ->values()
             ->all();
@@ -56,7 +57,7 @@ class PpmpBudgetService
 
         $ppmpItemIds = collect($ppmpItemIds)
             ->filter()
-            ->map(fn($id) => (int) $id)
+            ->map(fn ($id) => (int) $id)
             ->unique()
             ->values();
 
@@ -98,7 +99,7 @@ class PpmpBudgetService
 
         $ppmpCategoryIds = collect($ppmpCategoryIds)
             ->filter()
-            ->map(fn($id) => (int) $id)
+            ->map(fn ($id) => (int) $id)
             ->unique()
             ->values();
 

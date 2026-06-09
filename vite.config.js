@@ -31,9 +31,9 @@ export default defineConfig({
         }),
     ],
     server: {
-        host: "procurex.test",
+        host: "localhost",
         hmr: {
-            host: "procurex.test",
+            host: "localhost",
         },
         watch: {
             ignored: ["**/storage/framework/views/**"],

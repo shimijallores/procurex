@@ -129,6 +129,7 @@ class WorkProgramImport
         foreach ($cell->getElements() as $element) {
             if (is_object($element) && method_exists($element, 'getText')) {
                 $parts[] = (string) $element->getText();
+
                 continue;
             }
 
@@ -153,7 +154,7 @@ class WorkProgramImport
      */
     private function parseWorkProgramWithDocumentXml(string $absolutePath): array
     {
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
 
         if ($zip->open($absolutePath) !== true) {
             return [];
@@ -166,7 +167,7 @@ class WorkProgramImport
             return [];
         }
 
-        $dom = new DOMDocument();
+        $dom = new DOMDocument;
         $loaded = @$dom->loadXML($xmlContent);
 
         if (! $loaded) {
@@ -227,7 +228,7 @@ class WorkProgramImport
     }
 
     /**
-     * @param array<int, array<int, string>> $rows
+     * @param  array<int, array<int, string>>  $rows
      * @return array<int, array{item_name:string, quantity:float|null, unit:string, amount:float|null}>
      */
     private function extractRowsFromThreeColumnTable(array $rows, string $source): array
@@ -238,7 +239,7 @@ class WorkProgramImport
 
         foreach ($rows as $index => $row) {
             $upperRow = array_map(
-                fn($cell): string => strtoupper(trim((string) $cell)),
+                fn ($cell): string => strtoupper(trim((string) $cell)),
                 $row,
             );
 
@@ -267,6 +268,17 @@ class WorkProgramImport
         $quantityUnitColumnIndex = $headerOffset + 1;
         $amountColumnIndex = $headerOffset + 2;
         $startIndex = max($headerIndex + 1, $minimumDataStartIndex);
+
+        $expectedCells = $amountColumnIndex + 1;
+
+        foreach ($rows as &$row) {
+            if (count($row) < $expectedCells) {
+                $diff = $expectedCells - count($row);
+                $row = array_merge(array_fill(0, $diff, ''), $row);
+            }
+        }
+
+        unset($row);
 
         $items = [];
 

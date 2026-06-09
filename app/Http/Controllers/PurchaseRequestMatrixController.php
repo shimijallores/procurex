@@ -46,11 +46,11 @@ class PurchaseRequestMatrixController extends Controller
             ->latest('id')
             ->paginate(10)
             ->withQueryString()
-            ->through(fn(PurchaseRequest $purchaseRequest): array => $this->transformMatrixRow($purchaseRequest, $defaultPrAdminId, $defaultBudgetingAdminId));
+            ->through(fn (PurchaseRequest $purchaseRequest): array => $this->transformMatrixRow($purchaseRequest, $defaultPrAdminId, $defaultBudgetingAdminId));
 
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear + 1))
-            ->mapWithKeys(fn(int $year): array => [(string) $year => (string) $year])
+            ->mapWithKeys(fn (int $year): array => [(string) $year => (string) $year])
             ->reverse();
 
         return Inertia::render('PurchaseRequestMatrix/Index', [
@@ -91,7 +91,7 @@ class PurchaseRequestMatrixController extends Controller
         $rows = $this->buildMatrixQuery($request)
             ->latest('id')
             ->get()
-            ->map(fn(PurchaseRequest $purchaseRequest): array => $this->transformMatrixRow($purchaseRequest, $defaultPrAdminId, $defaultBudgetingAdminId))
+            ->map(fn (PurchaseRequest $purchaseRequest): array => $this->transformMatrixRow($purchaseRequest, $defaultPrAdminId, $defaultBudgetingAdminId))
             ->all();
 
         $fileName = sprintf('pr-matrix-%s.xlsx', $selectedFiscalYear !== '' ? $selectedFiscalYear : 'all-years');
@@ -220,7 +220,7 @@ class PurchaseRequestMatrixController extends Controller
                 ->pluck('emanatingItem.ppmpItem')
                 ->filter()
                 ->unique('id')
-                ->sum(fn($ppmpItem): float => (float) ($ppmpItem->estimated_budget ?? 0));
+                ->sum(fn ($ppmpItem): float => (float) ($ppmpItem->estimated_budget ?? 0));
         }
 
         $amountBelow = $ppmpEstimatedBudget > 0 && $ppmpEstimatedBudget < 1000000

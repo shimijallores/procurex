@@ -34,7 +34,7 @@ class UpdateUserRequest extends FormRequest
 
         return [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $editingUserId],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.$editingUserId],
             'password' => ['nullable', 'confirmed', Password::defaults()],
             'role_ids' => ['required', 'array', 'min:1'],
             'role_ids.*' => ['integer', 'exists:roles,id'],

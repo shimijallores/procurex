@@ -61,7 +61,7 @@ class ProjectBriefImport
      */
     private function parseWithDocumentXml(string $absolutePath): array
     {
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
 
         if ($zip->open($absolutePath) !== true) {
             return [];
@@ -74,7 +74,7 @@ class ProjectBriefImport
             return [];
         }
 
-        $dom = new DOMDocument();
+        $dom = new DOMDocument;
         $loaded = @$dom->loadXML($xmlContent);
 
         if (! $loaded) {
@@ -135,7 +135,7 @@ class ProjectBriefImport
     }
 
     /**
-     * @param array<int, array<int, string>> $rows
+     * @param  array<int, array<int, string>>  $rows
      * @return array<int, array{item_name:string, quantity:float|null, unit:string, amount:float|null}>
      */
     private function extractRowsFromFourColumnTable(array $rows): array
@@ -145,7 +145,7 @@ class ProjectBriefImport
 
         foreach ($rows as $index => $row) {
             $upperRow = array_map(
-                fn($cell): string => strtoupper(trim((string) $cell)),
+                fn ($cell): string => strtoupper(trim((string) $cell)),
                 $row,
             );
 

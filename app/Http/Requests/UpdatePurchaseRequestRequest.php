@@ -19,8 +19,8 @@ class UpdatePurchaseRequestRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'pr_no'                 => ['nullable', 'string', 'max:50'],
-            'pr_date'               => [
+            'pr_no' => ['nullable', 'string', 'max:50'],
+            'pr_date' => [
                 'nullable',
                 'date',
                 function (string $attribute, mixed $value, \Closure $fail): void {
@@ -34,22 +34,22 @@ class UpdatePurchaseRequestRequest extends FormRequest
                     }
                 },
             ],
-            'sai_no'                => ['nullable', 'string', 'max:50'],
-            'sai_date'              => ['nullable', 'date'],
-            'requested_by_name'     => ['nullable', 'string', 'max:255'],
+            'sai_no' => ['nullable', 'string', 'max:50'],
+            'sai_date' => ['nullable', 'date'],
+            'requested_by_name' => ['nullable', 'string', 'max:255'],
             'requested_by_designation' => ['nullable', 'string', 'max:255'],
-            'purpose'               => ['nullable', 'string'],
-            'total_amount'          => ['nullable', 'numeric', 'min:0'],
-            'status'                => ['nullable', 'string', 'in:draft,returned,approved,cancelled'],
-            'remarks'               => ['nullable', 'string'],
-            'items'                 => ['nullable', 'array'],
-            'items.*.id'            => ['nullable', 'integer', 'exists:purchase_request_items,id'],
+            'purpose' => ['nullable', 'string'],
+            'total_amount' => ['nullable', 'numeric', 'min:0'],
+            'status' => ['nullable', 'string', 'in:draft,returned,approved,cancelled'],
+            'remarks' => ['nullable', 'string'],
+            'items' => ['nullable', 'array'],
+            'items.*.id' => ['nullable', 'integer', 'exists:purchase_request_items,id'],
             'items.*.emanating_item_id' => ['required_with:items', 'integer', 'exists:emanating_items,id'],
-            'items.*.quantity'      => ['required_with:items', 'integer', 'min:1'],
-            'items.*.unit_cost'     => ['required_with:items', 'numeric', 'min:0'],
+            'items.*.quantity' => ['required_with:items', 'integer', 'min:1'],
+            'items.*.unit_cost' => ['required_with:items', 'numeric', 'min:0'],
             'items.*.vat_applicable' => ['boolean'],
-            'items.*.vat_rate'      => ['nullable', 'numeric', 'min:0', 'max:1'],
-            'items.*.remarks'       => ['nullable', 'string'],
+            'items.*.vat_rate' => ['nullable', 'numeric', 'min:0', 'max:1'],
+            'items.*.remarks' => ['nullable', 'string'],
         ];
     }
 }

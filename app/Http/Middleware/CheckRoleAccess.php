@@ -40,7 +40,7 @@ class CheckRoleAccess
 
         $roleNames = $user->roles->pluck('name')->all();
 
-        if (in_array('office', $roles, true) && $user->roles->contains(fn($role) => $role->is_system_role === false && $role->office_id)) {
+        if (in_array('office', $roles, true) && $user->roles->contains(fn ($role) => $role->is_system_role === false && $role->office_id)) {
             return $next($request);
         }
 

@@ -44,6 +44,7 @@ class APPController extends Controller
             ->pluck('office_id')
             ->mapWithKeys(function ($officeId) {
                 $office = Office::find($officeId);
+
                 return [$officeId => $office?->name];
             })
             ->filter()
@@ -51,7 +52,7 @@ class APPController extends Controller
 
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear))
-            ->mapWithKeys(fn($year) => [$year => $year])
+            ->mapWithKeys(fn ($year) => [$year => $year])
             ->reverse();
 
         return Inertia::render('APPs/Index', [
@@ -108,7 +109,7 @@ class APPController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to create APP: ' . $exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to create APP: '.$exception->getMessage()]);
         }
     }
 
@@ -149,7 +150,7 @@ class APPController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to update APP: ' . $exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to update APP: '.$exception->getMessage()]);
         }
     }
 
@@ -165,7 +166,7 @@ class APPController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to delete APP: ' . $exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to delete APP: '.$exception->getMessage()]);
         }
     }
 
@@ -208,7 +209,7 @@ class APPController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
 
-            return back()->withErrors(['error' => 'Failed to import file: ' . $exception->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to import file: '.$exception->getMessage()]);
         }
     }
 
