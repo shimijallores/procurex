@@ -263,11 +263,13 @@ watch(
             suggestedDefaultResolutionDate;
 
         const projectOptions =
-            Array.isArray(resolution.aoqs) && resolution.aoqs.length > 0
-                ? resolution.aoqs
-                : resolution.aoq
-                  ? [resolution.aoq]
-                  : [];
+            Array.isArray(resolution.remaining_aoqs) && resolution.remaining_aoqs.length > 0
+                ? resolution.remaining_aoqs
+                : Array.isArray(resolution.aoqs) && resolution.aoqs.length > 0
+                  ? resolution.aoqs
+                  : resolution.aoq
+                    ? [resolution.aoq]
+                    : [];
 
         const hasSelectedProject = projectOptions.some(
             (aoq) => String(aoq.id) === String(props.form.selected_aoq_id),

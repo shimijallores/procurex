@@ -203,18 +203,7 @@
     $amount = (float) ($resolution->winner_amount ?? 0);
     $amountFmt = number_format($amount, 2);
 
-    $whole = (int) floor($amount);
-    $fraction = (int) round(($amount - $whole) * 100);
-    if (class_exists(\NumberFormatter::class)) {
-    $formatter = new \NumberFormatter('en', \NumberFormatter::SPELLOUT);
-    $wholeWords = ucfirst((string) $formatter->format($whole));
-    $amountWords = $wholeWords . ' Pesos';
-    if ($fraction > 0) {
-    $amountWords .= ' and ' . ucfirst((string) $formatter->format($fraction)) . ' Centavos';
-    }
-    } else {
-    $amountWords = 'Amount in words';
-    }
+    $amountWords = \App\Helpers\NumberToWords::convert($amount, 'centavos');
     @endphp
 
     <div class="page">

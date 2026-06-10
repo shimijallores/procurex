@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Helpers\NumberToWords;
 use App\Http\Requests\StorePurchaseOrderRequest;
 use App\Models\Calendar;
 use App\Models\NOA;
@@ -339,22 +340,6 @@ class PurchaseOrderController extends Controller
 
     private function convertAmountToWords(float $amount): string
     {
-        $amount = max(0, round($amount, 2));
-
-        $whole = (int) floor($amount);
-        $cents = (int) round(($amount - $whole) * 100);
-
-        $wholeWords = 'Zero';
-
-        if (class_exists(\NumberFormatter::class)) {
-            $formatter = new \NumberFormatter('en', \NumberFormatter::SPELLOUT);
-            $wholeWords = ucfirst((string) $formatter->format($whole));
-        }
-
-        if ($cents > 0) {
-            return sprintf('%s Pesos and %02d/100 Only', $wholeWords, $cents);
-        }
-
-        return sprintf('%s Pesos Only', $wholeWords);
+        return NumberToWords::convert($amount);
     }
 }

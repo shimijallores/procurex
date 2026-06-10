@@ -205,6 +205,9 @@
     $deliveryText = $deliveryDays > 0
     ? 'within ' . $deliveryDays . ' calendar days upon receipt of this Purchase Order'
     : '________________________';
+
+    $poAmount = (float) ($purchaseOrder->total_amount ?? 0);
+    $poAmountWords = \App\Helpers\NumberToWords::convert($poAmount, 'centavos');
     @endphp
 
     <div class="page">
@@ -329,7 +332,7 @@
         <tr class="words-row">
             <td colspan="6" style="padding:10px 4px;">
                 <span>(Total Amount in Words)</span>
-                <span class="u">{{ $purchaseOrder->total_amount_words ?: '________________________' }}</span>
+                <span class="u">{{ $poAmountWords }}</span>
             </td>
         </tr>
 
