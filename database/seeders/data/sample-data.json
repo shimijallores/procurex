@@ -1,0 +1,4367 @@
+{
+    "apps": [
+        {
+            "office_code": "8721",
+            "fiscal_year": 2026,
+            "uploaded_file": "apps\/3IzZqlgJgB6amgngqlg9thzwiTQyJCxVICF0VwHw.xlsx",
+            "categories": [
+                {
+                    "account_code": "5 02 03 990",
+                    "early_procurement": false,
+                    "mode_of_procurement": "BIDDING\/ SMALL VALUE",
+                    "schedule_from_month": 1,
+                    "schedule_to_month": 1,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 0,
+                    "mooe_amount": 0,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": [
+                        {
+                            "name": "Air Freshener 320ml spray lemon",
+                            "estimated_budget": 0,
+                            "mooe_amount": 522000,
+                            "co_amount": 12,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Air Freshener 275ml",
+                            "estimated_budget": 0,
+                            "mooe_amount": 306200,
+                            "co_amount": 13,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Air Freshener 1N refill 175g\/269ml",
+                            "estimated_budget": 0,
+                            "mooe_amount": 591000,
+                            "co_amount": 14,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Alcohol 500ml",
+                            "estimated_budget": 0,
+                            "mooe_amount": 77200,
+                            "co_amount": 15,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Air Humidifier",
+                            "estimated_budget": 0,
+                            "mooe_amount": 27000,
+                            "co_amount": 16,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Air Humidifier Essential Oil (Oil Base 100ml)",
+                            "estimated_budget": 0,
+                            "mooe_amount": 55400,
+                            "co_amount": 17,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Air Sanitizer 300ml",
+                            "estimated_budget": 0,
+                            "mooe_amount": 108800,
+                            "co_amount": 18,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Bathroom Soap 135g",
+                            "estimated_budget": 0,
+                            "mooe_amount": 36400,
+                            "co_amount": 19,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Bleaching Solution 1gal",
+                            "estimated_budget": 0,
+                            "mooe_amount": 54300,
+                            "co_amount": 20,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Bleaching Solution 500ml",
+                            "estimated_budget": 0,
+                            "mooe_amount": 9600,
+                            "co_amount": 21,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Bleaching Solution 500ml color safe",
+                            "estimated_budget": 0,
+                            "mooe_amount": 15000,
+                            "co_amount": 22,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Broom Tambo",
+                            "estimated_budget": 0,
+                            "mooe_amount": 78000,
+                            "co_amount": 23,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Car Freshener 80g",
+                            "estimated_budget": 0,
+                            "mooe_amount": 97200,
+                            "co_amount": 24,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Car freshener gel type 180g (lavander scent)",
+                            "estimated_budget": 0,
+                            "mooe_amount": 112000,
+                            "co_amount": 25,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Court Mop",
+                            "estimated_budget": 0,
+                            "mooe_amount": 150000,
+                            "co_amount": 26,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Declogging Solution 1L",
+                            "estimated_budget": 0,
+                            "mooe_amount": 192000,
+                            "co_amount": 27,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Detergent Bar 380g (surf)",
+                            "estimated_budget": 0,
+                            "mooe_amount": 13300,
+                            "co_amount": 28,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Detergent Powder 74g",
+                            "estimated_budget": 0,
+                            "mooe_amount": 8740,
+                            "co_amount": 29,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Detergent Powder 1kg",
+                            "estimated_budget": 0,
+                            "mooe_amount": 42500,
+                            "co_amount": 30,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Dipper",
+                            "estimated_budget": 0,
+                            "mooe_amount": 18000,
+                            "co_amount": 31,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Dish rack",
+                            "estimated_budget": 0,
+                            "mooe_amount": 1650,
+                            "co_amount": 32,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Dishwashing Liquid 250ml",
+                            "estimated_budget": 0,
+                            "mooe_amount": 64200,
+                            "co_amount": 33,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Disinfectant Spray 300ml",
+                            "estimated_budget": 0,
+                            "mooe_amount": 122800,
+                            "co_amount": 34,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Doormat Cotton, medium",
+                            "estimated_budget": 0,
+                            "mooe_amount": 91200,
+                            "co_amount": 35,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Doormat Rubber medium (welcome)",
+                            "estimated_budget": 0,
+                            "mooe_amount": 100800,
+                            "co_amount": 36,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Dust Pan",
+                            "estimated_budget": 0,
+                            "mooe_amount": 39900,
+                            "co_amount": 37,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Hand Sanitizer 250ml",
+                            "estimated_budget": 0,
+                            "mooe_amount": 74400,
+                            "co_amount": 38,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Hand Wash Soap 250ml",
+                            "estimated_budget": 0,
+                            "mooe_amount": 107200,
+                            "co_amount": 39,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Floor Mop with Pail",
+                            "estimated_budget": 0,
+                            "mooe_amount": 212500,
+                            "co_amount": 40,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Floor wax Liquid, White, 1L",
+                            "estimated_budget": 0,
+                            "mooe_amount": 35000,
+                            "co_amount": 41,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Fabric conditioner, 1.2L refill",
+                            "estimated_budget": 0,
+                            "mooe_amount": 87600,
+                            "co_amount": 42,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Furniture Cleaner 330ml",
+                            "estimated_budget": 0,
+                            "mooe_amount": 184400,
+                            "co_amount": 43,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Auto Spray Primary",
+                            "estimated_budget": 0,
+                            "mooe_amount": 53360,
+                            "co_amount": 44,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Glass Cleaner 500ml",
+                            "estimated_budget": 0,
+                            "mooe_amount": 86800,
+                            "co_amount": 45,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Gloves, rubberized, large, 1 pair per pack",
+                            "estimated_budget": 0,
+                            "mooe_amount": 50000,
+                            "co_amount": 46,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Insecticide 500ml",
+                            "estimated_budget": 0,
+                            "mooe_amount": 172500,
+                            "co_amount": 47,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Insecticide 600ml Water based",
+                            "estimated_budget": 0,
+                            "mooe_amount": 172500,
+                            "co_amount": 48,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Kanebo",
+                            "estimated_budget": 0,
+                            "mooe_amount": 31000,
+                            "co_amount": 49,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Muriatic Acid 1L",
+                            "estimated_budget": 0,
+                            "mooe_amount": 42900,
+                            "co_amount": 50,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Pail 16L",
+                            "estimated_budget": 0,
+                            "mooe_amount": 31920,
+                            "co_amount": 51,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Plaque 10\"",
+                            "estimated_budget": 0,
+                            "mooe_amount": 25000,
+                            "co_amount": 52,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Push Brush with Handle",
+                            "estimated_budget": 0,
+                            "mooe_amount": 70000,
+                            "co_amount": 53,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rag",
+                            "estimated_budget": 0,
+                            "mooe_amount": 36000,
+                            "co_amount": 54,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Room & Linen Spray",
+                            "estimated_budget": 0,
+                            "mooe_amount": 240000,
+                            "co_amount": 55,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Scouring pad economy size 5pcs\/pack",
+                            "estimated_budget": 0,
+                            "mooe_amount": 10750,
+                            "co_amount": 56,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Scouring pad with foam",
+                            "estimated_budget": 0,
+                            "mooe_amount": 5900,
+                            "co_amount": 57,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Storage box with wheels",
+                            "estimated_budget": 0,
+                            "mooe_amount": 3860,
+                            "co_amount": 58,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Thumbtacks 100's\/Box",
+                            "estimated_budget": 0,
+                            "mooe_amount": 225,
+                            "co_amount": 59,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Tissue Unscented",
+                            "estimated_budget": 0,
+                            "mooe_amount": 92000,
+                            "co_amount": 60,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Toilet Bowl Cleaner 500ml",
+                            "estimated_budget": 0,
+                            "mooe_amount": 112000,
+                            "co_amount": 61,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Toilet Bowl brush w\/holder",
+                            "estimated_budget": 0,
+                            "mooe_amount": 307200,
+                            "co_amount": 62,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Toilet Tissue 12rolls\/pack",
+                            "estimated_budget": 0,
+                            "mooe_amount": 404000,
+                            "co_amount": 63,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Toilet Deodorant Cake w\/holder",
+                            "estimated_budget": 0,
+                            "mooe_amount": 36400,
+                            "co_amount": 64,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Tornado mop",
+                            "estimated_budget": 0,
+                            "mooe_amount": 150000,
+                            "co_amount": 65,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Trash bag, plastic black XL 10pcs\/pack",
+                            "estimated_budget": 0,
+                            "mooe_amount": 224000,
+                            "co_amount": 66,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Trash bag, plastic white L 10pcs\/pack",
+                            "estimated_budget": 0,
+                            "mooe_amount": 224000,
+                            "co_amount": 67,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Trash bag, plastic small 10pcs\/pack",
+                            "estimated_budget": 0,
+                            "mooe_amount": 74000,
+                            "co_amount": 68,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Trash bag, plastic meduim 10pcs\/pack",
+                            "estimated_budget": 0,
+                            "mooe_amount": 100000,
+                            "co_amount": 69,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Trash can small",
+                            "estimated_budget": 0,
+                            "mooe_amount": 98400,
+                            "co_amount": 70,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Monoblock chairs",
+                            "estimated_budget": 0,
+                            "mooe_amount": 605000,
+                            "co_amount": 71,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Purified Drinking water 350ml",
+                            "estimated_budget": 0,
+                            "mooe_amount": 12750,
+                            "co_amount": 72,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Purified Drinking water",
+                            "estimated_budget": 0,
+                            "mooe_amount": 32000,
+                            "co_amount": 73,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Walis Tingting",
+                            "estimated_budget": 0,
+                            "mooe_amount": 11500,
+                            "co_amount": 74,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Walis Pang-Agiw",
+                            "estimated_budget": 0,
+                            "mooe_amount": 76000,
+                            "co_amount": 75,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Walking Meter 12\"",
+                            "estimated_budget": 0,
+                            "mooe_amount": 23100,
+                            "co_amount": 76,
+                            "remarks": ""
+                        }
+                    ]
+                },
+                {
+                    "account_code": "5 02 03 010",
+                    "early_procurement": false,
+                    "mode_of_procurement": "SHOPPING\/ BIDDING",
+                    "schedule_from_month": 1,
+                    "schedule_to_month": 1,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 0,
+                    "mooe_amount": 0,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": [
+                        {
+                            "name": "All Purpose Sticker Paper A4 10's\/pack glossy",
+                            "estimated_budget": 0,
+                            "mooe_amount": 3400,
+                            "co_amount": 78,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Acetate PVC long",
+                            "estimated_budget": 0,
+                            "mooe_amount": 9375,
+                            "co_amount": 79,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Archfile 9.5 x 15 inches - 2.5 inches Black",
+                            "estimated_budget": 0,
+                            "mooe_amount": 3800,
+                            "co_amount": 80,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ballpen (black)",
+                            "estimated_budget": 0,
+                            "mooe_amount": 900,
+                            "co_amount": 81,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ballpoint Pen Fine point Black",
+                            "estimated_budget": 0,
+                            "mooe_amount": 6400,
+                            "co_amount": 82,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ballpoint Pen Fine point Blue",
+                            "estimated_budget": 0,
+                            "mooe_amount": 704,
+                            "co_amount": 83,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Battery AA (pack  2)",
+                            "estimated_budget": 0,
+                            "mooe_amount": 7725,
+                            "co_amount": 84,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Battery AAA (pack  2)",
+                            "estimated_budget": 0,
+                            "mooe_amount": 10050,
+                            "co_amount": 85,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Board paper Long 10's\/pack",
+                            "estimated_budget": 0,
+                            "mooe_amount": 5400,
+                            "co_amount": 86,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Board Paper Short 10's\/pack",
+                            "estimated_budget": 0,
+                            "mooe_amount": 5000,
+                            "co_amount": 87,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Bond Paper A4 70gsm",
+                            "estimated_budget": 0,
+                            "mooe_amount": 50600,
+                            "co_amount": 88,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Bond Paper short 70gsm",
+                            "estimated_budget": 0,
+                            "mooe_amount": 84600,
+                            "co_amount": 89,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Bond Paper long 70gsm",
+                            "estimated_budget": 0,
+                            "mooe_amount": 98400,
+                            "co_amount": 90,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Bond Paper A4 80gsm",
+                            "estimated_budget": 0,
+                            "mooe_amount": 109200,
+                            "co_amount": 91,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Bond Paper short 70gsm",
+                            "estimated_budget": 0,
+                            "mooe_amount": 70000,
+                            "co_amount": 92,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Bond Paper long , 80gsm",
+                            "estimated_budget": 0,
+                            "mooe_amount": 120000,
+                            "co_amount": 93,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Bundy Clock Ribbon Iwata",
+                            "estimated_budget": 0,
+                            "mooe_amount": 40800,
+                            "co_amount": 94,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Bundy Clock Ribbon BH65",
+                            "estimated_budget": 0,
+                            "mooe_amount": 15000,
+                            "co_amount": 95,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Bundy Clock Card 100's\/bundle",
+                            "estimated_budget": 0,
+                            "mooe_amount": 8450,
+                            "co_amount": 96,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Calculator 12 digits compact,  electronic, two way power",
+                            "estimated_budget": 0,
+                            "mooe_amount": 16950,
+                            "co_amount": 97,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Clear Sheet Refill, 100's per pack -for ring file folder",
+                            "estimated_budget": 0,
+                            "mooe_amount": 10650,
+                            "co_amount": 98,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Binder clip 3\/4\" (12pcs\/box)",
+                            "estimated_budget": 0,
+                            "mooe_amount": 621,
+                            "co_amount": 99,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Binder clip 1\/2\" (12pcs\/box)",
+                            "estimated_budget": 0,
+                            "mooe_amount": 460,
+                            "co_amount": 100,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Binder clip 1\" (8's\/pack)",
+                            "estimated_budget": 0,
+                            "mooe_amount": 594,
+                            "co_amount": 101,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Binder clip 1\" (12pcs\/box)",
+                            "estimated_budget": 0,
+                            "mooe_amount": 1150,
+                            "co_amount": 102,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Binder clip 1 5\/8\" (12pcs\/box)",
+                            "estimated_budget": 0,
+                            "mooe_amount": 1625,
+                            "co_amount": 103,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Binder clip 1 1\/4\" (4pcs\/box)",
+                            "estimated_budget": 0,
+                            "mooe_amount": 960,
+                            "co_amount": 104,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Binder clip 1 1\/4\" (12pcs\/box)",
+                            "estimated_budget": 0,
+                            "mooe_amount": 1800,
+                            "co_amount": 105,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Binder clip 2\" (12pcs\/box)",
+                            "estimated_budget": 0,
+                            "mooe_amount": 4028,
+                            "co_amount": 106,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Binder clip 2\" (2's\/pack)",
+                            "estimated_budget": 0,
+                            "mooe_amount": 960,
+                            "co_amount": 107,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Clipboard Long",
+                            "estimated_budget": 0,
+                            "mooe_amount": 4224,
+                            "co_amount": 108,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Computer Mouse USB Connection optical USB",
+                            "estimated_budget": 0,
+                            "mooe_amount": 11700,
+                            "co_amount": 109,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Computer Mouse USB - Wireless",
+                            "estimated_budget": 0,
+                            "mooe_amount": 9450,
+                            "co_amount": 110,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Correction Tape",
+                            "estimated_budget": 0,
+                            "mooe_amount": 5600,
+                            "co_amount": 111,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Correction Fluid",
+                            "estimated_budget": 0,
+                            "mooe_amount": 500,
+                            "co_amount": 112,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Cutter big HD",
+                            "estimated_budget": 0,
+                            "mooe_amount": 1360,
+                            "co_amount": 113,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Cutter small",
+                            "estimated_budget": 0,
+                            "mooe_amount": 840,
+                            "co_amount": 114,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Data File Folder",
+                            "estimated_budget": 0,
+                            "mooe_amount": 7680,
+                            "co_amount": 115,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Desk Organizer",
+                            "estimated_budget": 0,
+                            "mooe_amount": 10830,
+                            "co_amount": 116,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Double Adhesive Tape 1\"",
+                            "estimated_budget": 0,
+                            "mooe_amount": 3550,
+                            "co_amount": 117,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Double Adhesive Tape 2\"",
+                            "estimated_budget": 0,
+                            "mooe_amount": 5350,
+                            "co_amount": 118,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Envelope mailing white 500s\/box",
+                            "estimated_budget": 0,
+                            "mooe_amount": 32000,
+                            "co_amount": 119,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Envelope Plastic Long",
+                            "estimated_budget": 0,
+                            "mooe_amount": 2850,
+                            "co_amount": 120,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Envelope Plastic Expanding with handle long",
+                            "estimated_budget": 0,
+                            "mooe_amount": 9500,
+                            "co_amount": 121,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Envelope, Long, Brown",
+                            "estimated_budget": 0,
+                            "mooe_amount": 3300,
+                            "co_amount": 122,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Envelope, Short, Brown",
+                            "estimated_budget": 0,
+                            "mooe_amount": 1800,
+                            "co_amount": 123,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Envelope, A4",
+                            "estimated_budget": 0,
+                            "mooe_amount": 1000,
+                            "co_amount": 124,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Eraser rubber big",
+                            "estimated_budget": 0,
+                            "mooe_amount": 1440,
+                            "co_amount": 125,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Expandable Envelop brown",
+                            "estimated_budget": 0,
+                            "mooe_amount": 2750,
+                            "co_amount": 126,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Expandable Envelop green",
+                            "estimated_budget": 0,
+                            "mooe_amount": 2500,
+                            "co_amount": 127,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Fastener metal 50's",
+                            "estimated_budget": 0,
+                            "mooe_amount": 5800,
+                            "co_amount": 128,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Fastener metal long 50 pcs",
+                            "estimated_budget": 0,
+                            "mooe_amount": 4800,
+                            "co_amount": 129,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Fastener Plastic 50's",
+                            "estimated_budget": 0,
+                            "mooe_amount": 1600,
+                            "co_amount": 130,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Filing Box",
+                            "estimated_budget": 0,
+                            "mooe_amount": 2000,
+                            "co_amount": 131,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Folder Pressboard(green,yellow, blue,red long)",
+                            "estimated_budget": 0,
+                            "mooe_amount": 3510,
+                            "co_amount": 132,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Folder tagboard A4 size docs",
+                            "estimated_budget": 0,
+                            "mooe_amount": 480,
+                            "co_amount": 133,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Folder tagboard legal size",
+                            "estimated_budget": 0,
+                            "mooe_amount": 570,
+                            "co_amount": 134,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Folder Long",
+                            "estimated_budget": 0,
+                            "mooe_amount": 760,
+                            "co_amount": 135,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Folder short white",
+                            "estimated_budget": 0,
+                            "mooe_amount": 560,
+                            "co_amount": 136,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Folder, expanded, long",
+                            "estimated_budget": 0,
+                            "mooe_amount": 2960,
+                            "co_amount": 137,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Folder, Expanded, A4",
+                            "estimated_budget": 0,
+                            "mooe_amount": 2800,
+                            "co_amount": 138,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Frixion Pen, Black 0.5",
+                            "estimated_budget": 0,
+                            "mooe_amount": 540,
+                            "co_amount": 139,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Frixion Pen, Blue 0.5",
+                            "estimated_budget": 0,
+                            "mooe_amount": 570,
+                            "co_amount": 140,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Glue 130g all purpose",
+                            "estimated_budget": 0,
+                            "mooe_amount": 2625,
+                            "co_amount": 141,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Highlighters Set 15's 9 Fluorescent\/6 Pastel",
+                            "estimated_budget": 0,
+                            "mooe_amount": 3015,
+                            "co_amount": 142,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Keyboard (USB port)",
+                            "estimated_budget": 0,
+                            "mooe_amount": 17460,
+                            "co_amount": 143,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Index Tab, Self Adhesive, Assorted Colors",
+                            "estimated_budget": 0,
+                            "mooe_amount": 4400,
+                            "co_amount": 144,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Instant Glue",
+                            "estimated_budget": 0,
+                            "mooe_amount": 3240,
+                            "co_amount": 145,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink GT53, black (HP Printer)",
+                            "estimated_budget": 0,
+                            "mooe_amount": 7210,
+                            "co_amount": 146,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink GT52 (HP Printer)",
+                            "estimated_budget": 0,
+                            "mooe_amount": 3710,
+                            "co_amount": 147,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink GT52 cyan",
+                            "estimated_budget": 0,
+                            "mooe_amount": 3710,
+                            "co_amount": 148,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink GT52 magenta (HP Printer)",
+                            "estimated_budget": 0,
+                            "mooe_amount": 3710,
+                            "co_amount": 149,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink T6731",
+                            "estimated_budget": 0,
+                            "mooe_amount": 3532.5,
+                            "co_amount": 150,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink T6732",
+                            "estimated_budget": 0,
+                            "mooe_amount": 3532.5,
+                            "co_amount": 151,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink T6733",
+                            "estimated_budget": 0,
+                            "mooe_amount": 3532.5,
+                            "co_amount": 152,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink T6734",
+                            "estimated_budget": 0,
+                            "mooe_amount": 3532.5,
+                            "co_amount": 153,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink T6735",
+                            "estimated_budget": 0,
+                            "mooe_amount": 3532.5,
+                            "co_amount": 154,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink T6736",
+                            "estimated_budget": 0,
+                            "mooe_amount": 3532.5,
+                            "co_amount": 155,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink 001 black",
+                            "estimated_budget": 0,
+                            "mooe_amount": 3125,
+                            "co_amount": 156,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink 001 yellow",
+                            "estimated_budget": 0,
+                            "mooe_amount": 2000,
+                            "co_amount": 157,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink 001 magenta",
+                            "estimated_budget": 0,
+                            "mooe_amount": 2000,
+                            "co_amount": 158,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink 001 cyan",
+                            "estimated_budget": 0,
+                            "mooe_amount": 2000,
+                            "co_amount": 159,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink HP 678 Black",
+                            "estimated_budget": 0,
+                            "mooe_amount": 11865,
+                            "co_amount": 160,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink HP 678 Colored",
+                            "estimated_budget": 0,
+                            "mooe_amount": 11865,
+                            "co_amount": 161,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink GT52 Cyan",
+                            "estimated_budget": 0,
+                            "mooe_amount": 1560,
+                            "co_amount": 162,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink GT52 Magenta",
+                            "estimated_budget": 0,
+                            "mooe_amount": 1560,
+                            "co_amount": 163,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink GT52 Yellow",
+                            "estimated_budget": 0,
+                            "mooe_amount": 1560,
+                            "co_amount": 164,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink GT52 Black",
+                            "estimated_budget": 0,
+                            "mooe_amount": 1560,
+                            "co_amount": 165,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink  T6641 black",
+                            "estimated_budget": 0,
+                            "mooe_amount": 29840,
+                            "co_amount": 166,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink #T6642 Cyan",
+                            "estimated_budget": 0,
+                            "mooe_amount": 15240,
+                            "co_amount": 167,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink #T6643 Magenta",
+                            "estimated_budget": 0,
+                            "mooe_amount": 15240,
+                            "co_amount": 168,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink #T6644 Yellow",
+                            "estimated_budget": 0,
+                            "mooe_amount": 1143,
+                            "co_amount": 169,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink Epson 003 black",
+                            "estimated_budget": 0,
+                            "mooe_amount": 93250,
+                            "co_amount": 170,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink Epson 003 cyan",
+                            "estimated_budget": 0,
+                            "mooe_amount": 36195,
+                            "co_amount": 171,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink Epson 003 magenta",
+                            "estimated_budget": 0,
+                            "mooe_amount": 36195,
+                            "co_amount": 172,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink Epson 003 yellow",
+                            "estimated_budget": 0,
+                            "mooe_amount": 36195,
+                            "co_amount": 173,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink Epson C13T05A100",
+                            "estimated_budget": 0,
+                            "mooe_amount": 31000,
+                            "co_amount": 174,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink Epson C13T05A200",
+                            "estimated_budget": 0,
+                            "mooe_amount": 25464,
+                            "co_amount": 175,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink Epson C13T05A300",
+                            "estimated_budget": 0,
+                            "mooe_amount": 25464,
+                            "co_amount": 176,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink Epson C13T05A400",
+                            "estimated_budget": 0,
+                            "mooe_amount": 25464,
+                            "co_amount": 177,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink Epson 008 Black",
+                            "estimated_budget": 0,
+                            "mooe_amount": 3582,
+                            "co_amount": 178,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink Epson 008 Cyan",
+                            "estimated_budget": 0,
+                            "mooe_amount": 2850,
+                            "co_amount": 179,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink Epson 008 Magenta",
+                            "estimated_budget": 0,
+                            "mooe_amount": 2850,
+                            "co_amount": 180,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ink Epson 008 Yellow",
+                            "estimated_budget": 0,
+                            "mooe_amount": 2850,
+                            "co_amount": 181,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Magnetic Sheet 3's",
+                            "estimated_budget": 0,
+                            "mooe_amount": 2900,
+                            "co_amount": 182,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Tabbings (insert)",
+                            "estimated_budget": 0,
+                            "mooe_amount": 1000,
+                            "co_amount": 183,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Toner MX-237-FT",
+                            "estimated_budget": 0,
+                            "mooe_amount": 66000,
+                            "co_amount": 184,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Toner for KYOCERA-Taskalfa 4012i",
+                            "estimated_budget": 0,
+                            "mooe_amount": 880000,
+                            "co_amount": 185,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Toner for Ineo 165en\/TN116",
+                            "estimated_budget": 0,
+                            "mooe_amount": 21720,
+                            "co_amount": 186,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Toner for Ineo 225i",
+                            "estimated_budget": 0,
+                            "mooe_amount": 43440,
+                            "co_amount": 187,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Self Inking Stamp",
+                            "estimated_budget": 0,
+                            "mooe_amount": 6250,
+                            "co_amount": 188,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Magazine File Box\/Data File Box",
+                            "estimated_budget": 0,
+                            "mooe_amount": 3870,
+                            "co_amount": 189,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Notepad 1\"x3\" 100s",
+                            "estimated_budget": 0,
+                            "mooe_amount": 365,
+                            "co_amount": 190,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Notepad 2\"x2\" (100's)",
+                            "estimated_budget": 0,
+                            "mooe_amount": 295,
+                            "co_amount": 191,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Notepad 3\"x3\" (100's)",
+                            "estimated_budget": 0,
+                            "mooe_amount": 680,
+                            "co_amount": 192,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Notepad 3\"x4\" (100's)",
+                            "estimated_budget": 0,
+                            "mooe_amount": 815,
+                            "co_amount": 193,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Notepad 3\"x5\" (100's)",
+                            "estimated_budget": 0,
+                            "mooe_amount": 960,
+                            "co_amount": 194,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Numbering  Machine",
+                            "estimated_budget": 0,
+                            "mooe_amount": 17500,
+                            "co_amount": 195,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Customized Notepad, (8.5\"x5.5\")",
+                            "estimated_budget": 0,
+                            "mooe_amount": 4200,
+                            "co_amount": 196,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Payroll Paper",
+                            "estimated_budget": 0,
+                            "mooe_amount": 50000,
+                            "co_amount": 197,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Packaging Tape Big",
+                            "estimated_budget": 0,
+                            "mooe_amount": 3800,
+                            "co_amount": 198,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Paper Clip, small",
+                            "estimated_budget": 0,
+                            "mooe_amount": 600,
+                            "co_amount": 199,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Paper Clip, big",
+                            "estimated_budget": 0,
+                            "mooe_amount": 1300,
+                            "co_amount": 200,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Permanent Marker Black",
+                            "estimated_budget": 0,
+                            "mooe_amount": 5200,
+                            "co_amount": 201,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Permanent Marker Blue",
+                            "estimated_budget": 0,
+                            "mooe_amount": 2600,
+                            "co_amount": 202,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Permanent Marker White",
+                            "estimated_budget": 0,
+                            "mooe_amount": 450,
+                            "co_amount": 203,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Pencil",
+                            "estimated_budget": 0,
+                            "mooe_amount": 18000,
+                            "co_amount": 204,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Mouse Pad",
+                            "estimated_budget": 0,
+                            "mooe_amount": 3990,
+                            "co_amount": 205,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Puncher HD Steel",
+                            "estimated_budget": 0,
+                            "mooe_amount": 18870,
+                            "co_amount": 206,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Record Book 150 pages",
+                            "estimated_budget": 0,
+                            "mooe_amount": 7650,
+                            "co_amount": 207,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Record Book 300 pages",
+                            "estimated_budget": 0,
+                            "mooe_amount": 16120,
+                            "co_amount": 208,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Record Book 500 pages",
+                            "estimated_budget": 0,
+                            "mooe_amount": 17100,
+                            "co_amount": 209,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ring File folder,long, vertical",
+                            "estimated_budget": 0,
+                            "mooe_amount": 7680,
+                            "co_amount": 210,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Ruler small",
+                            "estimated_budget": 0,
+                            "mooe_amount": 320,
+                            "co_amount": 211,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rubber Band Big",
+                            "estimated_budget": 0,
+                            "mooe_amount": 1400,
+                            "co_amount": 212,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rubber Band Small",
+                            "estimated_budget": 0,
+                            "mooe_amount": 200,
+                            "co_amount": 213,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Scissor",
+                            "estimated_budget": 0,
+                            "mooe_amount": 720,
+                            "co_amount": 214,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Scissor 6\"",
+                            "estimated_budget": 0,
+                            "mooe_amount": 900,
+                            "co_amount": 215,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Scissor 8\"",
+                            "estimated_budget": 0,
+                            "mooe_amount": 2600,
+                            "co_amount": 216,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Transparent Tape",
+                            "estimated_budget": 0,
+                            "mooe_amount": 2400,
+                            "co_amount": 217,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Sign Pen .5 Black",
+                            "estimated_budget": 0,
+                            "mooe_amount": 3400,
+                            "co_amount": 218,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Sign Pen .5 Blue",
+                            "estimated_budget": 0,
+                            "mooe_amount": 3400,
+                            "co_amount": 219,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Sign Pen .7 Red",
+                            "estimated_budget": 0,
+                            "mooe_amount": 860,
+                            "co_amount": 220,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Sign Pen  blue 1.0",
+                            "estimated_budget": 0,
+                            "mooe_amount": 13000,
+                            "co_amount": 221,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Sign Pen  black 1.0",
+                            "estimated_budget": 0,
+                            "mooe_amount": 13000,
+                            "co_amount": 222,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Sharpener",
+                            "estimated_budget": 0,
+                            "mooe_amount": 2750,
+                            "co_amount": 223,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Highlighter",
+                            "estimated_budget": 0,
+                            "mooe_amount": 1800,
+                            "co_amount": 224,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Staple wire #35",
+                            "estimated_budget": 0,
+                            "mooe_amount": 8000,
+                            "co_amount": 225,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Stapler w\/ remover",
+                            "estimated_budget": 0,
+                            "mooe_amount": 106200,
+                            "co_amount": 226,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Stamp Pad",
+                            "estimated_budget": 0,
+                            "mooe_amount": 2080,
+                            "co_amount": 227,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Tape Masking 1\"",
+                            "estimated_budget": 0,
+                            "mooe_amount": 1400,
+                            "co_amount": 228,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "USB Flash Drive 32GB",
+                            "estimated_budget": 0,
+                            "mooe_amount": 5100,
+                            "co_amount": 229,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "USB Flash Drive 64GB",
+                            "estimated_budget": 0,
+                            "mooe_amount": 8350,
+                            "co_amount": 230,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "USB Flash Drive OTG 16GB",
+                            "estimated_budget": 0,
+                            "mooe_amount": 6870,
+                            "co_amount": 231,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "USB Flash Drive 16GB",
+                            "estimated_budget": 0,
+                            "mooe_amount": 4950,
+                            "co_amount": 232,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "USB Flash Drive 8GB",
+                            "estimated_budget": 0,
+                            "mooe_amount": 4910,
+                            "co_amount": 233,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "8GB Micro SD card",
+                            "estimated_budget": 0,
+                            "mooe_amount": 1562.5,
+                            "co_amount": 234,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Write 4 all pen",
+                            "estimated_budget": 0,
+                            "mooe_amount": 2000,
+                            "co_amount": 235,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "White board 18 X 24",
+                            "estimated_budget": 0,
+                            "mooe_amount": 3600,
+                            "co_amount": 236,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "White board marker black",
+                            "estimated_budget": 0,
+                            "mooe_amount": 1360,
+                            "co_amount": 237,
+                            "remarks": ""
+                        }
+                    ]
+                },
+                {
+                    "account_code": "5 02 13 020",
+                    "early_procurement": false,
+                    "mode_of_procurement": "BIDDING\/ SMALL VALUE",
+                    "schedule_from_month": 1,
+                    "schedule_to_month": 1,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 75000,
+                    "mooe_amount": 238,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": []
+                },
+                {
+                    "account_code": "5 02 13 050",
+                    "early_procurement": false,
+                    "mode_of_procurement": "BIDDING\/ SMALL VALUE",
+                    "schedule_from_month": 1,
+                    "schedule_to_month": 1,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 1580000,
+                    "mooe_amount": 239,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": []
+                },
+                {
+                    "account_code": "5 02 13 070",
+                    "early_procurement": false,
+                    "mode_of_procurement": "BIDDING\/ SMALL VALUE",
+                    "schedule_from_month": 1,
+                    "schedule_to_month": 1,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 285000,
+                    "mooe_amount": 240,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": []
+                },
+                {
+                    "account_code": "5 02 13 060",
+                    "early_procurement": false,
+                    "mode_of_procurement": "BIDDING\/ SMALL VALUE",
+                    "schedule_from_month": 1,
+                    "schedule_to_month": 1,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 6265000,
+                    "mooe_amount": 241,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": []
+                },
+                {
+                    "account_code": "5 02 13 040",
+                    "early_procurement": false,
+                    "mode_of_procurement": "BIDDING\/ SMALL VALUE",
+                    "schedule_from_month": 1,
+                    "schedule_to_month": 1,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 5686000,
+                    "mooe_amount": 242,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": []
+                },
+                {
+                    "account_code": "5 02 13 210",
+                    "early_procurement": false,
+                    "mode_of_procurement": "BIDDING\/ SMALL VALUE",
+                    "schedule_from_month": 1,
+                    "schedule_to_month": 1,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 330000,
+                    "mooe_amount": 243,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": []
+                },
+                {
+                    "account_code": "5 02 13 220",
+                    "early_procurement": false,
+                    "mode_of_procurement": "BIDDING\/ SMALL VALUE",
+                    "schedule_from_month": 1,
+                    "schedule_to_month": 1,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 320000,
+                    "mooe_amount": 244,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": []
+                },
+                {
+                    "account_code": "5 02 01 010",
+                    "early_procurement": false,
+                    "mode_of_procurement": "",
+                    "schedule_from_month": 1,
+                    "schedule_to_month": 1,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 1238275,
+                    "mooe_amount": 245,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": []
+                },
+                {
+                    "account_code": "5 02 01 020",
+                    "early_procurement": false,
+                    "mode_of_procurement": "",
+                    "schedule_from_month": 5,
+                    "schedule_to_month": 5,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 100500,
+                    "mooe_amount": 246,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": []
+                },
+                {
+                    "account_code": "5 02 03 090",
+                    "early_procurement": false,
+                    "mode_of_procurement": "",
+                    "schedule_from_month": 7,
+                    "schedule_to_month": 7,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 14275000,
+                    "mooe_amount": 247,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": []
+                },
+                {
+                    "account_code": "5 02 04 010",
+                    "early_procurement": false,
+                    "mode_of_procurement": "",
+                    "schedule_from_month": 7,
+                    "schedule_to_month": 7,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 14000000,
+                    "mooe_amount": 248,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": []
+                },
+                {
+                    "account_code": "5 02 04 020",
+                    "early_procurement": false,
+                    "mode_of_procurement": "",
+                    "schedule_from_month": 1,
+                    "schedule_to_month": 1,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 90000000,
+                    "mooe_amount": 75000000,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": []
+                },
+                {
+                    "account_code": "5 02 05 010",
+                    "early_procurement": false,
+                    "mode_of_procurement": "",
+                    "schedule_from_month": 3,
+                    "schedule_to_month": 5,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 9750,
+                    "mooe_amount": 9750,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": [
+                        {
+                            "name": "Mails of official documents\/letters\/notices",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        }
+                    ]
+                },
+                {
+                    "account_code": "5 02 05 020",
+                    "early_procurement": false,
+                    "mode_of_procurement": "",
+                    "schedule_from_month": 1,
+                    "schedule_to_month": 1,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 196000,
+                    "mooe_amount": 252,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": []
+                },
+                {
+                    "account_code": "5 02 05 030",
+                    "early_procurement": false,
+                    "mode_of_procurement": "",
+                    "schedule_from_month": 1,
+                    "schedule_to_month": 1,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 450000,
+                    "mooe_amount": 253,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": []
+                },
+                {
+                    "account_code": "5 02 05 040",
+                    "early_procurement": false,
+                    "mode_of_procurement": "",
+                    "schedule_from_month": 1,
+                    "schedule_to_month": 1,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 75000,
+                    "mooe_amount": 254,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": []
+                },
+                {
+                    "account_code": "5 02 99 060",
+                    "early_procurement": false,
+                    "mode_of_procurement": "",
+                    "schedule_from_month": 3,
+                    "schedule_to_month": 3,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 67000,
+                    "mooe_amount": 255,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": []
+                },
+                {
+                    "account_code": "5 02 99 010",
+                    "early_procurement": false,
+                    "mode_of_procurement": "BIDDING\/            SMALL VALUE",
+                    "schedule_from_month": 3,
+                    "schedule_to_month": 3,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 12025223,
+                    "mooe_amount": 256,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": [
+                        {
+                            "name": "Publication of Invitation to Bid",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 257,
+                            "remarks": ""
+                        }
+                    ]
+                },
+                {
+                    "account_code": "5 02 99 020",
+                    "early_procurement": false,
+                    "mode_of_procurement": "BIDDING\/            SMALL VALUE",
+                    "schedule_from_month": 3,
+                    "schedule_to_month": 3,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 12025225,
+                    "mooe_amount": 258,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": [
+                        {
+                            "name": "Records binding",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 259,
+                            "remarks": ""
+                        }
+                    ]
+                },
+                {
+                    "account_code": "5 02 99 050",
+                    "early_procurement": false,
+                    "mode_of_procurement": "BIDDING\/            SMALL VALUE",
+                    "schedule_from_month": 1,
+                    "schedule_to_month": 1,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 14903000,
+                    "mooe_amount": 260,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": [
+                        {
+                            "name": "Rental of Chairs",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of Sound system & LED monitor",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of tent",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of vehicle\/watercraft",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of portalet",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of Manlift",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of Crane Rough Terrain 25 tons with operator",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of stage",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of Chairs",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of Tables \/ Tables with cover",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of Sound system & LED monitor",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of tent \/ Collapsible tent \/ foldable, protable tent with aircon",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of vehicle\/watercraft",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of portalet",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of Manlift",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of Crane Rough Terrain 25 tons with operator",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of stage",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of LED Wall, Camera",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of camera with gears and underwater camera",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of HD Camera for Livefeed, Video Camera, Drone Camera, Roving Camera",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of Venue, space",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of drumbeaters\/brass band",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of jeep, bus, mini bus, van, coaster, truck, bangka, motor boat, tricycle, public utility vehicle,",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of Confetti blasters",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of Lapel Microphones",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of Portable Toilet",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of Projection Mapping (3D Surface Mapping)",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of Special Light Set up",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of Sound System (including all accessories), lights, and set up of instrument",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of stage st up and design",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of Video coverage",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of Video mixer, video processor, video switcher",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of PC Controller Scaler",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of HDMI, Cat 5, Peripherals",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of Cables, signals and Accessories",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of electrical Cables ans Accessories",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of Powerpack",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of Mascot",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of Exhibit booths",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of various Machinery\/Equipment",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of Livestram & Broadcast Equipment",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of Oxygen tanks",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rentals of Diving Pharapernalia",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of Diving gear",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Rental of Generator Set",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        }
+                    ]
+                },
+                {
+                    "account_code": "5 02 99 070",
+                    "early_procurement": false,
+                    "mode_of_procurement": "BIDDING\/            SMALL VALUE",
+                    "schedule_from_month": 1,
+                    "schedule_to_month": 1,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 32250,
+                    "mooe_amount": 306,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": [
+                        {
+                            "name": "Newspaper",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Magazine",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        }
+                    ]
+                },
+                {
+                    "account_code": "5 02 16 020",
+                    "early_procurement": false,
+                    "mode_of_procurement": "",
+                    "schedule_from_month": 1,
+                    "schedule_to_month": 1,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 12025239,
+                    "mooe_amount": 309,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": []
+                },
+                {
+                    "account_code": "5 02 99 030",
+                    "early_procurement": false,
+                    "mode_of_procurement": "BIDDING\/            SMALL VALUE",
+                    "schedule_from_month": 1,
+                    "schedule_to_month": 1,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 500000,
+                    "mooe_amount": 310,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": [
+                        {
+                            "name": "Meals & Snacks",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Tokens (Framed balisong,2x3ft.materials:deer horn, heavy duty w\/ seal);  kapeng barako, 1\/4 kilo, tablea, etc.)",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        }
+                    ]
+                },
+                {
+                    "account_code": "5 02 16 010",
+                    "early_procurement": false,
+                    "mode_of_procurement": "",
+                    "schedule_from_month": 1,
+                    "schedule_to_month": 1,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 1000000,
+                    "mooe_amount": 313,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": [
+                        {
+                            "name": "LTO Registration for vehicles",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Emmission Testing",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "PNP Clearance",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        }
+                    ]
+                },
+                {
+                    "account_code": "5 02 16 030",
+                    "early_procurement": false,
+                    "mode_of_procurement": "",
+                    "schedule_from_month": 1,
+                    "schedule_to_month": 1,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 25000000,
+                    "mooe_amount": 317,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": []
+                },
+                {
+                    "account_code": "5 02 12 010",
+                    "early_procurement": false,
+                    "mode_of_procurement": "Bidding\/Small Value",
+                    "schedule_from_month": 1,
+                    "schedule_to_month": 1,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 1500000,
+                    "mooe_amount": 318,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": [
+                        {
+                            "name": "Siphoning",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Disposal of Solid Waste Materials to Sanitary Landfill",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        }
+                    ]
+                },
+                {
+                    "account_code": "5 02 02 010",
+                    "early_procurement": false,
+                    "mode_of_procurement": "Bidding\/Small Value",
+                    "schedule_from_month": 3,
+                    "schedule_to_month": 3,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 800000,
+                    "mooe_amount": 321,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": [
+                        {
+                            "name": "Meals & Snacks Registration fee, Accomodation",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        }
+                    ]
+                },
+                {
+                    "account_code": "5 02 99 990",
+                    "early_procurement": false,
+                    "mode_of_procurement": "Bidding\/Small Value",
+                    "schedule_from_month": 1,
+                    "schedule_to_month": 1,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 800000,
+                    "mooe_amount": 323,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": [
+                        {
+                            "name": "Funeral Flowers",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Petty Cash",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Honorarium for speakers from LGU",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Laundry Services",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Sports Uniform",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "General Assembly",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Year end Assessment",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        }
+                    ]
+                },
+                {
+                    "account_code": "5 02 11 990",
+                    "early_procurement": false,
+                    "mode_of_procurement": "",
+                    "schedule_from_month": 3,
+                    "schedule_to_month": 3,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 50000,
+                    "mooe_amount": 331,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": [
+                        {
+                            "name": "Honorarium for speakers from",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "GPPB\/DILG\/COA",
+                            "estimated_budget": 0,
+                            "mooe_amount": 0,
+                            "co_amount": 0,
+                            "remarks": ""
+                        }
+                    ]
+                },
+                {
+                    "account_code": "1 07 05 020",
+                    "early_procurement": false,
+                    "mode_of_procurement": "BIDDING \/SMALL VALUE",
+                    "schedule_from_month": null,
+                    "schedule_to_month": null,
+                    "source_of_fund": "",
+                    "estimated_budget": 0,
+                    "mooe_amount": 0,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": [
+                        {
+                            "name": "Supply and installation of 6HP non-inverter ceiling mounted ACU including 90ft excess piping and dismantle of existing unit",
+                            "estimated_budget": 450000,
+                            "mooe_amount": 0,
+                            "co_amount": 335,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "2.5 HP split type aircon",
+                            "estimated_budget": 360000,
+                            "mooe_amount": 0,
+                            "co_amount": 336,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Multi functional Copier Machine(Printer\/Scanner )- with high speed copying at 25 pages\/minute simplex and 18 pages\/minute duplex",
+                            "estimated_budget": 199600,
+                            "mooe_amount": 0,
+                            "co_amount": 337,
+                            "remarks": ""
+                        }
+                    ]
+                },
+                {
+                    "account_code": "1 07 07 010",
+                    "early_procurement": false,
+                    "mode_of_procurement": "BIDDING \/SMALL VALUE",
+                    "schedule_from_month": null,
+                    "schedule_to_month": null,
+                    "source_of_fund": "",
+                    "estimated_budget": 0,
+                    "mooe_amount": 0,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": [
+                        {
+                            "name": "Partition - Fabric with glass partition, with powder coated endtrims and customized color scheme",
+                            "estimated_budget": 55000,
+                            "mooe_amount": 0,
+                            "co_amount": 339,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Customized Coffee Table:  Dimension: 60x60",
+                            "estimated_budget": 60000,
+                            "mooe_amount": 0,
+                            "co_amount": 340,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Induction cooker",
+                            "estimated_budget": 138000,
+                            "mooe_amount": 0,
+                            "co_amount": 341,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Customized Dining Table 4-seater with Dining Chairs, 140L x 70Wx 75H",
+                            "estimated_budget": 114000,
+                            "mooe_amount": 0,
+                            "co_amount": 342,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Customized Office Sofa 2- seater, 150Lx60Wx80H",
+                            "estimated_budget": 60000,
+                            "mooe_amount": 0,
+                            "co_amount": 343,
+                            "remarks": ""
+                        }
+                    ]
+                },
+                {
+                    "account_code": "1 07 05 030",
+                    "early_procurement": false,
+                    "mode_of_procurement": "BIDDING \/SMALL VALUE",
+                    "schedule_from_month": 3,
+                    "schedule_to_month": 3,
+                    "source_of_fund": "",
+                    "estimated_budget": 0,
+                    "mooe_amount": 0,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": [
+                        {
+                            "name": "Computer Package - Processor: Intel Core i5 \/ 8GB, 1TB+256GB SSD \/ Monitor \/ Keyboard and mouse \/ Windows OS \/ with 3 in 1 printer (print, scan & copy) \/ UPS AVR 650VA",
+                            "estimated_budget": 170000,
+                            "mooe_amount": 0,
+                            "co_amount": 345,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Computer Software",
+                            "estimated_budget": 185000,
+                            "mooe_amount": 0,
+                            "co_amount": 346,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Desktop Computer - Intel Core i7 8th Gen CPU \/ 16GB RAM \/ 256GB SSD \/ NVIDIA GeForce with monitor, AVR, UPS, printer",
+                            "estimated_budget": 99850,
+                            "mooe_amount": 0,
+                            "co_amount": 347,
+                            "remarks": ""
+                        }
+                    ]
+                },
+                {
+                    "account_code": "1 07 05 010",
+                    "early_procurement": false,
+                    "mode_of_procurement": "BIDDING \/SMALL VALUE",
+                    "schedule_from_month": null,
+                    "schedule_to_month": null,
+                    "source_of_fund": "",
+                    "estimated_budget": 0,
+                    "mooe_amount": 0,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": [
+                        {
+                            "name": "Light Tower With Silent Type Generator Set",
+                            "estimated_budget": 300000,
+                            "mooe_amount": 0,
+                            "co_amount": 349,
+                            "remarks": ""
+                        }
+                    ]
+                },
+                {
+                    "account_code": "1 07 05 990",
+                    "early_procurement": false,
+                    "mode_of_procurement": "BIDDING \/SMALL VALUE",
+                    "schedule_from_month": null,
+                    "schedule_to_month": null,
+                    "source_of_fund": "GF",
+                    "estimated_budget": 0,
+                    "mooe_amount": 0,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": [
+                        {
+                            "name": "Telescopic Pole Pruner, 14\" 1.9hp, 7.5kg",
+                            "estimated_budget": 98760,
+                            "mooe_amount": 0,
+                            "co_amount": 351,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Cordless Blower - with rechargeable battery and charger",
+                            "estimated_budget": 190680,
+                            "mooe_amount": 0,
+                            "co_amount": 352,
+                            "remarks": ""
+                        }
+                    ]
+                },
+                {
+                    "account_code": "1 07 05 100",
+                    "early_procurement": false,
+                    "mode_of_procurement": "BIDDING \/SMALL VALUE",
+                    "schedule_from_month": null,
+                    "schedule_to_month": null,
+                    "source_of_fund": "",
+                    "estimated_budget": 0,
+                    "mooe_amount": 0,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": [
+                        {
+                            "name": "Purchase and installation of CCTV units IP camera with Audio; IP Camera 1080p Network Video Recorder with Power Supply UTP Cable, RJ 45; UTP Connector, Hard disk 4TB , POE Channel LED TV 50 inches with heavy duty bracket; 22 pcs cameras",
+                            "estimated_budget": 499670,
+                            "mooe_amount": 0,
+                            "co_amount": 354,
+                            "remarks": ""
+                        }
+                    ]
+                },
+                {
+                    "account_code": "1 07 06 010",
+                    "early_procurement": false,
+                    "mode_of_procurement": "SHOPPING\/ BIDDING",
+                    "schedule_from_month": null,
+                    "schedule_to_month": null,
+                    "source_of_fund": "",
+                    "estimated_budget": 0,
+                    "mooe_amount": 0,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": [
+                        {
+                            "name": "SUV - Displacement: 2.0L to 2.9L \/ Number of Cylinder: 4CYL \/ Number of Valves: 16 Valve \/ Engine: Diesel \/ Transmission: Automatic",
+                            "estimated_budget": 5000000,
+                            "mooe_amount": 0,
+                            "co_amount": 356,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Van - 14 seater passenger van, Displacement 2.8L\/ Number of cylinder: 4cyl \/ Number of valves: 16 valve \/ Engine: Diesel \/ Transmission: Automatic",
+                            "estimated_budget": 2800000,
+                            "mooe_amount": 0,
+                            "co_amount": 357,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Coaster -  Displacement 3,500-4,500 cc\/ Number of cylinder: 4cyl \/ Number of valves: 16 valve \/ Engine: Diesel \/ Transmission: Manual",
+                            "estimated_budget": 2500000,
+                            "mooe_amount": 0,
+                            "co_amount": 358,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Three Wheeled Vehicle-  Engine type: 4 stroke, forced air and oil cooled \/ Starting system : Electric \/ Brake type (front): RH foot operated-hydraulic drum \/ Tire size front: 4.00-8 6 PR tubeless \/ Wheel type: Steel rems \/ Curb weight: 362kg \/ Ground clearance: 170mm \/ Fuel system: DTS-I FI Engine \/ Engine Oil \/ Displacement: 236.22cc \/ Ignition System \/ Brake type (rear): RH foot operated-hydraulic drum \/ Overall Dimensions: 2635mmx1300mmx1700mm \/ Fuel Tank Capacity: 8L \/ Battery type: 12V-3Ah MF dry \/ Gear Shift Pattern \/ Features: sleak dashboard w\/ PM3 \/ Real Steel Metal Doors \/ Symetrical transpareng Hood \/ Bigger rear view mirror \/ clear headlight lamp \/ Smoother engineer Performance \/ Included: TPL insurance & 3 years registration",
+                            "estimated_budget": 400000,
+                            "mooe_amount": 0,
+                            "co_amount": 359,
+                            "remarks": ""
+                        },
+                        {
+                            "name": "Van - Displacement: not exceeding 2.8L \/ Number of Cylinder: 4 CYL \/ Number of valves: 16 valve \/ Engine: Diesel \/ Transmission: Manual",
+                            "estimated_budget": 2000000,
+                            "mooe_amount": 0,
+                            "co_amount": 360,
+                            "remarks": ""
+                        }
+                    ]
+                },
+                {
+                    "account_code": "1 07 05 070",
+                    "early_procurement": false,
+                    "mode_of_procurement": "SHOPPING\/ BIDDING",
+                    "schedule_from_month": null,
+                    "schedule_to_month": null,
+                    "source_of_fund": "",
+                    "estimated_budget": 0,
+                    "mooe_amount": 0,
+                    "co_amount": 0,
+                    "remarks": "",
+                    "items": [
+                        {
+                            "name": "Portable PA System -H 44cm x W 45cm x L104cm \/ Power: 1100 watts \/ Connectivity: bluetooth, Wifi \/ 2 x 242mm subwoofer \/ 2 x 120mm mid range \/ 2 x 74mm tweeter",
+                            "estimated_budget": 12025232,
+                            "mooe_amount": 0,
+                            "co_amount": 363,
+                            "remarks": ""
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "funds": [
+        {
+            "office_code": "8721",
+            "project_code": "92401",
+            "name": "Livestock and Poultry Development Program of the Provincial Veterinary Office",
+            "type": "project",
+            "fiscal_year": 2026,
+            "remarks": null,
+            "project": {
+                "name": "Livestock and Poultry Development Program",
+                "remarks": null,
+                "work_program": {
+                    "file_url": "projects\/work-programs\/wl6FqW26G2amPBoarMzZn3Ydl9H5gQt9Tr4ExUJD.docx",
+                    "items": [
+                        {
+                            "item_name": "Carpentry Materials",
+                            "quantity": 0,
+                            "unit": null,
+                            "amount": 0,
+                            "row_order": 1
+                        },
+                        {
+                            "item_name": "Training Kit",
+                            "quantity": 20,
+                            "unit": "pieces",
+                            "amount": 600,
+                            "row_order": 2
+                        },
+                        {
+                            "item_name": "Blackscrew #1 (for metal)",
+                            "quantity": 200,
+                            "unit": "pieces",
+                            "amount": 800,
+                            "row_order": 3
+                        },
+                        {
+                            "item_name": "Blackscrew #1-½ (for wood)",
+                            "quantity": 200,
+                            "unit": "pieces",
+                            "amount": 600,
+                            "row_order": 4
+                        },
+                        {
+                            "item_name": "Blackscrew #1-½ (metal)",
+                            "quantity": 200,
+                            "unit": "pieces",
+                            "amount": 600,
+                            "row_order": 5
+                        },
+                        {
+                            "item_name": "Blackscrew #2-½ (for wood)",
+                            "quantity": 200,
+                            "unit": "pieces",
+                            "amount": 600,
+                            "row_order": 6
+                        },
+                        {
+                            "item_name": "Blackscrew #2-½ (for metal)",
+                            "quantity": 200,
+                            "unit": "pieces",
+                            "amount": 600,
+                            "row_order": 7
+                        },
+                        {
+                            "item_name": "Cement",
+                            "quantity": 10,
+                            "unit": "bags",
+                            "amount": 4900,
+                            "row_order": 8
+                        },
+                        {
+                            "item_name": "Honorarium for Resource Person",
+                            "quantity": 5,
+                            "unit": "kilos",
+                            "amount": 950,
+                            "row_order": 9
+                        },
+                        {
+                            "item_name": "Meals &amp; Snacks (AM Snacks &amp; Lunch)",
+                            "quantity": 5,
+                            "unit": "kilos",
+                            "amount": 950,
+                            "row_order": 10
+                        },
+                        {
+                            "item_name": "Concrete Nails #2",
+                            "quantity": 5,
+                            "unit": "kilos",
+                            "amount": 950,
+                            "row_order": 11
+                        },
+                        {
+                            "item_name": "Concrete Nails #3",
+                            "quantity": 5,
+                            "unit": "kilos",
+                            "amount": 950,
+                            "row_order": 12
+                        },
+                        {
+                            "item_name": "Concrete Putty",
+                            "quantity": 5,
+                            "unit": "gallons",
+                            "amount": 3400,
+                            "row_order": 13
+                        },
+                        {
+                            "item_name": "CWN # 1",
+                            "quantity": 5,
+                            "unit": "kilos",
+                            "amount": 650,
+                            "row_order": 14
+                        },
+                        {
+                            "item_name": "Tshirt with collar and print premium dry fit",
+                            "quantity": 80,
+                            "unit": "pieces",
+                            "amount": 675,
+                            "row_order": 15
+                        },
+                        {
+                            "item_name": "CWN # 2",
+                            "quantity": 5,
+                            "unit": "kilos",
+                            "amount": 700,
+                            "row_order": 16
+                        },
+                        {
+                            "item_name": "CWN # 2-½",
+                            "quantity": 0,
+                            "unit": null,
+                            "amount": 5,
+                            "row_order": 17
+                        },
+                        {
+                            "item_name": "CWN # 3",
+                            "quantity": 5,
+                            "unit": "kilos",
+                            "amount": 650,
+                            "row_order": 18
+                        },
+                        {
+                            "item_name": "CWN #4",
+                            "quantity": 0,
+                            "unit": null,
+                            "amount": 5,
+                            "row_order": 19
+                        },
+                        {
+                            "item_name": "Door Knob ( heavy duty)",
+                            "quantity": 50,
+                            "unit": "pieces",
+                            "amount": 77000,
+                            "row_order": 20
+                        },
+                        {
+                            "item_name": "Elastomeric Sealant",
+                            "quantity": 10,
+                            "unit": "gallons",
+                            "amount": 11020,
+                            "row_order": 21
+                        },
+                        {
+                            "item_name": "Finishing Nail #1",
+                            "quantity": 5,
+                            "unit": "kilograms",
+                            "amount": 675,
+                            "row_order": 22
+                        },
+                        {
+                            "item_name": "Finishing Nails # 1-½",
+                            "quantity": 5,
+                            "unit": "kilograms",
+                            "amount": 745,
+                            "row_order": 23
+                        },
+                        {
+                            "item_name": "Finishing Nails # 2",
+                            "quantity": 5,
+                            "unit": "kilograms",
+                            "amount": 795,
+                            "row_order": 24
+                        },
+                        {
+                            "item_name": "G.I. Wire #16 (1kilo\/roll)",
+                            "quantity": 20,
+                            "unit": "kilograms",
+                            "amount": 3600,
+                            "row_order": 25
+                        },
+                        {
+                            "item_name": "G.I. Wire #18 (1kilo\/roll)",
+                            "quantity": 20,
+                            "unit": "kilograms",
+                            "amount": 3800,
+                            "row_order": 26
+                        },
+                        {
+                            "item_name": "Hacksaw Blade 18 teeth",
+                            "quantity": 20,
+                            "unit": "pieces",
+                            "amount": 2540,
+                            "row_order": 27
+                        },
+                        {
+                            "item_name": "Loose Pin Hinges 3-½&quot; x 3-½",
+                            "quantity": 20,
+                            "unit": "pieces",
+                            "amount": 7040,
+                            "row_order": 28
+                        },
+                        {
+                            "item_name": "Loose Pin Hinges 1-¼&quot; x 1-¼&quot; - Stainless",
+                            "quantity": 20,
+                            "unit": "pieces",
+                            "amount": 7200,
+                            "row_order": 29
+                        },
+                        {
+                            "item_name": "No more Nails",
+                            "quantity": 20,
+                            "unit": "tubes",
+                            "amount": 7900,
+                            "row_order": 30
+                        },
+                        {
+                            "item_name": "Padlock 30 mm (heavy duty)",
+                            "quantity": 0,
+                            "unit": null,
+                            "amount": 50,
+                            "row_order": 31
+                        },
+                        {
+                            "item_name": "Padlock 40 mm (heavy duty)",
+                            "quantity": 0,
+                            "unit": null,
+                            "amount": 50,
+                            "row_order": 32
+                        },
+                        {
+                            "item_name": "Padlock 50 mm (heavy duty)",
+                            "quantity": 50,
+                            "unit": "pieces",
+                            "amount": 64850,
+                            "row_order": 33
+                        },
+                        {
+                            "item_name": "Padlock 60 mm (heavy duty)",
+                            "quantity": 50,
+                            "unit": "pieces",
+                            "amount": 95000,
+                            "row_order": 34
+                        },
+                        {
+                            "item_name": "Welding Rod E6013 (for portable unit)",
+                            "quantity": 20,
+                            "unit": "kilos",
+                            "amount": 5600,
+                            "row_order": 35
+                        },
+                        {
+                            "item_name": "Water Based Multi-Seal Elastomeric Sealant",
+                            "quantity": 20,
+                            "unit": "gallons",
+                            "amount": 41340,
+                            "row_order": 36
+                        },
+                        {
+                            "item_name": "½&quot; x 1&quot; x 8&#039; liston (K.D.)",
+                            "quantity": 50,
+                            "unit": "pieces",
+                            "amount": 7500,
+                            "row_order": 37
+                        },
+                        {
+                            "item_name": "½&quot; x 2&quot; x 8&#039; liston",
+                            "quantity": 50,
+                            "unit": "pieces",
+                            "amount": 6500,
+                            "row_order": 38
+                        },
+                        {
+                            "item_name": "¼&quot; x 4&#039; x 8&#039; Marine Plywood",
+                            "quantity": 50,
+                            "unit": "pieces",
+                            "amount": 43750,
+                            "row_order": 39
+                        },
+                        {
+                            "item_name": "¾&quot; x 4&#039; x 8&#039; Marine Plywood",
+                            "quantity": 50,
+                            "unit": "pieces",
+                            "amount": 115000,
+                            "row_order": 40
+                        },
+                        {
+                            "item_name": "2&quot; x 2&quot; x 12&#039; Good Lumber",
+                            "quantity": 50,
+                            "unit": "pieces",
+                            "amount": 8750,
+                            "row_order": 41
+                        },
+                        {
+                            "item_name": "2&quot; x 2&quot; x 8&#039; Good Lumber ( Tanguile ) S4S",
+                            "quantity": 0,
+                            "unit": null,
+                            "amount": 50,
+                            "row_order": 42
+                        },
+                        {
+                            "item_name": "2&quot; x 2&quot; x 10&#039; Good Lumber ( Tanguile ) S4S",
+                            "quantity": 50,
+                            "unit": "pieces",
+                            "amount": 18000,
+                            "row_order": 43
+                        },
+                        {
+                            "item_name": "2&quot; x 3&quot; x 8&#039; Good lumber",
+                            "quantity": 50,
+                            "unit": "pieces",
+                            "amount": 25200,
+                            "row_order": 44
+                        },
+                        {
+                            "item_name": "2&quot; x 3&quot; x 10&#039; Good lumber",
+                            "quantity": 50,
+                            "unit": "pieces",
+                            "amount": 24500,
+                            "row_order": 45
+                        },
+                        {
+                            "item_name": "2&quot; x 3&quot; x 10&#039; Good Lumber ( Tanguile ) S4S",
+                            "quantity": 50,
+                            "unit": "pieces",
+                            "amount": 30500,
+                            "row_order": 46
+                        },
+                        {
+                            "item_name": "Steel and Masonry",
+                            "quantity": 0,
+                            "unit": null,
+                            "amount": 0,
+                            "row_order": 47
+                        },
+                        {
+                            "item_name": "Angle bar 2&quot; x 2&quot; x ¼ thk",
+                            "quantity": 30,
+                            "unit": "pieces",
+                            "amount": 55500,
+                            "row_order": 48
+                        },
+                        {
+                            "item_name": "Angle bar 1-½&quot; x 1-½&quot; x ¼ thk",
+                            "quantity": 30,
+                            "unit": "pieces",
+                            "amount": 34320,
+                            "row_order": 49
+                        },
+                        {
+                            "item_name": "Angle bar 1 x 1 x ¼&quot; thk",
+                            "quantity": 30,
+                            "unit": "pieces",
+                            "amount": 18090,
+                            "row_order": 50
+                        },
+                        {
+                            "item_name": "Cutting Disc 4&quot;",
+                            "quantity": 200,
+                            "unit": "pieces",
+                            "amount": 19400,
+                            "row_order": 51
+                        },
+                        {
+                            "item_name": "Cutting Disc 1mm.",
+                            "quantity": 200,
+                            "unit": "pieces",
+                            "amount": 16000,
+                            "row_order": 52
+                        },
+                        {
+                            "item_name": "Deformed bar 10mm Ø",
+                            "quantity": 30,
+                            "unit": "pieces",
+                            "amount": 10500,
+                            "row_order": 53
+                        },
+                        {
+                            "item_name": "Deformed bar 12mm Ø",
+                            "quantity": 30,
+                            "unit": "pieces",
+                            "amount": 13800,
+                            "row_order": 54
+                        },
+                        {
+                            "item_name": "Painting Materials",
+                            "quantity": 0,
+                            "unit": null,
+                            "amount": 0,
+                            "row_order": 55
+                        },
+                        {
+                            "item_name": "All Purpose Putty",
+                            "quantity": 10,
+                            "unit": "gallons",
+                            "amount": 11000,
+                            "row_order": 56
+                        },
+                        {
+                            "item_name": "Baby Roller",
+                            "quantity": 100,
+                            "unit": "pieces",
+                            "amount": 15000,
+                            "row_order": 57
+                        },
+                        {
+                            "item_name": "Chlorinated paint reducer",
+                            "quantity": 3,
+                            "unit": "gallons",
+                            "amount": 3300,
+                            "row_order": 58
+                        },
+                        {
+                            "item_name": "Flat Latex",
+                            "quantity": 20,
+                            "unit": "gallons",
+                            "amount": 27200,
+                            "row_order": 59
+                        },
+                        {
+                            "item_name": "Flatwall Enamel",
+                            "quantity": 20,
+                            "unit": "gallons",
+                            "amount": 28000,
+                            "row_order": 60
+                        },
+                        {
+                            "item_name": "Gloss Latex ( white )",
+                            "quantity": 20,
+                            "unit": "gallons",
+                            "amount": 30000,
+                            "row_order": 61
+                        },
+                        {
+                            "item_name": "Gloss it (Odorless paint)",
+                            "quantity": 20,
+                            "unit": "gallons",
+                            "amount": 42000,
+                            "row_order": 62
+                        },
+                        {
+                            "item_name": "Latex Paint (Semi gloss white)",
+                            "quantity": 20,
+                            "unit": "gallons",
+                            "amount": 32200,
+                            "row_order": 63
+                        },
+                        {
+                            "item_name": "Masking Tape #1",
+                            "quantity": 40,
+                            "unit": "rolls",
+                            "amount": 4400,
+                            "row_order": 64
+                        },
+                        {
+                            "item_name": "Paleta",
+                            "quantity": 60,
+                            "unit": "pieces",
+                            "amount": 4500,
+                            "row_order": 65
+                        },
+                        {
+                            "item_name": "Paint Brush #1",
+                            "quantity": 100,
+                            "unit": "pieces",
+                            "amount": 6000,
+                            "row_order": 66
+                        },
+                        {
+                            "item_name": "Paint Brush #2",
+                            "quantity": 100,
+                            "unit": "pieces",
+                            "amount": 11000,
+                            "row_order": 67
+                        },
+                        {
+                            "item_name": "Paint Brush #3",
+                            "quantity": 100,
+                            "unit": "pieces",
+                            "amount": 15000,
+                            "row_order": 68
+                        },
+                        {
+                            "item_name": "Paint Brush #4",
+                            "quantity": 100,
+                            "unit": "pieces",
+                            "amount": 19000,
+                            "row_order": 69
+                        },
+                        {
+                            "item_name": "Paint roller brush #4 with handle",
+                            "quantity": 60,
+                            "unit": "pieces",
+                            "amount": 9000,
+                            "row_order": 70
+                        },
+                        {
+                            "item_name": "Paint Roller # 7 brush with handle",
+                            "quantity": 40,
+                            "unit": "pieces",
+                            "amount": 8800,
+                            "row_order": 71
+                        },
+                        {
+                            "item_name": "Paint Thinner",
+                            "quantity": 20,
+                            "unit": "gallons",
+                            "amount": 10400,
+                            "row_order": 72
+                        },
+                        {
+                            "item_name": "Polituff (Body filler) w\/ hardener",
+                            "quantity": 6,
+                            "unit": "gallons",
+                            "amount": 11040,
+                            "row_order": 73
+                        },
+                        {
+                            "item_name": "Quick Dry Enamel ( white )",
+                            "quantity": 30,
+                            "unit": "gallons",
+                            "amount": 39000,
+                            "row_order": 74
+                        },
+                        {
+                            "item_name": "Sanding Paper # 100",
+                            "quantity": 50,
+                            "unit": "pieces",
+                            "amount": 1750,
+                            "row_order": 75
+                        },
+                        {
+                            "item_name": "Sanding Paper # 120",
+                            "quantity": 50,
+                            "unit": "pieces",
+                            "amount": 1500,
+                            "row_order": 76
+                        },
+                        {
+                            "item_name": "Sanding Paper # 150",
+                            "quantity": 50,
+                            "unit": "pieces",
+                            "amount": 1500,
+                            "row_order": 77
+                        },
+                        {
+                            "item_name": "Sanding Paper # 280",
+                            "quantity": 50,
+                            "unit": "pieces",
+                            "amount": 1500,
+                            "row_order": 78
+                        },
+                        {
+                            "item_name": "Plumbing Materials",
+                            "quantity": 0,
+                            "unit": null,
+                            "amount": 0,
+                            "row_order": 79
+                        },
+                        {
+                            "item_name": "Angle Valve ½&quot; (Lavatory)",
+                            "quantity": 30,
+                            "unit": "pieces",
+                            "amount": 10500,
+                            "row_order": 80
+                        },
+                        {
+                            "item_name": "Angle Valve 3-way ½ Ø x ½ x½",
+                            "quantity": 30,
+                            "unit": "pieces",
+                            "amount": 14400,
+                            "row_order": 81
+                        },
+                        {
+                            "item_name": "Bidet",
+                            "quantity": 50,
+                            "unit": "pieces",
+                            "amount": 47500,
+                            "row_order": 82
+                        },
+                        {
+                            "item_name": "Faucet w\/ Hose bibb",
+                            "quantity": 100,
+                            "unit": "pieces",
+                            "amount": 59000,
+                            "row_order": 83
+                        },
+                        {
+                            "item_name": "Fill Valve",
+                            "quantity": 40,
+                            "unit": "pieces",
+                            "amount": 28400,
+                            "row_order": 84
+                        },
+                        {
+                            "item_name": "G.I. Plug ½&quot;",
+                            "quantity": 10,
+                            "unit": "pieces",
+                            "amount": 520,
+                            "row_order": 85
+                        },
+                        {
+                            "item_name": "Hose ½&quot; Ø ( 90 meters\/roll )",
+                            "quantity": 6,
+                            "unit": "rolls",
+                            "amount": 19800,
+                            "row_order": 86
+                        },
+                        {
+                            "item_name": "Hose Coupling ½&quot; Ø",
+                            "quantity": 30,
+                            "unit": "pieces",
+                            "amount": 7800,
+                            "row_order": 87
+                        },
+                        {
+                            "item_name": "Lavatory Faucet Long",
+                            "quantity": 50,
+                            "unit": "pieces",
+                            "amount": 116250,
+                            "row_order": 88
+                        },
+                        {
+                            "item_name": "Lavatory Faucet Short",
+                            "quantity": 30,
+                            "unit": "pieces",
+                            "amount": 35400,
+                            "row_order": 89
+                        },
+                        {
+                            "item_name": "Lavatory Hose ½&quot; x ½&quot; x 16&#039; Ø",
+                            "quantity": 60,
+                            "unit": "pieces",
+                            "amount": 18000,
+                            "row_order": 90
+                        },
+                        {
+                            "item_name": "Pressure Switch",
+                            "quantity": 2,
+                            "unit": "pieces",
+                            "amount": 2700,
+                            "row_order": 91
+                        },
+                        {
+                            "item_name": "Pressure Gauge",
+                            "quantity": 2,
+                            "unit": "pieces",
+                            "amount": 1820,
+                            "row_order": 92
+                        },
+                        {
+                            "item_name": "PVC Cement 400cc",
+                            "quantity": 10,
+                            "unit": "cans",
+                            "amount": 5400,
+                            "row_order": 93
+                        },
+                        {
+                            "item_name": "Strong Rubberized Water Proof Tape 4&quot;x 5ft, flex tape",
+                            "quantity": 5,
+                            "unit": "pieces",
+                            "amount": 9555,
+                            "row_order": 94
+                        },
+                        {
+                            "item_name": "Tank Fitting",
+                            "quantity": 20,
+                            "unit": "pieces",
+                            "amount": 24000,
+                            "row_order": 95
+                        },
+                        {
+                            "item_name": "Teflon tape ½",
+                            "quantity": 60,
+                            "unit": "pieces",
+                            "amount": 2400,
+                            "row_order": 96
+                        },
+                        {
+                            "item_name": "Teflon tape ¾",
+                            "quantity": 60,
+                            "unit": "pieces",
+                            "amount": 3780,
+                            "row_order": 97
+                        },
+                        {
+                            "item_name": "Wall Faucet (long)",
+                            "quantity": 40,
+                            "unit": "pieces",
+                            "amount": 60000,
+                            "row_order": 98
+                        },
+                        {
+                            "item_name": "Wall Faucet (short)",
+                            "quantity": 35,
+                            "unit": "pieces",
+                            "amount": 42000,
+                            "row_order": 99
+                        },
+                        {
+                            "item_name": "Water Supply Hose ½ x ½ x 16",
+                            "quantity": 40,
+                            "unit": "pieces",
+                            "amount": 12400,
+                            "row_order": 100
+                        },
+                        {
+                            "item_name": "Water Submeter",
+                            "quantity": 2,
+                            "unit": "pieces",
+                            "amount": 9280,
+                            "row_order": 101
+                        },
+                        {
+                            "item_name": "Universal Angle Valve",
+                            "quantity": 20,
+                            "unit": "pieces",
+                            "amount": 9200,
+                            "row_order": 102
+                        },
+                        {
+                            "item_name": "Electrical Materials",
+                            "quantity": 0,
+                            "unit": null,
+                            "amount": 0,
+                            "row_order": 103
+                        },
+                        {
+                            "item_name": "Circuit Breaker 20AMP w\/ Housing",
+                            "quantity": 10,
+                            "unit": "pieces",
+                            "amount": 11000,
+                            "row_order": 104
+                        },
+                        {
+                            "item_name": "Circuit Breaker 30AMP w\/ Housing",
+                            "quantity": 10,
+                            "unit": "pieces",
+                            "amount": 11000,
+                            "row_order": 105
+                        },
+                        {
+                            "item_name": "Circuit Breaker 40AMP (with housing)",
+                            "quantity": 10,
+                            "unit": "pieces",
+                            "amount": 11050,
+                            "row_order": 106
+                        },
+                        {
+                            "item_name": "Electrical Tape - black",
+                            "quantity": 200,
+                            "unit": "pieces",
+                            "amount": 14000,
+                            "row_order": 107
+                        },
+                        {
+                            "item_name": "Flatcord # 16",
+                            "quantity": 15,
+                            "unit": "rolls",
+                            "amount": 99000,
+                            "row_order": 108
+                        },
+                        {
+                            "item_name": "Flourescent tube bulb 15 watts LED",
+                            "quantity": 150,
+                            "unit": "pieces",
+                            "amount": 60000,
+                            "row_order": 109
+                        },
+                        {
+                            "item_name": "Junction box",
+                            "quantity": 20,
+                            "unit": "pieces",
+                            "amount": 2400,
+                            "row_order": 110
+                        },
+                        {
+                            "item_name": "LED 11 watts",
+                            "quantity": 100,
+                            "unit": "pieces",
+                            "amount": 26000,
+                            "row_order": 111
+                        },
+                        {
+                            "item_name": "LED bulb 5 watts (daylight)",
+                            "quantity": 100,
+                            "unit": "pieces",
+                            "amount": 29000,
+                            "row_order": 112
+                        },
+                        {
+                            "item_name": "LED Bulb 10 watts ( daylight )",
+                            "quantity": 100,
+                            "unit": "pieces",
+                            "amount": 32000,
+                            "row_order": 113
+                        },
+                        {
+                            "item_name": "LED bulb 7 watts (Daylight)",
+                            "quantity": 100,
+                            "unit": "pieces",
+                            "amount": 19000,
+                            "row_order": 114
+                        },
+                        {
+                            "item_name": "Metal Box",
+                            "quantity": 20,
+                            "unit": "pieces",
+                            "amount": 1700,
+                            "row_order": 115
+                        },
+                        {
+                            "item_name": "Metal Hallide 250 watts w\/ housing",
+                            "quantity": 8,
+                            "unit": "sets",
+                            "amount": 39200,
+                            "row_order": 116
+                        },
+                        {
+                            "item_name": "Metal Hallide 400 watts w\/ housing",
+                            "quantity": 0,
+                            "unit": null,
+                            "amount": 8,
+                            "row_order": 117
+                        },
+                        {
+                            "item_name": "PVC Moulding 1",
+                            "quantity": 20,
+                            "unit": "pieces",
+                            "amount": 5200,
+                            "row_order": 118
+                        },
+                        {
+                            "item_name": "PVC Moulding ¾",
+                            "quantity": 20,
+                            "unit": "pieces",
+                            "amount": 2600,
+                            "row_order": 119
+                        },
+                        {
+                            "item_name": "Rubber Plug ( heavy Duty ) (24pcs\/box)",
+                            "quantity": 3,
+                            "unit": "boxes",
+                            "amount": 10200,
+                            "row_order": 120
+                        },
+                        {
+                            "item_name": "Rugby",
+                            "quantity": 5,
+                            "unit": "bottles",
+                            "amount": 700,
+                            "row_order": 121
+                        },
+                        {
+                            "item_name": "Ramp Cable Protector 3 Channel 1000x290x50mm",
+                            "quantity": 5,
+                            "unit": "pieces",
+                            "amount": 17000,
+                            "row_order": 122
+                        },
+                        {
+                            "item_name": "Receptacle 3x3",
+                            "quantity": 20,
+                            "unit": "pieces",
+                            "amount": 2600,
+                            "row_order": 123
+                        },
+                        {
+                            "item_name": "Receptacle 4x4",
+                            "quantity": 20,
+                            "unit": "pieces",
+                            "amount": 3100,
+                            "row_order": 124
+                        },
+                        {
+                            "item_name": "Spotlight clear PAR 38 - 120 watts",
+                            "quantity": 10,
+                            "unit": "pieces",
+                            "amount": 8000,
+                            "row_order": 125
+                        },
+                        {
+                            "item_name": "Spotlight holder",
+                            "quantity": 6,
+                            "unit": "pieces",
+                            "amount": 960,
+                            "row_order": 126
+                        },
+                        {
+                            "item_name": "Switch",
+                            "quantity": 100,
+                            "unit": "pieces",
+                            "amount": 35000,
+                            "row_order": 127
+                        },
+                        {
+                            "item_name": "Universal Outlet",
+                            "quantity": 100,
+                            "unit": "pieces",
+                            "amount": 30000,
+                            "row_order": 128
+                        },
+                        {
+                            "item_name": "Utility box 4x2",
+                            "quantity": 50,
+                            "unit": "pieces",
+                            "amount": 4500,
+                            "row_order": 129
+                        },
+                        {
+                            "item_name": "1 gang Plate w\/ cover &amp; Screw",
+                            "quantity": 60,
+                            "unit": "sets",
+                            "amount": 4200,
+                            "row_order": 130
+                        },
+                        {
+                            "item_name": "2 gang Plate w\/ cover &amp; Screw",
+                            "quantity": 60,
+                            "unit": "sets",
+                            "amount": 4500,
+                            "row_order": 131
+                        },
+                        {
+                            "item_name": "3 gang Plate w\/ cover &amp; Screw",
+                            "quantity": 60,
+                            "unit": "sets",
+                            "amount": 4800,
+                            "row_order": 132
+                        },
+                        {
+                            "item_name": "Others",
+                            "quantity": 0,
+                            "unit": null,
+                            "amount": 0,
+                            "row_order": 133
+                        },
+                        {
+                            "item_name": "Safety Shoes",
+                            "quantity": 10,
+                            "unit": "pairs",
+                            "amount": 31500,
+                            "row_order": 134
+                        },
+                        {
+                            "item_name": "Caution Tape (yellow color)",
+                            "quantity": 10,
+                            "unit": "rolls",
+                            "amount": 13000,
+                            "row_order": 135
+                        },
+                        {
+                            "item_name": "Caution Tape (red color)",
+                            "quantity": 10,
+                            "unit": "rolls",
+                            "amount": 13000,
+                            "row_order": 136
+                        },
+                        {
+                            "item_name": "Cotton Gloves",
+                            "quantity": 850,
+                            "unit": "pairs",
+                            "amount": 119000,
+                            "row_order": 137
+                        },
+                        {
+                            "item_name": "Fire hose 38mm (1-½&quot;) x 30m (100ft) -double jacketed with rubber lining; 300 Psi wp; 900Psi bp",
+                            "quantity": 1,
+                            "unit": "set",
+                            "amount": 7500,
+                            "row_order": 138
+                        },
+                        {
+                            "item_name": "Fire hose 1.5&quot; x 50ft. With brass coupling double jacketed, NST (NH) Gaspang",
+                            "quantity": 1,
+                            "unit": "roll",
+                            "amount": 5150,
+                            "row_order": 139
+                        },
+                        {
+                            "item_name": "Gun Tucker Staple 6-14mm",
+                            "quantity": 40,
+                            "unit": "boxes",
+                            "amount": 12000,
+                            "row_order": 140
+                        },
+                        {
+                            "item_name": "Jigsaw blade (T101B)",
+                            "quantity": 5,
+                            "unit": "sets",
+                            "amount": 600,
+                            "row_order": 141
+                        },
+                        {
+                            "item_name": "Kapote (Raincoat)",
+                            "quantity": 30,
+                            "unit": "pieces",
+                            "amount": 28500,
+                            "row_order": 142
+                        },
+                        {
+                            "item_name": "Nylon holder",
+                            "quantity": 30,
+                            "unit": "pieces",
+                            "amount": 19500,
+                            "row_order": 143
+                        },
+                        {
+                            "item_name": "Rubber boots (various sizes)",
+                            "quantity": 20,
+                            "unit": "pairs",
+                            "amount": 14200,
+                            "row_order": 144
+                        },
+                        {
+                            "item_name": "Rubber tape",
+                            "quantity": 20,
+                            "unit": "pieces",
+                            "amount": 4200,
+                            "row_order": 145
+                        },
+                        {
+                            "item_name": "Safety Goggles",
+                            "quantity": 20,
+                            "unit": "pairs",
+                            "amount": 3200,
+                            "row_order": 146
+                        },
+                        {
+                            "item_name": "Slip resistant tread",
+                            "quantity": 2,
+                            "unit": "pieces",
+                            "amount": 2400,
+                            "row_order": 147
+                        },
+                        {
+                            "item_name": "Steel Brush (heavy duty)",
+                            "quantity": 10,
+                            "unit": "pieces",
+                            "amount": 2800,
+                            "row_order": 148
+                        },
+                        {
+                            "item_name": "Tansi #300",
+                            "quantity": 0,
+                            "unit": null,
+                            "amount": 150,
+                            "row_order": 149
+                        },
+                        {
+                            "item_name": "Insecticide - control of chewing and sucking insects; 850g\/kg Carbaryl; 250 grams",
+                            "quantity": 0,
+                            "unit": null,
+                            "amount": 4,
+                            "row_order": 150
+                        },
+                        {
+                            "item_name": "Silicon Sealant - clear",
+                            "quantity": 10,
+                            "unit": "tubes",
+                            "amount": 3000,
+                            "row_order": 151
+                        },
+                        {
+                            "item_name": "Sealant gray",
+                            "quantity": 5,
+                            "unit": "pieces",
+                            "amount": 2945,
+                            "row_order": 152
+                        },
+                        {
+                            "item_name": "Janitorial Supplies",
+                            "quantity": 0,
+                            "unit": null,
+                            "amount": 0,
+                            "row_order": 153
+                        },
+                        {
+                            "item_name": "Floor wax, paste type, natural 900g",
+                            "quantity": 90,
+                            "unit": "cans",
+                            "amount": 45000,
+                            "row_order": 154
+                        },
+                        {
+                            "item_name": "Floor wax, paste type, red 900g",
+                            "quantity": 90,
+                            "unit": "cans",
+                            "amount": 45000,
+                            "row_order": 155
+                        },
+                        {
+                            "item_name": "Floor wax, liquid, white 1L",
+                            "quantity": 60,
+                            "unit": "bottles",
+                            "amount": 34320,
+                            "row_order": 156
+                        },
+                        {
+                            "item_name": "Floor wax, liquid, red 1L",
+                            "quantity": 60,
+                            "unit": "bottles",
+                            "amount": 32280,
+                            "row_order": 157
+                        },
+                        {
+                            "item_name": "scouring pad",
+                            "quantity": 45,
+                            "unit": "packs",
+                            "amount": 5580,
+                            "row_order": 158
+                        },
+                        {
+                            "item_name": "TRASHBAG, plastic, black, (XL), 10 pcs per pack per roll",
+                            "quantity": 4500,
+                            "unit": "rolls",
+                            "amount": 562500,
+                            "row_order": 159
+                        },
+                        {
+                            "item_name": "Trashbag medium 25pcs\/roll black",
+                            "quantity": 60,
+                            "unit": "rolls",
+                            "amount": 9240,
+                            "row_order": 160
+                        },
+                        {
+                            "item_name": "Seal it bag 84x120x0.04mm",
+                            "quantity": 60,
+                            "unit": "packs",
+                            "amount": 2100,
+                            "row_order": 161
+                        },
+                        {
+                            "item_name": "Air freshener spray",
+                            "quantity": 60,
+                            "unit": "pieces",
+                            "amount": 17820,
+                            "row_order": 162
+                        },
+                        {
+                            "item_name": "Air revitalizer humidifier",
+                            "quantity": 3,
+                            "unit": "units",
+                            "amount": 3000,
+                            "row_order": 163
+                        },
+                        {
+                            "item_name": "Humidifier scent water based (fresh bamboo)",
+                            "quantity": 30,
+                            "unit": "bottles",
+                            "amount": 25500,
+                            "row_order": 164
+                        },
+                        {
+                            "item_name": "Alcohol isopropyl 70%",
+                            "quantity": 30,
+                            "unit": "bottles",
+                            "amount": 4350,
+                            "row_order": 165
+                        },
+                        {
+                            "item_name": "Bleaching solution 250ml",
+                            "quantity": 750,
+                            "unit": "bottles",
+                            "amount": 35250,
+                            "row_order": 166
+                        },
+                        {
+                            "item_name": "Mop handle",
+                            "quantity": 20,
+                            "unit": "pieces",
+                            "amount": 9400,
+                            "row_order": 167
+                        },
+                        {
+                            "item_name": "Mop head",
+                            "quantity": 30,
+                            "unit": "pieces",
+                            "amount": 9600,
+                            "row_order": 168
+                        },
+                        {
+                            "item_name": "Detergent powder 74g.",
+                            "quantity": 900,
+                            "unit": "sachets",
+                            "amount": 22500,
+                            "row_order": 169
+                        },
+                        {
+                            "item_name": "Dipper",
+                            "quantity": 15,
+                            "unit": "pieces",
+                            "amount": 285,
+                            "row_order": 170
+                        },
+                        {
+                            "item_name": "Dishwashing liquid 250ml",
+                            "quantity": 40,
+                            "unit": "pieces",
+                            "amount": 3520,
+                            "row_order": 171
+                        },
+                        {
+                            "item_name": "Disinfectant spray 400gms",
+                            "quantity": 45,
+                            "unit": "pieces",
+                            "amount": 20475,
+                            "row_order": 172
+                        },
+                        {
+                            "item_name": "Fabric conditioner 900 ml",
+                            "quantity": 60,
+                            "unit": "bottles",
+                            "amount": 11400,
+                            "row_order": 173
+                        },
+                        {
+                            "item_name": "Floor mop with pail",
+                            "quantity": 20,
+                            "unit": "pieces",
+                            "amount": 39380,
+                            "row_order": 174
+                        },
+                        {
+                            "item_name": "Furniture cleaner",
+                            "quantity": 60,
+                            "unit": "pieces",
+                            "amount": 28800,
+                            "row_order": 175
+                        },
+                        {
+                            "item_name": "Glass cleaner",
+                            "quantity": 60,
+                            "unit": "pieces",
+                            "amount": 13500,
+                            "row_order": 176
+                        },
+                        {
+                            "item_name": "Glass sweeper",
+                            "quantity": 5,
+                            "unit": "pieces",
+                            "amount": 3930,
+                            "row_order": 177
+                        },
+                        {
+                            "item_name": "Insecticide",
+                            "quantity": 15,
+                            "unit": "cans",
+                            "amount": 7200,
+                            "row_order": 178
+                        },
+                        {
+                            "item_name": "Push brush with handle",
+                            "quantity": 25,
+                            "unit": "pieces",
+                            "amount": 10500,
+                            "row_order": 179
+                        },
+                        {
+                            "item_name": "Rubber pump wooden",
+                            "quantity": 10,
+                            "unit": "pieces",
+                            "amount": 1630,
+                            "row_order": 180
+                        },
+                        {
+                            "item_name": "Toilet deodorizer with holder",
+                            "quantity": 400,
+                            "unit": "pieces",
+                            "amount": 48000,
+                            "row_order": 181
+                        },
+                        {
+                            "item_name": "Toilet bowl cleaner 140ml",
+                            "quantity": 240,
+                            "unit": "pouches",
+                            "amount": 26400,
+                            "row_order": 182
+                        },
+                        {
+                            "item_name": "Toilet cleaner tablets 10pcs\/pack",
+                            "quantity": 60,
+                            "unit": "packs",
+                            "amount": 11400,
+                            "row_order": 183
+                        },
+                        {
+                            "item_name": "Walis Pang-agiw (Heavy duty)",
+                            "quantity": 15,
+                            "unit": "pieces",
+                            "amount": 1950,
+                            "row_order": 184
+                        },
+                        {
+                            "item_name": "Walis tingting (kaong)",
+                            "quantity": 200,
+                            "unit": "pieces",
+                            "amount": 21000,
+                            "row_order": 185
+                        },
+                        {
+                            "item_name": "Facial Tissue Box 100s 3ply x 3 box per pack",
+                            "quantity": 50,
+                            "unit": "packs",
+                            "amount": 16000,
+                            "row_order": 186
+                        },
+                        {
+                            "item_name": "Tissue 12 rolls\/pack",
+                            "quantity": 40,
+                            "unit": "packs",
+                            "amount": 10000,
+                            "row_order": 187
+                        },
+                        {
+                            "item_name": "Tissue jumbo refill 9cm wide",
+                            "quantity": 45,
+                            "unit": "rolls",
+                            "amount": 5850,
+                            "row_order": 188
+                        },
+                        {
+                            "item_name": "5-1 Digester - Water Digester ; Odor Eliminator; Mosquito Repellant; Flies Control; Disinfectant\/Deodorizer",
+                            "quantity": 30,
+                            "unit": "gallons",
+                            "amount": 84000,
+                            "row_order": 189
+                        },
+                        {
+                            "item_name": "Cold Asphalt",
+                            "quantity": 5,
+                            "unit": "tins",
+                            "amount": 25500,
+                            "row_order": 190
+                        },
+                        {
+                            "item_name": "Other Maintenance and Operating Expenses",
+                            "quantity": 50299990,
+                            "unit": null,
+                            "amount": 9865000,
+                            "row_order": 191
+                        },
+                        {
+                            "item_name": "Job Order Salary",
+                            "quantity": 76,
+                            "unit": "personnel",
+                            "amount": 9865000,
+                            "row_order": 192
+                        },
+                        {
+                            "item_name": "Hiring of Job Orders for 12 months for the maintenance of Parks, Buildings &amp; Grounds",
+                            "quantity": 0,
+                            "unit": null,
+                            "amount": 0,
+                            "row_order": 193
+                        },
+                        {
+                            "item_name": "Job Description: Maintains cleanliness and orderliness of parks, buildings and grounds. Performs painting, carpentry, masonry and labor works within Capitol premises and provincial hospitals. Performs minor electrical and plumbing works at various offices and provincial hospitals. Trims and waters plants at Capitol compound. Renders administrative and other related services Photocopying and filing of documents",
+                            "quantity": 0,
+                            "unit": null,
+                            "amount": 0,
+                            "row_order": 194
+                        }
+                    ]
+                },
+                "project_brief": {
+                    "file_url": "projects\/project-briefs\/8NPvRWSLinG4Kw7jESxF9GCL3c3e4B6KF3ucy8v1.docx",
+                    "items": [
+                        {
+                            "item_name": "Training Kit",
+                            "quantity": 20,
+                            "unit": "pieces",
+                            "amount": 3000,
+                            "row_order": 1
+                        },
+                        {
+                            "item_name": "Honorarium for Resource Person",
+                            "quantity": 3,
+                            "unit": "pieces",
+                            "amount": 3750,
+                            "row_order": 2
+                        },
+                        {
+                            "item_name": "Meals & Snacks (AM Snacks & Lunch)",
+                            "quantity": 50,
+                            "unit": "pieces",
+                            "amount": 6000,
+                            "row_order": 3
+                        },
+                        {
+                            "item_name": "Tshirt with collar and print premium dry fit",
+                            "quantity": 100,
+                            "unit": "pieces",
+                            "amount": 14000,
+                            "row_order": 4
+                        },
+                        {
+                            "item_name": "Test Item",
+                            "quantity": 10,
+                            "unit": "pieces",
+                            "amount": 10000,
+                            "row_order": 5
+                        }
+                    ]
+                },
+                "project_proposal": {
+                    "file_url": "projects\/project-proposals\/1PaoC3B1lkN10Mr6mTQjyO1GXlAXCC1qzC9oDf9y.docx"
+                }
+            }
+        }
+    ],
+    "ppmps": [
+        {
+            "office_code": "8721",
+            "project_code": "92401",
+            "fiscal_year": 2026,
+            "is_addendum": false,
+            "remarks": null,
+            "xlsx_path": "ppmps\/6xLFjaU3zSBagWyQHUr2nkHiv1Y4ur3yCvS1vQ7D.xlsx",
+            "budget_notices": [],
+            "categories": [
+                {
+                    "account_code": "5 02 02 010",
+                    "estimated_budget": 130000,
+                    "remaining_budget": 130000,
+                    "items": [
+                        {
+                            "name": "Training Kit",
+                            "quantity": 20,
+                            "unit": "pcs",
+                            "estimated_budget": 0,
+                            "remaining_budget": 0,
+                            "mode_of_procurement": "bidding",
+                            "months": [
+                                {
+                                    "month": 8,
+                                    "planned_quantity": 20
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Honorarium for Resource Person",
+                            "quantity": 3,
+                            "unit": "persons",
+                            "estimated_budget": 0,
+                            "remaining_budget": 0,
+                            "mode_of_procurement": "bidding",
+                            "months": [
+                                {
+                                    "month": 8,
+                                    "planned_quantity": 3
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Meals & Snacks (AM Snacks & Lunch)",
+                            "quantity": 50,
+                            "unit": "pax",
+                            "estimated_budget": 0,
+                            "remaining_budget": 0,
+                            "mode_of_procurement": "bidding",
+                            "months": [
+                                {
+                                    "month": 8,
+                                    "planned_quantity": 50
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Tshirt with collar and print premium dry fit",
+                            "quantity": 60,
+                            "unit": "pcs",
+                            "estimated_budget": 0,
+                            "remaining_budget": 0,
+                            "mode_of_procurement": "bidding",
+                            "months": [
+                                {
+                                    "month": 8,
+                                    "planned_quantity": 60
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "account_code": "1 07 07 010",
+                    "estimated_budget": 427000,
+                    "remaining_budget": 427000,
+                    "items": [
+                        {
+                            "name": "Partition - Fabric with glass partition, with powder coated endtrims and customized color scheme",
+                            "quantity": 1,
+                            "unit": "pcs",
+                            "estimated_budget": 55000,
+                            "remaining_budget": 55000,
+                            "mode_of_procurement": "bidding",
+                            "months": [
+                                {
+                                    "month": 8,
+                                    "planned_quantity": 1
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Customized Coffee Table: Dimension: 60x60",
+                            "quantity": 1,
+                            "unit": "pcs",
+                            "estimated_budget": 60000,
+                            "remaining_budget": 60000,
+                            "mode_of_procurement": "bidding",
+                            "months": [
+                                {
+                                    "month": 8,
+                                    "planned_quantity": 1
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Induction cooker",
+                            "quantity": 3,
+                            "unit": "pcs",
+                            "estimated_budget": 138000,
+                            "remaining_budget": 138000,
+                            "mode_of_procurement": "bidding",
+                            "months": [
+                                {
+                                    "month": 6,
+                                    "planned_quantity": 1
+                                },
+                                {
+                                    "month": 8,
+                                    "planned_quantity": 2
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Customized Dining Table 4-seater with Dining Chairs, 140L x 70Wx 75H",
+                            "quantity": 1,
+                            "unit": "pcs",
+                            "estimated_budget": 114000,
+                            "remaining_budget": 114000,
+                            "mode_of_procurement": "bidding",
+                            "months": [
+                                {
+                                    "month": 8,
+                                    "planned_quantity": 1
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Customized Office Sofa 2- seater, 150Lx60Wx80H",
+                            "quantity": 1,
+                            "unit": "pcs",
+                            "estimated_budget": 60000,
+                            "remaining_budget": 60000,
+                            "mode_of_procurement": "bidding",
+                            "months": [
+                                {
+                                    "month": 8,
+                                    "planned_quantity": 1
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "emanatings": [
+        {
+            "emanating_no": "2026-001",
+            "fund_office_code": "8721",
+            "fund_project_code": "92401",
+            "fund_name": "Livestock and Poultry Development Program of the Provincial Veterinary Office",
+            "ppmp_office_code": "8721",
+            "ppmp_project_code": "92401",
+            "ppmp_fiscal_year": 2026,
+            "account_code": "5 02 02 010",
+            "ppmp_category_account_code": "5 02 02 010",
+            "charged_to_code": "",
+            "pr_no": null,
+            "fiscal_year": 2026,
+            "quarter": 3,
+            "month": 8,
+            "is_addendum": false,
+            "remarks": null,
+            "reimbursement": false,
+            "xlsx_path": "emanatings\/hSYkbhcm2aOrQEDZRJbdyUTyzt89y8HvlPomyH49.xlsx",
+            "requesting_officer_name": null,
+            "requesting_officer_title": null,
+            "items_match_ppmp": false,
+            "is_canvassed": false,
+            "is_approved": false,
+            "approved_at": null,
+            "rejection_reason": null,
+            "status": "pending",
+            "items": [
+                {
+                    "ppmp_item_name": "Training Kit",
+                    "name": "Training Kit",
+                    "quantity": 20,
+                    "unit": "pieces",
+                    "total_price": 0
+                },
+                {
+                    "ppmp_item_name": "Honorarium for Resource Person",
+                    "name": "Honorarium for Resource Person",
+                    "quantity": 3,
+                    "unit": "persons",
+                    "total_price": 0
+                },
+                {
+                    "ppmp_item_name": "Meals & Snacks (AM Snacks & Lunch)",
+                    "name": "Meals & Snacks (AM Snacks & Lunch)",
+                    "quantity": 50,
+                    "unit": "pax",
+                    "total_price": 0
+                },
+                {
+                    "ppmp_item_name": "Tshirt with collar and print premium dry fit",
+                    "name": "Tshirt with collar and print premium dry fit",
+                    "quantity": 60,
+                    "unit": "pcs",
+                    "total_price": 0
+                }
+            ]
+        }
+    ]
+}
