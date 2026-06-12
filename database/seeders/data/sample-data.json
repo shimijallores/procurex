@@ -4160,7 +4160,7 @@
                 {
                     "account_code": "5 02 02 010",
                     "estimated_budget": 130000,
-                    "remaining_budget": 130000,
+                    "remaining_budget": 25500,
                     "items": [
                         {
                             "name": "Training Kit",
@@ -4316,7 +4316,7 @@
             "account_code": "5 02 02 010",
             "ppmp_category_account_code": "5 02 02 010",
             "charged_to_code": "",
-            "pr_no": null,
+            "pr_no": "0626-0001",
             "fiscal_year": 2026,
             "quarter": 3,
             "month": 8,
@@ -4327,41 +4327,329 @@
             "requesting_officer_name": null,
             "requesting_officer_title": null,
             "items_match_ppmp": false,
-            "is_canvassed": false,
-            "is_approved": false,
-            "approved_at": null,
+            "is_canvassed": true,
+            "is_approved": true,
+            "approved_at": "2026-06-12T09:49:59.000000Z",
             "rejection_reason": null,
-            "status": "pending",
+            "status": "approved",
             "items": [
                 {
                     "ppmp_item_name": "Training Kit",
                     "name": "Training Kit",
                     "quantity": 20,
                     "unit": "pieces",
-                    "total_price": 0
+                    "total_price": 50000
                 },
                 {
                     "ppmp_item_name": "Honorarium for Resource Person",
                     "name": "Honorarium for Resource Person",
                     "quantity": 3,
                     "unit": "persons",
-                    "total_price": 0
+                    "total_price": 15000
                 },
                 {
                     "ppmp_item_name": "Meals & Snacks (AM Snacks & Lunch)",
                     "name": "Meals & Snacks (AM Snacks & Lunch)",
                     "quantity": 50,
                     "unit": "pax",
-                    "total_price": 0
+                    "total_price": 12500
                 },
                 {
                     "ppmp_item_name": "Tshirt with collar and print premium dry fit",
                     "name": "Tshirt with collar and print premium dry fit",
                     "quantity": 60,
                     "unit": "pcs",
-                    "total_price": 0
+                    "total_price": 27000
                 }
             ]
+        }
+    ],
+    "canvasses": [
+        {
+            "emanating_no": "2026-001",
+            "created_by_email": "superadmin@procurex.com",
+            "status": "completed",
+            "return_reason": null,
+            "total_amount": 104500,
+            "completed_at": "2026-06-12T09:51:23.000000Z",
+            "items": [
+                {
+                    "emanating_item_name": "Training Kit",
+                    "computed_price": 50000,
+                    "selections": [
+                        {
+                            "mli_supplier_name": "924 FOOD SERVICES",
+                            "mli_category_name": "Training & Seminar Materials",
+                            "mli_item_name": "Training Kit",
+                            "mli_unit": "pcs",
+                            "quantity": 20,
+                            "unit_price": 2500,
+                            "subtotal": 50000
+                        }
+                    ]
+                },
+                {
+                    "emanating_item_name": "Honorarium for Resource Person",
+                    "computed_price": 15000,
+                    "selections": [
+                        {
+                            "mli_supplier_name": "924 FOOD SERVICES",
+                            "mli_category_name": "Services",
+                            "mli_item_name": "Honorarium for Resource Person",
+                            "mli_unit": "person",
+                            "quantity": 3,
+                            "unit_price": 5000,
+                            "subtotal": 15000
+                        }
+                    ]
+                },
+                {
+                    "emanating_item_name": "Meals & Snacks (AM Snacks & Lunch)",
+                    "computed_price": 12500,
+                    "selections": [
+                        {
+                            "mli_supplier_name": "924 FOOD SERVICES",
+                            "mli_category_name": "Catering Services",
+                            "mli_item_name": "Meals & Snacks (AM Snacks & Lunch)",
+                            "mli_unit": "person",
+                            "quantity": 50,
+                            "unit_price": 250,
+                            "subtotal": 12500
+                        }
+                    ]
+                },
+                {
+                    "emanating_item_name": "Tshirt with collar and print premium dry fit",
+                    "computed_price": 27000,
+                    "selections": [
+                        {
+                            "mli_supplier_name": "924 FOOD SERVICES",
+                            "mli_category_name": "Apparel",
+                            "mli_item_name": "T-shirt with collar and print premium dry fit",
+                            "mli_unit": "piece",
+                            "quantity": 60,
+                            "unit_price": 450,
+                            "subtotal": 27000
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "purchase_requests": [
+        {
+            "emanating_no": "2026-001",
+            "office_code": "8721",
+            "fund_office_code": "8721",
+            "fund_project_code": "92401",
+            "fund_name": "Livestock and Poultry Development Program of the Provincial Veterinary Office",
+            "pr_no": "0626-0001",
+            "pr_date": "2026-06-15T00:00:00.000000Z",
+            "sai_no": null,
+            "sai_date": null,
+            "requested_by_name": null,
+            "requested_by_designation": null,
+            "purpose": "Purchase of Training Expenses (Training Kit, Honorarium for Resource Person, Meals & Snacks (AM Snacks & Lunch), Tshirt with collar and print premium dry fit) for use of Provincial Veterinary Office.",
+            "total_amount": 104500,
+            "status": "approved",
+            "remarks": null,
+            "items": [
+                {
+                    "emanating_item_name": "Training Kit",
+                    "quantity": 20,
+                    "unit_cost": 2500,
+                    "line_total": 50000,
+                    "vat_applicable": false,
+                    "vat_rate": 0,
+                    "remarks": null,
+                    "matrix_amount_below_1m": 50000,
+                    "matrix_amount_above_1m": 0,
+                    "matrix_new_amount": 50000,
+                    "matrix_account_code": "5 02 02 010",
+                    "matrix_pr_admin_user_email": null,
+                    "matrix_budgeting_admin_user_email": "rizza@procurex.com",
+                    "matrix_date_release": null,
+                    "matrix_new_date_release": null,
+                    "matrix_remarks": null
+                },
+                {
+                    "emanating_item_name": "Honorarium for Resource Person",
+                    "quantity": 3,
+                    "unit_cost": 5000,
+                    "line_total": 15000,
+                    "vat_applicable": false,
+                    "vat_rate": 0,
+                    "remarks": null,
+                    "matrix_amount_below_1m": 15000,
+                    "matrix_amount_above_1m": 0,
+                    "matrix_new_amount": 15000,
+                    "matrix_account_code": "5 02 02 010",
+                    "matrix_pr_admin_user_email": null,
+                    "matrix_budgeting_admin_user_email": "rizza@procurex.com",
+                    "matrix_date_release": null,
+                    "matrix_new_date_release": null,
+                    "matrix_remarks": null
+                },
+                {
+                    "emanating_item_name": "Meals & Snacks (AM Snacks & Lunch)",
+                    "quantity": 50,
+                    "unit_cost": 250,
+                    "line_total": 12500,
+                    "vat_applicable": false,
+                    "vat_rate": 0,
+                    "remarks": null,
+                    "matrix_amount_below_1m": 12500,
+                    "matrix_amount_above_1m": 0,
+                    "matrix_new_amount": 12500,
+                    "matrix_account_code": "5 02 02 010",
+                    "matrix_pr_admin_user_email": null,
+                    "matrix_budgeting_admin_user_email": "rizza@procurex.com",
+                    "matrix_date_release": null,
+                    "matrix_new_date_release": null,
+                    "matrix_remarks": null
+                },
+                {
+                    "emanating_item_name": "Tshirt with collar and print premium dry fit",
+                    "quantity": 60,
+                    "unit_cost": 450,
+                    "line_total": 27000,
+                    "vat_applicable": false,
+                    "vat_rate": 0,
+                    "remarks": null,
+                    "matrix_amount_below_1m": 27000,
+                    "matrix_amount_above_1m": 0,
+                    "matrix_new_amount": 27000,
+                    "matrix_account_code": "5 02 02 010",
+                    "matrix_pr_admin_user_email": null,
+                    "matrix_budgeting_admin_user_email": "rizza@procurex.com",
+                    "matrix_date_release": null,
+                    "matrix_new_date_release": null,
+                    "matrix_remarks": null
+                }
+            ]
+        }
+    ],
+    "rfqs": [
+        {
+            "pr_emanating_no": "2026-001",
+            "pr_no": "0626-0001",
+            "svp_no": "2026-0001",
+            "rfq_date": "2026-06-15T00:00:00.000000Z",
+            "submission_deadline": "2026-06-22T00:00:00.000000Z",
+            "project_name": "Purchase of Training Expenses (Training Kit, Honorarium for Resource Person, Meals & Snacks (AM Snacks & Lunch), Tshirt with collar and print premium dry fit) for use of Provincial Veterinary Office.",
+            "abc_amount": 104500,
+            "remarks": null,
+            "items": [
+                {
+                    "pr_emanating_no": "2026-001",
+                    "pr_item_emanating_name": "Training Kit",
+                    "item_name": "Training Kit",
+                    "unit": "pieces",
+                    "quantity": 20
+                },
+                {
+                    "pr_emanating_no": "2026-001",
+                    "pr_item_emanating_name": "Honorarium for Resource Person",
+                    "item_name": "Honorarium for Resource Person",
+                    "unit": "persons",
+                    "quantity": 3
+                },
+                {
+                    "pr_emanating_no": "2026-001",
+                    "pr_item_emanating_name": "Meals & Snacks (AM Snacks & Lunch)",
+                    "item_name": "Meals & Snacks (AM Snacks & Lunch)",
+                    "unit": "pax",
+                    "quantity": 50
+                },
+                {
+                    "pr_emanating_no": "2026-001",
+                    "pr_item_emanating_name": "Tshirt with collar and print premium dry fit",
+                    "item_name": "Tshirt with collar and print premium dry fit",
+                    "unit": "pcs",
+                    "quantity": 60
+                }
+            ],
+            "suppliers": [
+                {
+                    "supplier_name": "ASTROPHIL TRADING",
+                    "is_late": true,
+                    "submitted_at": "2026-06-26T00:00:00.000000Z",
+                    "remarks": null,
+                    "supplier_items": [
+                        {
+                            "rfq_item_name": "Training Kit",
+                            "unit_price": 2500
+                        },
+                        {
+                            "rfq_item_name": "Honorarium for Resource Person",
+                            "unit_price": 5000
+                        },
+                        {
+                            "rfq_item_name": "Meals & Snacks (AM Snacks & Lunch)",
+                            "unit_price": 250
+                        },
+                        {
+                            "rfq_item_name": "Tshirt with collar and print premium dry fit",
+                            "unit_price": 450
+                        }
+                    ]
+                },
+                {
+                    "supplier_name": "BRIXTON CONSTRUCTION & INDUSTRIAL SUPPLY CORP.",
+                    "is_late": true,
+                    "submitted_at": "2026-06-26T00:00:00.000000Z",
+                    "remarks": null,
+                    "supplier_items": [
+                        {
+                            "rfq_item_name": "Training Kit",
+                            "unit_price": 1000000
+                        },
+                        {
+                            "rfq_item_name": "Honorarium for Resource Person",
+                            "unit_price": 1000000
+                        },
+                        {
+                            "rfq_item_name": "Meals & Snacks (AM Snacks & Lunch)",
+                            "unit_price": 1000000
+                        },
+                        {
+                            "rfq_item_name": "Tshirt with collar and print premium dry fit",
+                            "unit_price": 1000000
+                        }
+                    ]
+                },
+                {
+                    "supplier_name": "BIOCARE INC.",
+                    "is_late": true,
+                    "submitted_at": "2026-06-26T00:00:00.000000Z",
+                    "remarks": null,
+                    "supplier_items": [
+                        {
+                            "rfq_item_name": "Training Kit",
+                            "unit_price": 1000000
+                        },
+                        {
+                            "rfq_item_name": "Honorarium for Resource Person",
+                            "unit_price": 1000000
+                        },
+                        {
+                            "rfq_item_name": "Meals & Snacks (AM Snacks & Lunch)",
+                            "unit_price": 1000000
+                        },
+                        {
+                            "rfq_item_name": "Tshirt with collar and print premium dry fit",
+                            "unit_price": 1000000
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "aoqs": [
+        {
+            "rfq_svp_no": "2026-0001",
+            "aoq_date": "2026-06-15T00:00:00.000000Z",
+            "winner_supplier_name": "ASTROPHIL TRADING"
         }
     ]
 }

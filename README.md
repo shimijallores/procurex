@@ -42,3 +42,9 @@ Default password for all seeded users: `password`
 - PDF printing for key procurement documents.
 - Search, filtering, pagination, and status-based tracking per module.
 - Editable document templates with preserved snapshot data for issued records.
+
+## Seeds
+
+- php artisan migrate:fresh --seed — basic seed (→ Emanating)
+- php artisan db:seed --class=FullDataSeeder — seeds the rest (Canvas → AOQ)
+- php artisan data:export — captures everything including full pipeline

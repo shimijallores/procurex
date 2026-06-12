@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Models\AOQ;
 use App\Models\APP;
 use App\Models\APPCategory;
 use App\Models\APPItem;
+use App\Models\Canvas;
+use App\Models\CanvasItem;
+use App\Models\CanvasItemSelection;
 use App\Models\Emanating;
 use App\Models\EmanatingItem;
 use App\Models\Fund;
@@ -17,6 +21,12 @@ use App\Models\PPMPItemMonth;
 use App\Models\ProjectBrief;
 use App\Models\ProjectBriefItem;
 use App\Models\ProjectProposal;
+use App\Models\PurchaseRequest;
+use App\Models\PurchaseRequestItem;
+use App\Models\RFQ;
+use App\Models\RFQItem;
+use App\Models\RFQSupplier;
+use App\Models\RFQSupplierItem;
 use App\Models\WorkProgram;
 use App\Models\WorkProgramItem;
 use Illuminate\Console\Command;
@@ -26,7 +36,7 @@ class ExportSeedData extends Command
 {
     protected $signature = 'data:export {--path=database/seeders/data/sample-data.json}';
 
-    protected $description = 'Export current APP, Fund, PPMP, and Emanating data to a JSON file for re-seeding';
+    protected $description = 'Export APP, Fund, PPMP, Emanating, Canvas, PR, RFQ, and AOQ data to a JSON file for re-seeding';
 
     public function handle(): int
     {
@@ -37,6 +47,10 @@ class ExportSeedData extends Command
             'funds' => $this->exportFunds(),
             'ppmps' => $this->exportPpmps(),
             'emanatings' => $this->exportEmanatings(),
+            'canvasses' => $this->exportCanvasses(),
+            'purchase_requests' => $this->exportPurchaseRequests(),
+            'rfqs' => $this->exportRfqs(),
+            'aoqs' => $this->exportAoqs(),
         ];
 
         $fullPath = base_path($path);
@@ -244,5 +258,133 @@ class ExportSeedData extends Command
                     ])->all(),
                 ];
             })->all();
+    }
+
+    private function exportCanvasses(): array
+    {
+        return Canvas::with([
+            'emanating',
+            'createdBy',
+            'canvasItems.emanatingItem',
+            'canvasItems.selections.masterListItem.masterListCategory',
+            'canvasItems.selections.masterListItem.supplier',
+        ])->get()->map(function (Canvas $canvas): array {
+            return [
+                'emanating_no' => $canvas->emanating?->emanating_no,
+                'created_by_email' => $canvas->createdBy?->email,
+                'status' => $canvas->status,
+                'return_reason' => $canvas->return_reason,
+                'total_amount' => (float) $canvas->total_amount,
+                'completed_at' => $canvas->completed_at,
+                'items' => $canvas->canvasItems->map(fn (CanvasItem $ci): array => [
+                    'emanating_item_name' => $ci->emanatingItem?->name,
+                    'computed_price' => (float) $ci->computed_price,
+                    'selections' => $ci->selections->map(fn (CanvasItemSelection $sel): array => [
+                        'mli_supplier_name' => $sel->masterListItem?->supplier?->name,
+                        'mli_category_name' => $sel->masterListItem?->masterListCategory?->name,
+                        'mli_item_name' => $sel->masterListItem?->item_name,
+                        'mli_unit' => $sel->masterListItem?->unit,
+                        'quantity' => (float) $sel->quantity,
+                        'unit_price' => (float) $sel->unit_price,
+                        'subtotal' => (float) $sel->subtotal,
+                    ])->all(),
+                ])->all(),
+            ];
+        })->all();
+    }
+
+    private function exportPurchaseRequests(): array
+    {
+        return PurchaseRequest::with([
+            'emanating',
+            'office',
+            'fund',
+            'items.emanatingItem',
+        ])->get()->map(function (PurchaseRequest $pr): array {
+            return [
+                'emanating_no' => $pr->emanating?->emanating_no,
+                'office_code' => $pr->office?->code,
+                'fund_office_code' => $pr->fund?->office?->code,
+                'fund_project_code' => $pr->fund?->projectCode?->code,
+                'fund_name' => $pr->fund?->name,
+                'pr_no' => $pr->pr_no,
+                'pr_date' => $pr->pr_date,
+                'sai_no' => $pr->sai_no,
+                'sai_date' => $pr->sai_date,
+                'requested_by_name' => $pr->requested_by_name,
+                'requested_by_designation' => $pr->requested_by_designation,
+                'purpose' => $pr->purpose,
+                'total_amount' => (float) $pr->total_amount,
+                'status' => $pr->status,
+                'remarks' => $pr->remarks,
+                'items' => $pr->items->map(fn (PurchaseRequestItem $pri): array => [
+                    'emanating_item_name' => $pri->emanatingItem?->name,
+                    'quantity' => $pri->quantity,
+                    'unit_cost' => (float) $pri->unit_cost,
+                    'line_total' => (float) $pri->line_total,
+                    'vat_applicable' => $pri->vat_applicable,
+                    'vat_rate' => (float) $pri->vat_rate,
+                    'remarks' => $pri->remarks,
+                    'matrix_amount_below_1m' => (float) $pri->matrix_amount_below_1m,
+                    'matrix_amount_above_1m' => (float) $pri->matrix_amount_above_1m,
+                    'matrix_new_amount' => (float) $pri->matrix_new_amount,
+                    'matrix_account_code' => $pri->matrixAccount?->code,
+                    'matrix_pr_admin_user_email' => $pri->matrixPrAdminUser?->email,
+                    'matrix_budgeting_admin_user_email' => $pri->matrixBudgetingAdminUser?->email,
+                    'matrix_date_release' => $pri->matrix_date_release,
+                    'matrix_new_date_release' => $pri->matrix_new_date_release,
+                    'matrix_remarks' => $pri->matrix_remarks,
+                ])->all(),
+            ];
+        })->all();
+    }
+
+    private function exportRfqs(): array
+    {
+        return RFQ::with([
+            'purchaseRequest.emanating',
+            'items.purchaseRequestItem.emanatingItem',
+            'suppliers.supplier',
+            'suppliers.supplierItems',
+        ])->get()->map(function (RFQ $rfq): array {
+            return [
+                'pr_emanating_no' => $rfq->purchaseRequest?->emanating?->emanating_no,
+                'pr_no' => $rfq->purchaseRequest?->pr_no,
+                'svp_no' => $rfq->svp_no,
+                'rfq_date' => $rfq->rfq_date,
+                'submission_deadline' => $rfq->submission_deadline,
+                'project_name' => $rfq->project_name,
+                'abc_amount' => (float) $rfq->abc_amount,
+                'remarks' => $rfq->remarks,
+                'items' => $rfq->items->map(fn (RFQItem $ri): array => [
+                    'pr_emanating_no' => $ri->purchaseRequestItem?->emanatingItem?->emanating?->emanating_no,
+                    'pr_item_emanating_name' => $ri->purchaseRequestItem?->emanatingItem?->name,
+                    'item_name' => $ri->item_name,
+                    'unit' => $ri->unit,
+                    'quantity' => $ri->quantity,
+                ])->all(),
+                'suppliers' => $rfq->suppliers->map(fn (RFQSupplier $rs): array => [
+                    'supplier_name' => $rs->supplier?->name,
+                    'is_late' => $rs->is_late,
+                    'submitted_at' => $rs->submitted_at,
+                    'remarks' => $rs->remarks,
+                    'supplier_items' => $rs->supplierItems->map(fn (RFQSupplierItem $rsi): array => [
+                        'rfq_item_name' => $rsi->rfqItem?->item_name,
+                        'unit_price' => (float) $rsi->unit_price,
+                    ])->all(),
+                ])->all(),
+            ];
+        })->all();
+    }
+
+    private function exportAoqs(): array
+    {
+        return AOQ::with('rfq', 'winnerSupplier')->get()->map(function (AOQ $aoq): array {
+            return [
+                'rfq_svp_no' => $aoq->rfq?->svp_no,
+                'aoq_date' => $aoq->aoq_date,
+                'winner_supplier_name' => $aoq->winnerSupplier?->name,
+            ];
+        })->all();
     }
 }
