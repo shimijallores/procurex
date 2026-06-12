@@ -42,8 +42,3 @@ Default password for all seeded users: `password`
 - PDF printing for key procurement documents.
 - Search, filtering, pagination, and status-based tracking per module.
 - Editable document templates with preserved snapshot data for issued records.
-
-## AI Context Documentation
-
-- AI-optimized codebase instructions are available in `docs/ai-context/README.md`.
-- Includes stack/runtime architecture, procurement pipeline flow map, and file-level navigation for AI agents.
