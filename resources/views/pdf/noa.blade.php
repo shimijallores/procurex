@@ -229,6 +229,9 @@
         <div class="divider"></div>
 
         <div class="noa-number">NOA No. {{ $noa->noa_no }}</div>
+        @if($rfq?->svp_no)
+            <div class="svp-number" style="font-size: 14px; margin-top: 4px;">SVP No. {{ $rfq->svp_no }}</div>
+        @endif
 
         <div class="title">Notice of Award</div>
 

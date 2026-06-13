@@ -11,6 +11,17 @@ const formatCurrency = (value) =>
         style: "currency",
         currency: "PHP",
     }).format(value || 0);
+
+const formatDate = (value) => {
+    if (!value) return "—";
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return value;
+    return d.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+    });
+};
 </script>
 
 <template>
@@ -32,7 +43,7 @@ const formatCurrency = (value) =>
                             Resolution Date
                         </p>
                         <p class="font-medium">
-                            {{ resolution.resolution_date || "—" }}
+                            {{ formatDate(resolution.resolution_date) }}
                         </p>
                     </div>
 
@@ -41,7 +52,7 @@ const formatCurrency = (value) =>
                             Meeting Date
                         </p>
                         <p class="font-medium">
-                            {{ resolution.meeting_date || "—" }}
+                            {{ formatDate(resolution.meeting_date) }}
                         </p>
                     </div>
                 </div>

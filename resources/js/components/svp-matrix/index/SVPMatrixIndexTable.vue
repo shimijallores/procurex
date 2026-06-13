@@ -31,6 +31,8 @@ const formatCurrency = (value) => {
     }
 
     return new Intl.NumberFormat("en-PH", {
+        style: "currency",
+        currency: "PHP",
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
     }).format(value);
@@ -93,110 +95,25 @@ const formatCurrency = (value) => {
 
         <CardContent>
             <div class="relative w-full overflow-x-auto">
-                <table
-                    class="w-full table-fixed caption-bottom text-xs md:text-sm"
-                >
+                <table class="w-full table-fixed caption-bottom text-xs md:text-sm">
                     <thead class="border-b">
-                        <tr
-                            class="border-b transition-colors hover:bg-muted/50"
-                        >
-                            <th
-                                class="h-11 px-2 py-2 text-center align-middle font-medium text-muted-foreground"
-                            >
-                                #
-                            </th>
-                            <th
-                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground"
-                            >
-                                OFFICE
-                            </th>
-                            <th
-                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground"
-                            >
-                                PO NO.
-                            </th>
-                            <th
-                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground"
-                            >
-                                MODE OF PROCUREMENT
-                            </th>
-                            <th
-                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground"
-                            >
-                                PR NO.
-                            </th>
-                            <th
-                                class="h-11 px-2 py-2 text-right align-middle font-medium text-muted-foreground"
-                            >
-                                ABC
-                            </th>
-                            <th
-                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground"
-                            >
-                                SUPPLIER
-                            </th>
-                            <th
-                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground"
-                            >
-                                PARTICULARS
-                            </th>
-                            <th
-                                class="h-11 px-2 py-2 text-right align-middle font-medium text-muted-foreground"
-                            >
-                                AMOUNT
-                            </th>
-                            <th
-                                class="h-11 px-2 py-2 text-center align-middle font-medium text-muted-foreground"
-                            >
-                                RFQ (PABS)
-                            </th>
-                            <th
-                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground"
-                            >
-                                ABSTRACT
-                            </th>
-                            <th
-                                class="h-11 px-2 py-2 text-center align-middle font-medium text-muted-foreground"
-                            >
-                                RESOLUTION
-                            </th>
-                            <th
-                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground"
-                            >
-                                NOA & PO
-                            </th>
-                            <th
-                                class="h-11 px-2 py-2 text-center align-middle font-medium text-muted-foreground"
-                            >
-                                TRANSMITTAL FORM
-                            </th>
-                            <th
-                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground"
-                            >
-                                ADMIN
-                            </th>
-                            <th
-                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground"
-                            >
-                                FRONTDESK
-                            </th>
-                            <th
-                                class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground"
-                            >
-                                REMARKS
-                            </th>
-                            <th
-                                class="h-11 px-2 py-2 text-right align-middle font-medium text-muted-foreground"
-                            >
-                                ACTIONS
-                            </th>
+                        <tr class="border-b transition-colors hover:bg-muted/50">
+                            <th class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground">SVP NO.</th>
+                            <th class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground">OFFICE</th>
+                            <th class="h-11 px-2 py-2 text-center align-middle font-medium text-muted-foreground">BATCH</th>
+                            <th class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground">PO NO.</th>
+                            <th class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground">PR NO.</th>
+                            <th class="h-11 px-2 py-2 text-center align-middle font-medium text-muted-foreground">ABC</th>
+                            <th class="h-11 px-2 py-2 text-left align-middle font-medium text-muted-foreground">SUPPLIER</th>
+                            <th class="h-11 px-2 py-2 text-right align-middle font-medium text-muted-foreground">AMOUNT</th>
+                            <th class="h-11 px-2 py-2 text-right align-middle font-medium text-muted-foreground">ACTIONS</th>
                         </tr>
                     </thead>
 
                     <tbody class="[&_tr:last-child]:border-0">
                         <tr v-if="!matrixRows?.data?.length">
                             <td
-                                colspan="18"
+                                colspan="9"
                                 class="p-8 text-center text-muted-foreground"
                             >
                                 <Icon
@@ -208,62 +125,33 @@ const formatCurrency = (value) => {
                         </tr>
 
                         <tr
-                            v-for="(row, idx) in matrixRows.data"
+                            v-for="row in matrixRows.data"
                             :key="row.id"
                             class="border-b transition-colors hover:bg-muted/50"
                         >
-                            <td
-                                class="p-2 align-middle text-center font-medium"
-                            >
-                                {{ (matrixRows.from || 1) + idx }}
+                            <td class="p-2 align-middle font-medium min-w-[140px]">
+                                {{ row.svp_no || "-" }}
                             </td>
                             <td class="p-2 align-middle">
                                 {{ row.office || "-" }}
                             </td>
-                            <td class="p-2 align-middle font-medium">
-                                {{ row.po_no || "-" }}
+                            <td class="p-2 align-middle text-center">
+                                {{ row.batch || "-" }}
                             </td>
-                            <td class="p-2 align-middle">
-                                {{ row.mode_of_procurement || "-" }}
+                            <td class="p-2 align-middle font-medium min-w-[160px]">
+                                {{ row.po_no || "-" }}
                             </td>
                             <td class="p-2 align-middle">
                                 {{ row.pr_no || "-" }}
                             </td>
-                            <td class="p-2 align-middle text-right">
+                            <td class="p-2 align-middle text-center min-w-[120px]">
                                 {{ formatCurrency(row.abc) }}
                             </td>
-                            <td class="p-2 align-middle">
+                            <td class="p-2 align-middle min-w-[180px]">
                                 {{ row.supplier || "-" }}
                             </td>
-                            <td class="p-2 align-middle">
-                                {{ row.particulars || "-" }}
-                            </td>
-                            <td class="p-2 align-middle text-right">
+                            <td class="p-2 align-middle text-right min-w-[120px]">
                                 {{ formatCurrency(row.amount) }}
-                            </td>
-                            <td class="p-2 align-middle text-center">
-                                {{ row.rfq || "-" }}
-                            </td>
-                            <td class="p-2 align-middle">
-                                {{ row.abstract || "-" }}
-                            </td>
-                            <td class="p-2 align-middle text-center">
-                                {{ row.resolution || "-" }}
-                            </td>
-                            <td class="p-2 align-middle">
-                                {{ row.noa_po || "-" }}
-                            </td>
-                            <td class="p-2 align-middle text-center">
-                                {{ row.transmittal_form || "-" }}
-                            </td>
-                            <td class="p-2 align-middle">
-                                {{ row.admin || "-" }}
-                            </td>
-                            <td class="p-2 align-middle">
-                                {{ row.frontdesk || "-" }}
-                            </td>
-                            <td class="p-2 align-middle">
-                                {{ row.remarks || "-" }}
                             </td>
                             <td class="p-2 align-middle text-right">
                                 <div

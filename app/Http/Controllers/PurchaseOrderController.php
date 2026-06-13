@@ -135,7 +135,9 @@ class PurchaseOrderController extends Controller
                 return $noa;
             });
 
-        $suggestedDate = $this->suggestNextWorkingDay()->toDateString();
+        $suggestedDate = $noaId
+            ? Carbon::parse(NOA::findOrFail((int) $noaId)->noa_date)->addDay()->toDateString()
+            : $this->suggestNextWorkingDay()->toDateString();
 
         return Inertia::render('PurchaseOrders/Create', [
             'batches' => $batches,
@@ -273,9 +275,10 @@ class PurchaseOrderController extends Controller
                 ]);
             }
 
-            SvpMatrix::query()->firstOrCreate([
-                'purchase_order_id' => $purchaseOrder->id,
-            ]);
+            SvpMatrix::query()->firstOrCreate(
+                ['purchase_order_id' => $purchaseOrder->id],
+                ['admin_value' => auth()->user()?->name],
+            );
 
             DB::commit();
         } catch (\Throwable $e) {
@@ -301,7 +304,9 @@ class PurchaseOrderController extends Controller
         $aoq = $purchaseOrder->noa?->aoq ?? $purchaseOrder->noa?->bacResolution?->aoq;
         $abcAmount = (float) ($aoq?->rfq?->abc_amount ?? 0);
 
-        $suggestedPoDate = $this->suggestNextWorkingDay()->toDateString();
+        $suggestedPoDate = $purchaseOrder->noa?->noa_date
+            ? Carbon::parse($purchaseOrder->noa->noa_date)->addDay()->toDateString()
+            : $this->suggestNextWorkingDay()->toDateString();
         $suggestedDeliveryDays = $abcAmount < 200000 ? 15 : 30;
 
         return Inertia::render('PurchaseOrders/Edit', [

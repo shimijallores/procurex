@@ -137,9 +137,14 @@ watch(
                 "upon 100% completion /delivery";
         }
 
-        if (!props.form.delivery_term_days) {
-            props.form.delivery_term_days =
-                props.defaults?.delivery_term_days || 15;
+        const winnerAmount = Number(noa.winner_amount ?? 0);
+        props.form.delivery_term_days = winnerAmount >= 200000 ? 30 : 15;
+
+        const noaDate = noa.noa_date?.slice(0, 10);
+        if (noaDate) {
+            const nextDay = new Date(noaDate);
+            nextDay.setDate(nextDay.getDate() + 1);
+            props.form.po_date = nextDay.toISOString().slice(0, 10);
         }
 
         const officeName =

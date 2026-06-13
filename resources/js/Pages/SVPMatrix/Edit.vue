@@ -39,7 +39,7 @@ const form = useForm({
     resolution_value: props.matrixRow.resolution || "",
     noa_po_value: props.matrixRow.noa_po || "",
     transmittal_form_value: props.matrixRow.transmittal_form || "",
-    admin_value: props.matrixRow.admin || "",
+    admin_value: props.matrixRow.bac_members_gov || "",
     frontdesk_value: props.matrixRow.frontdesk || "",
     remarks_value: props.matrixRow.remarks || "",
 });

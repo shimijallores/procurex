@@ -24,8 +24,9 @@ class SvpMatrixExport implements FromArray, ShouldAutoSize, WithColumnFormatting
     public function headings(): array
     {
         return [
-            '#',
+            'SVP NO.',
             'OFFICE',
+            'BATCH',
             'PO NO.',
             'MODE OF PROCUREMENT',
             'PR NO.',
@@ -38,7 +39,7 @@ class SvpMatrixExport implements FromArray, ShouldAutoSize, WithColumnFormatting
             'RESOLUTION',
             'NOA & PO',
             'TRANSMITTAL FORM',
-            'ADMIN',
+            'BAC MEMBERS/GOV',
             'FRONTDESK',
             'REMARKS',
         ];
@@ -49,8 +50,9 @@ class SvpMatrixExport implements FromArray, ShouldAutoSize, WithColumnFormatting
         return collect($this->rows)
             ->map(function (array $row): array {
                 return [
-                    $row['row_no'] ?? '',
+                    $row['svp_no'] ?? '',
                     $row['office'] ?? '',
+                    $row['batch'] ?? '',
                     $row['po_no'] ?? '',
                     $row['mode_of_procurement'] ?? '',
                     $row['pr_no'] ?? '',
@@ -63,7 +65,7 @@ class SvpMatrixExport implements FromArray, ShouldAutoSize, WithColumnFormatting
                     $row['resolution'] ?? '',
                     $row['noa_po'] ?? '',
                     $row['transmittal_form'] ?? '',
-                    $row['admin'] ?? '',
+                    $row['bac_members_gov'] ?? '',
                     $row['frontdesk'] ?? '',
                     $row['remarks'] ?? '',
                 ];
@@ -75,8 +77,8 @@ class SvpMatrixExport implements FromArray, ShouldAutoSize, WithColumnFormatting
     public function columnFormats(): array
     {
         return [
-            'F' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1,
-            'I' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1,
+            'G' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1,
+            'J' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1,
         ];
     }
 

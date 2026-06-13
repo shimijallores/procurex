@@ -22,6 +22,16 @@ defineEmits(["submit"]);
             <form class="space-y-4" @submit.prevent="$emit('submit')">
                 <div class="grid gap-4 md:grid-cols-2">
                     <div class="space-y-2">
+                        <Label for="svp">SVP No.</Label>
+                        <Input id="svp" :model-value="props.matrixRow.svp_no || '-'" readonly class="bg-muted text-muted-foreground" />
+                    </div>
+
+                    <div class="space-y-2">
+                        <Label for="batch">Batch</Label>
+                        <Input id="batch" :model-value="props.matrixRow.batch || '-'" readonly class="bg-muted text-muted-foreground" />
+                    </div>
+
+                    <div class="space-y-2">
                         <Label for="office">Office</Label>
                         <Input id="office" v-model="props.form.office_text" />
                     </div>
@@ -43,7 +53,7 @@ defineEmits(["submit"]);
 
                     <div class="space-y-2">
                         <Label for="pr_no">PR No.</Label>
-                        <Input id="pr_no" v-model="props.form.pr_no_text" />
+                        <Input id="pr_no" v-model="props.form.pr_no_text" readonly class="bg-muted text-muted-foreground" />
                     </div>
 
                     <div class="space-y-2">
@@ -117,8 +127,8 @@ defineEmits(["submit"]);
                     </div>
 
                     <div class="space-y-2">
-                        <Label for="admin">Admin</Label>
-                        <Input id="admin" v-model="props.form.admin_value" />
+                        <Label for="bac_members_gov">BAC Members/Gov</Label>
+                        <Input id="bac_members_gov" v-model="props.form.admin_value" />
                     </div>
 
                     <div class="space-y-2">

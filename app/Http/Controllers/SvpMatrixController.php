@@ -75,6 +75,7 @@ class SvpMatrixController extends Controller
     public function show(SvpMatrix $svpMatrix): Response
     {
         $svpMatrix->load([
+            'purchaseOrder.noa.aoq.batch',
             'purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest.office',
             'purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest.emanating.account',
             'purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest.emanating.ppmpCategory',
@@ -90,6 +91,7 @@ class SvpMatrixController extends Controller
     public function edit(SvpMatrix $svpMatrix): Response
     {
         $svpMatrix->load([
+            'purchaseOrder.noa.aoq.batch',
             'purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest.office',
             'purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest.emanating.account',
             'purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest.emanating.ppmpCategory',
@@ -123,6 +125,10 @@ class SvpMatrixController extends Controller
             'remarks_value' => ['nullable', 'string', 'max:1000'],
         ]);
 
+        if (blank($validated['admin_value'] ?? null)) {
+            $validated['admin_value'] = auth()->user()?->name;
+        }
+
         $svpMatrix->update($validated);
 
         return redirect()->route('svp-matrix.show', $svpMatrix)
@@ -135,6 +141,7 @@ class SvpMatrixController extends Controller
 
         return SvpMatrix::query()
             ->with([
+                'purchaseOrder.noa.aoq.batch',
                 'purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest.office',
                 'purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest.emanating.account',
                 'purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest.emanating.ppmpCategory',
@@ -175,10 +182,10 @@ class SvpMatrixController extends Controller
     private function transformMatrixRow(SvpMatrix $row): array
     {
         $purchaseOrder = $row->purchaseOrder;
-        $rfq = $purchaseOrder?->noa?->bacResolution?->aoq?->rfq;
-        $aoq = $purchaseOrder?->noa?->bacResolution?->aoq;
-        $resolution = $purchaseOrder?->noa?->bacResolution;
         $noa = $purchaseOrder?->noa;
+        $aoq = $noa?->aoq ?? $noa?->bacResolution?->aoq;
+        $rfq = $aoq?->rfq;
+        $resolution = $noa?->bacResolution;
         $purchaseRequest = $rfq?->purchaseRequest;
 
         $abcAmount = $row->abc_amount !== null
@@ -194,20 +201,25 @@ class SvpMatrixController extends Controller
             ? ($baseForMode > 200000 ? 'SMALL VALUE 200k A' : 'SMALL VALUE 200k B')
             : null;
 
+        $batch = $purchaseOrder?->noa?->aoq?->batch
+            ?? $purchaseOrder?->noa?->bacResolution?->aoq?->batch;
+
         $coaTransmittal = $purchaseOrder?->poTransmittals
             ?->where('type', 'coa')
-            ->sortByDesc('transmittal_date')
+            ->sortByDesc('created_at')
             ->first();
 
         return [
             'id' => $row->id,
+            'svp_no' => $rfq?->svp_no,
             'purchase_order_id' => $purchaseOrder?->id,
             'office' => $row->office_text ?? $purchaseRequest?->office?->name,
+            'batch' => $batch?->batch_no,
             'po_no' => $row->po_no_text ?? $purchaseOrder?->po_no,
             'mode_of_procurement' => $row->mode_of_procurement_text ?? $derivedMode,
             'pr_no' => $row->pr_no_text ?? $purchaseRequest?->pr_no,
             'abc' => $abcAmount > 0 ? round($abcAmount, 2) : null,
-            'supplier' => $row->supplier_text ?? $purchaseOrder?->noa?->bacResolution?->aoq?->winnerSupplier?->name,
+            'supplier' => $row->supplier_text ?? $aoq?->winnerSupplier?->name,
             'particulars' => $row->particulars_text
                 ?? $purchaseRequest?->emanating?->account?->name
                 ?? $purchaseRequest?->emanating?->ppmpCategory?->name,
@@ -215,14 +227,14 @@ class SvpMatrixController extends Controller
             'rfq' => $row->rfq_value
                 ?? $this->formatDateString($rfq?->rfq_date ?? $rfq?->created_at),
             'abstract' => $row->abstract_value
-                ?? $this->formatDateString($aoq?->created_at),
+                ?? $this->formatDateString($aoq?->aoq_date),
             'resolution' => $row->resolution_value
-                ?? $this->formatDateString($resolution?->created_at),
+                ?? $this->formatDateString($resolution?->resolution_date),
             'noa_po' => $row->noa_po_value
-                ?? $this->composeNoaPoValue($noa?->created_at, $purchaseOrder?->created_at),
+                ?? $this->composeNoaPoValue($noa?->noa_date, $purchaseOrder?->po_date),
             'transmittal_form' => $row->transmittal_form_value
-                ?? $this->formatDateString($coaTransmittal?->transmittal_date ?? $coaTransmittal?->created_at),
-            'admin' => $row->admin_value,
+                ?? $this->formatDateString($coaTransmittal?->created_at),
+            'bac_members_gov' => $row->admin_value,
             'frontdesk' => $row->frontdesk_value,
             'remarks' => $row->remarks_value,
             'created_at' => $row->created_at?->toDateString(),
@@ -238,9 +250,10 @@ class SvpMatrixController extends Controller
             ->pluck('id');
 
         foreach ($purchaseOrderIds as $purchaseOrderId) {
-            SvpMatrix::query()->firstOrCreate([
-                'purchase_order_id' => (int) $purchaseOrderId,
-            ]);
+            SvpMatrix::query()->firstOrCreate(
+                ['purchase_order_id' => (int) $purchaseOrderId],
+                ['admin_value' => auth()->user()?->name],
+            );
         }
     }
 
@@ -253,23 +266,23 @@ class SvpMatrixController extends Controller
         return $date->format('m/d/Y');
     }
 
-    private function composeNoaPoValue($noaCreatedAt, $poCreatedAt): ?string
+    private function composeNoaPoValue($noaDate, $poDate): ?string
     {
-        $noaDate = $this->formatDateString($noaCreatedAt);
-        $poDate = $this->formatDateString($poCreatedAt);
+        $noaDateFormatted = $this->formatDateString($noaDate);
+        $poDateFormatted = $this->formatDateString($poDate);
 
-        if (! $noaDate && ! $poDate) {
+        if (! $noaDateFormatted && ! $poDateFormatted) {
             return null;
         }
 
-        if ($noaDate && $poDate) {
-            if ($noaDate === $poDate) {
-                return $noaDate;
+        if ($noaDateFormatted && $poDateFormatted) {
+            if ($noaDateFormatted === $poDateFormatted) {
+                return $noaDateFormatted;
             }
 
-            return sprintf('NOA %s | PO %s', $noaDate, $poDate);
+            return sprintf('NOA %s | PO %s', $noaDateFormatted, $poDateFormatted);
         }
 
-        return $noaDate ?: $poDate;
+        return $noaDateFormatted ?: $poDateFormatted;
     }
 }
