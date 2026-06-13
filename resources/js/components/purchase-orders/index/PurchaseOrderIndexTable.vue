@@ -113,7 +113,7 @@ const formatCurrency = (value) =>
                         :href="route('purchase-orders.print-batch', selectedBatch)"
                         target="_blank"
                     >
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="lg">
                             <Icon icon="lucide:printer" class="mr-1 h-4 w-4" />
                             Print Batch
                         </Button>
