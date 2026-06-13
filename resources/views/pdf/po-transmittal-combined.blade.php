@@ -154,8 +154,6 @@
 
     $coaHeaderLines = collect(preg_split('/\r\n|\r|\n/', trim((string) ($coaTransmittal?->header_text ?? ''))))->filter();
     $opgHeaderLines = collect(preg_split('/\r\n|\r|\n/', trim((string) ($opgTransmittal?->header_text ?? ''))))->filter();
-
-    $coaCircular = $coaTransmittal?->coa_circular_no ?: '2009-001';
     @endphp
 
     <div class="page page-break">
@@ -195,7 +193,7 @@
             <div style="margin-top: 10px; margin-bottom: 10px;">Ma'am,</div>
 
             This is to respectfully transmit to your office the Purchase Order and supporting procurement documents for the project stated below,
-            in compliance with COA Circular No. {{ $coaCircular }} and related audit requirements.
+            in compliance with COA Circular No. 2009-001 and related audit requirements.
         </div>
 
         <div class="table-wrap">

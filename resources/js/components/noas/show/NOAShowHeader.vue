@@ -32,6 +32,12 @@ const openPdf = () => {
                 <Icon icon="lucide:printer" class="mr-2 h-4 w-4" />
                 Print PDF
             </Button>
+            <Link :href="route('noas.edit', noa.id)">
+                <Button variant="outline">
+                    <Icon icon="lucide:pencil" class="mr-2 h-4 w-4" />
+                    Edit
+                </Button>
+            </Link>
             <Button
                 variant="ghost"
                 class="text-destructive hover:text-destructive"

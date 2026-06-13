@@ -194,13 +194,13 @@
 
     $recipientRaw = $noa->recipient_name ?: ($addressedSupplier?->proprietor ?: ($addressedSupplier?->authorized_representative ?: ($addressedSupplier?->owner ?: ($winnerSupplier?->contact_person ?: 'AUTHORIZED REPRESENTATIVE'))));
     $recipientName = strtoupper((string) $recipientRaw);
-    $supplierName = strtoupper((string) ($resolution->winner_supplier_name ?? $winnerSupplier?->name ?? 'SUPPLIER'));
+    $supplierName = strtoupper((string) ($resolution?->winner_supplier_name ?? $winnerSupplier?->name ?? 'SUPPLIER'));
     $recipientAddress = $addressedSupplier?->address ?? $winnerSupplier?->address ?? 'Batangas';
 
-    $calculationLabel = strtoupper((string) ($resolution->calculation_label ?: 'LOWEST CALCULATED AND RESPONSIVE QUOTATION'));
-    $projectName = (string) ($rfq?->project_name ?: $resolution->project_name);
+    $calculationLabel = strtoupper((string) ($resolution?->calculation_label ?: 'LOWEST CALCULATED AND RESPONSIVE QUOTATION'));
+    $projectName = (string) ($rfq?->project_name ?: $resolution?->project_name);
 
-    $amount = (float) ($resolution->winner_amount ?? 0);
+    $amount = (float) ($noa->winner_amount ?: ($resolution?->winner_amount ?? 0));
     $amountFmt = number_format($amount, 2);
 
     $amountWords = \App\Helpers\NumberToWords::convert($amount, 'centavos');
@@ -243,7 +243,7 @@
 
         <div class="body">
             Dear {{ explode(' ', $recipientName)[0] ?? 'Sir/Madam' }},<br><br>
-            We would like to inform you that your company was declared as the supplier with <b>{{ $calculationLabel }}</b>, through BAC Resolution No. <b>{{ $resolution->resolution_no }}</b> dated <b>{{ optional($resolution->resolution_date)->format('F d, Y') }}</b>, after passing all terms, conditions, and specifications stipulated in the Request for Quotation dated <b>{{ optional($rfq?->rfq_date)->format('F d, Y') }}</b>. Thus, you are hereby AWARDED of the project, as follows:
+            We would like to inform you that your company was declared as the supplier with <b>{{ $calculationLabel }}</b>@if($resolution), through BAC Resolution No. <b>{{ $resolution->resolution_no }}</b> dated <b>{{ optional($resolution->resolution_date)->format('F d, Y') }}</b>@endif, after passing all terms, conditions, and specifications stipulated in the Request for Quotation dated <b>{{ optional($rfq?->rfq_date)->format('F d, Y') }}</b>. Thus, you are hereby AWARDED of the project, as follows:
         </div>
 
         <div class="table-wrap">

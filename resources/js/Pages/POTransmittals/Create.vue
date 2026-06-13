@@ -22,27 +22,24 @@ defineOptions({
 });
 
 const props = defineProps({
-    purchaseOrders: Array,
-    defaults: Object,
+    batches: Array,
 });
 
 const form = useForm({
     purchase_order_id: "",
     coa: {
         transmittal_no: "",
-        transmittal_date: props.defaults?.transmittal_date || "",
-        header_text: props.defaults?.coa?.header_text || "",
-        signatory_name: props.defaults?.coa?.signatory_name || "",
-        signatory_title: props.defaults?.coa?.signatory_title || "",
-        coa_circular_no: props.defaults?.coa?.coa_circular_no || "",
+        header_text:
+            "MARIA VANESSA C. BRIONES - VEGAS\nOIC – SUPERVISING AUDITOR\nCOMMISSION ON AUDIT\nCapitol Site, Batangas City\n\nMa'am,",
+        signatory_name: "NOEL R. ROCAFORT",
+        signatory_title: "PGDH – GSO",
     },
     opg: {
         transmittal_no: "",
-        transmittal_date: props.defaults?.transmittal_date || "",
-        header_text: props.defaults?.opg?.header_text || "",
-        signatory_name: props.defaults?.opg?.signatory_name || "",
-        signatory_title: props.defaults?.opg?.signatory_title || "",
-        coa_circular_no: props.defaults?.opg?.coa_circular_no || "",
+        header_text:
+            "HON. VILMA SANTOS - RECTO\nGovernor\nProvince of Batangas\nCapitol Site, Batangas City\n\nMa'am,",
+        signatory_name: "NOEL R. ROCAFORT",
+        signatory_title: "PGDH – GSO",
     },
 });
 
@@ -57,7 +54,7 @@ const submit = () => {
 
         <POTransmittalCreateForm
             :form="form"
-            :purchase-orders="purchaseOrders"
+            :batches="batches"
             @submit="submit"
         />
     </div>

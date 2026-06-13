@@ -15,16 +15,13 @@ return new class extends Migration
             $table->foreignId('purchase_order_id')->constrained('purchase_orders')->cascadeOnDelete();
             $table->enum('type', ['coa', 'opg']);
             $table->string('transmittal_no')->nullable();
-            $table->date('transmittal_date');
             $table->text('header_text')->nullable();
             $table->string('signatory_name')->nullable();
             $table->string('signatory_title')->nullable();
-            $table->string('coa_circular_no')->nullable();
             $table->timestamps();
 
             $table->unique(['purchase_order_id', 'type']);
             $table->index(['purchase_order_id', 'type']);
-            $table->index('transmittal_date');
             $table->index('type');
         });
     }

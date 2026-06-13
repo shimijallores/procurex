@@ -13,13 +13,16 @@ import { Button } from "@/components/ui/button";
 defineProps({
     resolutions: Object,
     offices: Array,
+    batches: Array,
     fiscalYears: Object,
     selectedOffice: String,
+    selectedBatch: String,
     selectedFiscalYear: String,
 });
 
 defineEmits([
     "update:selected-office",
+    "update:selected-batch",
     "update:selected-fiscal-year",
     "delete-click",
 ]);
@@ -85,6 +88,21 @@ const formatDate = (date) => {
                         </option>
                     </select>
 
+                    <select
+                        :value="selectedBatch"
+                        @change="$emit('update:selected-batch', $event.target.value)"
+                        class="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                        <option value="">All Batches</option>
+                        <option
+                            v-for="batch in batches || []"
+                            :key="batch.id"
+                            :value="String(batch.id)"
+                        >
+                            {{ batch.batch_no }}
+                        </option>
+                    </select>
+
                     <slot name="search" />
                 </div>
             </div>
@@ -113,6 +131,11 @@ const formatDate = (date) => {
                                 Resolution Date
                             </th>
                             <th
+                                class="h-12 px-4 text-center align-middle font-medium text-muted-foreground"
+                            >
+                                Batch
+                            </th>
+                            <th
                                 class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
                             >
                                 Winner
@@ -132,7 +155,7 @@ const formatDate = (date) => {
                     <tbody class="[&_tr:last-child]:border-0">
                         <tr v-if="!resolutions?.data?.length">
                             <td
-                                colspan="6"
+                                colspan="7"
                                 class="p-8 text-center text-muted-foreground"
                             >
                                 <Icon
@@ -173,6 +196,21 @@ const formatDate = (date) => {
                             </td>
                             <td class="p-4 align-middle text-center">
                                 {{ formatDate(resolution.resolution_date) }}
+                            </td>
+                            <td class="p-4 align-middle text-center">
+                                <span
+                                    v-if="resolution.aoqs?.[0]?.batch"
+                                    class="inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-mono"
+                                >
+                                    {{ resolution.aoqs[0].batch.batch_no }}
+                                </span>
+                                <span
+                                    v-else-if="resolution.aoq?.batch"
+                                    class="inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-mono"
+                                >
+                                    {{ resolution.aoq.batch.batch_no }}
+                                </span>
+                                <span v-else class="text-xs text-muted-foreground">—</span>
                             </td>
                             <td class="p-4 align-middle">
                                 {{ resolution.winner_supplier_name || "—" }}

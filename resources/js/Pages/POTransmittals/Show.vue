@@ -34,19 +34,15 @@ const form = useForm({
     purchase_order_id: props.poTransmittal.purchase_order_id,
     coa: {
         transmittal_no: props.coaTransmittal?.transmittal_no || "",
-        transmittal_date: props.coaTransmittal?.transmittal_date || "",
         header_text: props.coaTransmittal?.header_text || "",
         signatory_name: props.coaTransmittal?.signatory_name || "",
         signatory_title: props.coaTransmittal?.signatory_title || "",
-        coa_circular_no: props.coaTransmittal?.coa_circular_no || "",
     },
     opg: {
         transmittal_no: props.opgTransmittal?.transmittal_no || "",
-        transmittal_date: props.opgTransmittal?.transmittal_date || "",
         header_text: props.opgTransmittal?.header_text || "",
         signatory_name: props.opgTransmittal?.signatory_name || "",
         signatory_title: props.opgTransmittal?.signatory_title || "",
-        coa_circular_no: props.opgTransmittal?.coa_circular_no || "",
     },
 });
 

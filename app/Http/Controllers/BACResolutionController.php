@@ -27,7 +27,9 @@ class BACResolutionController extends Controller
     {
         $query = BACResolution::with([
             'aoqs.rfq.purchaseRequest.office',
+            'aoqs.batch',
             'aoq.rfq.purchaseRequest.office',
+            'aoq.batch',
         ])
             ->when($request->search, function ($q, string $search): void {
                 $q->where(function ($inner) use ($search): void {
@@ -50,6 +52,12 @@ class BACResolutionController extends Controller
             })
             ->when($request->fiscal_year, function ($q, string $fiscalYear): void {
                 $q->whereYear('resolution_date', $fiscalYear);
+            })
+            ->when($request->batch_id, function ($q, string $batchId): void {
+                $q->where(function ($inner) use ($batchId): void {
+                    $inner->whereHas('aoqs', fn ($aoq) => $aoq->where('batch_id', $batchId))
+                        ->orWhereHas('aoq', fn ($aoq) => $aoq->where('batch_id', $batchId));
+                });
             });
 
         $resolutions = (clone $query)
@@ -64,6 +72,7 @@ class BACResolutionController extends Controller
         ];
 
         $offices = Office::orderBy('name')->get(['id', 'name']);
+        $batches = Batch::orderByDesc('batch_no')->get(['id', 'batch_no']);
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear + 1))
             ->mapWithKeys(fn ($year) => [$year => $year])
@@ -73,11 +82,13 @@ class BACResolutionController extends Controller
             'resolutions' => $resolutions,
             'stats' => $stats,
             'offices' => $offices,
+            'batches' => $batches,
             'fiscalYears' => $fiscalYears,
             'filters' => [
                 'search' => $request->search,
                 'office_id' => $request->office_id,
                 'fiscal_year' => $request->fiscal_year,
+                'batch_id' => $request->batch_id,
             ],
         ]);
     }

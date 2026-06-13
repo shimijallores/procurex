@@ -1,19 +1,21 @@
 <script setup>
 import { computed, ref, watch } from "vue";
 import { Icon } from "@iconify/vue";
-import { useWorkingDayInputGuard } from "@/composables/useWorkingDayInputGuard";
+import axios from "axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
 const props = defineProps({
     form: Object,
-    purchaseOrders: Array,
+    batches: Array,
 });
 
 defineEmits(["submit"]);
-const { enforceWorkingDay, getDateNotice, getDateNoticeClass } =
-    useWorkingDayInputGuard(props.form);
+
+const selectedBatchId = ref("");
+const purchaseOrders = ref([]);
+const loadingPos = ref(false);
 
 const headerTouched = ref(false);
 const signatoryTouched = ref(false);
@@ -23,77 +25,68 @@ const opgSignatoryTouched = ref(false);
 const opgTitleTouched = ref(false);
 
 const selectedPurchaseOrder = computed(() =>
-    props.purchaseOrders?.find(
+    purchaseOrders.value?.find(
         (po) => String(po.id) === String(props.form.purchase_order_id),
     ),
 );
 
-const typeDefaults = {
-    coa: {
-        header_text:
-            "MARIA VANESSA C. BRIONES - VEGAS\nOIC – SUPERVISING AUDITOR\nCOMMISSION ON AUDIT\nCapitol Site, Batangas City\n\nMa’am,",
-        signatory_name: "NOEL R. ROCAFORT",
-        signatory_title: "PGDH – GSO",
-    },
-    opg: {
-        header_text:
-            "HON. VILMA SANTOS - RECTO\nGovernor\nProvince of Batangas\nCapitol Site, Batangas City\n\nMa’am,",
-        signatory_name: "NOEL R. ROCAFORT",
-        signatory_title: "PGDH – GSO",
-    },
+const fetchPurchaseOrders = async (batchId) => {
+    if (!batchId) {
+        purchaseOrders.value = [];
+        props.form.purchase_order_id = "";
+        return;
+    }
+
+    loadingPos.value = true;
+    try {
+        const res = await axios.get(
+            route("po-transmittals.batch-purchase-orders", batchId),
+        );
+        purchaseOrders.value = res.data.purchaseOrders || [];
+        props.form.purchase_order_id = "";
+    } catch {
+        purchaseOrders.value = [];
+    } finally {
+        loadingPos.value = false;
+    }
 };
+
+watch(selectedBatchId, (id) => {
+    fetchPurchaseOrders(id);
+});
 
 watch(
     () => props.form.purchase_order_id,
-    () => {
+    (poId) => {
+        if (!poId) return;
+        const po = purchaseOrders.value?.find(
+            (p) => String(p.id) === String(poId),
+        );
+        if (!po) return;
+
         if (!headerTouched.value) {
-            props.form.coa.header_text = typeDefaults.coa.header_text;
+            props.form.coa.header_text =
+                "MARIA VANESSA C. BRIONES - VEGAS\nOIC – SUPERVISING AUDITOR\nCOMMISSION ON AUDIT\nCapitol Site, Batangas City\n\nMa'am,";
         }
         if (!signatoryTouched.value) {
-            props.form.coa.signatory_name = typeDefaults.coa.signatory_name;
+            props.form.coa.signatory_name = "NOEL R. ROCAFORT";
         }
         if (!titleTouched.value) {
-            props.form.coa.signatory_title = typeDefaults.coa.signatory_title;
+            props.form.coa.signatory_title = "PGDH – GSO";
         }
-
         if (!opgHeaderTouched.value) {
-            props.form.opg.header_text = typeDefaults.opg.header_text;
+            props.form.opg.header_text =
+                "HON. VILMA SANTOS - RECTO\nGovernor\nProvince of Batangas\nCapitol Site, Batangas City\n\nMa'am,";
         }
         if (!opgSignatoryTouched.value) {
-            props.form.opg.signatory_name = typeDefaults.opg.signatory_name;
+            props.form.opg.signatory_name = "NOEL R. ROCAFORT";
         }
         if (!opgTitleTouched.value) {
-            props.form.opg.signatory_title = typeDefaults.opg.signatory_title;
+            props.form.opg.signatory_title = "PGDH – GSO";
         }
-    },
-    { immediate: true },
-);
 
-watch(
-    () => props.form.coa.transmittal_date,
-    async (date) => {
-        await enforceWorkingDay({
-            dateValue: date,
-            errorKey: "coa.transmittal_date",
-            statusKey: "coa.transmittal_date",
-            clearDate: () => {
-                props.form.coa.transmittal_date = "";
-            },
-        });
-    },
-);
-
-watch(
-    () => props.form.opg.transmittal_date,
-    async (date) => {
-        await enforceWorkingDay({
-            dateValue: date,
-            errorKey: "opg.transmittal_date",
-            statusKey: "opg.transmittal_date",
-            clearDate: () => {
-                props.form.opg.transmittal_date = "";
-            },
-        });
+        props.form.coa.transmittal_no = po._coa_transmittal_no || "";
+        props.form.opg.transmittal_no = po._opg_transmittal_no || "";
     },
 );
 </script>
@@ -102,10 +95,52 @@ watch(
     <form @submit.prevent="$emit('submit')" class="space-y-6">
         <Card>
             <CardHeader>
-                <CardTitle class="text-base">Source Purchase Order</CardTitle>
+                <CardTitle class="text-base">Select Batch</CardTitle>
             </CardHeader>
             <CardContent class="space-y-4">
                 <div class="space-y-2">
+                    <Label for="batch_id">Batch</Label>
+                    <select
+                        id="batch_id"
+                        v-model="selectedBatchId"
+                        class="flex h-10 w-full max-w-md rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                        <option value="">— Select Batch —</option>
+                        <option
+                            v-for="batch in batches"
+                            :key="batch.id"
+                            :value="String(batch.id)"
+                        >
+                            {{ batch.batch_no }}
+                            ({{ batch.aoqs_count }} PO{{ batch.aoqs_count !== 1 ? "s" : "" }})
+                        </option>
+                    </select>
+                </div>
+            </CardContent>
+        </Card>
+
+        <Card v-if="selectedBatchId">
+            <CardHeader>
+                <CardTitle class="flex items-center gap-2 text-base">
+                    <Icon icon="lucide:file-text" class="h-4 w-4 text-primary" />
+                    Purchase Orders in Batch
+                    <span v-if="loadingPos" class="ml-2">
+                        <Icon
+                            icon="lucide:loader-2"
+                            class="h-4 w-4 animate-spin text-muted-foreground"
+                        />
+                    </span>
+                </CardTitle>
+            </CardHeader>
+            <CardContent class="space-y-4">
+                <div
+                    v-if="!purchaseOrders.length && !loadingPos"
+                    class="py-6 text-center text-sm text-muted-foreground"
+                >
+                    All POs in this batch already have transmittals.
+                </div>
+
+                <div v-if="purchaseOrders.length" class="space-y-2">
                     <Label for="purchase_order_id">Purchase Order</Label>
                     <select
                         id="purchase_order_id"
@@ -120,7 +155,7 @@ watch(
                             :value="po.id"
                         >
                             {{ po.po_no }} —
-                            {{ po.noa?.bac_resolution?.project_name }}
+                            {{ po.noa?.aoq?.rfq?.project_name || po.noa?.bac_resolution?.project_name || "—" }}
                         </option>
                     </select>
                     <p
@@ -139,25 +174,28 @@ watch(
                         <p class="text-muted-foreground">Supplier</p>
                         <p class="font-medium">
                             {{
-                                selectedPurchaseOrder.noa?.bac_resolution?.aoq
-                                    ?.winner_supplier?.name || "—"
+                                selectedPurchaseOrder.noa?.aoq?.winner_supplier
+                                    ?.name
+                                    || selectedPurchaseOrder.noa?.bac_resolution
+                                        ?.aoq?.winner_supplier?.name
+                                    || "—"
                             }}
                         </p>
                     </div>
                     <div>
-                        <p class="text-muted-foreground">Project</p>
-                        <p class="font-medium">
-                            {{
-                                selectedPurchaseOrder.noa?.bac_resolution
-                                    ?.project_name || "—"
-                            }}
+                        <p class="text-muted-foreground">SVP No.</p>
+                        <p class="font-mono font-medium">
+                            {{ selectedPurchaseOrder._svp_no || "—" }}
                         </p>
                     </div>
                 </div>
             </CardContent>
         </Card>
 
-        <div class="grid gap-6 lg:grid-cols-2">
+        <div
+            v-if="selectedPurchaseOrder"
+            class="grid gap-6 lg:grid-cols-2"
+        >
             <Card>
                 <CardHeader>
                     <CardTitle class="text-base">COA Transmittal</CardTitle>
@@ -175,42 +213,6 @@ watch(
                             class="text-xs text-destructive"
                         >
                             {{ form.errors["coa.transmittal_no"] }}
-                        </p>
-                    </div>
-
-                    <div class="space-y-2">
-                        <Label for="coa_transmittal_date"
-                            >Transmittal Date</Label
-                        >
-                        <input
-                            id="coa_transmittal_date"
-                            v-model="form.coa.transmittal_date"
-                            type="date"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                        />
-                        <p :class="getDateNoticeClass('coa.transmittal_date')">
-                            {{ getDateNotice("coa.transmittal_date") }}
-                        </p>
-                        <p
-                            v-if="form.errors?.['coa.transmittal_date']"
-                            class="text-xs text-destructive"
-                        >
-                            {{ form.errors["coa.transmittal_date"] }}
-                        </p>
-                    </div>
-
-                    <div class="space-y-2">
-                        <Label for="coa_circular_no">COA Circular No.</Label>
-                        <input
-                            id="coa_circular_no"
-                            v-model="form.coa.coa_circular_no"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                        />
-                        <p
-                            v-if="form.errors?.['coa.coa_circular_no']"
-                            class="text-xs text-destructive"
-                        >
-                            {{ form.errors["coa.coa_circular_no"] }}
                         </p>
                     </div>
 
@@ -285,27 +287,6 @@ watch(
                         </p>
                     </div>
 
-                    <div class="space-y-2">
-                        <Label for="opg_transmittal_date"
-                            >Transmittal Date</Label
-                        >
-                        <input
-                            id="opg_transmittal_date"
-                            v-model="form.opg.transmittal_date"
-                            type="date"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                        />
-                        <p :class="getDateNoticeClass('opg.transmittal_date')">
-                            {{ getDateNotice("opg.transmittal_date") }}
-                        </p>
-                        <p
-                            v-if="form.errors?.['opg.transmittal_date']"
-                            class="text-xs text-destructive"
-                        >
-                            {{ form.errors["opg.transmittal_date"] }}
-                        </p>
-                    </div>
-
                     <div class="space-y-2 md:col-span-2">
                         <Label for="opg_header_text">Header / Addressee</Label>
                         <textarea
@@ -358,10 +339,13 @@ watch(
             </Card>
         </div>
 
-        <div class="flex justify-end gap-2">
-            <Button type="button" variant="outline" @click="form.reset()"
-                >Reset</Button
-            >
+        <div
+            v-if="selectedPurchaseOrder"
+            class="flex justify-end gap-2"
+        >
+            <Button type="button" variant="outline" @click="form.reset()">
+                Reset
+            </Button>
             <Button type="submit" :disabled="form.processing">
                 <Icon
                     v-if="form.processing"

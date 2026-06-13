@@ -40,7 +40,7 @@ const formatCurrency = (value) =>
         <div class="rounded-lg border bg-card p-4 text-sm">
             <p class="text-muted-foreground">Winner Amount</p>
             <p class="font-medium">
-                {{ formatCurrency(noa.aoq?.winner_amount || 0) }}
+                {{ formatCurrency(noa.winner_amount ?? 0) }}
             </p>
         </div>
 

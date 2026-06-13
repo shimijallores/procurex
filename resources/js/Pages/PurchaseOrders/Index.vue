@@ -19,12 +19,14 @@ const props = defineProps({
     stats: Object,
     offices: Array,
     fiscalYears: Object,
+    batches: Array,
     filters: Object,
 });
 
 const search = ref(props.filters?.search ?? "");
 const selectedOffice = ref(props.filters?.office_id ?? "");
 const selectedFiscalYear = ref(props.filters?.fiscal_year ?? "");
+const selectedBatch = ref(props.filters?.batch_id ?? "");
 
 const applyFilters = useDebounceFn(() => {
     router.get(
@@ -33,12 +35,13 @@ const applyFilters = useDebounceFn(() => {
             search: search.value,
             office_id: selectedOffice.value,
             fiscal_year: selectedFiscalYear.value,
+            batch_id: selectedBatch.value,
         },
         { preserveState: true, preserveScroll: true, replace: true },
     );
 }, 300);
 
-watch([search, selectedOffice, selectedFiscalYear], () => applyFilters());
+watch([search, selectedOffice, selectedFiscalYear, selectedBatch], () => applyFilters());
 
 const showDeleteModal = ref(false);
 const purchaseOrderToDelete = ref(null);
@@ -59,11 +62,14 @@ const openDeleteModal = (purchaseOrder) => {
             :purchase-orders="purchaseOrders"
             :offices="offices"
             :fiscal-years="fiscalYears"
+            :batches="batches"
             :selected-office="selectedOffice"
             :selected-fiscal-year="selectedFiscalYear"
+            :selected-batch="selectedBatch"
             @delete-click="openDeleteModal"
             @update:selected-office="selectedOffice = $event"
             @update:selected-fiscal-year="selectedFiscalYear = $event"
+            @update:selected-batch="selectedBatch = $event"
         >
             <template #search>
                 <div class="relative w-64">

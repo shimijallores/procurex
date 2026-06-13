@@ -14,25 +14,16 @@ import { Button } from "@/components/ui/button";
 defineProps({
     poTransmittals: Object,
     offices: Array,
-    fiscalYears: Object,
+    batches: Array,
     selectedOffice: String,
-    selectedFiscalYear: String,
+    selectedBatch: String,
 });
 
 defineEmits([
     "update:selected-office",
-    "update:selected-fiscal-year",
+    "update:selected-batch",
     "delete-click",
 ]);
-
-const formatDate = (date) => {
-    if (!date) return "—";
-    return new Date(date).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-    });
-};
 
 const getTransmittalByType = (entry, type) => {
     const matched = entry.purchase_order?.po_transmittals?.find(
@@ -83,22 +74,17 @@ const getTransmittalByType = (entry, type) => {
                     </select>
 
                     <select
-                        :value="selectedFiscalYear"
-                        @change="
-                            $emit(
-                                'update:selected-fiscal-year',
-                                $event.target.value,
-                            )
-                        "
+                        :value="selectedBatch"
+                        @change="$emit('update:selected-batch', $event.target.value)"
                         class="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
                     >
-                        <option value="">All Years</option>
+                        <option value="">All Batches</option>
                         <option
-                            v-for="(year, id) in fiscalYears"
-                            :key="id"
-                            :value="id"
+                            v-for="batch in batches || []"
+                            :key="batch.id"
+                            :value="String(batch.id)"
                         >
-                            {{ year }}
+                            {{ batch.batch_no }}
                         </option>
                     </select>
 
@@ -132,7 +118,7 @@ const getTransmittalByType = (entry, type) => {
                             <th
                                 class="h-12 px-4 text-center align-middle font-medium text-muted-foreground"
                             >
-                                COA Date / OPG Date
+                                Batch
                             </th>
                             <th
                                 class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
@@ -212,22 +198,19 @@ const getTransmittalByType = (entry, type) => {
                                 </div>
                             </td>
                             <td class="p-4 align-middle text-center">
-                                <div>
-                                    {{
-                                        formatDate(
-                                            getTransmittalByType(entry, "coa")
-                                                ?.transmittal_date,
-                                        )
-                                    }}
-                                </div>
-                                <div class="text-xs text-muted-foreground">
-                                    {{
-                                        formatDate(
-                                            getTransmittalByType(entry, "opg")
-                                                ?.transmittal_date,
-                                        )
-                                    }}
-                                </div>
+                                <span
+                                    v-if="entry.purchase_order?.noa?.aoq?.batch"
+                                    class="inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-mono"
+                                >
+                                    {{ entry.purchase_order.noa.aoq.batch.batch_no }}
+                                </span>
+                                <span
+                                    v-else-if="entry.purchase_order?.noa?.bac_resolution?.aoq?.batch"
+                                    class="inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-mono"
+                                >
+                                    {{ entry.purchase_order.noa.bac_resolution.aoq.batch.batch_no }}
+                                </span>
+                                <span v-else class="text-xs text-muted-foreground">—</span>
                             </td>
                             <td class="p-4 align-middle">
                                 <div class="font-medium">

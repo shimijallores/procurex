@@ -13,8 +13,17 @@ return new class extends Migration
         Schema::create('aoqs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('rfq_id')->constrained('rfqs')->cascadeOnDelete();
+            $table
+                ->foreignId('batch_id')
+                ->nullable()
+                ->constrained('batches')
+                ->nullOnDelete();
             $table->date('aoq_date');
-            $table->foreignId('winner_supplier_id')->nullable()->constrained('suppliers')->nullOnDelete();
+            $table
+                ->foreignId('winner_supplier_id')
+                ->nullable()
+                ->constrained('suppliers')
+                ->nullOnDelete();
             $table->timestamps();
 
             $table->unique('rfq_id', 'uq_aoq_rfq');

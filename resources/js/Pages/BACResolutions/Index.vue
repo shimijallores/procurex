@@ -18,12 +18,14 @@ const props = defineProps({
     resolutions: Object,
     stats: Object,
     offices: Array,
+    batches: Array,
     fiscalYears: Object,
     filters: Object,
 });
 
 const search = ref(props.filters?.search ?? "");
 const selectedOffice = ref(props.filters?.office_id ?? "");
+const selectedBatch = ref(props.filters?.batch_id ?? "");
 const selectedFiscalYear = ref(props.filters?.fiscal_year ?? "");
 
 const applyFilters = useDebounceFn(() => {
@@ -32,13 +34,14 @@ const applyFilters = useDebounceFn(() => {
         {
             search: search.value,
             office_id: selectedOffice.value,
+            batch_id: selectedBatch.value,
             fiscal_year: selectedFiscalYear.value,
         },
         { preserveState: true, preserveScroll: true, replace: true },
     );
 }, 300);
 
-watch([search, selectedOffice, selectedFiscalYear], () => applyFilters());
+watch([search, selectedOffice, selectedBatch, selectedFiscalYear], () => applyFilters());
 
 const showDeleteModal = ref(false);
 const resolutionToDelete = ref(null);
@@ -58,11 +61,14 @@ const openDeleteModal = (resolution) => {
         <BACResolutionIndexTable
             :resolutions="resolutions"
             :offices="offices"
+            :batches="batches"
             :fiscal-years="fiscalYears"
             :selected-office="selectedOffice"
+            :selected-batch="selectedBatch"
             :selected-fiscal-year="selectedFiscalYear"
             @delete-click="openDeleteModal"
             @update:selected-office="selectedOffice = $event"
+            @update:selected-batch="selectedBatch = $event"
             @update:selected-fiscal-year="selectedFiscalYear = $event"
         >
             <template #search>

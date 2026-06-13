@@ -148,7 +148,6 @@
     $headerLines = collect(preg_split('/\r\n|\r|\n/', trim((string) ($poTransmittal->header_text ?? ''))))->filter();
     $supplier = strtoupper((string) ($winnerSupplier?->name ?? '—'));
     $projectName = (string) ($resolution?->project_name ?? '—');
-    $coaCircular = $poTransmittal->coa_circular_no ?: '2009-001';
     @endphp
 
     <div class="page">
@@ -182,6 +181,13 @@
             <div class="normal-weight">COMMISSION ON AUDIT</div>
             <div class="normal-weight">Capitol Site, Batangas City</div>
             @endforelse
+        </div>
+
+        <div class="body normal-weight">
+            <div style="margin-top: 10px; margin-bottom: 10px;">Ma'am,</div>
+
+            This is to respectfully transmit to your office the Purchase Order and supporting procurement documents for the project stated below,
+            in compliance with COA Circular No. 2009-001 and related audit requirements.
         </div>
 
         <div class="body normal-weight">

@@ -356,19 +356,37 @@ Route::middleware(['auth'])->group(function (): void {
         'role:'.
         implode(',', [RoleType::SUPERADMIN->value, RoleType::NOA_ADMIN->value]);
     Route::resource('noas', NOAController::class)
-        ->only(['index', 'create', 'store', 'show', 'destroy'])
+        ->except(['edit', 'update'])
         ->middleware($noaRoles);
+    Route::get('noas/{noa}/edit', [NOAController::class, 'edit'])
+        ->middleware($noaRoles)
+        ->name('noas.edit');
+    Route::put('noas/{noa}', [NOAController::class, 'update'])
+        ->middleware($noaRoles)
+        ->name('noas.update');
     Route::get('noas/{noa}/pdf', [NOAController::class, 'printPdf'])
         ->middleware($noaRoles)
         ->name('noas.pdf');
+    Route::get('batches/{batch}/print-noas', [NOAController::class, 'printBatch'])
+        ->middleware($noaRoles)
+        ->name('noas.print-batch');
+    Route::get('noas/batch-aoqs/{batch}', [NOAController::class, 'batchAoqs'])
+        ->middleware($noaRoles)
+        ->name('noas.batch-aoqs');
 
     // Purchase Order module
     $poRoles =
         'role:'.
         implode(',', [RoleType::SUPERADMIN->value, RoleType::PO_ADMIN->value]);
     Route::resource('purchase-orders', PurchaseOrderController::class)
-        ->only(['index', 'create', 'store', 'show', 'destroy'])
+        ->except(['edit', 'update'])
         ->middleware($poRoles);
+    Route::get('purchase-orders/{purchase_order}/edit', [PurchaseOrderController::class, 'edit'])
+        ->middleware($poRoles)
+        ->name('purchase-orders.edit');
+    Route::put('purchase-orders/{purchase_order}', [PurchaseOrderController::class, 'update'])
+        ->middleware($poRoles)
+        ->name('purchase-orders.update');
     Route::post('purchase-orders/suggest-po-no', [
         PurchaseOrderController::class,
         'suggestPoNo',
@@ -381,6 +399,9 @@ Route::middleware(['auth'])->group(function (): void {
     ])
         ->middleware($poRoles)
         ->name('purchase-orders.pdf');
+    Route::get('batches/{batch}/print-pos', [PurchaseOrderController::class, 'printBatch'])
+        ->middleware($poRoles)
+        ->name('purchase-orders.print-batch');
 
     // PO Transmittal module
     $inspectionRoles =
@@ -395,6 +416,12 @@ Route::middleware(['auth'])->group(function (): void {
     ])
         ->middleware($inspectionRoles)
         ->name('po-transmittals.pdf');
+    Route::get('po-transmittals/batch/{batch}/purchase-orders', [
+        POTransmittalController::class,
+        'batchPurchaseOrders',
+    ])
+        ->middleware($inspectionRoles)
+        ->name('po-transmittals.batch-purchase-orders');
 
     // Acceptance & Inspection module
     $acceptanceInspectionRoles =

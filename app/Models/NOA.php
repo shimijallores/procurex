@@ -17,12 +17,14 @@ class NOA extends Model
         'aoq_id',
         'noa_no',
         'noa_date',
+        'winner_amount',
         'recipient_name',
         'recipient_title',
     ];
 
     protected $casts = [
         'noa_date' => 'date',
+        'winner_amount' => 'decimal:2',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

@@ -15,15 +15,12 @@ class POTransmittal extends Model
         'purchase_order_id',
         'type',
         'transmittal_no',
-        'transmittal_date',
         'header_text',
         'signatory_name',
         'signatory_title',
-        'coa_circular_no',
     ];
 
     protected $casts = [
-        'transmittal_date' => 'date',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

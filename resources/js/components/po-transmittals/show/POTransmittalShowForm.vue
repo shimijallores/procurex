@@ -37,8 +37,11 @@ defineEmits(["submit"]);
                     <p class="text-muted-foreground">Supplier</p>
                     <p class="font-medium">
                         {{
-                            poTransmittal.purchase_order?.noa?.bac_resolution
-                                ?.aoq?.winner_supplier?.name || "—"
+                            poTransmittal.purchase_order?.noa?.aoq
+                                ?.winner_supplier?.name
+                            || poTransmittal.purchase_order?.noa?.bac_resolution
+                                ?.aoq?.winner_supplier?.name
+                            || "—"
                         }}
                     </p>
                 </div>
@@ -46,8 +49,11 @@ defineEmits(["submit"]);
                     <p class="text-muted-foreground">Project Name</p>
                     <p class="font-medium">
                         {{
-                            poTransmittal.purchase_order?.noa?.bac_resolution
-                                ?.project_name || "—"
+                            poTransmittal.purchase_order?.noa?.aoq?.rfq
+                                ?.project_name
+                            || poTransmittal.purchase_order?.noa?.bac_resolution
+                                ?.project_name
+                            || "—"
                         }}
                     </p>
                 </div>
@@ -71,37 +77,6 @@ defineEmits(["submit"]);
                         class="text-xs text-destructive"
                     >
                         {{ form.errors["coa.transmittal_no"] }}
-                    </p>
-                </div>
-
-                <div class="space-y-2">
-                    <Label for="coa_transmittal_date">Transmittal Date</Label>
-                    <input
-                        id="coa_transmittal_date"
-                        v-model="form.coa.transmittal_date"
-                        type="date"
-                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    />
-                    <p
-                        v-if="form.errors?.['coa.transmittal_date']"
-                        class="text-xs text-destructive"
-                    >
-                        {{ form.errors["coa.transmittal_date"] }}
-                    </p>
-                </div>
-
-                <div class="space-y-2">
-                    <Label for="coa_circular_no">COA Circular No.</Label>
-                    <input
-                        id="coa_circular_no"
-                        v-model="form.coa.coa_circular_no"
-                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    />
-                    <p
-                        v-if="form.errors?.['coa.coa_circular_no']"
-                        class="text-xs text-destructive"
-                    >
-                        {{ form.errors["coa.coa_circular_no"] }}
                     </p>
                 </div>
 
@@ -170,22 +145,6 @@ defineEmits(["submit"]);
                         class="text-xs text-destructive"
                     >
                         {{ form.errors["opg.transmittal_no"] }}
-                    </p>
-                </div>
-
-                <div class="space-y-2">
-                    <Label for="opg_transmittal_date">Transmittal Date</Label>
-                    <input
-                        id="opg_transmittal_date"
-                        v-model="form.opg.transmittal_date"
-                        type="date"
-                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    />
-                    <p
-                        v-if="form.errors?.['opg.transmittal_date']"
-                        class="text-xs text-destructive"
-                    >
-                        {{ form.errors["opg.transmittal_date"] }}
                     </p>
                 </div>
 

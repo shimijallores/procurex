@@ -6,11 +6,14 @@ namespace App\Http\Controllers;
 
 use App\Helpers\NumberToWords;
 use App\Http\Requests\StorePurchaseOrderRequest;
+use App\Http\Requests\UpdatePurchaseOrderRequest;
+use App\Models\Batch;
 use App\Models\Calendar;
 use App\Models\NOA;
 use App\Models\Office;
 use App\Models\PurchaseOrder;
 use App\Models\SvpMatrix;
+use Barryvdh\DomPDF\Facade\Pdf as DomPdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -25,6 +28,7 @@ class PurchaseOrderController extends Controller
     {
         $query = PurchaseOrder::with([
             'noa.aoq.rfq.purchaseRequest.office',
+            'noa.aoq.batch',
             'noa.aoq.winnerSupplier',
             'noa.bacResolution.aoq.rfq.purchaseRequest.office',
             'noa.bacResolution.aoq.winnerSupplier',
@@ -52,6 +56,9 @@ class PurchaseOrderController extends Controller
             })
             ->when($request->fiscal_year, function ($q, string $fiscalYear): void {
                 $q->whereYear('po_date', $fiscalYear);
+            })
+            ->when($request->batch_id, function ($q, string $batchId): void {
+                $q->whereHas('noa.aoq', fn ($aoq) => $aoq->where('batch_id', $batchId));
             });
 
         $purchaseOrders = (clone $query)
@@ -74,26 +81,41 @@ class PurchaseOrderController extends Controller
             ->mapWithKeys(fn ($year) => [$year => $year])
             ->reverse();
 
+        $batches = Batch::orderByDesc('batch_no')->get(['id', 'batch_no']);
+
         return Inertia::render('PurchaseOrders/Index', [
             'purchaseOrders' => $purchaseOrders,
             'stats' => $stats,
             'offices' => $offices,
             'fiscalYears' => $fiscalYears,
+            'batches' => $batches,
             'filters' => [
                 'search' => $request->search,
                 'office_id' => $request->office_id,
                 'fiscal_year' => $request->fiscal_year,
+                'batch_id' => $request->batch_id,
             ],
         ]);
     }
 
-    public function create(): Response
+    public function create(Request $request): Response
     {
+        $batchId = $request->query('batch_id');
+        $noaId = $request->query('noa_id');
+
+        $batches = Batch::withCount(['aoqs' => function ($q): void {
+            $q->whereHas('noa')->whereDoesntHave('noa.purchaseOrder');
+        }])
+            ->whereHas('aoqs', fn ($q) => $q->whereHas('noa')->whereDoesntHave('noa.purchaseOrder'))
+            ->latest()
+            ->get(['id', 'batch_no', 'created_at']);
+
         $eligibleNoas = NOA::with([
             'aoq.rfq.purchaseRequest.office',
             'aoq.rfq.items.purchaseRequestItem',
             'aoq.rfq.suppliers.supplierItems.rfqItem',
             'aoq.winnerSupplier',
+            'aoq.batch',
             'bacResolution.aoq.rfq.purchaseRequest.office',
             'bacResolution.aoq.rfq.items.purchaseRequestItem',
             'bacResolution.aoq.rfq.suppliers.supplier',
@@ -101,6 +123,7 @@ class PurchaseOrderController extends Controller
             'bacResolution.aoq.winnerSupplier',
         ])
             ->whereDoesntHave('purchaseOrder')
+            ->when($batchId, fn ($q) => $q->whereHas('aoq', fn ($aoq) => $aoq->where('batch_id', $batchId)))
             ->latest('noa_date')
             ->get()
             ->map(function (NOA $noa): NOA {
@@ -115,7 +138,10 @@ class PurchaseOrderController extends Controller
         $suggestedDate = $this->suggestNextWorkingDay()->toDateString();
 
         return Inertia::render('PurchaseOrders/Create', [
+            'batches' => $batches,
             'eligibleNoas' => $eligibleNoas,
+            'selectedBatchId' => $batchId,
+            'selectedNoaId' => $noaId,
             'defaults' => [
                 'po_date' => $suggestedDate,
                 'mode_of_procurement' => 'Small Value',
@@ -260,6 +286,109 @@ class PurchaseOrderController extends Controller
 
         return redirect()->route('purchase-orders.show', $purchaseOrder)
             ->with('success', 'Purchase Order created successfully.');
+    }
+
+    public function edit(PurchaseOrder $purchaseOrder): Response
+    {
+        $purchaseOrder->load([
+            'noa.aoq.rfq.purchaseRequest.office',
+            'noa.aoq.winnerSupplier',
+            'noa.bacResolution.aoq.rfq.purchaseRequest.office',
+            'noa.bacResolution.aoq.winnerSupplier',
+            'items.rfqItem.purchaseRequestItem',
+        ]);
+
+        $aoq = $purchaseOrder->noa?->aoq ?? $purchaseOrder->noa?->bacResolution?->aoq;
+        $abcAmount = (float) ($aoq?->rfq?->abc_amount ?? 0);
+
+        $suggestedPoDate = $this->suggestNextWorkingDay()->toDateString();
+        $suggestedDeliveryDays = $abcAmount < 200000 ? 15 : 30;
+
+        return Inertia::render('PurchaseOrders/Edit', [
+            'purchaseOrder' => $purchaseOrder,
+            'abcAmount' => $abcAmount,
+            'defaults' => [
+                'suggested_po_date' => $suggestedPoDate,
+                'suggested_delivery_days' => $suggestedDeliveryDays,
+            ],
+        ]);
+    }
+
+    public function update(UpdatePurchaseOrderRequest $request, PurchaseOrder $purchaseOrder): RedirectResponse
+    {
+        $validated = $request->validated();
+
+        DB::beginTransaction();
+        try {
+            $purchaseOrder->update([
+                'po_date' => $validated['po_date'],
+                'mode_of_procurement' => $validated['mode_of_procurement'],
+                'place_of_delivery' => $validated['place_of_delivery'],
+                'delivery_term_days' => $validated['delivery_term_days'] ?? 15,
+                'payment_term' => $validated['payment_term'] ?? null,
+                'remarks' => $validated['remarks'] ?? null,
+            ]);
+
+            if (! empty($validated['items'])) {
+                $totalAmount = 0;
+                $existingItemIds = $purchaseOrder->items()->pluck('id');
+
+                foreach ($validated['items'] as $itemData) {
+                    $quantity = (int) ($itemData['quantity_snapshot'] ?? 0);
+                    $unitCost = (float) ($itemData['unit_cost_snapshot'] ?? 0);
+                    $amount = $quantity * $unitCost;
+                    $totalAmount += $amount;
+
+                    $purchaseOrder->items()->updateOrCreate(
+                        ['rfq_item_id' => $itemData['rfq_item_id']],
+                        [
+                            'quantity_snapshot' => $quantity,
+                            'unit_cost_snapshot' => $unitCost,
+                            'amount_snapshot' => $amount,
+                        ],
+                    );
+                }
+
+                $purchaseOrder->update([
+                    'total_amount' => $totalAmount,
+                    'total_amount_words' => $this->convertAmountToWords($totalAmount),
+                ]);
+            }
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return redirect()->back()->with('error', 'Failed to update Purchase Order. Please try again.');
+        }
+
+        return redirect()->route('purchase-orders.show', $purchaseOrder)
+            ->with('success', 'Purchase Order updated successfully.');
+    }
+
+    public function printBatch(Batch $batch)
+    {
+        $purchaseOrders = PurchaseOrder::with([
+            'noa.aoq.rfq.purchaseRequest.office',
+            'noa.aoq.winnerSupplier',
+            'noa.bacResolution.aoq.rfq.purchaseRequest.office',
+            'noa.bacResolution.aoq.winnerSupplier',
+            'items.rfqItem.purchaseRequestItem',
+        ])
+            ->whereHas('noa.aoq', fn ($q) => $q->where('batch_id', $batch->id))
+            ->get();
+
+        if ($purchaseOrders->isEmpty()) {
+            return redirect()->back()->with('error', 'No Purchase Orders found in this batch.');
+        }
+
+        $pdf = DomPdf::loadView('pdf.purchase-orders-batch', [
+            'purchaseOrders' => $purchaseOrders,
+            'batch' => $batch,
+        ]);
+
+        return $pdf->setPaper('a4')
+            ->stream("POs-Batch-{$batch->batch_no}.pdf");
     }
 
     public function show(PurchaseOrder $purchaseOrder): Response
