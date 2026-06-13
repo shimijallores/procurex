@@ -78,13 +78,6 @@ const mainNavItems = computed(() => {
             roles: ["all"], // Available to all
         },
         {
-            title: "Procurement Map (Beta)",
-            url: route("procurement-map.index"),
-            icon: "lucide:workflow",
-            isActive: route().current("procurement-map.*"),
-            roles: ["all"],
-        },
-        {
             title: "Users",
             url: route("users.index"),
             icon: "lucide:users",
@@ -282,7 +275,6 @@ const navigationItems = computed(() => {
     return mainNavItems.value.filter((item) =>
         [
             "Dashboard",
-            "Procurement Map (Beta)",
             "Users",
             "Roles",
             "Offices & General Codes",

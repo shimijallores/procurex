@@ -30,7 +30,6 @@ class GlobalSearchController extends Controller
         // Static module pages (index only)
         $modules = [
             'Dashboard' => 'dashboard.index',
-            'Procurement Map' => 'procurement-map.index',
             'Users' => 'users.index',
             'Roles' => 'roles.index',
             'Offices' => 'offices.index',
