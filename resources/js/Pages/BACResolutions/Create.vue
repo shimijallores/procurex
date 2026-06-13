@@ -22,13 +22,13 @@ defineOptions({
 });
 
 const props = defineProps({
-    eligibleAoqs: Array,
+    eligibleBatches: Array,
     defaultResolutionDate: String,
     defaultMeetingDate: String,
 });
 
 const form = useForm({
-    aoq_ids: [],
+    batch_id: "",
     resolution_date: props.defaultResolutionDate || "",
     meeting_date: props.defaultMeetingDate || "",
     project_name: "",
@@ -53,7 +53,7 @@ const submit = () => {
 
         <BACResolutionCreateForm
             :form="form"
-            :eligible-aoqs="eligibleAoqs"
+            :eligible-batches="eligibleBatches"
             @submit="submit"
         />
     </div>

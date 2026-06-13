@@ -13,14 +13,17 @@ import { Button } from "@/components/ui/button";
 defineProps({
     aoqs: Object,
     offices: Array,
+    batches: Array,
     fiscalYears: Object,
     selectedOffice: String,
     selectedFiscalYear: String,
+    selectedBatch: String,
 });
 
 defineEmits([
     "update:selected-office",
     "update:selected-fiscal-year",
+    "update:selected-batch",
     "delete-click",
 ]);
 
@@ -84,6 +87,27 @@ const formatDate = (date) => {
                         </option>
                     </select>
 
+                    <select
+                        :value="selectedBatch"
+                        @change="
+                            $emit(
+                                'update:selected-batch',
+                                $event.target.value,
+                            )
+                        "
+                        class="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-backspace focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                        <option value="">All Batches</option>
+                        <option
+                            v-for="batch in batches"
+                            :key="batch.id"
+                            :value="String(batch.id)"
+                        >
+                            {{ batch.batch_no }}
+                            ({{ batch.aoqs_count }} AOQ{{ batch.aoqs_count !== 1 ? "s" : "" }})
+                        </option>
+                    </select>
+
                     <slot name="search" />
                 </div>
             </div>
@@ -105,6 +129,11 @@ const formatDate = (date) => {
                                 class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
                             >
                                 Office
+                            </th>
+                            <th
+                                class="h-12 px-4 text-center align-middle font-medium text-muted-foreground"
+                            >
+                                Batch
                             </th>
                             <th
                                 class="h-12 px-4 text-center align-middle font-medium text-muted-foreground"
@@ -131,7 +160,7 @@ const formatDate = (date) => {
                     <tbody class="[&_tr:last-child]:border-0">
                         <tr v-if="!aoqs?.data?.length">
                             <td
-                                colspan="6"
+                                colspan="7"
                                 class="p-8 text-center text-muted-foreground"
                             >
                                 <Icon
@@ -162,6 +191,21 @@ const formatDate = (date) => {
                                     aoq.rfq?.purchase_request?.office?.name ||
                                     "—"
                                 }}
+                            </td>
+                            <td class="p-4 align-middle text-center">
+                                <span
+                                    v-if="aoq.batch"
+                                    class="inline-flex items-center rounded-md border border-border bg-muted/40 px-2 py-0.5 text-xs font-mono"
+                                >
+                                    {{ aoq.batch.batch_no }}
+                                </span>
+                                <span
+                                    v-else-if="aoq.batch_id"
+                                    class="inline-flex items-center rounded-md border border-border bg-muted/40 px-2 py-0.5 text-xs font-mono"
+                                >
+                                    Batch #{{ aoq.batch_id }}
+                                </span>
+                                <span v-else class="text-xs text-muted-foreground">—</span>
                             </td>
                             <td class="p-4 align-middle text-center">
                                 {{ formatDate(aoq.aoq_date) }}

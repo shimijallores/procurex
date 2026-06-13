@@ -324,6 +324,15 @@ Route::middleware(['auth'])->group(function (): void {
     Route::get('aoqs/{aoq}/pdf', [AOQController::class, 'printPdf'])
         ->middleware($aoqRoles)
         ->name('aoqs.pdf');
+    Route::get('aoqs/suggest-batch', [AOQController::class, 'suggestBatch'])
+        ->middleware($aoqRoles)
+        ->name('aoqs.suggest-batch');
+    Route::post('aoqs/store-batch', [AOQController::class, 'storeBatch'])
+        ->middleware($aoqRoles)
+        ->name('aoqs.store-batch');
+    Route::delete('batches/{batch}', [AOQController::class, 'destroyBatch'])
+        ->middleware($aoqRoles)
+        ->name('batches.destroy');
 
     // BAC Resolution module
     $bacResolutionRoles =

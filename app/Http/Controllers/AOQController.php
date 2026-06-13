@@ -6,12 +6,14 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreAOQRequest;
 use App\Models\AOQ;
+use App\Models\Batch;
 use App\Models\Calendar;
 use App\Models\RFQ;
 use App\Models\RFQSupplier;
 use App\Models\RFQSupplierItem;
 use App\Models\Supplier;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -27,6 +29,7 @@ class AOQController extends Controller
             'rfq.purchaseRequest.office',
             'rfq.suppliers.supplier',
             'winnerSupplier',
+            'batch',
         ])
             ->when($request->search, function ($q, string $search): void {
                 $q->whereHas('rfq', function ($rfq) use ($search): void {
@@ -41,6 +44,9 @@ class AOQController extends Controller
             })
             ->when($request->fiscal_year, function ($q, string $fiscalYear): void {
                 $q->whereYear('aoq_date', $fiscalYear);
+            })
+            ->when($request->batch_id, function ($q, string $batchId): void {
+                $q->where('batch_id', $batchId);
             });
 
         $aoqs = (clone $query)
@@ -76,6 +82,9 @@ class AOQController extends Controller
         ];
 
         $offices = \App\Models\Office::orderBy('name')->get(['id', 'name']);
+        $batches = Batch::withCount('aoqs')
+            ->orderByDesc('id')
+            ->get(['id', 'batch_no']);
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear + 1))
             ->mapWithKeys(fn ($year) => [$year => $year])
@@ -85,11 +94,13 @@ class AOQController extends Controller
             'aoqs' => $aoqs,
             'stats' => $stats,
             'offices' => $offices,
+            'batches' => $batches,
             'fiscalYears' => $fiscalYears,
             'filters' => [
                 'search' => $request->search,
                 'office_id' => $request->office_id,
                 'fiscal_year' => $request->fiscal_year,
+                'batch_id' => $request->batch_id,
             ],
         ]);
     }
@@ -110,11 +121,72 @@ class AOQController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'address', 'contact_number']);
 
+        $batches = Batch::withCount('aoqs')
+            ->orderByDesc('id')
+            ->get();
+
         return Inertia::render('AOQs/Create', [
             'eligibleRfqs' => $eligibleRfqs,
             'suppliers' => $suppliers,
+            'batches' => $batches,
             'defaultAoqDate' => $this->suggestNextWorkingDay()->toDateString(),
         ]);
+    }
+
+    public function storeBatch(): JsonResponse
+    {
+        $year = now()->format('y');
+        $prefix = $year;
+
+        $latest = Batch::query()
+            ->where('batch_no', 'like', $prefix.'%')
+            ->orderByDesc('batch_no')
+            ->value('batch_no');
+
+        $next = 1;
+        if ($latest && preg_match('/^\d{2}(\d{4})$/', $latest, $matches) === 1) {
+            $next = (int) $matches[1] + 1;
+        }
+
+        $batchNo = sprintf('%s%04d', $prefix, $next);
+
+        while (Batch::where('batch_no', $batchNo)->exists()) {
+            $next++;
+            $batchNo = sprintf('%s%04d', $prefix, $next);
+        }
+
+        $batch = Batch::create(['batch_no' => $batchNo]);
+
+        return response()->json($batch);
+    }
+
+    public function destroyBatch(Batch $batch): JsonResponse
+    {
+        abort_if($batch->aoqs()->exists(), 422, 'Cannot delete a batch with existing AOQs.');
+
+        $batch->delete();
+
+        return response()->json(['success' => true]);
+    }
+
+    public function suggestBatch(): JsonResponse
+    {
+        $year = now()->format('y');
+        $prefix = $year;
+
+        $latest = Batch::query()
+            ->where('batch_no', 'like', $prefix.'%')
+            ->orderByDesc('batch_no')
+            ->value('batch_no');
+
+        $next = 1;
+        if ($latest && preg_match('/^\d{2}(\d{4})$/', $latest, $matches) === 1) {
+            $next = (int) $matches[1] + 1;
+        }
+
+        $batchNo = sprintf('%s%04d', $prefix, $next);
+
+        return response()->json(['batch_no' => $batchNo]);
     }
 
     public function store(StoreAOQRequest $request): RedirectResponse
@@ -217,6 +289,7 @@ class AOQController extends Controller
 
             $aoq = AOQ::create([
                 'rfq_id' => $rfq->id,
+                'batch_id' => $validated['batch_id'] ?? null,
                 'aoq_date' => $validated['aoq_date'],
                 'winner_supplier_id' => $winnerSupplierId,
             ]);

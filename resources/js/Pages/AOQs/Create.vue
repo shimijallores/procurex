@@ -24,11 +24,13 @@ defineOptions({
 const props = defineProps({
     eligibleRfqs: Array,
     suppliers: Array,
+    batches: Array,
     defaultAoqDate: String,
 });
 
 const form = useForm({
     rfq_id: "",
+    batch_id: "",
     aoq_date: props.defaultAoqDate || "",
     quotations: [],
 });
@@ -46,6 +48,7 @@ const submit = () => {
             :form="form"
             :eligible-rfqs="eligibleRfqs"
             :suppliers="suppliers"
+            :batches="batches"
             @submit="submit"
         />
     </div>

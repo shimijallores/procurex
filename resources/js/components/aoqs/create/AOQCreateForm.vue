@@ -1,6 +1,8 @@
 <script setup>
 import { computed, ref, watch } from "vue";
 import { Icon } from "@iconify/vue";
+import axios from "axios";
+import { router } from "@inertiajs/vue3";
 import { useWorkingDayInputGuard } from "@/composables/useWorkingDayInputGuard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +12,63 @@ const props = defineProps({
     form: Object,
     eligibleRfqs: Array,
     suppliers: Array,
+    batches: Array,
 });
+
+const creatingBatch = ref(false);
+const batchList = ref([...(props.batches || [])]);
+const selectedBatchYear = ref("");
+
+const batchYears = computed(() => {
+    const years = new Set();
+    for (const batch of batchList.value) {
+        const year = batch.created_at?.slice(0, 4);
+        if (year) years.add(year);
+    }
+    return [...years].sort().reverse();
+});
+
+const displayBatches = computed(() => {
+    let list = batchList.value;
+    if (selectedBatchYear.value) {
+        list = list.filter(
+            (b) => b.created_at?.slice(0, 4) === selectedBatchYear.value,
+        );
+    }
+    return [...list]
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .slice(0, 5);
+});
+
+const deletingBatchId = ref(null);
+
+const deleteBatch = async (batch) => {
+    if (batch.aoqs_count > 0 || deletingBatchId.value) return;
+    deletingBatchId.value = batch.id;
+
+    try {
+        await axios.delete(route("batches.destroy", batch.id));
+        batchList.value = batchList.value.filter((b) => b.id !== batch.id);
+        if (String(form.batch_id) === String(batch.id)) {
+            form.batch_id = "";
+        }
+    } catch {
+        // noop
+    } finally {
+        deletingBatchId.value = null;
+    }
+};
+
+const isSelected = (batch) => String(batch.id) === String(props.form.batch_id);
+
+const formatDate = (date) => {
+    if (!date) return "—";
+    return new Date(date).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+    });
+};
 
 defineEmits(["submit"]);
 const selectedOfficeId = ref("");
@@ -202,6 +260,21 @@ const quotationTotal = (quotation) => {
     return total;
 };
 
+const createNewBatch = async () => {
+    if (creatingBatch.value) return;
+    creatingBatch.value = true;
+
+    try {
+        const { data } = await axios.post(route("aoqs.store-batch"));
+        props.form.batch_id = String(data.id);
+        batchList.value.push({ ...data, aoqs_count: 0 });
+    } catch {
+        // noop
+    } finally {
+        creatingBatch.value = false;
+    }
+};
+
 const supplierCountWithPrices = computed(() => {
     return (props.form.quotations || []).filter((quotation) => {
         return selectedItems.value.some((item) => {
@@ -330,6 +403,129 @@ const calculationMessage = computed(() => {
                         }}</span>
                     </div>
                 </div>
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <div class="flex items-center justify-between">
+                    <CardTitle class="flex items-center gap-2 text-base">
+                        <Icon icon="lucide:layers" class="h-4 w-4 text-primary" />
+                        Batch Assignment
+                    </CardTitle>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        :disabled="creatingBatch"
+                        @click="createNewBatch"
+                    >
+                        <Icon
+                            v-if="creatingBatch"
+                            icon="lucide:loader-2"
+                            class="mr-1 h-3.5 w-3.5 animate-spin"
+                        />
+                        <Icon v-else icon="lucide:plus" class="mr-1 h-3.5 w-3.5" />
+                        New Batch
+                    </Button>
+                </div>
+            </CardHeader>
+            <CardContent class="space-y-3">
+                <div class="flex items-center gap-2">
+                    <Icon icon="lucide:calendar" class="h-4 w-4 text-muted-foreground shrink-0" />
+                    <select
+                        v-model="selectedBatchYear"
+                        class="flex h-9 w-40 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                        <option value="">All Years</option>
+                        <option v-for="year in batchYears" :key="year" :value="year">
+                            {{ year }}
+                        </option>
+                    </select>
+                </div>
+
+                <div class="overflow-hidden rounded-md border">
+                    <table class="w-full text-sm">
+                        <thead class="bg-muted/40">
+                            <tr>
+                                <th class="w-8 px-2 py-2"></th>
+                                <th class="px-2 py-2 text-left font-medium text-muted-foreground">Batch No.</th>
+                                <th class="px-2 py-2 text-center font-medium text-muted-foreground">AOQs</th>
+                                <th class="px-2 py-2 text-left font-medium text-muted-foreground">Created</th>
+                                <th class="px-2 py-2 text-right font-medium text-muted-foreground"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-if="!displayBatches.length">
+                                <td colspan="5" class="px-3 py-6 text-center text-sm text-muted-foreground">
+                                    No batches yet. Click "New Batch" to create one.
+                                </td>
+                            </tr>
+                            <tr
+                                v-for="batch in displayBatches"
+                                :key="batch.id"
+                                class="cursor-pointer border-b transition-colors hover:bg-primary/5"
+                                :class="isSelected(batch) ? 'bg-primary/10' : ''"
+                                @click="form.batch_id = String(batch.id)"
+                            >
+                                <td class="w-8 px-2 py-2.5 text-center">
+                                    <Icon
+                                        v-if="isSelected(batch)"
+                                        icon="lucide:circle-check"
+                                        class="h-4 w-4 text-primary"
+                                    />
+                                    <Icon
+                                        v-else
+                                        icon="lucide:circle"
+                                        class="h-4 w-4 text-muted-foreground/30"
+                                    />
+                                </td>
+                                <td class="px-2 py-2.5">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-mono font-medium">{{ batch.batch_no }}</span>
+                                        <span
+                                            v-if="isSelected(batch)"
+                                            class="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium leading-none text-primary"
+                                        >
+                                            Selected
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="px-2 py-2.5 text-center text-muted-foreground">
+                                    {{ batch.aoqs_count || 0 }}
+                                </td>
+                                <td class="px-2 py-2.5 text-muted-foreground">
+                                    {{ formatDate(batch.created_at) }}
+                                </td>
+                                <td class="px-2 py-2.5 text-right">
+                                    <button
+                                        v-if="!batch.aoqs_count"
+                                        type="button"
+                                        :disabled="deletingBatchId === batch.id"
+                                        class="inline-flex items-center justify-center rounded-md p-1 text-muted-foreground opacity-0 transition-all hover:bg-destructive/10 hover:text-destructive"
+                                        :class="[deletingBatchId === batch.id ? 'opacity-50' : '', isSelected(batch) ? 'opacity-100' : 'hover:opacity-100']"
+                                        @click.stop="deleteBatch(batch)"
+                                        :title="'Delete batch ' + batch.batch_no"
+                                    >
+                                        <Icon
+                                            v-if="deletingBatchId === batch.id"
+                                            icon="lucide:loader-2"
+                                            class="h-4 w-4 animate-spin"
+                                        />
+                                        <Icon v-else icon="lucide:trash-2" class="h-4 w-4" />
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p class="text-xs text-muted-foreground">
+                    Batches group AOQs for later BAC Resolution batching. Click a row to select. Batch number is auto-generated.
+                </p>
+                <p v-if="form.errors?.batch_id" class="text-xs text-destructive">
+                    {{ form.errors.batch_id }}
+                </p>
             </CardContent>
         </Card>
 

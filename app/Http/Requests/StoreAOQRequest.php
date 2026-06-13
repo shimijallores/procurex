@@ -20,6 +20,7 @@ class StoreAOQRequest extends FormRequest
     {
         return [
             'rfq_id' => ['required', 'integer', 'exists:rfqs,id', 'unique:aoqs,rfq_id'],
+            'batch_id' => ['nullable', 'integer', 'exists:batches,id'],
             'aoq_date' => ['required', 'date'],
             'quotations' => ['required', 'array', 'min:1'],
             'quotations.*.supplier_id' => ['required', 'integer', 'distinct', 'exists:suppliers,id'],

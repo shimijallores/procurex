@@ -8,6 +8,7 @@ use App\Http\Requests\StoreBACResolutionRequest;
 use App\Http\Requests\UpdateBACResolutionRequest;
 use App\Models\AOQ;
 use App\Models\BACResolution;
+use App\Models\Batch;
 use App\Models\Calendar;
 use App\Models\NOA;
 use App\Models\Office;
@@ -83,33 +84,37 @@ class BACResolutionController extends Controller
 
     public function create(): Response
     {
-        $eligibleAoqs = AOQ::with([
-            'rfq.purchaseRequest.office',
-            'rfq.suppliers.supplierItems.rfqItem',
-            'winnerSupplier',
+        $eligibleBatches = Batch::with([
+            'aoqs.rfq.purchaseRequest.office',
+            'aoqs.rfq.suppliers.supplierItems.rfqItem',
+            'aoqs.winnerSupplier',
         ])
-            ->whereDoesntHave('bacResolution')
-            ->whereDoesntHave('bacResolutions')
-            ->latest('aoq_date')
+            ->has('aoqs')
+            ->whereDoesntHave('aoqs.bacResolution')
+            ->whereDoesntHave('aoqs.bacResolutions')
+            ->withCount('aoqs')
+            ->orderByDesc('id')
             ->get()
-            ->map(function (AOQ $aoq): AOQ {
-                $calculatedSupplierCount = $this->countCalculatedSuppliers($aoq);
-                $calculationLabel = $calculatedSupplierCount <= 1
-                    ? 'Single Calculated'
-                    : 'Lowest Calculated';
+            ->map(function (Batch $batch): Batch {
+                $batch->aoqs->each(function (AOQ $aoq): void {
+                    $calculatedSupplierCount = $this->countCalculatedSuppliers($aoq);
+                    $calculationLabel = $calculatedSupplierCount <= 1
+                        ? 'Single Calculated'
+                        : 'Lowest Calculated';
 
-                $aoq->setAttribute('calculated_supplier_count', $calculatedSupplierCount);
-                $aoq->setAttribute('calculation_label', $calculationLabel);
-                $aoq->setAttribute('winner_amount', $this->calculateWinnerAmount($aoq));
+                    $aoq->setAttribute('calculated_supplier_count', $calculatedSupplierCount);
+                    $aoq->setAttribute('calculation_label', $calculationLabel);
+                    $aoq->setAttribute('winner_amount', $this->calculateWinnerAmount($aoq));
+                });
 
-                return $aoq;
+                return $batch;
             })
             ->values();
 
         $suggestedDate = $this->suggestNextWorkingDay()->toDateString();
 
         return Inertia::render('BACResolutions/Create', [
-            'eligibleAoqs' => $eligibleAoqs,
+            'eligibleBatches' => $eligibleBatches,
             'defaultResolutionDate' => $suggestedDate,
             'defaultMeetingDate' => $suggestedDate,
         ]);
@@ -134,32 +139,23 @@ class BACResolutionController extends Controller
         DB::beginTransaction();
 
         try {
-            $selectedAoqIds = collect($validated['aoq_ids'] ?? [])
-                ->map(fn ($id) => (int) $id)
-                ->unique()
-                ->values();
+            $batch = Batch::with([
+                'aoqs.rfq',
+                'aoqs.rfq.purchaseRequest.office',
+                'aoqs.rfq.items.purchaseRequestItem',
+                'aoqs.rfq.suppliers.supplier',
+                'aoqs.rfq.suppliers.supplierItems.rfqItem',
+                'aoqs.rfq.suppliers.supplierItems',
+                'aoqs.winnerSupplier',
+                'aoqs.bacResolution',
+                'aoqs.bacResolutions',
+            ])->findOrFail($validated['batch_id']);
 
-            if ($selectedAoqIds->isEmpty()) {
+            $aoqs = $batch->aoqs;
+
+            if ($aoqs->isEmpty()) {
                 return redirect()->back()->withErrors([
-                    'aoq_ids' => 'Please select at least one AOQ.',
-                ])->withInput();
-            }
-
-            $aoqs = AOQ::with([
-                'rfq',
-                'rfq.purchaseRequest.office',
-                'rfq.items.purchaseRequestItem',
-                'rfq.suppliers.supplier',
-                'rfq.suppliers.supplierItems.rfqItem',
-                'rfq.suppliers.supplierItems',
-                'winnerSupplier',
-                'bacResolution',
-                'bacResolutions',
-            ])->whereIn('id', $selectedAoqIds)->get();
-
-            if ($aoqs->count() !== $selectedAoqIds->count()) {
-                return redirect()->back()->withErrors([
-                    'aoq_ids' => 'One or more selected AOQs no longer exist.',
+                    'batch_id' => 'The selected batch has no AOQs.',
                 ])->withInput();
             }
 
@@ -168,7 +164,7 @@ class BACResolutionController extends Controller
             });
 
             if ($alreadyLinked) {
-                return redirect()->back()->with('error', 'One or more selected AOQs are already linked to an existing BAC Resolution.');
+                return redirect()->back()->with('error', 'One or more AOQs in this batch are already linked to an existing BAC Resolution.');
             }
 
             $primaryAoq = $aoqs->first();
@@ -202,14 +198,15 @@ class BACResolutionController extends Controller
             ]);
 
             $syncPayload = [];
-            foreach ($selectedAoqIds as $index => $aoqId) {
-                $syncPayload[(int) $aoqId] = ['sort_order' => $index + 1];
+            foreach ($aoqs as $index => $aoq) {
+                $syncPayload[(int) $aoq->id] = ['sort_order' => $index + 1];
             }
 
             $resolution->aoqs()->sync($syncPayload);
 
             // Link existing NOAs that reference the batched AOQs
-            NOA::whereIn('aoq_id', $selectedAoqIds->all())
+            $aoqIds = $aoqs->pluck('id')->toArray();
+            NOA::whereIn('aoq_id', $aoqIds)
                 ->whereNull('bac_resolution_id')
                 ->update(['bac_resolution_id' => $resolution->id]);
 

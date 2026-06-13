@@ -15,6 +15,7 @@ class AOQ extends Model
 
     protected $fillable = [
         'rfq_id',
+        'batch_id',
         'aoq_date',
         'winner_supplier_id',
     ];
@@ -24,6 +25,11 @@ class AOQ extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    public function batch(): BelongsTo
+    {
+        return $this->belongsTo(Batch::class, 'batch_id');
+    }
 
     public function rfq(): BelongsTo
     {

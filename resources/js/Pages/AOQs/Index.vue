@@ -22,6 +22,7 @@ const props = defineProps({
     aoqs: Object,
     stats: Object,
     offices: Array,
+    batches: Array,
     fiscalYears: Object,
     filters: Object,
 });
@@ -29,6 +30,7 @@ const props = defineProps({
 const search = ref(props.filters?.search ?? "");
 const selectedOffice = ref(props.filters?.office_id ?? "");
 const selectedFiscalYear = ref(props.filters?.fiscal_year ?? "");
+const selectedBatch = ref(props.filters?.batch_id ?? "");
 
 const applyFilters = useDebounceFn(() => {
     router.get(
@@ -37,12 +39,13 @@ const applyFilters = useDebounceFn(() => {
             search: search.value,
             office_id: selectedOffice.value,
             fiscal_year: selectedFiscalYear.value,
+            batch_id: selectedBatch.value,
         },
         { preserveState: true, preserveScroll: true, replace: true },
     );
 }, 300);
 
-watch([search, selectedOffice, selectedFiscalYear], () => applyFilters());
+watch([search, selectedOffice, selectedFiscalYear, selectedBatch], () => applyFilters());
 
 const showDeleteModal = ref(false);
 const aoqToDelete = ref(null);
@@ -62,12 +65,15 @@ const openDeleteModal = (aoq) => {
         <AOQIndexTable
             :aoqs="aoqs"
             :offices="offices"
+            :batches="batches"
             :fiscal-years="fiscalYears"
             :selected-office="selectedOffice"
             :selected-fiscal-year="selectedFiscalYear"
+            :selected-batch="selectedBatch"
             @delete-click="openDeleteModal"
             @update:selected-office="selectedOffice = $event"
             @update:selected-fiscal-year="selectedFiscalYear = $event"
+            @update:selected-batch="selectedBatch = $event"
         >
             <template #search>
                 <div class="relative w-64">

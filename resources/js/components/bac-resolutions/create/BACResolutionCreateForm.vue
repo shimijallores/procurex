@@ -1,6 +1,7 @@
 <script setup>
-import { computed, ref, watch } from "vue";
+import { computed, watch } from "vue";
 import { Icon } from "@iconify/vue";
+import { NativeSelect } from "@/components/ui/native-select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -8,7 +9,7 @@ import { useWorkingDayInputGuard } from "@/composables/useWorkingDayInputGuard";
 
 const props = defineProps({
     form: Object,
-    eligibleAoqs: Array,
+    eligibleBatches: Array,
 });
 
 defineEmits(["submit"]);
@@ -16,53 +17,13 @@ defineEmits(["submit"]);
 const { enforceWorkingDay, getDateNotice, getDateNoticeClass } =
     useWorkingDayInputGuard(props.form);
 
-watch(
-    () => props.form.resolution_date,
-    async (date) => {
-        if (!date) {
-            return;
-        }
-
-        const isValid = await enforceWorkingDay({
-            dateValue: date,
-            errorKey: "resolution_date",
-            statusKey: "resolution_date",
-            clearDate: () => {
-                props.form.resolution_date = "";
-            },
-        });
-
-        if (!isValid) {
-            return;
-        }
-    },
-    { immediate: true },
-);
-
-watch(
-    () => props.form.meeting_date,
-    async (date) => {
-        await enforceWorkingDay({
-            dateValue: date,
-            errorKey: "meeting_date",
-            statusKey: "meeting_date",
-            clearDate: () => {
-                props.form.meeting_date = "";
-            },
-        });
-    },
-    { immediate: true },
-);
-
-const selectedAoqIds = computed(() =>
-    (props.form.aoq_ids || []).map((id) => String(id)),
-);
-
-const selectedAoqs = computed(() =>
-    (props.eligibleAoqs || []).filter((aoq) =>
-        selectedAoqIds.value.includes(String(aoq.id)),
+const selectedBatch = computed(() =>
+    (props.eligibleBatches || []).find(
+        (b) => String(b.id) === String(props.form.batch_id),
     ),
 );
+
+const selectedAoqs = computed(() => selectedBatch.value?.aoqs || []);
 
 const formatCurrency = (value) =>
     new Intl.NumberFormat("en-PH", {
@@ -71,11 +32,14 @@ const formatCurrency = (value) =>
     }).format(value || 0);
 
 watch(
-    selectedAoqs,
-    (aoqs) => {
-        if (!aoqs?.length) {
-            return;
-        }
+    () => props.form.batch_id,
+    (batchId) => {
+        const batch = (props.eligibleBatches || []).find(
+            (b) => String(b.id) === String(batchId),
+        );
+        const aoqs = batch?.aoqs || [];
+
+        if (!aoqs.length) return;
 
         const totalWinnerAmount = aoqs.reduce(
             (sum, aoq) => sum + Number(aoq.winner_amount || 0),
@@ -111,18 +75,39 @@ watch(
         props.form.signatory_member_three =
             props.form.signatory_member_three || "BAC Member";
     },
+);
+
+watch(
+    () => props.form.resolution_date,
+    async (date) => {
+        if (!date) return;
+
+        await enforceWorkingDay({
+            dateValue: date,
+            errorKey: "resolution_date",
+            statusKey: "resolution_date",
+            clearDate: () => {
+                props.form.resolution_date = "";
+            },
+        });
+    },
     { immediate: true },
 );
 
-const toggleAoqSelection = (aoqId) => {
-    const value = String(aoqId);
-    const current = [...selectedAoqIds.value];
-    const exists = current.includes(value);
-
-    props.form.aoq_ids = exists
-        ? current.filter((id) => id !== value)
-        : [...current, value];
-};
+watch(
+    () => props.form.meeting_date,
+    async (date) => {
+        await enforceWorkingDay({
+            dateValue: date,
+            errorKey: "meeting_date",
+            statusKey: "meeting_date",
+            clearDate: () => {
+                props.form.meeting_date = "";
+            },
+        });
+    },
+    { immediate: true },
+);
 </script>
 
 <template>
@@ -130,57 +115,34 @@ const toggleAoqSelection = (aoqId) => {
         <Card>
             <CardHeader>
                 <CardTitle class="flex items-center gap-2 text-base">
-                    <Icon icon="lucide:link" class="h-4 w-4 text-primary" />
-                    Source AOQ
+                    <Icon icon="lucide:layers" class="h-4 w-4 text-primary" />
+                    Select Batch
                 </CardTitle>
             </CardHeader>
             <CardContent class="space-y-3">
                 <div class="space-y-2">
-                    <Label>AOQs (Batch Selection)</Label>
-                    <div
-                        class="max-h-64 space-y-2 overflow-auto rounded-md border border-input p-2"
+                    <Label for="batch_id">Batch</Label>
+                    <NativeSelect
+                        id="batch_id"
+                        :model-value="form.batch_id"
+                        @update:model-value="form.batch_id = $event"
+                        class="w-full"
                     >
-                        <label
-                            v-for="aoq in eligibleAoqs"
-                            :key="aoq.id"
-                            class="flex cursor-pointer items-start gap-3 rounded-md border border-border p-2 hover:bg-muted/40"
+                        <option value="">— Select Batch —</option>
+                        <option
+                            v-for="batch in eligibleBatches"
+                            :key="batch.id"
+                            :value="String(batch.id)"
                         >
-                            <input
-                                type="checkbox"
-                                :checked="
-                                    selectedAoqIds.includes(String(aoq.id))
-                                "
-                                @change="toggleAoqSelection(aoq.id)"
-                                class="mt-1"
-                            />
-                            <div class="min-w-0 text-sm">
-                                <p class="font-medium truncate">
-                                    {{ aoq.rfq?.svp_no }} —
-                                    {{ aoq.rfq?.project_name }}
-                                </p>
-                                <p class="text-xs text-muted-foreground">
-                                    {{
-                                        aoq.rfq?.purchase_request?.office
-                                            ?.name || "No Office"
-                                    }}
-                                    • AOQ Date: {{ aoq.aoq_date || "—" }}
-                                    • Winner:
-                                    {{ aoq.winner_supplier?.name || "N/A" }}
-                                </p>
-                            </div>
-                        </label>
-                    </div>
+                            {{ batch.batch_no }}
+                            ({{ batch.aoqs_count || 0 }} AOQ{{ batch.aoqs_count !== 1 ? "s" : "" }})
+                        </option>
+                    </NativeSelect>
                     <p
-                        v-if="form.errors?.aoq_ids"
+                        v-if="form.errors?.batch_id"
                         class="text-xs text-destructive"
                     >
-                        {{ form.errors.aoq_ids }}
-                    </p>
-                    <p
-                        v-if="form.errors?.['aoq_ids.0']"
-                        class="text-xs text-destructive"
-                    >
-                        {{ form.errors["aoq_ids.0"] }}
+                        {{ form.errors.batch_id }}
                     </p>
                 </div>
 
@@ -228,14 +190,16 @@ const toggleAoqSelection = (aoqId) => {
             </CardContent>
         </Card>
 
-        <Card v-if="selectedAoqs.length">
+        <Card v-if="selectedBatch">
             <CardHeader>
-                <CardTitle class="text-base">Selected AOQ Batch</CardTitle>
+                <CardTitle class="text-base flex items-center gap-2">
+                    <Icon icon="lucide:list" class="h-4 w-4 text-primary" />
+                    Batch AOQs — {{ selectedBatch.batch_no }}
+                </CardTitle>
             </CardHeader>
             <CardContent class="space-y-3 text-sm">
                 <div class="text-muted-foreground">
-                    {{ selectedAoqs.length }} AOQ(s) selected for this
-                    resolution.
+                    {{ selectedAoqs.length }} AOQ(s) in this batch.
                 </div>
                 <div class="relative w-full overflow-auto">
                     <table class="w-full text-sm">
@@ -279,7 +243,7 @@ const toggleAoqSelection = (aoqId) => {
             </CardContent>
         </Card>
 
-        <Card v-if="selectedAoqs.length">
+        <Card v-if="selectedBatch">
             <CardHeader>
                 <CardTitle class="text-base flex items-center gap-2">
                     <Icon
