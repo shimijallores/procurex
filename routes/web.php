@@ -19,7 +19,6 @@ use App\Http\Controllers\NOAController;
 use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\POTransmittalController;
 use App\Http\Controllers\PPMPController;
-use App\Http\Controllers\ProcurementMapController;
 use App\Http\Controllers\ProjectCodeController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\PurchaseRequestController;
@@ -56,10 +55,6 @@ Route::middleware(['auth'])->group(function (): void {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name(
         'dashboard.index',
     );
-    Route::get('/map', [ProcurementMapController::class, 'index'])->name(
-        'procurement-map.index',
-    );
-
     // Define all resources once, authorization will be handled in controllers/policies
     Route::resource('users', UserController::class)->middleware(
         'role:'.RoleType::SUPERADMIN->value,
