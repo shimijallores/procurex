@@ -9,6 +9,7 @@ import { Link } from "@inertiajs/vue3";
 import AppSidebar from "@/components/AppSidebar.vue";
 import DarkModeButton from "@/components/DarkModeButton.vue";
 import FlashMessage from "@/components/FlashMessage.vue";
+import GlobalSearchBar from "@/components/GlobalSearchBar.vue";
 
 defineProps({
     title: {
@@ -74,6 +75,7 @@ defineProps({
 
                 <!-- Right side actions -->
                 <div class="flex items-center gap-2">
+                    <GlobalSearchBar />
                     <DarkModeButton />
                 </div>
             </header>

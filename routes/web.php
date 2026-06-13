@@ -12,6 +12,7 @@ use App\Http\Controllers\COAInspectionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmanatingController;
 use App\Http\Controllers\FundController;
+use App\Http\Controllers\GlobalSearchController;
 use App\Http\Controllers\MasterListCategoryController;
 use App\Http\Controllers\MasterListItemController;
 use App\Http\Controllers\NOAController;
@@ -47,6 +48,9 @@ Route::post('/login', [SessionController::class, 'login'])
 
 Route::middleware(['auth'])->group(function (): void {
     Route::get('/logout', [SessionController::class, 'logout'])->name('logout');
+
+    // Global search
+    Route::get('/search', GlobalSearchController::class)->name('search');
 
     // Dashboard - accessible to all authenticated users
     Route::get('/dashboard', [DashboardController::class, 'index'])->name(

@@ -9,9 +9,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Laravel\Scout\Searchable;
 
 class BACResolution extends Model
 {
+    use Searchable;
+
     protected $table = 'bac_resolutions';
 
     protected $fillable = [
@@ -39,6 +42,14 @@ class BACResolution extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    public function toSearchableArray(): array
+    {
+        return [
+            'resolution_no' => $this->resolution_no,
+            'project_name' => $this->project_name,
+        ];
+    }
 
     public function aoq(): BelongsTo
     {

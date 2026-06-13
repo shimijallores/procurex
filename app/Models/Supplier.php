@@ -6,9 +6,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Laravel\Scout\Searchable;
 
 class Supplier extends Model
 {
+    use Searchable;
+
     protected $fillable = [
         'name',
         'proprietor',
@@ -28,6 +31,15 @@ class Supplier extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    public function toSearchableArray(): array
+    {
+        return [
+            'name' => $this->name,
+            'proprietor' => $this->proprietor,
+            'contact_person' => $this->contact_person,
+        ];
+    }
 
     public function masterListItems(): HasMany
     {

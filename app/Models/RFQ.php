@@ -8,9 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Laravel\Scout\Searchable;
 
 class RFQ extends Model
 {
+    use Searchable;
+
     protected $table = 'rfqs';
 
     protected $fillable = [
@@ -30,6 +33,14 @@ class RFQ extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    public function toSearchableArray(): array
+    {
+        return [
+            'svp_no' => $this->svp_no,
+            'project_name' => $this->project_name,
+        ];
+    }
 
     public function purchaseRequest(): BelongsTo
     {

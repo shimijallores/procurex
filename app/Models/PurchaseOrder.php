@@ -8,9 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Laravel\Scout\Searchable;
 
 class PurchaseOrder extends Model
 {
+    use Searchable;
+
     protected $table = 'purchase_orders';
 
     protected $fillable = [
@@ -33,6 +36,13 @@ class PurchaseOrder extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    public function toSearchableArray(): array
+    {
+        return [
+            'po_no' => $this->po_no,
+        ];
+    }
 
     public function noa(): BelongsTo
     {

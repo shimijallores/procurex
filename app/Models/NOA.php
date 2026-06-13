@@ -7,9 +7,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Laravel\Scout\Searchable;
 
 class NOA extends Model
 {
+    use Searchable;
+
     protected $table = 'noas';
 
     protected $fillable = [
@@ -28,6 +31,14 @@ class NOA extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    public function toSearchableArray(): array
+    {
+        return [
+            'noa_no' => $this->noa_no,
+            'recipient_name' => $this->recipient_name,
+        ];
+    }
 
     public function bacResolution(): BelongsTo
     {

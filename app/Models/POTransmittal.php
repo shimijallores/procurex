@@ -6,9 +6,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Laravel\Scout\Searchable;
 
 class POTransmittal extends Model
 {
+    use Searchable;
+
     protected $table = 'po_transmittals';
 
     protected $fillable = [
@@ -24,6 +27,13 @@ class POTransmittal extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    public function toSearchableArray(): array
+    {
+        return [
+            'transmittal_no' => $this->transmittal_no,
+        ];
+    }
 
     public function purchaseOrder(): BelongsTo
     {
