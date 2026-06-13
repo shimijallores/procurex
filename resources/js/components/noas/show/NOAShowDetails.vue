@@ -34,45 +34,26 @@ const formatCurrency = (value) =>
         <div class="rounded-lg border bg-card p-4 text-sm">
             <p class="text-muted-foreground">SVP No.</p>
             <p class="font-medium">
-                {{
-                    noa.aoq?.rfq?.svp_no ||
-                    noa.bac_resolution?.aoq?.rfq?.svp_no ||
-                    "—"
-                }}
+                {{ noa.aoq?.rfq?.svp_no || "—" }}
             </p>
         </div>
         <div class="rounded-lg border bg-card p-4 text-sm">
             <p class="text-muted-foreground">Winner Amount</p>
             <p class="font-medium">
-                {{
-                    formatCurrency(
-                        noa.aoq?.winner_amount ||
-                            noa.bac_resolution?.winner_amount ||
-                            0,
-                    )
-                }}
+                {{ formatCurrency(noa.aoq?.winner_amount || 0) }}
             </p>
         </div>
 
         <div class="rounded-lg border bg-card p-4 text-sm md:col-span-2">
             <p class="text-muted-foreground">Project Name</p>
             <p class="font-medium">
-                {{
-                    noa.aoq?.rfq?.project_name ||
-                    noa.bac_resolution?.project_name ||
-                    "—"
-                }}
+                {{ noa.aoq?.rfq?.project_name || "—" }}
             </p>
         </div>
         <div class="rounded-lg border bg-card p-4 text-sm md:col-span-2">
             <p class="text-muted-foreground">Winner Supplier</p>
             <p class="font-medium">
-                {{
-                    noa.aoq?.winner_supplier?.name ||
-                    noa.bac_resolution?.winner_supplier_name ||
-                    noa.bac_resolution?.aoq?.winner_supplier?.name ||
-                    "—"
-                }}
+                {{ noa.aoq?.winner_supplier?.name || "—" }}
             </p>
         </div>
     </div>

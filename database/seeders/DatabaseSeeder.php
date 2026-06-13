@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             CalendarSeeder::class,
             SupplierSeeder::class,
             MasterListSeeder::class,
+            FullDataSeeder::class,
         ]);
     }
 }

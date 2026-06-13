@@ -214,13 +214,6 @@ const mainNavItems = computed(() => {
             roles: ["SuperAdmin", "Abstract Admin"],
         },
         {
-            title: "BAC Resolutions",
-            url: route("bac-resolutions.index"),
-            icon: "lucide:files",
-            isActive: route().current("bac-resolutions.*"),
-            roles: ["SuperAdmin", "Resolution Admin"],
-        },
-        {
             title: "Notice of Award",
             url: route("noas.index"),
             icon: "lucide:file-badge",
@@ -233,6 +226,13 @@ const mainNavItems = computed(() => {
             icon: "lucide:file-signature",
             isActive: route().current("purchase-orders.*"),
             roles: ["SuperAdmin", "PO Admin"],
+        },
+        {
+            title: "BAC Resolutions",
+            url: route("bac-resolutions.index"),
+            icon: "lucide:files",
+            isActive: route().current("bac-resolutions.*"),
+            roles: ["SuperAdmin", "Resolution Admin"],
         },
         {
             title: "PO Transmittal",
@@ -325,9 +325,9 @@ const quotationItems = computed(() => {
 const documentItems = computed(() => {
     return mainNavItems.value.filter((item) =>
         [
-            "BAC Resolutions",
             "Notice of Award",
             "Purchase Order",
+            "BAC Resolutions",
             "PO Transmittal",
         ].includes(item.title),
     );
@@ -691,3 +691,13 @@ const userInitials = computed(() => {
         <SidebarRail />
     </Sidebar>
 </template>
+
+<style scoped>
+:deep([data-sidebar="content"]) {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+:deep([data-sidebar="content"]::-webkit-scrollbar) {
+    display: none;
+}
+</style>

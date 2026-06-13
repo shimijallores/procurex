@@ -12,7 +12,7 @@ return new class extends Migration
     {
         Schema::create('noas', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('bac_resolution_id')->constrained('bac_resolutions')->cascadeOnDelete();
+            $table->foreignId('bac_resolution_id')->nullable()->constrained('bac_resolutions')->cascadeOnDelete();
             $table->foreignId('aoq_id')->nullable()->constrained('aoqs')->nullOnDelete();
             $table->string('noa_no')->unique();
             $table->date('noa_date');

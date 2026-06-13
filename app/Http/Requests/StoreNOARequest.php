@@ -20,8 +20,8 @@ class StoreNOARequest extends FormRequest
     public function rules(): array
     {
         return [
-            'bac_resolution_id' => ['required', 'integer', 'exists:bac_resolutions,id'],
-            'selected_aoq_id' => ['required', 'integer', 'exists:aoqs,id', 'unique:noas,aoq_id'],
+            'bac_resolution_id' => ['nullable', 'integer', 'exists:bac_resolutions,id'],
+            'aoq_id' => ['required', 'integer', 'exists:aoqs,id', 'unique:noas,aoq_id'],
             'noa_no' => ['nullable', 'string', 'max:255'],
             'noa_date' => ['required', 'date'],
             'calculation_label' => ['nullable', 'string', 'max:100', Rule::in(['Lowest Calculated', 'Single Calculated'])],

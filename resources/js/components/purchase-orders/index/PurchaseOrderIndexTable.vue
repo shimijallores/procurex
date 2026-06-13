@@ -162,13 +162,13 @@ const formatCurrency = (value) =>
                                 <div
                                     class="text-xs text-muted-foreground truncate max-w-[320px]"
                                     :title="
-                                        purchaseOrder.noa?.bac_resolution?.aoq
-                                            ?.winner_supplier?.name
+                                        purchaseOrder.noa?.aoq?.winner_supplier
+                                            ?.name
                                     "
                                 >
                                     {{
-                                        purchaseOrder.noa?.bac_resolution?.aoq
-                                            ?.winner_supplier?.name || "—"
+                                        purchaseOrder.noa?.aoq?.winner_supplier
+                                            ?.name || "—"
                                     }}
                                 </div>
                             </td>
@@ -177,7 +177,7 @@ const formatCurrency = (value) =>
                             </td>
                             <td class="p-4 align-middle">
                                 {{
-                                    purchaseOrder.noa?.bac_resolution?.aoq?.rfq
+                                    purchaseOrder.noa?.aoq?.rfq
                                         ?.purchase_request?.office?.name || "—"
                                 }}
                             </td>

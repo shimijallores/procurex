@@ -35,6 +35,11 @@ class AOQ extends Model
         return $this->belongsTo(Supplier::class, 'winner_supplier_id');
     }
 
+    public function noa(): HasOne
+    {
+        return $this->hasOne(NOA::class, 'aoq_id');
+    }
+
     public function bacResolution(): HasOne
     {
         return $this->hasOne(BACResolution::class, 'aoq_id');

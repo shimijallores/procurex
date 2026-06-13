@@ -43,7 +43,7 @@ const formatDate = (date) => {
                 <div>
                     <CardTitle>All Notices of Award</CardTitle>
                     <CardDescription>
-                        Generated NOA documents from BAC Resolutions
+                        Generated NOA documents from Abstract of Quotations
                     </CardDescription>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
@@ -146,17 +146,13 @@ const formatDate = (date) => {
                             </td>
                             <td class="p-4 align-middle">
                                 <div class="font-medium">
-                                    {{
-                                        noa.bac_resolution?.resolution_no || "—"
-                                    }}
+                                    {{ noa.aoq?.rfq?.project_name || "—" }}
                                 </div>
                                 <div
                                     class="text-xs text-muted-foreground truncate max-w-[320px]"
-                                    :title="noa.bac_resolution?.project_name"
                                 >
-                                    {{
-                                        noa.bac_resolution?.project_name || "—"
-                                    }}
+                                    Resolution:
+                                    {{ noa.bac_resolution?.resolution_no || "—" }}
                                 </div>
                             </td>
                             <td class="p-4 align-middle text-center">
@@ -165,10 +161,7 @@ const formatDate = (date) => {
                             <td class="p-4 align-middle">
                                 {{
                                     noa.aoq?.rfq?.purchase_request?.office
-                                        ?.name ||
-                                    noa.bac_resolution?.aoq?.rfq
-                                        ?.purchase_request?.office?.name ||
-                                    "—"
+                                        ?.name || "—"
                                 }}
                             </td>
                             <td class="p-4 align-middle text-right">

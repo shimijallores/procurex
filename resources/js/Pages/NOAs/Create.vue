@@ -19,20 +19,15 @@ defineOptions({
 });
 
 const props = defineProps({
-    eligibleResolutions: Array,
+    eligibleAoqs: Array,
     suppliers: Array,
-    defaultResolutionDate: String,
     defaultNoaDate: String,
 });
 
 const form = useForm({
-    bac_resolution_id: "",
-    selected_aoq_id: "",
+    aoq_id: "",
     noa_no: "",
     noa_date: props.defaultNoaDate || "",
-    resolution_no: "",
-    resolution_date: "",
-    calculation_label: "",
     winner_supplier_name: "",
     recipient_name: "",
     recipient_title: "",
@@ -49,9 +44,8 @@ const submit = () => {
 
         <NOACreateForm
             :form="form"
-            :eligible-resolutions="eligibleResolutions"
+            :eligible-aoqs="eligibleAoqs"
             :suppliers="suppliers"
-            :default-resolution-date="defaultResolutionDate"
             :default-noa-date="defaultNoaDate"
             @submit="submit"
         />

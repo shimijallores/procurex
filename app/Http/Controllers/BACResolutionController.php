@@ -9,6 +9,7 @@ use App\Http\Requests\UpdateBACResolutionRequest;
 use App\Models\AOQ;
 use App\Models\BACResolution;
 use App\Models\Calendar;
+use App\Models\NOA;
 use App\Models\Office;
 use App\Models\RFQ;
 use Illuminate\Http\RedirectResponse;
@@ -206,6 +207,11 @@ class BACResolutionController extends Controller
             }
 
             $resolution->aoqs()->sync($syncPayload);
+
+            // Link existing NOAs that reference the batched AOQs
+            NOA::whereIn('aoq_id', $selectedAoqIds->all())
+                ->whereNull('bac_resolution_id')
+                ->update(['bac_resolution_id' => $resolution->id]);
 
             DB::commit();
         } catch (\Throwable $e) {

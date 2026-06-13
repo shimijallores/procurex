@@ -3,6 +3,7 @@ import { computed, ref, watch } from "vue";
 import axios from "axios";
 import { Icon } from "@iconify/vue";
 import { useWorkingDayInputGuard } from "@/composables/useWorkingDayInputGuard";
+import { NativeSelect } from "@/components/ui/native-select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -234,11 +235,11 @@ const formatCurrency = (value) =>
             <CardContent class="space-y-4">
                 <div class="space-y-2">
                     <Label for="noa_id">Notice of Award</Label>
-                    <select
+                    <NativeSelect
                         id="noa_id"
-                        :value="form.noa_id"
-                        @change="form.noa_id = $event.target.value"
-                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        :model-value="form.noa_id"
+                        @update:model-value="form.noa_id = $event"
+                        class="w-full"
                     >
                         <option value="">— Select NOA —</option>
                         <option
@@ -247,9 +248,9 @@ const formatCurrency = (value) =>
                             :value="noa.id"
                         >
                             {{ noa.noa_no }} —
-                            {{ noa.bac_resolution?.project_name }}
+                            {{ noa._project_name }}
                         </option>
-                    </select>
+                    </NativeSelect>
                     <p
                         v-if="form.errors?.noa_id"
                         class="text-xs text-destructive"
@@ -265,18 +266,13 @@ const formatCurrency = (value) =>
                     <div>
                         <p class="text-muted-foreground">Project</p>
                         <p class="font-medium">
-                            {{
-                                selectedNoa.bac_resolution?.project_name || "—"
-                            }}
+                            {{ selectedNoa._project_name || "—" }}
                         </p>
                     </div>
                     <div>
                         <p class="text-muted-foreground">Winner Supplier</p>
                         <p class="font-medium">
-                            {{
-                                selectedNoa.bac_resolution?.aoq?.winner_supplier
-                                    ?.name || "—"
-                            }}
+                            {{ selectedNoa._winner_supplier_name || "—" }}
                         </p>
                     </div>
                 </div>
@@ -329,10 +325,11 @@ const formatCurrency = (value) =>
 
                 <div class="space-y-2">
                     <Label for="mode_of_procurement">Mode of Procurement</Label>
-                    <select
+                    <NativeSelect
                         id="mode_of_procurement"
-                        v-model="form.mode_of_procurement"
-                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        :model-value="form.mode_of_procurement"
+                        @update:model-value="form.mode_of_procurement = $event"
+                        class="w-full"
                     >
                         <option value="Small Value">Small Value</option>
                         <option value="Direct Contracting">
@@ -341,7 +338,7 @@ const formatCurrency = (value) =>
                         <option value="Direct Acquisition">
                             Direct Acquisition
                         </option>
-                    </select>
+                    </NativeSelect>
                     <p
                         v-if="form.errors?.mode_of_procurement"
                         class="text-xs text-destructive"

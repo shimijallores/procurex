@@ -2,15 +2,15 @@
 import { computed, ref, watch } from "vue";
 import { Icon } from "@iconify/vue";
 import { useWorkingDayInputGuard } from "@/composables/useWorkingDayInputGuard";
+import { NativeSelect } from "@/components/ui/native-select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
 const props = defineProps({
     form: Object,
-    eligibleResolutions: Array,
+    eligibleAoqs: Array,
     suppliers: Array,
-    defaultResolutionDate: String,
     defaultNoaDate: String,
 });
 
@@ -18,37 +18,9 @@ defineEmits(["submit"]);
 const { enforceWorkingDay, getDateNotice, getDateNoticeClass } =
     useWorkingDayInputGuard(props.form);
 
-const selectedResolution = computed(() =>
-    props.eligibleResolutions?.find(
-        (resolution) =>
-            String(resolution.id) === String(props.form.bac_resolution_id),
-    ),
-);
-
-const resolutionAoqOptions = computed(() => {
-    const resolution = selectedResolution.value;
-    if (!resolution) {
-        return [];
-    }
-
-    const remainingAoqs = Array.isArray(resolution.remaining_aoqs)
-        ? resolution.remaining_aoqs
-        : [];
-    if (remainingAoqs.length > 0) {
-        return remainingAoqs;
-    }
-
-    const aoqs = Array.isArray(resolution.aoqs) ? resolution.aoqs : [];
-    if (aoqs.length > 0) {
-        return aoqs;
-    }
-
-    return resolution.aoq ? [resolution.aoq] : [];
-});
-
-const selectedProjectAoq = computed(() =>
-    resolutionAoqOptions.value.find(
-        (aoq) => String(aoq.id) === String(props.form.selected_aoq_id),
+const selectedAoq = computed(() =>
+    props.eligibleAoqs?.find(
+        (aoq) => String(aoq.id) === String(props.form.aoq_id),
     ),
 );
 
@@ -60,24 +32,6 @@ const recipientTitleSuggestions = [
     "Authorized Representative",
     "Owner",
 ];
-
-const calculationLabelOptions = ["Lowest Calculated", "Single Calculated"];
-
-const normalizeCalculationLabel = (value) => {
-    const normalized = String(value || "")
-        .trim()
-        .toLowerCase();
-
-    if (normalized.includes("lowest")) {
-        return "Lowest Calculated";
-    }
-
-    if (normalized.includes("single")) {
-        return "Single Calculated";
-    }
-
-    return "";
-};
 
 const normalizeName = (value) =>
     String(value || "")
@@ -147,23 +101,7 @@ const normalizeDate = (dateValue) => {
     return parsedDate.toISOString().slice(0, 10);
 };
 
-const suggestedDefaultResolutionDate =
-    normalizeDate(props.defaultResolutionDate) || "";
 const suggestedDefaultNoaDate = normalizeDate(props.defaultNoaDate) || "";
-
-const suggestNoaDate = (resolutionDate) => {
-    if (!resolutionDate) {
-        return suggestedDefaultNoaDate;
-    }
-
-    if (!suggestedDefaultNoaDate) {
-        return resolutionDate;
-    }
-
-    return resolutionDate > suggestedDefaultNoaDate
-        ? resolutionDate
-        : suggestedDefaultNoaDate;
-};
 
 const selectRecipientName = (name) => {
     props.form.recipient_name = String(name || "");
@@ -237,19 +175,15 @@ const onRecipientTitleBlur = () => {
 };
 
 watch(
-    () => props.form.bac_resolution_id,
+    () => props.form.aoq_id,
     (id) => {
-        const resolution = props.eligibleResolutions?.find(
+        const aoq = props.eligibleAoqs?.find(
             (entry) => String(entry.id) === String(id),
         );
 
-        if (!resolution) {
-            props.form.selected_aoq_id = "";
+        if (!aoq) {
             props.form.noa_no = "";
             props.form.winner_supplier_name = "";
-            props.form.resolution_no = "";
-            props.form.resolution_date = "";
-            props.form.calculation_label = "";
 
             if (!props.form.noa_date) {
                 props.form.noa_date = suggestedDefaultNoaDate;
@@ -258,36 +192,9 @@ watch(
             return;
         }
 
-        const suggestedResolutionDate =
-            normalizeDate(resolution.resolution_date) ||
-            suggestedDefaultResolutionDate;
-
-        const projectOptions =
-            Array.isArray(resolution.remaining_aoqs) && resolution.remaining_aoqs.length > 0
-                ? resolution.remaining_aoqs
-                : Array.isArray(resolution.aoqs) && resolution.aoqs.length > 0
-                  ? resolution.aoqs
-                  : resolution.aoq
-                    ? [resolution.aoq]
-                    : [];
-
-        const hasSelectedProject = projectOptions.some(
-            (aoq) => String(aoq.id) === String(props.form.selected_aoq_id),
-        );
-
-        if (!hasSelectedProject) {
-            props.form.selected_aoq_id = projectOptions[0]?.id
-                ? String(projectOptions[0].id)
-                : "";
-        }
-
-        props.form.noa_date = suggestNoaDate(suggestedResolutionDate);
-        props.form.resolution_no = resolution.resolution_no || "";
-        props.form.resolution_date = suggestedResolutionDate;
-        props.form.calculation_label = normalizeCalculationLabel(
-            resolution.calculation_label,
-        );
-        props.form.winner_supplier_name = resolution.winner_supplier_name || "";
+        props.form.noa_no = aoq.rfq?.svp_no || "";
+        props.form.winner_supplier_name =
+            aoq.winner_supplier?.name || "";
 
         if (!props.form.recipient_name) {
             const supplier =
@@ -315,20 +222,6 @@ watch(
                 props.form.recipient_title = "Owner";
             }
         }
-    },
-    { immediate: true },
-);
-
-watch(
-    selectedProjectAoq,
-    (aoq) => {
-        if (!aoq) {
-            return;
-        }
-
-        props.form.noa_no = aoq.rfq?.svp_no || "";
-        props.form.winner_supplier_name =
-            aoq.winner_supplier?.name || props.form.winner_supplier_name || "";
     },
     { immediate: true },
 );
@@ -387,60 +280,33 @@ watch(
             <CardHeader>
                 <CardTitle class="flex items-center gap-2 text-base">
                     <Icon icon="lucide:link" class="h-4 w-4 text-primary" />
-                    Source BAC Resolution
+                    Source AOQ
                 </CardTitle>
             </CardHeader>
             <CardContent class="space-y-4">
                 <div class="space-y-2">
-                    <Label for="bac_resolution_id">BAC Resolution</Label>
-                    <select
-                        id="bac_resolution_id"
-                        :value="form.bac_resolution_id"
-                        @change="form.bac_resolution_id = $event.target.value"
-                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    <Label for="aoq_id">Abstract of Quotation (AOQ)</Label>
+                    <NativeSelect
+                        id="aoq_id"
+                        :model-value="form.aoq_id"
+                        @update:model-value="form.aoq_id = $event"
+                        class="w-full"
                     >
-                        <option value="">— Select BAC Resolution —</option>
+                        <option value="">— Select AOQ —</option>
                         <option
-                            v-for="resolution in eligibleResolutions"
-                            :key="resolution.id"
-                            :value="resolution.id"
-                        >
-                            {{ resolution.resolution_no }} —
-                            {{ resolution.project_name }}
-                        </option>
-                    </select>
-                    <p
-                        v-if="form.errors?.bac_resolution_id"
-                        class="text-xs text-destructive"
-                    >
-                        {{ form.errors.bac_resolution_id }}
-                    </p>
-                </div>
-
-                <div class="space-y-2">
-                    <Label for="selected_aoq_id">Project in Selected BAC</Label>
-                    <select
-                        id="selected_aoq_id"
-                        :value="form.selected_aoq_id"
-                        :disabled="!selectedResolution"
-                        @change="form.selected_aoq_id = $event.target.value"
-                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    >
-                        <option value="">— Select Project —</option>
-                        <option
-                            v-for="aoq in resolutionAoqOptions"
+                            v-for="aoq in eligibleAoqs"
                             :key="aoq.id"
                             :value="aoq.id"
                         >
                             {{ aoq.rfq?.svp_no || "No SVP" }} —
                             {{ aoq.rfq?.project_name || "Project" }}
                         </option>
-                    </select>
+                    </NativeSelect>
                     <p
-                        v-if="form.errors?.selected_aoq_id"
+                        v-if="form.errors?.aoq_id"
                         class="text-xs text-destructive"
                     >
-                        {{ form.errors.selected_aoq_id }}
+                        {{ form.errors.aoq_id }}
                     </p>
                 </div>
 
@@ -482,71 +348,6 @@ watch(
                             {{ form.errors.noa_date }}
                         </p>
                     </div>
-                </div>
-
-                <div class="grid gap-4 md:grid-cols-2">
-                    <div class="space-y-2">
-                        <Label for="resolution_no">Resolution Number</Label>
-                        <input
-                            id="resolution_no"
-                            v-model="form.resolution_no"
-                            readonly
-                            class="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm"
-                        />
-                        <p class="text-xs text-muted-foreground">
-                            Fetched from selected BAC Resolution.
-                        </p>
-                        <p
-                            v-if="form.errors?.resolution_no"
-                            class="text-xs text-destructive"
-                        >
-                            {{ form.errors.resolution_no }}
-                        </p>
-                    </div>
-
-                    <div class="space-y-2">
-                        <Label for="resolution_date">Resolution Date</Label>
-                        <input
-                            id="resolution_date"
-                            v-model="form.resolution_date"
-                            type="date"
-                            readonly
-                            class="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm"
-                        />
-                        <p class="text-xs text-muted-foreground">
-                            Fetched from selected BAC Resolution.
-                        </p>
-                        <p
-                            v-if="form.errors?.resolution_date"
-                            class="text-xs text-destructive"
-                        >
-                            {{ form.errors.resolution_date }}
-                        </p>
-                    </div>
-                </div>
-
-                <div class="space-y-2">
-                    <Label for="calculation_label">Calculated Label</Label>
-                    <select
-                        id="calculation_label"
-                        v-model="form.calculation_label"
-                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    >
-                        <option value="">— Select Calculated Label —</option>
-                        <option
-                            v-for="option in calculationLabelOptions"
-                            :key="option"
-                            :value="option"
-                        >
-                            {{ option }}
-                        </option>
-                    </select>
-                    <p
-                        v-if="form.errors?.calculation_label"
-                        class="text-xs text-destructive"
-                    >
-                        {{ form.errors.calculation_label }}
-                    </p>
                 </div>
 
                 <div class="space-y-2">
@@ -656,7 +457,7 @@ watch(
             </CardContent>
         </Card>
 
-        <Card v-if="selectedResolution">
+        <Card v-if="selectedAoq">
             <CardHeader>
                 <CardTitle class="text-base">Preview</CardTitle>
             </CardHeader>
@@ -664,41 +465,37 @@ watch(
                 <div>
                     <p class="text-muted-foreground">SVP No.</p>
                     <p class="font-medium">
-                        {{ selectedProjectAoq?.rfq?.svp_no || "—" }}
+                        {{ selectedAoq.rfq?.svp_no || "—" }}
                     </p>
                 </div>
                 <div>
                     <p class="text-muted-foreground">RFQ Date</p>
                     <p class="font-medium">
-                        {{ selectedProjectAoq?.rfq?.rfq_date || "—" }}
-                    </p>
-                </div>
-                <div>
-                    <p class="text-muted-foreground">Resolution Date</p>
-                    <p class="font-medium">
-                        {{ selectedResolution.resolution_date || "—" }}
+                        {{ selectedAoq.rfq?.rfq_date || "—" }}
                     </p>
                 </div>
                 <div>
                     <p class="text-muted-foreground">Project</p>
                     <p class="font-medium">
-                        {{
-                            selectedProjectAoq?.rfq?.project_name ||
-                            selectedResolution.project_name ||
-                            "—"
-                        }}
+                        {{ selectedAoq.rfq?.project_name || "—" }}
                     </p>
                 </div>
                 <div>
-                    <p class="text-muted-foreground">Amount</p>
+                    <p class="text-muted-foreground">Winner Amount</p>
                     <p class="font-medium">
-                        {{ selectedResolution.winner_amount || "—" }}
+                        {{ selectedAoq.winner_amount || "—" }}
                     </p>
                 </div>
                 <div>
                     <p class="text-muted-foreground">Winner Supplier</p>
                     <p class="font-medium">
-                        {{ selectedResolution.winner_supplier_name || "—" }}
+                        {{ selectedAoq.winner_supplier?.name || "—" }}
+                    </p>
+                </div>
+                <div>
+                    <p class="text-muted-foreground">Office</p>
+                    <p class="font-medium">
+                        {{ selectedAoq.rfq?.purchase_request?.office?.name || "—" }}
                     </p>
                 </div>
             </CardContent>

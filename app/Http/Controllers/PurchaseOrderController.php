@@ -24,6 +24,8 @@ class PurchaseOrderController extends Controller
     public function index(Request $request): Response
     {
         $query = PurchaseOrder::with([
+            'noa.aoq.rfq.purchaseRequest.office',
+            'noa.aoq.winnerSupplier',
             'noa.bacResolution.aoq.rfq.purchaseRequest.office',
             'noa.bacResolution.aoq.winnerSupplier',
         ])
@@ -32,13 +34,21 @@ class PurchaseOrderController extends Controller
                     ->orWhereHas('noa', function ($noa) use ($search): void {
                         $noa->where('noa_no', 'like', sprintf('%%%s%%', $search));
                     })
+                    ->orWhereHas('noa.aoq.rfq', function ($rfq) use ($search): void {
+                        $rfq->where('project_name', 'like', sprintf('%%%s%%', $search))
+                            ->orWhere('svp_no', 'like', sprintf('%%%s%%', $search));
+                    })
                     ->orWhereHas('noa.bacResolution', function ($br) use ($search): void {
                         $br->where('resolution_no', 'like', sprintf('%%%s%%', $search))
                             ->orWhere('project_name', 'like', sprintf('%%%s%%', $search));
                     });
             })
             ->when($request->office_id, function ($q, string $officeId): void {
-                $q->whereHas('noa.bacResolution.aoq.rfq.purchaseRequest', fn ($pr) => $pr->where('office_id', $officeId));
+                $q->where(function ($officeQuery) use ($officeId): void {
+                    $officeQuery
+                        ->whereHas('noa.aoq.rfq.purchaseRequest', fn ($pr) => $pr->where('office_id', $officeId))
+                        ->orWhereHas('noa.bacResolution.aoq.rfq.purchaseRequest', fn ($pr) => $pr->where('office_id', $officeId));
+                });
             })
             ->when($request->fiscal_year, function ($q, string $fiscalYear): void {
                 $q->whereYear('po_date', $fiscalYear);
@@ -92,7 +102,15 @@ class PurchaseOrderController extends Controller
         ])
             ->whereDoesntHave('purchaseOrder')
             ->latest('noa_date')
-            ->get();
+            ->get()
+            ->map(function (NOA $noa): NOA {
+                $aoq = $noa->aoq ?? $noa->bacResolution?->aoq;
+                $noa->setAttribute('_project_name', $aoq?->rfq?->project_name ?? '—');
+                $noa->setAttribute('_winner_supplier_name', $aoq?->winnerSupplier?->name ?? '—');
+                $noa->setAttribute('_office_name', $aoq?->rfq?->purchaseRequest?->office?->name ?? '—');
+
+                return $noa;
+            });
 
         $suggestedDate = $this->suggestNextWorkingDay()->toDateString();
 
@@ -134,7 +152,7 @@ class PurchaseOrderController extends Controller
             'bacResolution.aoq.winnerSupplier',
         ])->findOrFail($validated['noa_id']);
 
-        $aoq = $noa->aoq ?: $noa->bacResolution?->aoq;
+        $aoq = $noa->aoq ?? $noa->bacResolution?->aoq;
         $rfq = $aoq?->rfq;
         $winnerSupplierId = $aoq?->winner_supplier_id;
 
@@ -247,6 +265,8 @@ class PurchaseOrderController extends Controller
     public function show(PurchaseOrder $purchaseOrder): Response
     {
         $purchaseOrder->load([
+            'noa.aoq.rfq.purchaseRequest.office',
+            'noa.aoq.winnerSupplier',
             'noa.bacResolution.aoq.rfq.purchaseRequest.office',
             'noa.bacResolution.aoq.winnerSupplier',
             'items.rfqItem.purchaseRequestItem.emanatingItem.ppmpItem',
@@ -268,18 +288,23 @@ class PurchaseOrderController extends Controller
     public function printPdf(PurchaseOrder $purchaseOrder)
     {
         $purchaseOrder->load([
+            'noa.aoq.rfq.purchaseRequest.office',
+            'noa.aoq.winnerSupplier',
             'noa.bacResolution.aoq.rfq.purchaseRequest.office',
             'noa.bacResolution.aoq.winnerSupplier',
             'items.rfqItem.purchaseRequestItem.emanatingItem.ppmpItem',
         ]);
 
+        $noa = $purchaseOrder->noa;
+        $aoq = $noa?->aoq ?? $noa?->bacResolution?->aoq;
+
         return Pdf::view('pdf.purchase-order', [
             'purchaseOrder' => $purchaseOrder,
-            'noa' => $purchaseOrder->noa,
-            'resolution' => $purchaseOrder->noa?->bacResolution,
-            'aoq' => $purchaseOrder->noa?->bacResolution?->aoq,
-            'rfq' => $purchaseOrder->noa?->bacResolution?->aoq?->rfq,
-            'winnerSupplier' => $purchaseOrder->noa?->bacResolution?->aoq?->winnerSupplier,
+            'noa' => $noa,
+            'resolution' => $noa?->bacResolution,
+            'aoq' => $aoq,
+            'rfq' => $aoq?->rfq,
+            'winnerSupplier' => $aoq?->winnerSupplier,
         ])
             ->format('a4')
             ->name('PO-'.$purchaseOrder->po_no.'.pdf')

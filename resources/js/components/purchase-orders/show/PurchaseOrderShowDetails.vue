@@ -52,6 +52,7 @@ const formatCurrency = (value) =>
                 <p class="text-muted-foreground">Supplier</p>
                 <p class="font-medium">
                     {{
+                        purchaseOrder.noa?.aoq?.winner_supplier?.name ||
                         purchaseOrder.noa?.bac_resolution?.aoq?.winner_supplier
                             ?.name || "—"
                     }}
