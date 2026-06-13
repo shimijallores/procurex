@@ -51,7 +51,7 @@ class NOAController extends Controller
                 $q->whereHas('aoq', fn ($aoq) => $aoq->where('batch_id', $batchId));
             });
 
-        $noas = (clone $query)
+        $lengthAwarePaginator = (clone $query)
             ->latest('noa_date')
             ->paginate(10)
             ->withQueryString();
@@ -70,13 +70,13 @@ class NOAController extends Controller
         $offices = Office::orderBy('name')->get(['id', 'name']);
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear + 1))
-            ->mapWithKeys(fn ($year) => [$year => $year])
+            ->mapWithKeys(fn ($year): array => [$year => $year])
             ->reverse();
 
         $batches = Batch::orderByDesc('batch_no')->get(['id', 'batch_no']);
 
         return Inertia::render('NOAs/Index', [
-            'noas' => $noas,
+            'noas' => $lengthAwarePaginator,
             'stats' => $stats,
             'offices' => $offices,
             'fiscalYears' => $fiscalYears,
@@ -131,7 +131,7 @@ class NOAController extends Controller
         ]);
 
         $batch = Batch::with('aoqs')->findOrFail($validated['batch_id']);
-        $batchAoqIds = $batch->aoqs->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $batchAoqIds = $batch->aoqs->pluck('id')->map(fn ($id): int => (int) $id)->all();
 
         $errors = [];
         $created = [];
@@ -142,33 +142,33 @@ class NOAController extends Controller
                 $aoqId = (int) $noaData['aoq_id'];
 
                 if (! in_array($aoqId, $batchAoqIds, true)) {
-                    $errors["noas.$index.aoq_id"] = "AOQ #$aoqId is not in the selected batch.";
+                    $errors[sprintf('noas.%s.aoq_id', $index)] = sprintf('AOQ #%d is not in the selected batch.', $aoqId);
 
                     continue;
                 }
 
                 if (NOA::where('aoq_id', $aoqId)->exists()) {
-                    $errors["noas.$index.aoq_id"] = 'NOA already exists for this AOQ.';
+                    $errors[sprintf('noas.%s.aoq_id', $index)] = 'NOA already exists for this AOQ.';
 
                     continue;
                 }
 
                 if (! $this->isWorkingDay($noaData['noa_date'] ?? null)) {
-                    $errors["noas.$index.noa_date"] = 'NOA date must be a working day (not weekend/holiday).';
+                    $errors[sprintf('noas.%s.noa_date', $index)] = 'NOA date must be a working day (not weekend/holiday).';
 
                     continue;
                 }
 
                 $aoq = AOQ::with(['rfq', 'winnerSupplier'])->find($aoqId);
                 if (! $aoq?->rfq) {
-                    $errors["noas.$index.aoq_id"] = "AOQ #$aoqId has no linked RFQ.";
+                    $errors[sprintf('noas.%s.aoq_id', $index)] = sprintf('AOQ #%d has no linked RFQ.', $aoqId);
 
                     continue;
                 }
 
                 $noaNo = (string) ($aoq->rfq->svp_no ?? '');
                 if ($noaNo === '') {
-                    $errors["noas.$index.aoq_id"] = "Unable to generate NOA number from AOQ #$aoqId.";
+                    $errors[sprintf('noas.%s.aoq_id', $index)] = sprintf('Unable to generate NOA number from AOQ #%d.', $aoqId);
 
                     continue;
                 }
@@ -187,14 +187,14 @@ class NOAController extends Controller
                 $created[] = $noa;
             }
 
-            if (! empty($errors)) {
+            if ($errors !== []) {
                 DB::rollBack();
 
                 return redirect()->back()->withErrors($errors)->withInput();
             }
 
             DB::commit();
-        } catch (\Throwable $e) {
+        } catch (\Throwable $throwable) {
             DB::rollBack();
 
             return redirect()->back()->with('error', 'Failed to create Notices of Award. Please try again.');
@@ -203,7 +203,7 @@ class NOAController extends Controller
         $count = count($created);
 
         return redirect()->route('noas.index')
-            ->with('success', "$count Notice(s) of Award created successfully.");
+            ->with('success', $count . ' Notice(s) of Award created successfully.');
     }
 
     public function edit(NOA $noa): Response
@@ -272,9 +272,9 @@ class NOAController extends Controller
         ]);
     }
 
-    public function update(UpdateNOARequest $request, NOA $noa): RedirectResponse
+    public function update(UpdateNOARequest $updateNOARequest, NOA $noa): RedirectResponse
     {
-        $validated = $request->validated();
+        $validated = $updateNOARequest->validated();
 
         $noa->update([
             'noa_date' => $validated['noa_date'],
@@ -307,7 +307,7 @@ class NOAController extends Controller
         ]);
 
         return $pdf->setPaper('a4')
-            ->stream("NOAs-Batch-{$batch->batch_no}.pdf");
+            ->stream(sprintf('NOAs-Batch-%s.pdf', $batch->batch_no));
     }
 
     private function calculateWinnerAmount(AOQ $aoq): float
@@ -361,7 +361,7 @@ class NOAController extends Controller
             ->with('success', 'Notice of Award deleted successfully.');
     }
 
-    public function printPdf(NOA $noa)
+    public function printPdf(NOA $noa): \Spatie\LaravelPdf\PdfBuilder
     {
         $noa->load([
             'aoq.rfq.purchaseRequest.office',

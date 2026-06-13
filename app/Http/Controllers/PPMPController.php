@@ -46,7 +46,7 @@ class PPMPController extends Controller
         // Get unique offices and fiscal years for filters
         $offices = PPMP::distinct()
             ->pluck('office_id')
-            ->mapWithKeys(function ($officeId) {
+            ->mapWithKeys(function ($officeId): array {
                 $office = Office::find($officeId);
 
                 return [$officeId => $office?->name];
@@ -56,7 +56,7 @@ class PPMPController extends Controller
 
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear))
-            ->mapWithKeys(fn ($year) => [$year => $year])
+            ->mapWithKeys(fn ($year): array => [$year => $year])
             ->reverse();
 
         return Inertia::render('PPMPs/Index', [
@@ -104,7 +104,7 @@ class PPMPController extends Controller
                 (int) $validated['office_id']
             );
 
-            if (! $resolvedProjectCode) {
+            if (!$resolvedProjectCode instanceof \App\Models\ProjectCode) {
                 return back()->withErrors([
                     'xlsx_file' => 'Unable to match the PPMP project code to the selected office project codes.',
                 ]);
@@ -345,9 +345,9 @@ class PPMPController extends Controller
         );
     }
 
-    private function resolveProjectCodeFromXlsx(UploadedFile $xlsxFile, int $officeId): ?ProjectCode
+    private function resolveProjectCodeFromXlsx(UploadedFile $uploadedFile, int $officeId): ?ProjectCode
     {
-        $spreadsheet = IOFactory::load($xlsxFile->getRealPath());
+        $spreadsheet = IOFactory::load($uploadedFile->getRealPath());
         $cellValue = trim((string) $spreadsheet->getActiveSheet()->getCell('C4')->getFormattedValue());
 
         if ($cellValue === '') {

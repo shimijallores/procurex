@@ -42,7 +42,7 @@ class APPController extends Controller
         // Get unique offices and fiscal years for filters
         $offices = APP::distinct()
             ->pluck('office_id')
-            ->mapWithKeys(function ($officeId) {
+            ->mapWithKeys(function ($officeId): array {
                 $office = Office::find($officeId);
 
                 return [$officeId => $office?->name];
@@ -52,7 +52,7 @@ class APPController extends Controller
 
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear))
-            ->mapWithKeys(fn ($year) => [$year => $year])
+            ->mapWithKeys(fn ($year): array => [$year => $year])
             ->reverse();
 
         return Inertia::render('APPs/Index', [

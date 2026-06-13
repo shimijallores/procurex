@@ -44,7 +44,7 @@ class AcceptanceInspectionController extends Controller
                 $q->whereYear('created_at', $fiscalYear);
             });
 
-        $acceptanceInspections = (clone $query)->latest()->paginate(10)->withQueryString();
+        $lengthAwarePaginator = (clone $query)->latest()->paginate(10)->withQueryString();
 
         $stats = [
             'total' => (clone $query)->count(),
@@ -55,11 +55,11 @@ class AcceptanceInspectionController extends Controller
         $offices = Office::orderBy('name')->get(['id', 'name']);
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear + 1))
-            ->mapWithKeys(fn ($year) => [$year => $year])
+            ->mapWithKeys(fn ($year): array => [$year => $year])
             ->reverse();
 
         return Inertia::render('AcceptanceInspections/Index', [
-            'acceptanceInspections' => $acceptanceInspections,
+            'acceptanceInspections' => $lengthAwarePaginator,
             'stats' => $stats,
             'offices' => $offices,
             'fiscalYears' => $fiscalYears,
@@ -97,9 +97,9 @@ class AcceptanceInspectionController extends Controller
         ]);
     }
 
-    public function store(StoreAcceptanceInspectionRequest $request): RedirectResponse
+    public function store(StoreAcceptanceInspectionRequest $storeAcceptanceInspectionRequest): RedirectResponse
     {
-        $acceptanceInspection = AcceptanceInspection::create($request->validated());
+        $acceptanceInspection = AcceptanceInspection::create($storeAcceptanceInspectionRequest->validated());
 
         return redirect()->route('acceptance-inspections.show', $acceptanceInspection)
             ->with('success', 'Acceptance & Inspection report created successfully.');
@@ -118,9 +118,9 @@ class AcceptanceInspectionController extends Controller
         ]);
     }
 
-    public function update(UpdateAcceptanceInspectionRequest $request, AcceptanceInspection $acceptanceInspection): RedirectResponse
+    public function update(UpdateAcceptanceInspectionRequest $updateAcceptanceInspectionRequest, AcceptanceInspection $acceptanceInspection): RedirectResponse
     {
-        $acceptanceInspection->update($request->validated());
+        $acceptanceInspection->update($updateAcceptanceInspectionRequest->validated());
 
         return redirect()->route('acceptance-inspections.show', $acceptanceInspection)
             ->with('success', 'Acceptance & Inspection report updated successfully.');
@@ -134,7 +134,7 @@ class AcceptanceInspectionController extends Controller
             ->with('success', 'Acceptance & Inspection report deleted successfully.');
     }
 
-    public function printPdf(AcceptanceInspection $acceptanceInspection)
+    public function printPdf(AcceptanceInspection $acceptanceInspection): \Spatie\LaravelPdf\PdfBuilder
     {
         $acceptanceInspection->load([
             'purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest.office',

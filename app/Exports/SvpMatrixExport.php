@@ -103,16 +103,16 @@ class SvpMatrixExport implements FromArray, ShouldAutoSize, WithColumnFormatting
     public function registerEvents(): array
     {
         return [
-            AfterSheet::class => function (AfterSheet $event): void {
-                $sheet = $event->sheet->getDelegate();
-                $highestRow = $sheet->getHighestRow();
-                $highestColumn = $sheet->getHighestColumn();
+            AfterSheet::class => function (AfterSheet $afterSheet): void {
+                $worksheet = $afterSheet->sheet->getDelegate();
+                $highestRow = $worksheet->getHighestRow();
+                $highestColumn = $worksheet->getHighestColumn();
                 $range = sprintf('A1:%s%d', $highestColumn, $highestRow);
 
-                $sheet->getStyle($range)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+                $worksheet->getStyle($range)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
 
-                $sheet->freezePane('A2');
-                $sheet->getRowDimension(1)->setRowHeight(28);
+                $worksheet->freezePane('A2');
+                $worksheet->getRowDimension(1)->setRowHeight(28);
             },
         ];
     }

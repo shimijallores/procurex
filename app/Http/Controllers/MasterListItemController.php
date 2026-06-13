@@ -49,26 +49,26 @@ class MasterListItemController extends Controller
 
             $phpWord = $this->buildMasterListDocument($items, $request);
 
-            $settingsClass = 'PhpOffice\\PhpWord\\Settings';
+            $settingsClass = \PhpOffice\PhpWord\Settings::class;
             $settingsClass::setPdfRendererName($settingsClass::PDF_RENDERER_DOMPDF);
             $settingsClass::setPdfRendererPath(base_path('vendor/dompdf/dompdf'));
 
             $filePath = sys_get_temp_dir().DIRECTORY_SEPARATOR.uniqid('masterlist-pdf-', true).'.pdf';
             $fileName = sprintf('masterlist-%s-%04d.pdf', now()->format('Ymd'), random_int(0, 9999));
 
-            $ioFactoryClass = 'PhpOffice\\PhpWord\\IOFactory';
+            $ioFactoryClass = \PhpOffice\PhpWord\IOFactory::class;
             $ioFactoryClass::createWriter($phpWord, 'PDF')->save($filePath);
 
             return response()->file($filePath, [
                 'Content-Type' => 'application/pdf',
                 'Content-Disposition' => sprintf('inline; filename="%s"', $fileName),
             ])->deleteFileAfterSend(true);
-        } catch (\Throwable $exception) {
+        } catch (\Throwable $throwable) {
             Log::error('Master List PDF export failed', [
-                'message' => $exception->getMessage(),
-                'file' => $exception->getFile(),
-                'line' => $exception->getLine(),
-                'trace' => $exception->getTraceAsString(),
+                'message' => $throwable->getMessage(),
+                'file' => $throwable->getFile(),
+                'line' => $throwable->getLine(),
+                'trace' => $throwable->getTraceAsString(),
             ]);
 
             return redirect()->route('master-list-items.index')->with('error', 'Unable to generate PDF export at the moment.');
@@ -143,29 +143,29 @@ class MasterListItemController extends Controller
     {
         return MasterListItem::query()
             ->with(['masterListCategory', 'supplier'])
-            ->when($request->search, function (Builder $query, string $search): void {
-                $query->where(function (Builder $nestedQuery) use ($search): void {
-                    $nestedQuery->where('item_name', 'like', sprintf('%%%s%%', $search))
+            ->when($request->search, function (Builder $builder, string $search): void {
+                $builder->where(function (Builder $builder) use ($search): void {
+                    $builder->where('item_name', 'like', sprintf('%%%s%%', $search))
                         ->orWhere('search_key', 'like', sprintf('%%%s%%', $search))
-                        ->orWhereHas('masterListCategory', function (Builder $categoryQuery) use ($search): void {
-                            $categoryQuery->where('name', 'like', sprintf('%%%s%%', $search));
+                        ->orWhereHas('masterListCategory', function (Builder $builder) use ($search): void {
+                            $builder->where('name', 'like', sprintf('%%%s%%', $search));
                         })
-                        ->orWhereHas('supplier', function (Builder $supplierQuery) use ($search): void {
-                            $supplierQuery->where('name', 'like', sprintf('%%%s%%', $search));
+                        ->orWhereHas('supplier', function (Builder $builder) use ($search): void {
+                            $builder->where('name', 'like', sprintf('%%%s%%', $search));
                         });
                 });
             })
-            ->when($request->filled('category_id'), function (Builder $query) use ($request): void {
-                $query->where('master_list_category_id', $request->category_id);
+            ->when($request->filled('category_id'), function (Builder $builder) use ($request): void {
+                $builder->where('master_list_category_id', $request->category_id);
             })
-            ->when($request->phased_out !== null && $request->phased_out !== '', function (Builder $query) use ($request): void {
-                $query->where('is_phased_out', filter_var($request->phased_out, FILTER_VALIDATE_BOOLEAN));
+            ->when($request->phased_out !== null && $request->phased_out !== '', function (Builder $builder) use ($request): void {
+                $builder->where('is_phased_out', filter_var($request->phased_out, FILTER_VALIDATE_BOOLEAN));
             });
     }
 
     private function buildMasterListDocument($items, Request $request)
     {
-        $phpWordClass = 'PhpOffice\\PhpWord\\PhpWord';
+        $phpWordClass = \PhpOffice\PhpWord\PhpWord::class;
         $phpWord = new $phpWordClass;
         $section = $phpWord->addSection([
             'marginTop' => 900,
@@ -269,7 +269,7 @@ class MasterListItemController extends Controller
 
     private function ensurePhpWordInstalled(): void
     {
-        if (! class_exists('PhpOffice\\PhpWord\\PhpWord')) {
+        if (! class_exists(\PhpOffice\PhpWord\PhpWord::class)) {
             abort(500, 'PhpWord is required for Master List print export. Please install phpoffice/phpword.');
         }
     }

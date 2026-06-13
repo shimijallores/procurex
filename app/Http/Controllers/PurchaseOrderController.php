@@ -61,7 +61,7 @@ class PurchaseOrderController extends Controller
                 $q->whereHas('noa.aoq', fn ($aoq) => $aoq->where('batch_id', $batchId));
             });
 
-        $purchaseOrders = (clone $query)
+        $lengthAwarePaginator = (clone $query)
             ->latest('po_date')
             ->paginate(10)
             ->withQueryString();
@@ -78,13 +78,13 @@ class PurchaseOrderController extends Controller
         $offices = Office::orderBy('name')->get(['id', 'name']);
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear + 1))
-            ->mapWithKeys(fn ($year) => [$year => $year])
+            ->mapWithKeys(fn ($year): array => [$year => $year])
             ->reverse();
 
         $batches = Batch::orderByDesc('batch_no')->get(['id', 'batch_no']);
 
         return Inertia::render('PurchaseOrders/Index', [
-            'purchaseOrders' => $purchaseOrders,
+            'purchaseOrders' => $lengthAwarePaginator,
             'stats' => $stats,
             'offices' => $offices,
             'fiscalYears' => $fiscalYears,
@@ -165,9 +165,9 @@ class PurchaseOrderController extends Controller
         ]);
     }
 
-    public function store(StorePurchaseOrderRequest $request): RedirectResponse
+    public function store(StorePurchaseOrderRequest $storePurchaseOrderRequest): RedirectResponse
     {
-        $validated = $request->validated();
+        $validated = $storePurchaseOrderRequest->validated();
 
         $noa = NOA::with([
             'aoq.rfq.purchaseRequest.office',
@@ -196,8 +196,8 @@ class PurchaseOrderController extends Controller
             ]);
         }
 
-        $allowedRfqItemIds = $rfq->items->pluck('id')->map(fn ($id) => (int) $id)->all();
-        $submittedRfqItemIds = collect($validated['items'])->pluck('rfq_item_id')->map(fn ($id) => (int) $id)->all();
+        $allowedRfqItemIds = $rfq->items->pluck('id')->map(fn ($id): int => (int) $id)->all();
+        $submittedRfqItemIds = collect($validated['items'])->pluck('rfq_item_id')->map(fn ($id): int => (int) $id)->all();
         $hasInvalidItems = collect($submittedRfqItemIds)->diff($allowedRfqItemIds)->isNotEmpty();
         $hasMissingItems = collect($allowedRfqItemIds)->diff($submittedRfqItemIds)->isNotEmpty();
 
@@ -217,9 +217,9 @@ class PurchaseOrderController extends Controller
         }
 
         $winnerSupplierItems = $winnerQuote->supplierItems
-            ->keyBy(fn ($item) => (int) $item->rfq_item_id);
+            ->keyBy(fn ($item): int => (int) $item->rfq_item_id);
 
-        $rfqItemsById = $rfq->items->keyBy(fn ($item) => (int) $item->id);
+        $rfqItemsById = $rfq->items->keyBy(fn ($item): int => (int) $item->id);
 
         $computedItems = collect($validated['items'])
             ->map(function (array $item) use ($winnerSupplierItems, $rfqItemsById): array {
@@ -266,12 +266,12 @@ class PurchaseOrderController extends Controller
                 'remarks' => $validated['remarks'] ?? null,
             ]);
 
-            foreach ($computedItems as $item) {
+            foreach ($computedItems as $computedItem) {
                 $purchaseOrder->items()->create([
-                    'rfq_item_id' => $item['rfq_item_id'],
-                    'quantity_snapshot' => $item['quantity_snapshot'],
-                    'unit_cost_snapshot' => $item['unit_cost_snapshot'],
-                    'amount_snapshot' => $item['amount_snapshot'],
+                    'rfq_item_id' => $computedItem['rfq_item_id'],
+                    'quantity_snapshot' => $computedItem['quantity_snapshot'],
+                    'unit_cost_snapshot' => $computedItem['unit_cost_snapshot'],
+                    'amount_snapshot' => $computedItem['amount_snapshot'],
                 ]);
             }
 
@@ -281,7 +281,7 @@ class PurchaseOrderController extends Controller
             );
 
             DB::commit();
-        } catch (\Throwable $e) {
+        } catch (\Throwable $throwable) {
             DB::rollBack();
 
             return redirect()->back()->with('error', 'Failed to create Purchase Order. Please try again.');
@@ -319,9 +319,9 @@ class PurchaseOrderController extends Controller
         ]);
     }
 
-    public function update(UpdatePurchaseOrderRequest $request, PurchaseOrder $purchaseOrder): RedirectResponse
+    public function update(UpdatePurchaseOrderRequest $updatePurchaseOrderRequest, PurchaseOrder $purchaseOrder): RedirectResponse
     {
-        $validated = $request->validated();
+        $validated = $updatePurchaseOrderRequest->validated();
 
         DB::beginTransaction();
         try {
@@ -361,7 +361,7 @@ class PurchaseOrderController extends Controller
             }
 
             DB::commit();
-        } catch (\Throwable $e) {
+        } catch (\Throwable $throwable) {
             DB::rollBack();
 
             return redirect()->back()->with('error', 'Failed to update Purchase Order. Please try again.');
@@ -393,7 +393,7 @@ class PurchaseOrderController extends Controller
         ]);
 
         return $pdf->setPaper('a4')
-            ->stream("POs-Batch-{$batch->batch_no}.pdf");
+            ->stream(sprintf('POs-Batch-%s.pdf', $batch->batch_no));
     }
 
     public function show(PurchaseOrder $purchaseOrder): Response
@@ -419,7 +419,7 @@ class PurchaseOrderController extends Controller
             ->with('success', 'Purchase Order deleted successfully.');
     }
 
-    public function printPdf(PurchaseOrder $purchaseOrder)
+    public function printPdf(PurchaseOrder $purchaseOrder): \Spatie\LaravelPdf\PdfBuilder
     {
         $purchaseOrder->load([
             'noa.aoq.rfq.purchaseRequest.office',
@@ -466,7 +466,7 @@ class PurchaseOrderController extends Controller
 
         do {
             $poNo = $prefix.str_pad((string) $next, 4, '0', STR_PAD_LEFT);
-            $next++;
+            ++$next;
         } while (PurchaseOrder::where('po_no', $poNo)->exists());
 
         return $poNo;

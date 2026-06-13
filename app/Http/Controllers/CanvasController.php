@@ -112,7 +112,7 @@ class CanvasController extends Controller
 
                 $matchedMasterListItem = $this->findBestMasterListItemMatch($emanatingItem, $masterListItems);
 
-                if (! $matchedMasterListItem) {
+                if (!$matchedMasterListItem instanceof \App\Models\MasterListItem) {
                     $allItemsAutoPriced = false;
                     $missingItems[] = (string) ($emanatingItem->name ?: $emanatingItem->ppmpItem?->name ?: ('Item #'.$emanatingItem->id));
 
@@ -235,14 +235,14 @@ class CanvasController extends Controller
 
             $selections = $request->input('selections', []);
 
-            foreach ($selections as $sel) {
-                $subtotal = (float) $sel['quantity'] * (float) $sel['unit_price'];
+            foreach ($selections as $selection) {
+                $subtotal = (float) $selection['quantity'] * (float) $selection['unit_price'];
 
                 CanvasItemSelection::create([
                     'canvas_item_id' => $canvasItem->id,
-                    'master_list_item_id' => $sel['master_list_item_id'],
-                    'quantity' => $sel['quantity'],
-                    'unit_price' => $sel['unit_price'],
+                    'master_list_item_id' => $selection['master_list_item_id'],
+                    'quantity' => $selection['quantity'],
+                    'unit_price' => $selection['unit_price'],
                     'subtotal' => $subtotal,
                 ]);
             }
@@ -544,7 +544,7 @@ class CanvasController extends Controller
     {
         $normalized = mb_strtolower(trim($text));
         $normalized = str_replace("\u{00A0}", ' ', $normalized);
-        $normalized = str_replace(['’', '“', '”', "\t", "\r", "\n"], ['\'', '"', '"', ' ', ' ', ' '], $normalized);
+        $normalized = str_replace(['’', '“', '”', "\t", "\r", "\n"], ["'", '"', '"', ' ', ' ', ' '], $normalized);
         $normalized = preg_replace('/[^\pL\pN\s]/u', ' ', $normalized) ?? $normalized;
         $normalized = preg_replace('/\s+/u', ' ', $normalized) ?? $normalized;
 

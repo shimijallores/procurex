@@ -60,7 +60,7 @@ class BACResolutionController extends Controller
                 });
             });
 
-        $resolutions = (clone $query)
+        $lengthAwarePaginator = (clone $query)
             ->latest('resolution_date')
             ->paginate(10)
             ->withQueryString();
@@ -75,11 +75,11 @@ class BACResolutionController extends Controller
         $batches = Batch::orderByDesc('batch_no')->get(['id', 'batch_no']);
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear + 1))
-            ->mapWithKeys(fn ($year) => [$year => $year])
+            ->mapWithKeys(fn ($year): array => [$year => $year])
             ->reverse();
 
         return Inertia::render('BACResolutions/Index', [
-            'resolutions' => $resolutions,
+            'resolutions' => $lengthAwarePaginator,
             'stats' => $stats,
             'offices' => $offices,
             'batches' => $batches,
@@ -131,9 +131,9 @@ class BACResolutionController extends Controller
         ]);
     }
 
-    public function store(StoreBACResolutionRequest $request): RedirectResponse
+    public function store(StoreBACResolutionRequest $storeBACResolutionRequest): RedirectResponse
     {
-        $validated = $request->validated();
+        $validated = $storeBACResolutionRequest->validated();
 
         if (! $this->isWorkingDay($validated['resolution_date'] ?? null)) {
             return redirect()->back()->withErrors([
@@ -179,7 +179,7 @@ class BACResolutionController extends Controller
             }
 
             $primaryAoq = $aoqs->first();
-            $winnerAmount = $aoqs->sum(fn (AOQ $aoq) => $this->calculateWinnerAmount($aoq));
+            $winnerAmount = $aoqs->sum(fn (AOQ $aoq): float => $this->calculateWinnerAmount($aoq));
             $calculationLabel = 'Lowest/Single Calculated';
 
             $projectName = (string) ($validated['project_name'] ?? 'Batch of Projects');
@@ -222,7 +222,7 @@ class BACResolutionController extends Controller
                 ->update(['bac_resolution_id' => $resolution->id]);
 
             DB::commit();
-        } catch (\Throwable $e) {
+        } catch (\Throwable $throwable) {
             DB::rollBack();
 
             return redirect()->back()->with('error', 'Failed to create BAC Resolution. Please try again.');
@@ -251,13 +251,13 @@ class BACResolutionController extends Controller
         ]);
     }
 
-    public function update(UpdateBACResolutionRequest $request, BACResolution $bacResolution): RedirectResponse
+    public function update(UpdateBACResolutionRequest $updateBACResolutionRequest, BACResolution $bacResolution): RedirectResponse
     {
         if ($bacResolution->isFinalized()) {
             return redirect()->back()->with('error', 'Finalized BAC Resolution can no longer be edited.');
         }
 
-        $validated = $request->validated();
+        $validated = $updateBACResolutionRequest->validated();
 
         if (! $this->isWorkingDay($validated['resolution_date'] ?? null)) {
             return redirect()->back()->withErrors([
@@ -299,7 +299,7 @@ class BACResolutionController extends Controller
             ->with('success', 'BAC Resolution deleted successfully.');
     }
 
-    public function printPdf(BACResolution $bacResolution)
+    public function printPdf(BACResolution $bacResolution): \Spatie\LaravelPdf\PdfBuilder
     {
         $bacResolution->load([
             'aoqs.rfq.purchaseRequest.office',
@@ -372,7 +372,7 @@ class BACResolutionController extends Controller
                     'quantity' => $quantity,
                     'unit' => (string) ($item->unit ?? ''),
                     'particulars' => (string) ($item->item_name ?? ''),
-                    'approved_budget' => (float) $approvedBudget,
+                    'approved_budget' => $approvedBudget,
                     'supplier_columns' => $supplierColumns,
                 ];
             })->values();
@@ -415,7 +415,7 @@ class BACResolutionController extends Controller
 
         do {
             $resolutionNo = sprintf('%s%04d', $prefix, $next);
-            $next++;
+            ++$next;
         } while (BACResolution::where('resolution_no', $resolutionNo)->exists());
 
         return $resolutionNo;
@@ -497,7 +497,7 @@ class BACResolutionController extends Controller
             }
 
             if ($hasAtLeastOnePrice) {
-                $count++;
+                ++$count;
             }
         }
 
@@ -544,7 +544,7 @@ class BACResolutionController extends Controller
             ];
         }
 
-        usort($supplierTotals, fn ($left, $right) => $left['total_amount'] <=> $right['total_amount']);
+        usort($supplierTotals, fn (array $left, array $right): int => $left['total_amount'] <=> $right['total_amount']);
 
         $count = count($supplierTotals);
         $winner = $count > 0 ? $supplierTotals[0] : null;

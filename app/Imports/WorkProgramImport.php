@@ -53,7 +53,7 @@ class WorkProgramImport
      */
     private function parseWorkProgramDocxRows(string $absolutePath): array
     {
-        if (class_exists('PhpOffice\\PhpWord\\IOFactory')) {
+        if (class_exists(\PhpOffice\PhpWord\IOFactory::class)) {
             $parsedUsingPhpWord = $this->parseWorkProgramWithPhpWord($absolutePath);
 
             if ($parsedUsingPhpWord !== []) {
@@ -69,7 +69,7 @@ class WorkProgramImport
      */
     private function parseWorkProgramWithPhpWord(string $absolutePath): array
     {
-        $ioFactoryClass = 'PhpOffice\\PhpWord\\IOFactory';
+        $ioFactoryClass = \PhpOffice\PhpWord\IOFactory::class;
 
         try {
             $phpWord = $ioFactoryClass::load($absolutePath);
@@ -86,7 +86,7 @@ class WorkProgramImport
                     continue;
                 }
 
-                $tableIndex++;
+                ++$tableIndex;
 
                 $rows = [];
 
@@ -106,7 +106,7 @@ class WorkProgramImport
                     }
                 }
 
-                $parsedRows = $this->extractRowsFromThreeColumnTable($rows, sprintf('phpword-table-%d', $tableIndex));
+                $parsedRows = $this->extractRowsFromThreeColumnTable($rows);
 
                 if ($parsedRows !== []) {
                     $collectedRows = $parsedRows;
@@ -154,38 +154,38 @@ class WorkProgramImport
      */
     private function parseWorkProgramWithDocumentXml(string $absolutePath): array
     {
-        $zip = new ZipArchive;
+        $zipArchive = new ZipArchive;
 
-        if ($zip->open($absolutePath) !== true) {
+        if ($zipArchive->open($absolutePath) !== true) {
             return [];
         }
 
-        $xmlContent = $zip->getFromName('word/document.xml');
-        $zip->close();
+        $xmlContent = $zipArchive->getFromName('word/document.xml');
+        $zipArchive->close();
 
         if (! is_string($xmlContent) || $xmlContent === '') {
             return [];
         }
 
-        $dom = new DOMDocument;
-        $loaded = @$dom->loadXML($xmlContent);
+        $domDocument = new DOMDocument;
+        $loaded = @$domDocument->loadXML($xmlContent);
 
         if (! $loaded) {
             return [];
         }
 
-        $xpath = new DOMXPath($dom);
-        $xpath->registerNamespace('w', 'http://schemas.openxmlformats.org/wordprocessingml/2006/main');
+        $domxPath = new DOMXPath($domDocument);
+        $domxPath->registerNamespace('w', 'http://schemas.openxmlformats.org/wordprocessingml/2006/main');
 
-        $tables = $xpath->query('//w:tbl');
+        $tables = $domxPath->query('//w:tbl');
 
         if (! $tables) {
             return [];
         }
 
-        foreach ($tables as $tableIndex => $table) {
+        foreach ($tables as $table) {
             $rows = [];
-            $rowNodes = $xpath->query('.//w:tr', $table);
+            $rowNodes = $domxPath->query('.//w:tr', $table);
 
             if (! $rowNodes) {
                 continue;
@@ -193,14 +193,14 @@ class WorkProgramImport
 
             foreach ($rowNodes as $rowNode) {
                 $cells = [];
-                $cellNodes = $xpath->query('./w:tc', $rowNode);
+                $cellNodes = $domxPath->query('./w:tc', $rowNode);
 
                 if (! $cellNodes) {
                     continue;
                 }
 
                 foreach ($cellNodes as $cellNode) {
-                    $textNodes = $xpath->query('.//w:t', $cellNode);
+                    $textNodes = $domxPath->query('.//w:t', $cellNode);
                     $parts = [];
 
                     if ($textNodes) {
@@ -217,7 +217,7 @@ class WorkProgramImport
                 }
             }
 
-            $parsedRows = $this->extractRowsFromThreeColumnTable($rows, sprintf('document-xml-table-%d', $tableIndex + 1));
+            $parsedRows = $this->extractRowsFromThreeColumnTable($rows);
 
             if ($parsedRows !== []) {
                 return $parsedRows;
@@ -231,7 +231,7 @@ class WorkProgramImport
      * @param  array<int, array<int, string>>  $rows
      * @return array<int, array{item_name:string, quantity:float|null, unit:string, amount:float|null}>
      */
-    private function extractRowsFromThreeColumnTable(array $rows, string $source): array
+    private function extractRowsFromThreeColumnTable(array $rows): array
     {
         $headerIndex = null;
         $headerOffset = 0;
@@ -239,11 +239,11 @@ class WorkProgramImport
 
         foreach ($rows as $index => $row) {
             $upperRow = array_map(
-                fn ($cell): string => strtoupper(trim((string) $cell)),
+                fn (string $cell): string => strtoupper(trim($cell)),
                 $row,
             );
 
-            for ($offset = 0; $offset <= max(0, count($upperRow) - 3); $offset++) {
+            for ($offset = 0; $offset <= max(0, count($upperRow) - 3); ++$offset) {
                 $col1 = (string) ($upperRow[$offset] ?? '');
                 $col2 = (string) ($upperRow[$offset + 1] ?? '');
                 $col3 = (string) ($upperRow[$offset + 2] ?? '');
@@ -281,8 +281,9 @@ class WorkProgramImport
         unset($row);
 
         $items = [];
+        $counter = count($rows);
 
-        for ($i = $startIndex; $i < count($rows); $i++) {
+        for ($i = $startIndex; $i < $counter; ++$i) {
             $row = $rows[$i];
             $itemName = trim((string) ($row[$nameColumnIndex] ?? ''));
             $quantityUnitRaw = trim((string) ($row[$quantityUnitColumnIndex] ?? ''));
@@ -347,10 +348,10 @@ class WorkProgramImport
 
         if (preg_match('/^([0-9][0-9,\s]*(?:\.[0-9]+)?)\s*(.*)$/u', $normalized, $matches) === 1) {
             $quantityRaw = isset($matches[1])
-                ? (preg_replace('/[,\s]/u', '', (string) $matches[1]) ?? '')
+                ? (preg_replace('/[,\s]/u', '', $matches[1]) ?? '')
                 : '';
             $quantity = is_numeric($quantityRaw) ? (float) $quantityRaw : null;
-            $unit = isset($matches[2]) ? trim((string) $matches[2]) : '';
+            $unit = isset($matches[2]) ? trim($matches[2]) : '';
 
             return [
                 'quantity' => $quantity,

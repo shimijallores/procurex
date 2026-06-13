@@ -61,30 +61,30 @@ class ProjectBriefImport
      */
     private function parseWithDocumentXml(string $absolutePath): array
     {
-        $zip = new ZipArchive;
+        $zipArchive = new ZipArchive;
 
-        if ($zip->open($absolutePath) !== true) {
+        if ($zipArchive->open($absolutePath) !== true) {
             return [];
         }
 
-        $xmlContent = $zip->getFromName('word/document.xml');
-        $zip->close();
+        $xmlContent = $zipArchive->getFromName('word/document.xml');
+        $zipArchive->close();
 
         if (! is_string($xmlContent) || $xmlContent === '') {
             return [];
         }
 
-        $dom = new DOMDocument;
-        $loaded = @$dom->loadXML($xmlContent);
+        $domDocument = new DOMDocument;
+        $loaded = @$domDocument->loadXML($xmlContent);
 
         if (! $loaded) {
             return [];
         }
 
-        $xpath = new DOMXPath($dom);
-        $xpath->registerNamespace('w', 'http://schemas.openxmlformats.org/wordprocessingml/2006/main');
+        $domxPath = new DOMXPath($domDocument);
+        $domxPath->registerNamespace('w', 'http://schemas.openxmlformats.org/wordprocessingml/2006/main');
 
-        $tables = $xpath->query('//w:tbl');
+        $tables = $domxPath->query('//w:tbl');
 
         if (! $tables) {
             return [];
@@ -92,7 +92,7 @@ class ProjectBriefImport
 
         foreach ($tables as $table) {
             $rows = [];
-            $rowNodes = $xpath->query('.//w:tr', $table);
+            $rowNodes = $domxPath->query('.//w:tr', $table);
 
             if (! $rowNodes) {
                 continue;
@@ -100,14 +100,14 @@ class ProjectBriefImport
 
             foreach ($rowNodes as $rowNode) {
                 $cells = [];
-                $cellNodes = $xpath->query('./w:tc', $rowNode);
+                $cellNodes = $domxPath->query('./w:tc', $rowNode);
 
                 if (! $cellNodes) {
                     continue;
                 }
 
                 foreach ($cellNodes as $cellNode) {
-                    $textNodes = $xpath->query('.//w:t', $cellNode);
+                    $textNodes = $domxPath->query('.//w:t', $cellNode);
                     $parts = [];
 
                     if ($textNodes) {
@@ -145,11 +145,11 @@ class ProjectBriefImport
 
         foreach ($rows as $index => $row) {
             $upperRow = array_map(
-                fn ($cell): string => strtoupper(trim((string) $cell)),
+                fn (string $cell): string => strtoupper(trim($cell)),
                 $row,
             );
 
-            for ($offset = 0; $offset <= max(0, count($upperRow) - 4); $offset++) {
+            for ($offset = 0; $offset <= max(0, count($upperRow) - 4); ++$offset) {
                 $colA = (string) ($upperRow[$offset] ?? '');
                 $colB = (string) ($upperRow[$offset + 1] ?? '');
                 $colC = (string) ($upperRow[$offset + 2] ?? '');
@@ -177,8 +177,9 @@ class ProjectBriefImport
         $amountColumnIndex = $headerOffset + 3;
 
         $items = [];
+        $counter = count($rows);
 
-        for ($i = $headerIndex + 1; $i < count($rows); $i++) {
+        for ($i = $headerIndex + 1; $i < $counter; ++$i) {
             $row = $rows[$i];
             $itemName = trim((string) ($row[$descriptionColumnIndex] ?? ''));
             $quantityUnitRaw = trim((string) ($row[$quantityColumnIndex] ?? ''));
@@ -240,10 +241,10 @@ class ProjectBriefImport
 
         if (preg_match('/^([0-9][0-9,\s]*(?:\.[0-9]+)?)\s*(.*)$/u', $normalized, $matches) === 1) {
             $quantityRaw = isset($matches[1])
-                ? (preg_replace('/[,\s]/u', '', (string) $matches[1]) ?? '')
+                ? (preg_replace('/[,\s]/u', '', $matches[1]) ?? '')
                 : '';
             $quantity = is_numeric($quantityRaw) ? (float) $quantityRaw : null;
-            $unit = isset($matches[2]) ? trim((string) $matches[2]) : '';
+            $unit = isset($matches[2]) ? trim($matches[2]) : '';
 
             return [
                 'quantity' => $quantity,

@@ -42,7 +42,7 @@ class PurchaseRequestMatrixController extends Controller
         $defaultPrAdminId = $prAdminUsers->count() === 1 ? (int) $prAdminUsers->first()->id : null;
         $defaultBudgetingAdminId = $budgetingAdminUsers->count() === 1 ? (int) $budgetingAdminUsers->first()->id : null;
 
-        $matrixRows = $this->buildMatrixQuery($request)
+        $lengthAwarePaginator = $this->buildMatrixQuery($request)
             ->latest('id')
             ->paginate(10)
             ->withQueryString()
@@ -54,7 +54,7 @@ class PurchaseRequestMatrixController extends Controller
             ->reverse();
 
         return Inertia::render('PurchaseRequestMatrix/Index', [
-            'matrixRows' => $matrixRows,
+            'matrixRows' => $lengthAwarePaginator,
             'offices' => Office::query()->orderBy('name')->get(['id', 'name']),
             'accounts' => Account::query()->orderBy('name')->get(['id', 'name']),
             'fiscalYears' => $fiscalYears,
@@ -275,32 +275,32 @@ class PurchaseRequestMatrixController extends Controller
             ])
             ->whereIn('status', ['draft', 'approved', 'returned'])
             ->whereHas('items')
-            ->when($request->filled('office_id'), function (Builder $query) use ($selectedOfficeId): void {
-                $query->where('office_id', $selectedOfficeId);
+            ->when($request->filled('office_id'), function (Builder $builder) use ($selectedOfficeId): void {
+                $builder->where('office_id', $selectedOfficeId);
             })
-            ->when($request->filled('account_id'), function (Builder $query) use ($selectedAccountId): void {
-                $query->whereHas('emanating', function (Builder $emanatingQuery) use ($selectedAccountId): void {
-                    $emanatingQuery->where('account_id', $selectedAccountId);
+            ->when($request->filled('account_id'), function (Builder $builder) use ($selectedAccountId): void {
+                $builder->whereHas('emanating', function (Builder $builder) use ($selectedAccountId): void {
+                    $builder->where('account_id', $selectedAccountId);
                 });
             })
-            ->when($selectedFiscalYear !== '', function (Builder $query) use ($selectedFiscalYear): void {
-                $query->whereHas('emanating', function (Builder $emanatingQuery) use ($selectedFiscalYear): void {
-                    $emanatingQuery->where('fiscal_year', $selectedFiscalYear);
+            ->when($selectedFiscalYear !== '', function (Builder $builder) use ($selectedFiscalYear): void {
+                $builder->whereHas('emanating', function (Builder $builder) use ($selectedFiscalYear): void {
+                    $builder->where('fiscal_year', $selectedFiscalYear);
                 });
             })
-            ->when($request->search, function (Builder $query, string $search): void {
-                $query->where(function (Builder $nestedQuery) use ($search): void {
-                    $nestedQuery->where('pr_no', 'like', sprintf('%%%s%%', $search))
-                        ->orWhereHas('office', function (Builder $officeQuery) use ($search): void {
-                            $officeQuery->where('name', 'like', sprintf('%%%s%%', $search));
+            ->when($request->search, function (Builder $builder, string $search): void {
+                $builder->where(function (Builder $builder) use ($search): void {
+                    $builder->where('pr_no', 'like', sprintf('%%%s%%', $search))
+                        ->orWhereHas('office', function (Builder $builder) use ($search): void {
+                            $builder->where('name', 'like', sprintf('%%%s%%', $search));
                         })
-                        ->orWhereHas('emanating', function (Builder $emanatingQuery) use ($search): void {
-                            $emanatingQuery->where('emanating_no', 'like', sprintf('%%%s%%', $search))
-                                ->orWhereHas('account', function (Builder $accountQuery) use ($search): void {
-                                    $accountQuery->where('name', 'like', sprintf('%%%s%%', $search));
+                        ->orWhereHas('emanating', function (Builder $builder) use ($search): void {
+                            $builder->where('emanating_no', 'like', sprintf('%%%s%%', $search))
+                                ->orWhereHas('account', function (Builder $builder) use ($search): void {
+                                    $builder->where('name', 'like', sprintf('%%%s%%', $search));
                                 })
-                                ->orWhereHas('project', function (Builder $projectQuery) use ($search): void {
-                                    $projectQuery->where('name', 'like', sprintf('%%%s%%', $search));
+                                ->orWhereHas('project', function (Builder $builder) use ($search): void {
+                                    $builder->where('name', 'like', sprintf('%%%s%%', $search));
                                 });
                         });
                 });

@@ -25,7 +25,7 @@ class UpdateFundRequest extends FormRequest
      */
     public function rules(): array
     {
-        $rules = [
+        return [
             'office_id' => ['required', 'exists:offices,id'],
             'project_code_id' => [
                 'nullable',
@@ -40,8 +40,6 @@ class UpdateFundRequest extends FormRequest
             'project_brief' => ['nullable', 'file', 'mimes:docx', 'max:51200'],
             'project_proposal' => ['nullable', 'file', 'mimes:docx', 'max:51200'],
         ];
-
-        return $rules;
     }
 
     public function withValidator($validator): void

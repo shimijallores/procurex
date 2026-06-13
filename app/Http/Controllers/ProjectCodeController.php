@@ -47,9 +47,9 @@ class ProjectCodeController extends Controller
         ]);
     }
 
-    public function store(StoreProjectCodeRequest $request): RedirectResponse
+    public function store(StoreProjectCodeRequest $storeProjectCodeRequest): RedirectResponse
     {
-        ProjectCode::create($request->validated());
+        ProjectCode::create($storeProjectCodeRequest->validated());
 
         return redirect()->route('project-codes.index')
             ->with('success', 'Project code created successfully.');
@@ -70,9 +70,9 @@ class ProjectCodeController extends Controller
         ]);
     }
 
-    public function update(UpdateProjectCodeRequest $request, ProjectCode $projectCode): RedirectResponse
+    public function update(UpdateProjectCodeRequest $updateProjectCodeRequest, ProjectCode $projectCode): RedirectResponse
     {
-        $projectCode->update($request->validated());
+        $projectCode->update($updateProjectCodeRequest->validated());
 
         return redirect()->route('project-codes.index')
             ->with('success', 'Project code updated successfully.');

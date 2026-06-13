@@ -68,9 +68,9 @@ class AccountController extends Controller
         return Inertia::render('Accounts/Create');
     }
 
-    public function store(StoreAccountRequest $request): RedirectResponse
+    public function store(StoreAccountRequest $storeAccountRequest): RedirectResponse
     {
-        Account::create($request->validated());
+        Account::create($storeAccountRequest->validated());
 
         return redirect()->route('accounts.index')
             ->with('success', 'Account created successfully.');
@@ -90,9 +90,9 @@ class AccountController extends Controller
         ]);
     }
 
-    public function update(UpdateAccountRequest $request, Account $account): RedirectResponse
+    public function update(UpdateAccountRequest $updateAccountRequest, Account $account): RedirectResponse
     {
-        $account->update($request->validated());
+        $account->update($updateAccountRequest->validated());
 
         return redirect()->route('accounts.index')
             ->with('success', 'Account updated successfully.');

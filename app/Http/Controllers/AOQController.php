@@ -49,7 +49,7 @@ class AOQController extends Controller
                 $q->where('batch_id', $batchId);
             });
 
-        $aoqs = (clone $query)
+        $lengthAwarePaginator = (clone $query)
             ->latest('aoq_date')
             ->paginate(10)
             ->withQueryString()
@@ -67,10 +67,11 @@ class AOQController extends Controller
         foreach ($all as $aoq) {
             $calculation = $this->calculateSupplierTotals($aoq->rfq);
             if ($calculation['calculation_mode'] === 'single_calculated') {
-                $singleCalculated++;
+                ++$singleCalculated;
             }
+
             if ($calculation['calculation_mode'] === 'lowest_calculated') {
-                $lowestCalculated++;
+                ++$lowestCalculated;
             }
         }
 
@@ -87,11 +88,11 @@ class AOQController extends Controller
             ->get(['id', 'batch_no']);
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear + 1))
-            ->mapWithKeys(fn ($year) => [$year => $year])
+            ->mapWithKeys(fn ($year): array => [$year => $year])
             ->reverse();
 
         return Inertia::render('AOQs/Index', [
-            'aoqs' => $aoqs,
+            'aoqs' => $lengthAwarePaginator,
             'stats' => $stats,
             'offices' => $offices,
             'batches' => $batches,
@@ -151,7 +152,7 @@ class AOQController extends Controller
         $batchNo = sprintf('%s%04d', $prefix, $next);
 
         while (Batch::where('batch_no', $batchNo)->exists()) {
-            $next++;
+            ++$next;
             $batchNo = sprintf('%s%04d', $prefix, $next);
         }
 
@@ -189,9 +190,9 @@ class AOQController extends Controller
         return response()->json(['batch_no' => $batchNo]);
     }
 
-    public function store(StoreAOQRequest $request): RedirectResponse
+    public function store(StoreAOQRequest $storeAOQRequest): RedirectResponse
     {
-        $validated = $request->validated();
+        $validated = $storeAOQRequest->validated();
 
         DB::beginTransaction();
         try {
@@ -209,7 +210,7 @@ class AOQController extends Controller
                 return redirect()->back()->with('error', 'An AOQ already exists for this RFQ.');
             }
 
-            $rfqItemIds = $rfq->items->pluck('id')->map(fn ($id) => (int) $id)->all();
+            $rfqItemIds = $rfq->items->pluck('id')->map(fn ($id): int => (int) $id)->all();
             if (count($rfqItemIds) === 0) {
                 return redirect()->back()->with('error', 'This RFQ has no items to evaluate.');
             }
@@ -241,11 +242,11 @@ class AOQController extends Controller
                 ];
             }
 
-            if (count($supplierTotals) === 0) {
+            if ($supplierTotals === []) {
                 return redirect()->back()->with('error', 'Please enter at least one supplier quotation with unit prices.');
             }
 
-            usort($supplierTotals, fn ($a, $b) => $a['total_amount'] <=> $b['total_amount']);
+            usort($supplierTotals, fn (array $a, array $b): int => $a['total_amount'] <=> $b['total_amount']);
             $winnerSupplierId = $supplierTotals[0]['supplier_id'];
 
             // Reset previous RFQ quotation records so recreated AOQs don't reuse stale supplier items.
@@ -253,6 +254,7 @@ class AOQController extends Controller
             foreach ($rfq->suppliers as $existingSupplier) {
                 $existingSupplier->supplierItems()->delete();
             }
+
             $rfq->suppliers()->delete();
 
             foreach ($validated['quotations'] as $quotation) {
@@ -295,7 +297,7 @@ class AOQController extends Controller
             ]);
 
             DB::commit();
-        } catch (\Throwable $e) {
+        } catch (\Throwable $throwable) {
             DB::rollBack();
 
             return redirect()->back()->with('error', 'Failed to create AOQ. Please try again.');
@@ -340,7 +342,7 @@ class AOQController extends Controller
         return redirect()->route('aoqs.index')->with('success', 'AOQ deleted successfully.');
     }
 
-    public function printPdf(AOQ $aoq)
+    public function printPdf(AOQ $aoq): \Spatie\LaravelPdf\PdfBuilder
     {
         $aoq->load([
             'rfq.purchaseRequest.office',
@@ -403,7 +405,7 @@ class AOQController extends Controller
             ];
         }
 
-        usort($supplierTotals, fn ($a, $b) => $a['total_amount'] <=> $b['total_amount']);
+        usort($supplierTotals, fn (array $a, array $b): int => $a['total_amount'] <=> $b['total_amount']);
 
         $count = count($supplierTotals);
         $winner = $count > 0 ? $supplierTotals[0] : null;

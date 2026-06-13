@@ -38,12 +38,10 @@ class NumberToWords
                 $centsWords = self::convertWhole($cents);
                 $result .= ' and '.$centsWords.' Centavos';
             }
+        } elseif ($cents > 0) {
+            $result .= ' and '.str_pad((string) $cents, 2, '0', STR_PAD_LEFT).'/100 Only';
         } else {
-            if ($cents > 0) {
-                $result .= ' and '.str_pad((string) $cents, 2, '0', STR_PAD_LEFT).'/100 Only';
-            } else {
-                $result .= ' Only';
-            }
+            $result .= ' Only';
         }
 
         return $result;

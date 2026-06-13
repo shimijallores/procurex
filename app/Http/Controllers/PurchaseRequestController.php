@@ -78,7 +78,7 @@ class PurchaseRequestController extends Controller
                 });
             });
 
-        $paginator = (clone $query)
+        $lengthAwarePaginator = (clone $query)
             ->latest()
             ->paginate(10)
             ->withQueryString();
@@ -94,11 +94,11 @@ class PurchaseRequestController extends Controller
 
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear + 1))
-            ->mapWithKeys(fn ($year) => [$year => $year])
+            ->mapWithKeys(fn ($year): array => [$year => $year])
             ->reverse();
 
         return Inertia::render('PurchaseRequests/Index', [
-            'purchaseRequests' => $paginator,
+            'purchaseRequests' => $lengthAwarePaginator,
             'stats' => $stats,
             'offices' => $offices,
             'fiscalYears' => $fiscalYears,
@@ -152,9 +152,9 @@ class PurchaseRequestController extends Controller
         ]);
     }
 
-    public function store(StorePurchaseRequestRequest $request): RedirectResponse
+    public function store(StorePurchaseRequestRequest $storePurchaseRequestRequest): RedirectResponse
     {
-        $validated = $request->validated();
+        $validated = $storePurchaseRequestRequest->validated();
 
         DB::beginTransaction();
         try {
@@ -180,8 +180,9 @@ class PurchaseRequestController extends Controller
                 $lineTotal = (float) $item['unit_cost'] * (int) $item['quantity'];
                 if (! empty($item['vat_applicable'])) {
                     $vatRate = (float) ($item['vat_rate'] ?? 0.12);
-                    $lineTotal = $lineTotal * (1 + $vatRate);
+                    $lineTotal *= 1 + $vatRate;
                 }
+
                 $total += $lineTotal;
             }
 
@@ -208,9 +209,9 @@ class PurchaseRequestController extends Controller
 
             foreach ($validated['items'] as $item) {
                 $lineTotal = (float) $item['unit_cost'] * (int) $item['quantity'];
-                $vatRate = ! empty($item['vat_applicable']) ? (float) ($item['vat_rate'] ?? 0.12) : 0;
+                $vatRate = empty($item['vat_applicable']) ? 0 : (float) ($item['vat_rate'] ?? 0.12);
                 if (! empty($item['vat_applicable'])) {
-                    $lineTotal = $lineTotal * (1 + $vatRate);
+                    $lineTotal *= 1 + $vatRate;
                 }
 
                 $emanatingItem = $emanating->emanatingItems->firstWhere('id', (int) $item['emanating_item_id']);
@@ -223,7 +224,7 @@ class PurchaseRequestController extends Controller
                     'unit_cost' => $item['unit_cost'],
                     'line_total' => round($lineTotal, 2),
                     'vat_applicable' => ! empty($item['vat_applicable']),
-                    'vat_rate' => ! empty($item['vat_applicable']) ? $vatRate : 0,
+                    'vat_rate' => empty($item['vat_applicable']) ? 0 : $vatRate,
                     'remarks' => $item['remarks'] ?? null,
                     'matrix_amount_below_1m' => $sourceAmount > 0 && $sourceAmount < 1000000 ? round($sourceAmount, 2) : null,
                     'matrix_amount_above_1m' => $sourceAmount >= 1000000 ? round($sourceAmount, 2) : null,
@@ -237,7 +238,7 @@ class PurchaseRequestController extends Controller
             $this->ppmpBudgetService->recalculateForPurchaseRequest($pr);
 
             DB::commit();
-        } catch (\Throwable $e) {
+        } catch (\Throwable $throwable) {
             DB::rollBack();
 
             return redirect()->back()
@@ -286,9 +287,9 @@ class PurchaseRequestController extends Controller
         ]);
     }
 
-    public function update(UpdatePurchaseRequestRequest $request, PurchaseRequest $purchaseRequest): RedirectResponse
+    public function update(UpdatePurchaseRequestRequest $updatePurchaseRequestRequest, PurchaseRequest $purchaseRequest): RedirectResponse
     {
-        $validated = $request->validated();
+        $validated = $updatePurchaseRequestRequest->validated();
 
         DB::beginTransaction();
         try {
@@ -319,19 +320,21 @@ class PurchaseRequestController extends Controller
                     $lineTotal = (float) $item['unit_cost'] * (int) $item['quantity'];
                     if (! empty($item['vat_applicable'])) {
                         $vatRate = (float) ($item['vat_rate'] ?? 0.12);
-                        $lineTotal = $lineTotal * (1 + $vatRate);
+                        $lineTotal *= 1 + $vatRate;
                     }
+
                     $total += $lineTotal;
                 }
+
                 $validated['total_amount'] = round($total, 2);
 
                 // Sync items: delete all then recreate
                 $purchaseRequest->items()->delete();
                 foreach ($validated['items'] as $item) {
                     $lineTotal = (float) $item['unit_cost'] * (int) $item['quantity'];
-                    $vatRate = ! empty($item['vat_applicable']) ? (float) ($item['vat_rate'] ?? 0.12) : 0;
+                    $vatRate = empty($item['vat_applicable']) ? 0 : (float) ($item['vat_rate'] ?? 0.12);
                     if (! empty($item['vat_applicable'])) {
-                        $lineTotal = $lineTotal * (1 + $vatRate);
+                        $lineTotal *= 1 + $vatRate;
                     }
 
                     $emanatingItemId = (int) $item['emanating_item_id'];
@@ -346,7 +349,7 @@ class PurchaseRequestController extends Controller
                         'unit_cost' => $item['unit_cost'],
                         'line_total' => round($lineTotal, 2),
                         'vat_applicable' => ! empty($item['vat_applicable']),
-                        'vat_rate' => ! empty($item['vat_applicable']) ? $vatRate : 0,
+                        'vat_rate' => empty($item['vat_applicable']) ? 0 : $vatRate,
                         'remarks' => $item['remarks'] ?? null,
                         'matrix_amount_below_1m' => $existingMatrix?->matrix_amount_below_1m ?? ($sourceAmount > 0 && $sourceAmount < 1000000 ? round($sourceAmount, 2) : null),
                         'matrix_amount_above_1m' => $existingMatrix?->matrix_amount_above_1m ?? ($sourceAmount >= 1000000 ? round($sourceAmount, 2) : null),
@@ -370,7 +373,7 @@ class PurchaseRequestController extends Controller
             }
 
             DB::commit();
-        } catch (\Throwable $e) {
+        } catch (\Throwable $throwable) {
             DB::rollBack();
 
             return redirect()->back()
@@ -396,7 +399,7 @@ class PurchaseRequestController extends Controller
                     ->get()
                     ->pluck('emanatingItem.ppmp_item_id')
                     ->filter()
-                    ->map(fn ($id) => (int) $id)
+                    ->map(fn ($id): int => (int) $id)
                     ->unique()
                     ->values()
                     ->all();
@@ -418,7 +421,7 @@ class PurchaseRequestController extends Controller
             }
 
             DB::commit();
-        } catch (\Throwable $e) {
+        } catch (\Throwable $throwable) {
             DB::rollBack();
 
             return redirect()->back()->with('error', 'Failed to delete Purchase Request.');
@@ -444,7 +447,7 @@ class PurchaseRequestController extends Controller
             $this->ppmpBudgetService->recalculateForPurchaseRequest($purchaseRequest);
 
             DB::commit();
-        } catch (\Throwable $e) {
+        } catch (\Throwable $throwable) {
             DB::rollBack();
 
             return redirect()->back()->with('error', 'Failed to approve Purchase Request.');
@@ -503,7 +506,7 @@ class PurchaseRequestController extends Controller
             }
 
             DB::commit();
-        } catch (\Throwable $e) {
+        } catch (\Throwable $throwable) {
             DB::rollBack();
 
             return redirect()->back()->with('error', 'Failed to return Purchase Request.');
@@ -516,7 +519,7 @@ class PurchaseRequestController extends Controller
     /**
      * Generate and stream the PR as a PDF (inline for browser print dialog).
      */
-    public function printPdf(PurchaseRequest $purchaseRequest)
+    public function printPdf(PurchaseRequest $purchaseRequest): \Spatie\LaravelPdf\PdfBuilder
     {
         $purchaseRequest->load([
             'office',
@@ -613,15 +616,15 @@ class PurchaseRequestController extends Controller
         $yearPrefix = $prDate->format('y');
         $prefix = $monthPrefix.$yearPrefix;
 
-        $query = PurchaseRequest::query()
+        $builder = PurchaseRequest::query()
             ->whereYear('pr_date', (int) $prDate->format('Y'))
             ->whereNotNull('pr_no');
 
         if ($lockRows) {
-            $query->lockForUpdate();
+            $builder->lockForUpdate();
         }
 
-        $existingNumbers = $query->pluck('pr_no');
+        $existingNumbers = $builder->pluck('pr_no');
 
         $latestCounter = 0;
 
@@ -637,7 +640,7 @@ class PurchaseRequestController extends Controller
             $numberPrefix = $matches[1] ?? null;
             $counterPart = $matches[2] ?? null;
 
-            if ($numberPrefix === null || $counterPart === null) {
+            if ($counterPart === null) {
                 continue;
             }
 

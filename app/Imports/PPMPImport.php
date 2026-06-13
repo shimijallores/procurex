@@ -86,7 +86,7 @@ class PPMPImport implements ToCollection, WithStartRow
 
             // Month columns (indices 9-20 for Jan-Dec)
             $monthQuantities = [];
-            for ($i = 9; $i <= 20; $i++) {
+            for ($i = 9; $i <= 20; ++$i) {
                 $monthValue = trim((string) ($rowData[$i] ?? ''));
                 $monthQuantities[] = $this->parseMonthQuantity($monthValue);
             }
@@ -145,7 +145,7 @@ class PPMPImport implements ToCollection, WithStartRow
 
                     $this->currentCategory = PPMPCategory::create($categoryPayload);
 
-                    $this->categoriesCreated++;
+                    ++$this->categoriesCreated;
                 }
             } elseif ($name !== '' && $name !== '0' && $this->currentCategory && ! str_contains(strtolower($name), 'total')) {
                 // This is an item row
@@ -174,11 +174,11 @@ class PPMPImport implements ToCollection, WithStartRow
                             'planned_quantity' => $plannedQuantity,
                         ]);
 
-                        $monthsCreated++;
+                        ++$monthsCreated;
                     }
                 }
 
-                $this->itemsCreated++;
+                ++$this->itemsCreated;
             }
         }
     }

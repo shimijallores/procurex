@@ -38,9 +38,9 @@ class OfficeController extends Controller
         return Inertia::render('Office/Create');
     }
 
-    public function store(StoreOfficeRequest $request): RedirectResponse
+    public function store(StoreOfficeRequest $storeOfficeRequest): RedirectResponse
     {
-        $validated = $request->validated();
+        $validated = $storeOfficeRequest->validated();
 
         Office::create($validated);
 
@@ -65,9 +65,9 @@ class OfficeController extends Controller
         ]);
     }
 
-    public function update(UpdateOfficeRequest $request, Office $office): RedirectResponse
+    public function update(UpdateOfficeRequest $updateOfficeRequest, Office $office): RedirectResponse
     {
-        $validated = $request->validated();
+        $validated = $updateOfficeRequest->validated();
 
         $office->update($validated);
 

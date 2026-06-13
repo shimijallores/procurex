@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
-Route::get('/templates', function () {
+Route::get('/templates', function (): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View {
     return view('templates', [
         'templates' => [
             ['id' => 1, 'title' => 'APP Template', 'file' => 'standard-template/app-template.xlsx', 'type' => 'XLSX'],

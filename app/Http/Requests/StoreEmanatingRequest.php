@@ -55,17 +55,17 @@ class StoreEmanatingRequest extends FormRequest
                 return;
             }
 
-            $ppmpQuery = PPMP::query()
+            $builder = PPMP::query()
                 ->where('office_id', $fund->office_id)
                 ->where('fiscal_year', $fund->fiscal_year);
 
             if (strtolower((string) $fund->type) === 'project' && $fund->project_code_id !== null) {
-                $ppmpQuery->where('project_code_id', $fund->project_code_id);
+                $builder->where('project_code_id', $fund->project_code_id);
             } else {
-                $ppmpQuery->whereNull('project_code_id');
+                $builder->whereNull('project_code_id');
             }
 
-            $ppmp = $ppmpQuery->latest('id')->first();
+            $ppmp = $builder->latest('id')->first();
 
             if (! $ppmp) {
                 $validator->errors()->add('fund_id', 'No PPMP is connected to the selected fund.');

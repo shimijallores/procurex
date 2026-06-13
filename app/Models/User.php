@@ -63,11 +63,11 @@ class User extends Authenticatable
 
     public function hasRole(string $roleName): bool
     {
-        return $this->roles->contains(fn (Role $role) => $role->name === $roleName);
+        return $this->roles->contains(fn (Role $role): bool => $role->name === $roleName);
     }
 
     public function hasAnyRole(array $roleNames): bool
     {
-        return $this->roles->contains(fn (Role $role) => in_array($role->name, $roleNames, true));
+        return $this->roles->contains(fn (Role $role): bool => in_array($role->name, $roleNames, true));
     }
 }

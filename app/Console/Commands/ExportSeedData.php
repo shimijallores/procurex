@@ -65,14 +65,14 @@ class ExportSeedData extends Command
         // Copy uploaded files to seeders/files/
         $this->copyUploadedFiles();
 
-        $this->info("Exported to {$path}");
+        $this->info('Exported to ' . $path);
 
         return self::SUCCESS;
     }
 
     private function copyUploadedFiles(): void
     {
-        $storage = Storage::disk('public');
+        $filesystem = Storage::disk('public');
         $filesDir = base_path('database/seeders/files');
 
         $paths = collect()
@@ -86,7 +86,7 @@ class ExportSeedData extends Command
             ->unique();
 
         foreach ($paths as $path) {
-            if (! $storage->exists($path)) {
+            if (! $filesystem->exists($path)) {
                 continue;
             }
 
@@ -97,11 +97,11 @@ class ExportSeedData extends Command
                 mkdir($destDir, 0755, true);
             }
 
-            file_put_contents($dest, $storage->get($path));
+            file_put_contents($dest, $filesystem->get($path));
         }
 
         $count = $paths->count();
-        $this->info("Copied {$count} uploaded file(s) to database/seeders/files/");
+        $this->info(sprintf('Copied %d uploaded file(s) to database/seeders/files/', $count));
     }
 
     private function exportApps(): array
@@ -111,23 +111,23 @@ class ExportSeedData extends Command
                 'office_code' => $app->office?->code,
                 'fiscal_year' => $app->fiscal_year,
                 'uploaded_file' => $app->uploaded_file,
-                'categories' => $app->APPCategories->map(fn (APPCategory $cat): array => [
-                    'account_code' => $cat->account?->code,
-                    'early_procurement' => $cat->early_procurement,
-                    'mode_of_procurement' => $cat->mode_of_procurement,
-                    'schedule_from_month' => $cat->schedule_from_month,
-                    'schedule_to_month' => $cat->schedule_to_month,
-                    'source_of_fund' => $cat->source_of_fund,
-                    'estimated_budget' => (float) $cat->estimated_budget,
-                    'mooe_amount' => (float) $cat->mooe_amount,
-                    'co_amount' => (float) $cat->co_amount,
-                    'remarks' => $cat->remarks,
-                    'items' => $cat->APPItems->map(fn (APPItem $item): array => [
-                        'name' => $item->name,
-                        'estimated_budget' => (float) $item->estimated_budget,
-                        'mooe_amount' => (float) $item->mooe_amount,
-                        'co_amount' => (float) $item->co_amount,
-                        'remarks' => $item->remarks,
+                'categories' => $app->APPCategories->map(fn (APPCategory $appCategory): array => [
+                    'account_code' => $appCategory->account?->code,
+                    'early_procurement' => $appCategory->early_procurement,
+                    'mode_of_procurement' => $appCategory->mode_of_procurement,
+                    'schedule_from_month' => $appCategory->schedule_from_month,
+                    'schedule_to_month' => $appCategory->schedule_to_month,
+                    'source_of_fund' => $appCategory->source_of_fund,
+                    'estimated_budget' => (float) $appCategory->estimated_budget,
+                    'mooe_amount' => (float) $appCategory->mooe_amount,
+                    'co_amount' => (float) $appCategory->co_amount,
+                    'remarks' => $appCategory->remarks,
+                    'items' => $appCategory->APPItems->map(fn (APPItem $appItem): array => [
+                        'name' => $appItem->name,
+                        'estimated_budget' => (float) $appItem->estimated_budget,
+                        'mooe_amount' => (float) $appItem->mooe_amount,
+                        'co_amount' => (float) $appItem->co_amount,
+                        'remarks' => $appItem->remarks,
                     ])->all(),
                 ])->all(),
             ];
@@ -157,22 +157,22 @@ class ExportSeedData extends Command
                     'remarks' => $project->remarks,
                     'work_program' => $project->workProgram ? [
                         'file_url' => $project->workProgram->file_url,
-                        'items' => $project->workProgram->items->map(fn (WorkProgramItem $i): array => [
-                            'item_name' => $i->item_name,
-                            'quantity' => (float) $i->quantity,
-                            'unit' => $i->unit,
-                            'amount' => (float) $i->amount,
-                            'row_order' => $i->row_order,
+                        'items' => $project->workProgram->items->map(fn (WorkProgramItem $workProgramItem): array => [
+                            'item_name' => $workProgramItem->item_name,
+                            'quantity' => (float) $workProgramItem->quantity,
+                            'unit' => $workProgramItem->unit,
+                            'amount' => (float) $workProgramItem->amount,
+                            'row_order' => $workProgramItem->row_order,
                         ])->all(),
                     ] : null,
                     'project_brief' => $project->projectBrief ? [
                         'file_url' => $project->projectBrief->file_url,
-                        'items' => $project->projectBrief->items->map(fn (ProjectBriefItem $i): array => [
-                            'item_name' => $i->item_name,
-                            'quantity' => (float) $i->quantity,
-                            'unit' => $i->unit,
-                            'amount' => (float) $i->amount,
-                            'row_order' => $i->row_order,
+                        'items' => $project->projectBrief->items->map(fn (ProjectBriefItem $projectBriefItem): array => [
+                            'item_name' => $projectBriefItem->item_name,
+                            'quantity' => (float) $projectBriefItem->quantity,
+                            'unit' => $projectBriefItem->unit,
+                            'amount' => (float) $projectBriefItem->amount,
+                            'row_order' => $projectBriefItem->row_order,
                         ])->all(),
                     ] : null,
                     'project_proposal' => $project->projectProposal ? [
@@ -196,20 +196,20 @@ class ExportSeedData extends Command
                     'remarks' => $ppmp->remarks,
                     'xlsx_path' => $ppmp->xlsx_path,
                     'budget_notices' => $ppmp->budget_notices,
-                    'categories' => $ppmp->categories->map(fn (PPMPCategory $cat): array => [
-                        'account_code' => $cat->account?->code,
-                        'estimated_budget' => (float) $cat->estimated_budget,
-                        'remaining_budget' => (float) $cat->remaining_budget,
-                        'items' => $cat->items->map(fn (PPMPItem $item): array => [
-                            'name' => $item->name,
-                            'quantity' => $item->quantity,
-                            'unit' => $item->unit,
-                            'estimated_budget' => (float) $item->estimated_budget,
-                            'remaining_budget' => (float) $item->remaining_budget,
-                            'mode_of_procurement' => $item->mode_of_procurement,
-                            'months' => $item->months->map(fn (PPMPItemMonth $m): array => [
-                                'month' => $m->month,
-                                'planned_quantity' => $m->planned_quantity,
+                    'categories' => $ppmp->categories->map(fn (PPMPCategory $ppmpCategory): array => [
+                        'account_code' => $ppmpCategory->account?->code,
+                        'estimated_budget' => (float) $ppmpCategory->estimated_budget,
+                        'remaining_budget' => (float) $ppmpCategory->remaining_budget,
+                        'items' => $ppmpCategory->items->map(fn (PPMPItem $ppmpItem): array => [
+                            'name' => $ppmpItem->name,
+                            'quantity' => $ppmpItem->quantity,
+                            'unit' => $ppmpItem->unit,
+                            'estimated_budget' => (float) $ppmpItem->estimated_budget,
+                            'remaining_budget' => (float) $ppmpItem->remaining_budget,
+                            'mode_of_procurement' => $ppmpItem->mode_of_procurement,
+                            'months' => $ppmpItem->months->map(fn (PPMPItemMonth $ppmpItemMonth): array => [
+                                'month' => $ppmpItemMonth->month,
+                                'planned_quantity' => $ppmpItemMonth->planned_quantity,
                             ])->all(),
                         ])->all(),
                     ])->all(),
@@ -249,12 +249,12 @@ class ExportSeedData extends Command
                     'approved_at' => $emanating->approved_at,
                     'rejection_reason' => $emanating->rejection_reason,
                     'status' => $emanating->status,
-                    'items' => $emanating->emanatingItems->map(fn (EmanatingItem $ei): array => [
-                        'ppmp_item_name' => $ei->ppmpItem?->name,
-                        'name' => $ei->name,
-                        'quantity' => $ei->quantity,
-                        'unit' => $ei->unit,
-                        'total_price' => (float) $ei->total_price,
+                    'items' => $emanating->emanatingItems->map(fn (EmanatingItem $emanatingItem): array => [
+                        'ppmp_item_name' => $emanatingItem->ppmpItem?->name,
+                        'name' => $emanatingItem->name,
+                        'quantity' => $emanatingItem->quantity,
+                        'unit' => $emanatingItem->unit,
+                        'total_price' => (float) $emanatingItem->total_price,
                     ])->all(),
                 ];
             })->all();
@@ -276,17 +276,17 @@ class ExportSeedData extends Command
                 'return_reason' => $canvas->return_reason,
                 'total_amount' => (float) $canvas->total_amount,
                 'completed_at' => $canvas->completed_at,
-                'items' => $canvas->canvasItems->map(fn (CanvasItem $ci): array => [
-                    'emanating_item_name' => $ci->emanatingItem?->name,
-                    'computed_price' => (float) $ci->computed_price,
-                    'selections' => $ci->selections->map(fn (CanvasItemSelection $sel): array => [
-                        'mli_supplier_name' => $sel->masterListItem?->supplier?->name,
-                        'mli_category_name' => $sel->masterListItem?->masterListCategory?->name,
-                        'mli_item_name' => $sel->masterListItem?->item_name,
-                        'mli_unit' => $sel->masterListItem?->unit,
-                        'quantity' => (float) $sel->quantity,
-                        'unit_price' => (float) $sel->unit_price,
-                        'subtotal' => (float) $sel->subtotal,
+                'items' => $canvas->canvasItems->map(fn (CanvasItem $canvasItem): array => [
+                    'emanating_item_name' => $canvasItem->emanatingItem?->name,
+                    'computed_price' => (float) $canvasItem->computed_price,
+                    'selections' => $canvasItem->selections->map(fn (CanvasItemSelection $canvasItemSelection): array => [
+                        'mli_supplier_name' => $canvasItemSelection->masterListItem?->supplier?->name,
+                        'mli_category_name' => $canvasItemSelection->masterListItem?->masterListCategory?->name,
+                        'mli_item_name' => $canvasItemSelection->masterListItem?->item_name,
+                        'mli_unit' => $canvasItemSelection->masterListItem?->unit,
+                        'quantity' => (float) $canvasItemSelection->quantity,
+                        'unit_price' => (float) $canvasItemSelection->unit_price,
+                        'subtotal' => (float) $canvasItemSelection->subtotal,
                     ])->all(),
                 ])->all(),
             ];
@@ -300,40 +300,40 @@ class ExportSeedData extends Command
             'office',
             'fund',
             'items.emanatingItem',
-        ])->get()->map(function (PurchaseRequest $pr): array {
+        ])->get()->map(function (PurchaseRequest $purchaseRequest): array {
             return [
-                'emanating_no' => $pr->emanating?->emanating_no,
-                'office_code' => $pr->office?->code,
-                'fund_office_code' => $pr->fund?->office?->code,
-                'fund_project_code' => $pr->fund?->projectCode?->code,
-                'fund_name' => $pr->fund?->name,
-                'pr_no' => $pr->pr_no,
-                'pr_date' => $pr->pr_date,
-                'sai_no' => $pr->sai_no,
-                'sai_date' => $pr->sai_date,
-                'requested_by_name' => $pr->requested_by_name,
-                'requested_by_designation' => $pr->requested_by_designation,
-                'purpose' => $pr->purpose,
-                'total_amount' => (float) $pr->total_amount,
-                'status' => $pr->status,
-                'remarks' => $pr->remarks,
-                'items' => $pr->items->map(fn (PurchaseRequestItem $pri): array => [
-                    'emanating_item_name' => $pri->emanatingItem?->name,
-                    'quantity' => $pri->quantity,
-                    'unit_cost' => (float) $pri->unit_cost,
-                    'line_total' => (float) $pri->line_total,
-                    'vat_applicable' => $pri->vat_applicable,
-                    'vat_rate' => (float) $pri->vat_rate,
-                    'remarks' => $pri->remarks,
-                    'matrix_amount_below_1m' => (float) $pri->matrix_amount_below_1m,
-                    'matrix_amount_above_1m' => (float) $pri->matrix_amount_above_1m,
-                    'matrix_new_amount' => (float) $pri->matrix_new_amount,
-                    'matrix_account_code' => $pri->matrixAccount?->code,
-                    'matrix_pr_admin_user_email' => $pri->matrixPrAdminUser?->email,
-                    'matrix_budgeting_admin_user_email' => $pri->matrixBudgetingAdminUser?->email,
-                    'matrix_date_release' => $pri->matrix_date_release,
-                    'matrix_new_date_release' => $pri->matrix_new_date_release,
-                    'matrix_remarks' => $pri->matrix_remarks,
+                'emanating_no' => $purchaseRequest->emanating?->emanating_no,
+                'office_code' => $purchaseRequest->office?->code,
+                'fund_office_code' => $purchaseRequest->fund?->office?->code,
+                'fund_project_code' => $purchaseRequest->fund?->projectCode?->code,
+                'fund_name' => $purchaseRequest->fund?->name,
+                'pr_no' => $purchaseRequest->pr_no,
+                'pr_date' => $purchaseRequest->pr_date,
+                'sai_no' => $purchaseRequest->sai_no,
+                'sai_date' => $purchaseRequest->sai_date,
+                'requested_by_name' => $purchaseRequest->requested_by_name,
+                'requested_by_designation' => $purchaseRequest->requested_by_designation,
+                'purpose' => $purchaseRequest->purpose,
+                'total_amount' => (float) $purchaseRequest->total_amount,
+                'status' => $purchaseRequest->status,
+                'remarks' => $purchaseRequest->remarks,
+                'items' => $purchaseRequest->items->map(fn (PurchaseRequestItem $purchaseRequestItem): array => [
+                    'emanating_item_name' => $purchaseRequestItem->emanatingItem?->name,
+                    'quantity' => $purchaseRequestItem->quantity,
+                    'unit_cost' => (float) $purchaseRequestItem->unit_cost,
+                    'line_total' => (float) $purchaseRequestItem->line_total,
+                    'vat_applicable' => $purchaseRequestItem->vat_applicable,
+                    'vat_rate' => (float) $purchaseRequestItem->vat_rate,
+                    'remarks' => $purchaseRequestItem->remarks,
+                    'matrix_amount_below_1m' => (float) $purchaseRequestItem->matrix_amount_below_1m,
+                    'matrix_amount_above_1m' => (float) $purchaseRequestItem->matrix_amount_above_1m,
+                    'matrix_new_amount' => (float) $purchaseRequestItem->matrix_new_amount,
+                    'matrix_account_code' => $purchaseRequestItem->matrixAccount?->code,
+                    'matrix_pr_admin_user_email' => $purchaseRequestItem->matrixPrAdminUser?->email,
+                    'matrix_budgeting_admin_user_email' => $purchaseRequestItem->matrixBudgetingAdminUser?->email,
+                    'matrix_date_release' => $purchaseRequestItem->matrix_date_release,
+                    'matrix_new_date_release' => $purchaseRequestItem->matrix_new_date_release,
+                    'matrix_remarks' => $purchaseRequestItem->matrix_remarks,
                 ])->all(),
             ];
         })->all();
@@ -356,21 +356,21 @@ class ExportSeedData extends Command
                 'project_name' => $rfq->project_name,
                 'abc_amount' => (float) $rfq->abc_amount,
                 'remarks' => $rfq->remarks,
-                'items' => $rfq->items->map(fn (RFQItem $ri): array => [
-                    'pr_emanating_no' => $ri->purchaseRequestItem?->emanatingItem?->emanating?->emanating_no,
-                    'pr_item_emanating_name' => $ri->purchaseRequestItem?->emanatingItem?->name,
-                    'item_name' => $ri->item_name,
-                    'unit' => $ri->unit,
-                    'quantity' => $ri->quantity,
+                'items' => $rfq->items->map(fn (RFQItem $rfqItem): array => [
+                    'pr_emanating_no' => $rfqItem->purchaseRequestItem?->emanatingItem?->emanating?->emanating_no,
+                    'pr_item_emanating_name' => $rfqItem->purchaseRequestItem?->emanatingItem?->name,
+                    'item_name' => $rfqItem->item_name,
+                    'unit' => $rfqItem->unit,
+                    'quantity' => $rfqItem->quantity,
                 ])->all(),
-                'suppliers' => $rfq->suppliers->map(fn (RFQSupplier $rs): array => [
-                    'supplier_name' => $rs->supplier?->name,
-                    'is_late' => $rs->is_late,
-                    'submitted_at' => $rs->submitted_at,
-                    'remarks' => $rs->remarks,
-                    'supplier_items' => $rs->supplierItems->map(fn (RFQSupplierItem $rsi): array => [
-                        'rfq_item_name' => $rsi->rfqItem?->item_name,
-                        'unit_price' => (float) $rsi->unit_price,
+                'suppliers' => $rfq->suppliers->map(fn (RFQSupplier $rfqSupplier): array => [
+                    'supplier_name' => $rfqSupplier->supplier?->name,
+                    'is_late' => $rfqSupplier->is_late,
+                    'submitted_at' => $rfqSupplier->submitted_at,
+                    'remarks' => $rfqSupplier->remarks,
+                    'supplier_items' => $rfqSupplier->supplierItems->map(fn (RFQSupplierItem $rfqSupplierItem): array => [
+                        'rfq_item_name' => $rfqSupplierItem->rfqItem?->item_name,
+                        'unit_price' => (float) $rfqSupplierItem->unit_price,
                     ])->all(),
                 ])->all(),
             ];

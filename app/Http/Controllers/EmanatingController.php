@@ -80,11 +80,13 @@ class EmanatingController extends Controller
                     });
             });
         }
+
         if ($request->office_id) {
             $builder->whereHas('fund', function ($q) use ($request): void {
                 $q->where('office_id', $request->office_id);
             });
         }
+
         if ($request->fiscal_year) {
             $builder->where('fiscal_year', $request->fiscal_year);
         }
@@ -102,11 +104,11 @@ class EmanatingController extends Controller
             ->pluck('fund.office')
             ->unique('id')
             ->sortBy('name')
-            ->mapWithKeys(fn ($office) => [$office->id => $office->name]);
+            ->mapWithKeys(fn ($office): array => [$office->id => $office->name]);
 
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear))
-            ->mapWithKeys(fn ($year) => [$year => $year])
+            ->mapWithKeys(fn ($year): array => [$year => $year])
             ->reverse();
 
         return Inertia::render('Emanatings/Index', [
@@ -134,16 +136,16 @@ class EmanatingController extends Controller
 
             $categories = collect();
 
-            if ($ppmp) {
+            if ($ppmp instanceof \App\Models\PPMP) {
                 $categories = PPMPCategory::query()
                     ->with('account:id,code,name')
                     ->where('ppmp_id', $ppmp->id)
                     ->get(['id', 'ppmp_id', 'account_id'])
-                    ->map(fn (PPMPCategory $category): array => [
-                        'id' => $category->id,
-                        'ppmp_id' => $category->ppmp_id,
-                        'code' => $category->account?->code,
-                        'name' => $category->account?->name,
+                    ->map(fn (PPMPCategory $ppmpCategory): array => [
+                        'id' => $ppmpCategory->id,
+                        'ppmp_id' => $ppmpCategory->ppmp_id,
+                        'code' => $ppmpCategory->account?->code,
+                        'name' => $ppmpCategory->account?->name,
                     ])
                     ->values();
             }
@@ -184,7 +186,7 @@ class EmanatingController extends Controller
                 ->firstOrFail();
             $ppmp = $this->resolvePpmpForFund($fund);
 
-            if (! $ppmp) {
+            if (!$ppmp instanceof \App\Models\PPMP) {
                 return back()->withErrors([
                     'fund_id' => 'No PPMP is connected to the selected fund.',
                 ])->withInput();
@@ -243,17 +245,17 @@ class EmanatingController extends Controller
 
     private function resolvePpmpForFund(Fund $fund): ?PPMP
     {
-        $ppmpQuery = PPMP::query()
+        $builder = PPMP::query()
             ->where('office_id', $fund->office_id)
             ->where('fiscal_year', $fund->fiscal_year);
 
         if (strtolower((string) $fund->type) === 'project' && $fund->project_code_id !== null) {
-            $ppmpQuery->where('project_code_id', $fund->project_code_id);
+            $builder->where('project_code_id', $fund->project_code_id);
         } else {
-            $ppmpQuery->whereNull('project_code_id');
+            $builder->whereNull('project_code_id');
         }
 
-        return $ppmpQuery->latest('id')->first();
+        return $builder->latest('id')->first();
     }
 
     public function show(Emanating $emanating): Response
@@ -429,7 +431,7 @@ class EmanatingController extends Controller
             return back()->withErrors(['error' => 'This Emanating Request is already approved.']);
         }
 
-        $comparison = $this->compareWithDocuments($emanating);
+        $this->compareWithDocuments($emanating);
 
         DB::beginTransaction();
         try {
@@ -519,9 +521,7 @@ class EmanatingController extends Controller
         $projectBriefItems = $isProjectFund
             ? $this->getOrParseProjectBriefItems($emanating)
             : collect();
-        $hasProjectProposal = $isProjectFund
-            ? (bool) $emanating->fund?->project?->projectProposal
-            : false;
+        $hasProjectProposal = $isProjectFund && (bool) $emanating->fund?->project?->projectProposal;
 
         $comparisonItems = [];
         $allMatched = true;
@@ -556,7 +556,7 @@ class EmanatingController extends Controller
                 }
             }
 
-            if (! $appMatch) {
+            if (!$appMatch instanceof \App\Models\APPItem) {
                 $issues[] = 'Missing in APP';
             }
 
@@ -658,11 +658,11 @@ class EmanatingController extends Controller
             'total_project_brief_items' => $matchedProjectBriefItems->count(),
             'project_proposal_present' => $hasProjectProposal,
             'total_matched_items' => collect($comparisonItems)->where('matched', true)->count(),
-            'unmatched_ppmp_items' => collect($comparisonItems)->filter(fn ($item) => in_array('Missing in PPMP', $item['issues'] ?? [], true))->count(),
-            'unmatched_app_items' => collect($comparisonItems)->filter(fn ($item) => in_array('Missing in APP', $item['issues'] ?? [], true))->count(),
-            'unmatched_work_program_items' => collect($comparisonItems)->filter(fn ($item) => in_array('Missing in Work Program', $item['issues'] ?? [], true))->count(),
-            'unmatched_project_brief_items' => collect($comparisonItems)->filter(fn ($item) => in_array('Missing in Project Brief', $item['issues'] ?? [], true))->count(),
-            'unmatched_project_proposal_items' => collect($comparisonItems)->filter(fn ($item) => in_array('Missing in Project Proposal', $item['issues'] ?? [], true))->count(),
+            'unmatched_ppmp_items' => collect($comparisonItems)->filter(fn ($item): bool => in_array('Missing in PPMP', $item['issues'] ?? [], true))->count(),
+            'unmatched_app_items' => collect($comparisonItems)->filter(fn ($item): bool => in_array('Missing in APP', $item['issues'] ?? [], true))->count(),
+            'unmatched_work_program_items' => collect($comparisonItems)->filter(fn ($item): bool => in_array('Missing in Work Program', $item['issues'] ?? [], true))->count(),
+            'unmatched_project_brief_items' => collect($comparisonItems)->filter(fn ($item): bool => in_array('Missing in Project Brief', $item['issues'] ?? [], true))->count(),
+            'unmatched_project_proposal_items' => collect($comparisonItems)->filter(fn ($item): bool => in_array('Missing in Project Proposal', $item['issues'] ?? [], true))->count(),
         ];
     }
 
@@ -696,8 +696,8 @@ class EmanatingController extends Controller
 
         $normalizedName = $this->normalizeItemText($name);
 
-        return $workProgramItems->first(function (WorkProgramItem $item) use ($normalizedName): bool {
-            return $this->normalizeItemText((string) $item->item_name) === $normalizedName;
+        return $workProgramItems->first(function (WorkProgramItem $workProgramItem) use ($normalizedName): bool {
+            return $this->normalizeItemText((string) $workProgramItem->item_name) === $normalizedName;
         });
     }
 
@@ -709,8 +709,8 @@ class EmanatingController extends Controller
 
         $normalizedName = $this->normalizeItemText($name);
 
-        return $projectBriefItems->first(function (ProjectBriefItem $item) use ($normalizedName): bool {
-            return $this->normalizeItemText((string) $item->item_name) === $normalizedName;
+        return $projectBriefItems->first(function (ProjectBriefItem $projectBriefItem) use ($normalizedName): bool {
+            return $this->normalizeItemText((string) $projectBriefItem->item_name) === $normalizedName;
         });
     }
 
@@ -722,15 +722,15 @@ class EmanatingController extends Controller
 
         $normalizedName = $this->normalizeItemText($name);
 
-        $exact = $appItems->first(function (APPItem $item) use ($normalizedName): bool {
-            return $this->normalizeItemText((string) $item->name) === $normalizedName;
+        $exact = $appItems->first(function (APPItem $appItem) use ($normalizedName): bool {
+            return $this->normalizeItemText((string) $appItem->name) === $normalizedName;
         });
         if ($exact) {
             return $exact;
         }
 
-        return $appItems->first(function (APPItem $item) use ($name): bool {
-            $normalizedItemName = $this->normalizeItemText((string) $item->name);
+        return $appItems->first(function (APPItem $appItem) use ($name): bool {
+            $normalizedItemName = $this->normalizeItemText((string) $appItem->name);
             $normalizedSearch = $this->normalizeItemText($name);
 
             return str_contains($normalizedItemName, $normalizedSearch)
@@ -746,16 +746,16 @@ class EmanatingController extends Controller
 
         $normalizedName = $this->normalizeItemText($name);
 
-        $exact = $ppmpItems->first(function (PPMPItem $item) use ($normalizedName): bool {
-            return $this->normalizeItemText((string) $item->name) === $normalizedName;
+        $exact = $ppmpItems->first(function (PPMPItem $ppmpItem) use ($normalizedName): bool {
+            return $this->normalizeItemText((string) $ppmpItem->name) === $normalizedName;
         });
 
         if ($exact) {
             return $exact;
         }
 
-        return $ppmpItems->first(function (PPMPItem $item) use ($normalizedName): bool {
-            $normalizedItemName = $this->normalizeItemText((string) $item->name);
+        return $ppmpItems->first(function (PPMPItem $ppmpItem) use ($normalizedName): bool {
+            $normalizedItemName = $this->normalizeItemText((string) $ppmpItem->name);
 
             return str_contains($normalizedItemName, $normalizedName)
                 || str_contains($normalizedName, $normalizedItemName);
@@ -767,7 +767,7 @@ class EmanatingController extends Controller
         $decoded = trim($text);
 
         // Handle encoded names such as "Meals &amp; Snacks" from uploaded docs.
-        for ($i = 0; $i < 2; $i++) {
+        for ($i = 0; $i < 2; ++$i) {
             $next = html_entity_decode($decoded, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
             if ($next === $decoded) {
@@ -778,7 +778,7 @@ class EmanatingController extends Controller
         }
 
         $normalized = mb_strtolower($decoded);
-        $normalized = str_replace(['’', '“', '”', "\t", "\r", "\n"], ['\'', '"', '"', ' ', ' ', ' '], $normalized);
+        $normalized = str_replace(['’', '“', '”', "\t", "\r", "\n"], ["'", '"', '"', ' ', ' ', ' '], $normalized);
         $normalized = preg_replace('/[^\pL\pN\s]/u', ' ', $normalized) ?? $normalized;
         $normalized = preg_replace('/\s+/u', ' ', $normalized) ?? $normalized;
 

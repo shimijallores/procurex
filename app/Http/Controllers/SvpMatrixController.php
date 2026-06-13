@@ -24,13 +24,13 @@ class SvpMatrixController extends Controller
 
         $selectedFiscalYear = (string) $request->input('fiscal_year', (string) now()->year);
 
-        $query = $this->buildMatrixQuery($request);
+        $builder = $this->buildMatrixQuery($request);
 
-        $matrixRows = $query
+        $lengthAwarePaginator = $builder
             ->latest('id')
             ->paginate(10)
             ->withQueryString()
-            ->through(fn (SvpMatrix $row): array => $this->transformMatrixRow($row));
+            ->through(fn (SvpMatrix $svpMatrix): array => $this->transformMatrixRow($svpMatrix));
 
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear + 1))
@@ -38,7 +38,7 @@ class SvpMatrixController extends Controller
             ->reverse();
 
         return Inertia::render('SVPMatrix/Index', [
-            'matrixRows' => $matrixRows,
+            'matrixRows' => $lengthAwarePaginator,
             'offices' => Office::query()->orderBy('name')->get(['id', 'name']),
             'fiscalYears' => $fiscalYears,
             'filters' => [
@@ -59,8 +59,8 @@ class SvpMatrixController extends Controller
             ->latest('id')
             ->get()
             ->values()
-            ->map(function (SvpMatrix $row, int $index): array {
-                $transformed = $this->transformMatrixRow($row);
+            ->map(function (SvpMatrix $svpMatrix, int $index): array {
+                $transformed = $this->transformMatrixRow($svpMatrix);
                 $transformed['row_no'] = $index + 1;
 
                 return $transformed;
@@ -149,51 +149,51 @@ class SvpMatrixController extends Controller
                 'purchaseOrder.poTransmittals',
             ])
             ->whereHas('purchaseOrder')
-            ->when($request->filled('office_id'), function (Builder $query) use ($request): void {
-                $query->whereHas('purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest', function (Builder $purchaseRequestQuery) use ($request): void {
-                    $purchaseRequestQuery->where('office_id', (int) $request->input('office_id'));
+            ->when($request->filled('office_id'), function (Builder $builder) use ($request): void {
+                $builder->whereHas('purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest', function (Builder $builder) use ($request): void {
+                    $builder->where('office_id', (int) $request->input('office_id'));
                 });
             })
-            ->when($selectedFiscalYear !== '', function (Builder $query) use ($selectedFiscalYear): void {
-                $query->whereHas('purchaseOrder', function (Builder $purchaseOrderQuery) use ($selectedFiscalYear): void {
-                    $purchaseOrderQuery->whereYear('po_date', (int) $selectedFiscalYear);
+            ->when($selectedFiscalYear !== '', function (Builder $builder) use ($selectedFiscalYear): void {
+                $builder->whereHas('purchaseOrder', function (Builder $builder) use ($selectedFiscalYear): void {
+                    $builder->whereYear('po_date', (int) $selectedFiscalYear);
                 });
             })
-            ->when($request->search, function (Builder $query, string $search): void {
-                $query->where(function (Builder $nestedQuery) use ($search): void {
-                    $nestedQuery->where('office_text', 'like', sprintf('%%%s%%', $search))
+            ->when($request->search, function (Builder $builder, string $search): void {
+                $builder->where(function (Builder $builder) use ($search): void {
+                    $builder->where('office_text', 'like', sprintf('%%%s%%', $search))
                         ->orWhere('po_no_text', 'like', sprintf('%%%s%%', $search))
                         ->orWhere('pr_no_text', 'like', sprintf('%%%s%%', $search))
                         ->orWhere('supplier_text', 'like', sprintf('%%%s%%', $search))
                         ->orWhere('particulars_text', 'like', sprintf('%%%s%%', $search))
-                        ->orWhereHas('purchaseOrder', function (Builder $purchaseOrderQuery) use ($search): void {
-                            $purchaseOrderQuery->where('po_no', 'like', sprintf('%%%s%%', $search))
-                                ->orWhereHas('noa.bacResolution.aoq.rfq.purchaseRequest', function (Builder $purchaseRequestQuery) use ($search): void {
-                                    $purchaseRequestQuery->where('pr_no', 'like', sprintf('%%%s%%', $search));
+                        ->orWhereHas('purchaseOrder', function (Builder $builder) use ($search): void {
+                            $builder->where('po_no', 'like', sprintf('%%%s%%', $search))
+                                ->orWhereHas('noa.bacResolution.aoq.rfq.purchaseRequest', function (Builder $builder) use ($search): void {
+                                    $builder->where('pr_no', 'like', sprintf('%%%s%%', $search));
                                 })
-                                ->orWhereHas('noa.bacResolution.aoq.winnerSupplier', function (Builder $supplierQuery) use ($search): void {
-                                    $supplierQuery->where('name', 'like', sprintf('%%%s%%', $search));
+                                ->orWhereHas('noa.bacResolution.aoq.winnerSupplier', function (Builder $builder) use ($search): void {
+                                    $builder->where('name', 'like', sprintf('%%%s%%', $search));
                                 });
                         });
                 });
             });
     }
 
-    private function transformMatrixRow(SvpMatrix $row): array
+    private function transformMatrixRow(SvpMatrix $svpMatrix): array
     {
-        $purchaseOrder = $row->purchaseOrder;
+        $purchaseOrder = $svpMatrix->purchaseOrder;
         $noa = $purchaseOrder?->noa;
         $aoq = $noa?->aoq ?? $noa?->bacResolution?->aoq;
         $rfq = $aoq?->rfq;
         $resolution = $noa?->bacResolution;
         $purchaseRequest = $rfq?->purchaseRequest;
 
-        $abcAmount = $row->abc_amount !== null
-            ? (float) $row->abc_amount
+        $abcAmount = $svpMatrix->abc_amount !== null
+            ? (float) $svpMatrix->abc_amount
             : (float) ($rfq?->abc_amount ?? $purchaseRequest?->total_amount ?? 0);
 
-        $amountValue = $row->amount_value !== null
-            ? (float) $row->amount_value
+        $amountValue = $svpMatrix->amount_value !== null
+            ? (float) $svpMatrix->amount_value
             : (float) ($purchaseOrder?->total_amount ?? 0);
 
         $baseForMode = $abcAmount > 0 ? $abcAmount : $amountValue;
@@ -210,34 +210,34 @@ class SvpMatrixController extends Controller
             ->first();
 
         return [
-            'id' => $row->id,
+            'id' => $svpMatrix->id,
             'svp_no' => $rfq?->svp_no,
             'purchase_order_id' => $purchaseOrder?->id,
-            'office' => $row->office_text ?? $purchaseRequest?->office?->name,
+            'office' => $svpMatrix->office_text ?? $purchaseRequest?->office?->name,
             'batch' => $batch?->batch_no,
-            'po_no' => $row->po_no_text ?? $purchaseOrder?->po_no,
-            'mode_of_procurement' => $row->mode_of_procurement_text ?? $derivedMode,
-            'pr_no' => $row->pr_no_text ?? $purchaseRequest?->pr_no,
+            'po_no' => $svpMatrix->po_no_text ?? $purchaseOrder?->po_no,
+            'mode_of_procurement' => $svpMatrix->mode_of_procurement_text ?? $derivedMode,
+            'pr_no' => $svpMatrix->pr_no_text ?? $purchaseRequest?->pr_no,
             'abc' => $abcAmount > 0 ? round($abcAmount, 2) : null,
-            'supplier' => $row->supplier_text ?? $aoq?->winnerSupplier?->name,
-            'particulars' => $row->particulars_text
+            'supplier' => $svpMatrix->supplier_text ?? $aoq?->winnerSupplier?->name,
+            'particulars' => $svpMatrix->particulars_text
                 ?? $purchaseRequest?->emanating?->account?->name
                 ?? $purchaseRequest?->emanating?->ppmpCategory?->name,
             'amount' => $amountValue > 0 ? round($amountValue, 2) : null,
-            'rfq' => $row->rfq_value
+            'rfq' => $svpMatrix->rfq_value
                 ?? $this->formatDateString($rfq?->rfq_date ?? $rfq?->created_at),
-            'abstract' => $row->abstract_value
+            'abstract' => $svpMatrix->abstract_value
                 ?? $this->formatDateString($aoq?->aoq_date),
-            'resolution' => $row->resolution_value
+            'resolution' => $svpMatrix->resolution_value
                 ?? $this->formatDateString($resolution?->resolution_date),
-            'noa_po' => $row->noa_po_value
+            'noa_po' => $svpMatrix->noa_po_value
                 ?? $this->composeNoaPoValue($noa?->noa_date, $purchaseOrder?->po_date),
-            'transmittal_form' => $row->transmittal_form_value
+            'transmittal_form' => $svpMatrix->transmittal_form_value
                 ?? $this->formatDateString($coaTransmittal?->created_at),
-            'bac_members_gov' => $row->admin_value,
-            'frontdesk' => $row->frontdesk_value,
-            'remarks' => $row->remarks_value,
-            'created_at' => $row->created_at?->toDateString(),
+            'bac_members_gov' => $svpMatrix->admin_value,
+            'frontdesk' => $svpMatrix->frontdesk_value,
+            'remarks' => $svpMatrix->remarks_value,
+            'created_at' => $svpMatrix->created_at?->toDateString(),
         ];
     }
 

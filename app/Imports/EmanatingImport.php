@@ -89,7 +89,7 @@ class EmanatingImport implements ToCollection
             }
         }
 
-        if (! $this->fund) {
+        if (!$this->fund instanceof \App\Models\Fund) {
             throw new RuntimeException('No matching Fund found for selected PPMP (office, project code, fiscal year).');
         }
 
@@ -175,11 +175,7 @@ class EmanatingImport implements ToCollection
             if ($columnA !== '' && str_contains(mb_strtoupper($columnA), 'CHARGE TO:')) {
                 $metadata['charged_to_raw'] = $columnB;
 
-                if (preg_match('/\b(\d{4,})\b/', $columnB, $codeMatches) === 1) {
-                    $metadata['charged_to_code'] = $codeMatches[1];
-                } else {
-                    $metadata['charged_to_code'] = $columnB;
-                }
+                $metadata['charged_to_code'] = preg_match('/\b(\d{4,})\b/', $columnB, $codeMatches) === 1 ? $codeMatches[1] : $columnB;
 
                 $metadata['office_name'] = trim((string) preg_replace('/\(.*$/', '', $columnB));
                 $detectedMarkers[] = ['row' => $index + 1, 'marker' => 'charge_to', 'value' => $columnB];
@@ -208,8 +204,9 @@ class EmanatingImport implements ToCollection
         if ($underlineRow !== null) {
             $name = null;
             $title = null;
+            $counter = count($rows);
 
-            for ($i = $underlineRow + 1; $i < count($rows); $i++) {
+            for ($i = $underlineRow + 1; $i < $counter; ++$i) {
                 $candidate = trim((string) ($rows[$i][1] ?? ''));
                 if ($candidate === '') {
                     continue;
@@ -239,8 +236,8 @@ class EmanatingImport implements ToCollection
                 ->where('ppmp_id', $this->ppmp->id)
                 ->with('account')
                 ->get()
-                ->first(function (PPMPCategory $category) use ($normalizedCategoryCode): bool {
-                    return $this->normalizeCode((string) $category->account?->code) === $normalizedCategoryCode;
+                ->first(function (PPMPCategory $ppmpCategory) use ($normalizedCategoryCode): bool {
+                    return $this->normalizeCode((string) $ppmpCategory->account?->code) === $normalizedCategoryCode;
                 });
         }
 
@@ -253,12 +250,12 @@ class EmanatingImport implements ToCollection
     private function parseItems(array $rows, Emanating $emanating): array
     {
         $items = [];
-        $ppmpItems = $this->ppmpCategory
+        $ppmpItems = $this->ppmpCategory instanceof \App\Models\PPMPCategory
             ? PPMPItem::query()->where('ppmp_category_id', $this->ppmpCategory->id)->get()
             : collect();
 
         $appItems = collect();
-        if ($this->ppmp) {
+        if ($this->ppmp instanceof \App\Models\PPMP) {
             $app = APP::query()
                 ->where('office_id', $this->ppmp->office_id)
                 ->where('fiscal_year', $this->ppmp->fiscal_year)
@@ -277,7 +274,7 @@ class EmanatingImport implements ToCollection
         $skippedMissingDescription = 0;
         $breakReason = null;
 
-        foreach ($rows as $index => $row) {
+        foreach ($rows as $row) {
             $columnA = trim((string) ($row[0] ?? ''));
             $columnB = trim((string) ($row[1] ?? ''));
             $columnC = trim((string) ($row[2] ?? ''));
@@ -296,7 +293,7 @@ class EmanatingImport implements ToCollection
             }
 
             if (! $hasStartedItemSection && ($columnA === '' || preg_match('/\d/', $columnA) !== 1)) {
-                $skippedBeforeStart++;
+                ++$skippedBeforeStart;
 
                 continue;
             }
@@ -307,7 +304,7 @@ class EmanatingImport implements ToCollection
             }
 
             if ($description === '') {
-                $skippedMissingDescription++;
+                ++$skippedMissingDescription;
 
                 continue;
             }
@@ -329,9 +326,11 @@ class EmanatingImport implements ToCollection
             if ($missingInPpmp) {
                 $messages[] = 'Missing in PPMP';
             }
+
             if ($missingInApp) {
                 $messages[] = 'Missing in APP';
             }
+
             if ($exceedsPPMPQuantity) {
                 $messages[] = sprintf('Quantity exceeds PPMP (%d > %d)', $quantity, (int) $ppmpItem->quantity);
             }
@@ -354,7 +353,7 @@ class EmanatingImport implements ToCollection
             ]);
 
             $items[] = $emanatingItem;
-            $this->itemsCreated++;
+            ++$this->itemsCreated;
         }
 
         return $items;
@@ -374,16 +373,16 @@ class EmanatingImport implements ToCollection
             return null;
         }
 
-        $exact = $ppmpItems->first(function (PPMPItem $item) use ($normalizedDescription): bool {
-            return $this->normalizeItemText((string) $item->name) === $normalizedDescription;
+        $exact = $ppmpItems->first(function (PPMPItem $ppmpItem) use ($normalizedDescription): bool {
+            return $this->normalizeItemText((string) $ppmpItem->name) === $normalizedDescription;
         });
 
         if ($exact) {
             return $exact;
         }
 
-        return $ppmpItems->first(function (PPMPItem $item) use ($normalizedDescription): bool {
-            $normalizedItemName = $this->normalizeItemText((string) $item->name);
+        return $ppmpItems->first(function (PPMPItem $ppmpItem) use ($normalizedDescription): bool {
+            $normalizedItemName = $this->normalizeItemText((string) $ppmpItem->name);
 
             return str_contains($normalizedItemName, $normalizedDescription)
                 || str_contains($normalizedDescription, $normalizedItemName);
@@ -401,16 +400,16 @@ class EmanatingImport implements ToCollection
             return null;
         }
 
-        $exact = $appItems->first(function (APPItem $item) use ($normalizedDescription): bool {
-            return $this->normalizeItemText((string) $item->name) === $normalizedDescription;
+        $exact = $appItems->first(function (APPItem $appItem) use ($normalizedDescription): bool {
+            return $this->normalizeItemText((string) $appItem->name) === $normalizedDescription;
         });
 
         if ($exact) {
             return $exact;
         }
 
-        return $appItems->first(function (APPItem $item) use ($description): bool {
-            $normalizedItemName = $this->normalizeItemText((string) $item->name);
+        return $appItems->first(function (APPItem $appItem) use ($description): bool {
+            $normalizedItemName = $this->normalizeItemText((string) $appItem->name);
             $normalizedDescription = $this->normalizeItemText($description);
 
             return str_contains($normalizedItemName, $normalizedDescription)
@@ -426,7 +425,7 @@ class EmanatingImport implements ToCollection
 
         if (preg_match('/^(\d+)\s*(.*)$/', $value, $matches) === 1) {
             $quantity = (int) $matches[1];
-            $unit = trim((string) ($matches[2] ?? ''));
+            $unit = trim($matches[2] ?? '');
 
             return [$quantity, $unit !== '' ? $unit : 'pcs'];
         }
@@ -580,7 +579,7 @@ class EmanatingImport implements ToCollection
     private function normalizeItemText(string $text): string
     {
         $normalized = mb_strtolower(trim($text));
-        $normalized = str_replace(['’', '“', '”', "\t", "\r", "\n"], ['\'', '"', '"', ' ', ' ', ' '], $normalized);
+        $normalized = str_replace(['’', '“', '”', "\t", "\r", "\n"], ["'", '"', '"', ' ', ' ', ' '], $normalized);
         $normalized = preg_replace('/[^\pL\pN\s]/u', ' ', $normalized) ?? $normalized;
         $normalized = preg_replace('/\s+/u', ' ', $normalized) ?? $normalized;
 

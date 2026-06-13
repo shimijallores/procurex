@@ -42,7 +42,7 @@ class COAInspectionController extends Controller
                 $q->whereYear('created_at', $fiscalYear);
             });
 
-        $coaInspections = (clone $query)->latest()->paginate(10)->withQueryString();
+        $lengthAwarePaginator = (clone $query)->latest()->paginate(10)->withQueryString();
 
         $stats = [
             'total' => (clone $query)->count(),
@@ -53,11 +53,11 @@ class COAInspectionController extends Controller
         $offices = Office::orderBy('name')->get(['id', 'name']);
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear + 1))
-            ->mapWithKeys(fn ($year) => [$year => $year])
+            ->mapWithKeys(fn ($year): array => [$year => $year])
             ->reverse();
 
         return Inertia::render('COAInspections/Index', [
-            'coaInspections' => $coaInspections,
+            'coaInspections' => $lengthAwarePaginator,
             'stats' => $stats,
             'offices' => $offices,
             'fiscalYears' => $fiscalYears,
@@ -97,9 +97,9 @@ class COAInspectionController extends Controller
         ]);
     }
 
-    public function store(StoreCOAInspectionRequest $request): RedirectResponse
+    public function store(StoreCOAInspectionRequest $storeCOAInspectionRequest): RedirectResponse
     {
-        $validated = $request->validated();
+        $validated = $storeCOAInspectionRequest->validated();
 
         $coaInspection = COAInspection::create([
             'purchase_order_id' => $validated['purchase_order_id'],
@@ -128,9 +128,9 @@ class COAInspectionController extends Controller
         ]);
     }
 
-    public function update(UpdateCOAInspectionRequest $request, COAInspection $coaInspection): RedirectResponse
+    public function update(UpdateCOAInspectionRequest $updateCOAInspectionRequest, COAInspection $coaInspection): RedirectResponse
     {
-        $validated = $request->validated();
+        $validated = $updateCOAInspectionRequest->validated();
 
         $coaInspection->update([
             'purchase_order_id' => $validated['purchase_order_id'],
@@ -154,7 +154,7 @@ class COAInspectionController extends Controller
             ->with('success', 'COA Inspection deleted successfully.');
     }
 
-    public function printPdf(COAInspection $coaInspection)
+    public function printPdf(COAInspection $coaInspection): \Spatie\LaravelPdf\PdfBuilder
     {
         $coaInspection->load([
             'purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest.office',
@@ -187,7 +187,7 @@ class COAInspectionController extends Controller
 
     private function buildItemSummary(?PurchaseOrder $purchaseOrder): string
     {
-        if (! $purchaseOrder) {
+        if (!$purchaseOrder instanceof \App\Models\PurchaseOrder) {
             return 'items';
         }
 

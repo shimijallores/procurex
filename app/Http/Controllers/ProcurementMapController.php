@@ -35,31 +35,31 @@ class ProcurementMapController extends Controller
                 'purchaseRequest.rfq.aoq.bacResolution.noa.purchaseOrder.acceptanceInspection',
                 'purchaseRequest.rfq.aoq.bacResolution.noa.purchaseOrder.coaInspection',
             ])
-            ->when($selectedOfficeId !== null, function (Builder $query) use ($selectedOfficeId): void {
-                $query->whereHas('fund', function (Builder $fundQuery) use ($selectedOfficeId): void {
-                    $fundQuery->where('office_id', $selectedOfficeId);
+            ->when($selectedOfficeId !== null, function (Builder $builder) use ($selectedOfficeId): void {
+                $builder->whereHas('fund', function (Builder $builder) use ($selectedOfficeId): void {
+                    $builder->where('office_id', $selectedOfficeId);
                 });
             })
-            ->when($selectedFiscalYear !== '', function (Builder $query) use ($selectedFiscalYear): void {
-                $query->where('fiscal_year', (int) $selectedFiscalYear);
+            ->when($selectedFiscalYear !== '', function (Builder $builder) use ($selectedFiscalYear): void {
+                $builder->where('fiscal_year', (int) $selectedFiscalYear);
             })
-            ->when($search !== '', function (Builder $query) use ($search): void {
-                $query->where(function (Builder $nestedQuery) use ($search): void {
-                    $nestedQuery
+            ->when($search !== '', function (Builder $builder) use ($search): void {
+                $builder->where(function (Builder $builder) use ($search): void {
+                    $builder
                         ->where('emanating_no', 'like', sprintf('%%%s%%', $search))
                         ->orWhere('pr_no', 'like', sprintf('%%%s%%', $search))
-                        ->orWhereHas('fund', function (Builder $fundQuery) use ($search): void {
-                            $fundQuery
+                        ->orWhereHas('fund', function (Builder $builder) use ($search): void {
+                            $builder
                                 ->where('name', 'like', sprintf('%%%s%%', $search))
-                                ->orWhereHas('office', function (Builder $officeQuery) use ($search): void {
-                                    $officeQuery->where('name', 'like', sprintf('%%%s%%', $search));
+                                ->orWhereHas('office', function (Builder $builder) use ($search): void {
+                                    $builder->where('name', 'like', sprintf('%%%s%%', $search));
                                 });
                         })
-                        ->orWhereHas('purchaseRequest', function (Builder $purchaseRequestQuery) use ($search): void {
-                            $purchaseRequestQuery
+                        ->orWhereHas('purchaseRequest', function (Builder $builder) use ($search): void {
+                            $builder
                                 ->where('pr_no', 'like', sprintf('%%%s%%', $search))
-                                ->orWhereHas('rfq', function (Builder $rfqQuery) use ($search): void {
-                                    $rfqQuery
+                                ->orWhereHas('rfq', function (Builder $builder) use ($search): void {
+                                    $builder
                                         ->where('svp_no', 'like', sprintf('%%%s%%', $search))
                                         ->orWhere('project_name', 'like', sprintf('%%%s%%', $search));
                                 });
@@ -75,15 +75,15 @@ class ProcurementMapController extends Controller
 
         $apps = APP::query()
             ->with('office')
-            ->when($selectedOfficeId !== null, fn (Builder $query) => $query->where('office_id', $selectedOfficeId))
-            ->when($selectedFiscalYear !== '', fn (Builder $query) => $query->where('fiscal_year', (int) $selectedFiscalYear))
-            ->when($search !== '', function (Builder $query) use ($search): void {
-                $query->where(function (Builder $nestedQuery) use ($search): void {
-                    $nestedQuery
+            ->when($selectedOfficeId !== null, fn (Builder $builder) => $builder->where('office_id', $selectedOfficeId))
+            ->when($selectedFiscalYear !== '', fn (Builder $builder) => $builder->where('fiscal_year', (int) $selectedFiscalYear))
+            ->when($search !== '', function (Builder $builder) use ($search): void {
+                $builder->where(function (Builder $builder) use ($search): void {
+                    $builder
                         ->where('fiscal_year', 'like', sprintf('%%%s%%', $search))
                         ->orWhere('uploaded_file', 'like', sprintf('%%%s%%', $search))
-                        ->orWhereHas('office', function (Builder $officeQuery) use ($search): void {
-                            $officeQuery->where('name', 'like', sprintf('%%%s%%', $search));
+                        ->orWhereHas('office', function (Builder $builder) use ($search): void {
+                            $builder->where('name', 'like', sprintf('%%%s%%', $search));
                         });
                 });
             })
@@ -92,16 +92,16 @@ class ProcurementMapController extends Controller
 
         $funds = Fund::query()
             ->with('office')
-            ->when($selectedOfficeId !== null, fn (Builder $query) => $query->where('office_id', $selectedOfficeId))
-            ->when($selectedFiscalYear !== '', fn (Builder $query) => $query->where('fiscal_year', (int) $selectedFiscalYear))
-            ->when($search !== '', function (Builder $query) use ($search): void {
-                $query->where(function (Builder $nestedQuery) use ($search): void {
-                    $nestedQuery
+            ->when($selectedOfficeId !== null, fn (Builder $builder) => $builder->where('office_id', $selectedOfficeId))
+            ->when($selectedFiscalYear !== '', fn (Builder $builder) => $builder->where('fiscal_year', (int) $selectedFiscalYear))
+            ->when($search !== '', function (Builder $builder) use ($search): void {
+                $builder->where(function (Builder $builder) use ($search): void {
+                    $builder
                         ->where('name', 'like', sprintf('%%%s%%', $search))
                         ->orWhere('type', 'like', sprintf('%%%s%%', $search))
                         ->orWhere('fiscal_year', 'like', sprintf('%%%s%%', $search))
-                        ->orWhereHas('office', function (Builder $officeQuery) use ($search): void {
-                            $officeQuery->where('name', 'like', sprintf('%%%s%%', $search));
+                        ->orWhereHas('office', function (Builder $builder) use ($search): void {
+                            $builder->where('name', 'like', sprintf('%%%s%%', $search));
                         });
                 });
             })
@@ -191,7 +191,7 @@ class ProcurementMapController extends Controller
         $resolveYearColumn = function (string $officeKey, string $yearKey) use (&$officeIndexes, &$officeYearCounts, &$yearColumns, &$nextOfficeIndex, &$officeYearMinColumns, &$officeYearMaxColumns, $officeColumnGap): int {
             if (! isset($officeIndexes[$officeKey])) {
                 $officeIndexes[$officeKey] = $nextOfficeIndex;
-                $nextOfficeIndex++;
+                ++$nextOfficeIndex;
                 $officeYearCounts[$officeKey] = 0;
             }
 
@@ -199,7 +199,7 @@ class ProcurementMapController extends Controller
 
             if (! isset($yearColumns[$yearKey])) {
                 $yearColumns[$yearKey] = $officeColumnStart + $officeYearCounts[$officeKey];
-                $officeYearCounts[$officeKey]++;
+                ++$officeYearCounts[$officeKey];
             }
 
             $currentYearColumn = $yearColumns[$yearKey];
@@ -300,6 +300,7 @@ class ProcurementMapController extends Controller
             if ($emanating->fund?->id !== null) {
                 $representedFundIds[] = (int) $emanating->fund->id;
             }
+
             $ppmpNodeId = sprintf('ppmp-%d-%s', $emanating->id, (string) ($emanating->ppmp?->id ?? 'none'));
             $workProgramNodeId = sprintf('work-program-%d-%s', $emanating->id, (string) ($workProgram?->id ?? 'none'));
             $projectProposalNodeId = sprintf('project-proposal-%d-%s', $emanating->id, (string) ($projectProposal?->id ?? 'none'));
@@ -782,6 +783,7 @@ class ProcurementMapController extends Controller
 
             $node['position']['x'] = $officeCenterXByNodeId[$nodeId];
         }
+
         unset($node);
 
         // Final layout guard: keep every node from overlapping with any previously placed node.
@@ -797,11 +799,11 @@ class ProcurementMapController extends Controller
             while ($attempts < 40) {
                 $collides = false;
 
-                foreach ($placedNodeBoxes as $box) {
-                    $deltaX = abs(($x + ($width / 2)) - ($box['x'] + ($box['width'] / 2)));
-                    $deltaY = abs(($y + ($height / 2)) - ($box['y'] + ($box['height'] / 2)));
-                    $allowedX = (($width + $box['width']) / 2) + 14;
-                    $allowedY = (($height + $box['height']) / 2) + 14;
+                foreach ($placedNodeBoxes as $placedNodeBox) {
+                    $deltaX = abs(($x + ($width / 2)) - ($placedNodeBox['x'] + ($placedNodeBox['width'] / 2)));
+                    $deltaY = abs(($y + ($height / 2)) - ($placedNodeBox['y'] + ($placedNodeBox['height'] / 2)));
+                    $allowedX = (($width + $placedNodeBox['width']) / 2) + 14;
+                    $allowedY = (($height + $placedNodeBox['height']) / 2) + 14;
 
                     if ($deltaX < $allowedX && $deltaY < $allowedY) {
                         $collides = true;
@@ -814,7 +816,7 @@ class ProcurementMapController extends Controller
                 }
 
                 $x += 140;
-                $attempts++;
+                ++$attempts;
             }
 
             $node['position']['x'] = $x;
@@ -825,6 +827,7 @@ class ProcurementMapController extends Controller
                 'height' => $height,
             ];
         }
+
         unset($node);
 
         return [

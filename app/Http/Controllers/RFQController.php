@@ -41,7 +41,7 @@ class RFQController extends Controller
                 $q->whereYear('rfq_date', $fiscalYear);
             });
 
-        $rfqs = (clone $query)->latest('rfq_date')->paginate(10)->withQueryString();
+        $lengthAwarePaginator = (clone $query)->latest('rfq_date')->paginate(10)->withQueryString();
 
         $stats = [
             'total' => (clone $query)->count(),
@@ -57,11 +57,11 @@ class RFQController extends Controller
 
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear + 1))
-            ->mapWithKeys(fn ($year) => [$year => $year])
+            ->mapWithKeys(fn ($year): array => [$year => $year])
             ->reverse();
 
         return Inertia::render('RFQs/Index', [
-            'rfqs' => $rfqs,
+            'rfqs' => $lengthAwarePaginator,
             'stats' => $stats,
             'offices' => $offices,
             'fiscalYears' => $fiscalYears,
@@ -102,9 +102,9 @@ class RFQController extends Controller
         ]);
     }
 
-    public function store(StoreRFQRequest $request): RedirectResponse
+    public function store(StoreRFQRequest $storeRFQRequest): RedirectResponse
     {
-        $validated = $request->validated();
+        $validated = $storeRFQRequest->validated();
 
         DB::beginTransaction();
         try {
@@ -129,11 +129,11 @@ class RFQController extends Controller
             }
 
             $rfqDate = Carbon::parse($validated['rfq_date']);
-            $submissionDeadline = ! empty($validated['submission_deadline'])
-                ? Carbon::parse($validated['submission_deadline'])
-                : $this->suggestSubmissionDeadline($rfqDate);
+            $submissionDeadline = empty($validated['submission_deadline'])
+                ? $this->suggestSubmissionDeadline($rfqDate)
+                : Carbon::parse($validated['submission_deadline']);
 
-            $allowedPrItemIds = $purchaseRequest->items->pluck('id')->map(fn ($id) => (int) $id)->all();
+            $allowedPrItemIds = $purchaseRequest->items->pluck('id')->map(fn ($id): int => (int) $id)->all();
 
             foreach ($validated['items'] as $itemPayload) {
                 if (! in_array((int) $itemPayload['pr_item_id'], $allowedPrItemIds, true)) {
@@ -162,7 +162,7 @@ class RFQController extends Controller
             }
 
             DB::commit();
-        } catch (\Throwable $e) {
+        } catch (\Throwable $throwable) {
             DB::rollBack();
 
             return redirect()->back()->with('error', 'Failed to create RFQ. Please try again.');
@@ -193,7 +193,7 @@ class RFQController extends Controller
         return redirect()->route('rfqs.index')->with('success', 'RFQ deleted successfully.');
     }
 
-    public function printPdf(RFQ $rfq)
+    public function printPdf(RFQ $rfq): \Spatie\LaravelPdf\PdfBuilder
     {
         $rfq->load([
             'purchaseRequest.office',
@@ -225,7 +225,7 @@ class RFQController extends Controller
 
         do {
             $svpNo = sprintf('%s%04d', $prefix, $next);
-            $next++;
+            ++$next;
         } while (RFQ::where('svp_no', $svpNo)->exists());
 
         return $svpNo;

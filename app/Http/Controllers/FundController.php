@@ -47,7 +47,7 @@ class FundController extends Controller
         // Get unique offices for filter
         $offices = Fund::distinct()
             ->pluck('office_id')
-            ->mapWithKeys(function ($officeId) {
+            ->mapWithKeys(function ($officeId): array {
                 $office = Office::find($officeId);
 
                 return [$officeId => $office?->name];
@@ -57,7 +57,7 @@ class FundController extends Controller
 
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear))
-            ->mapWithKeys(fn ($year) => [$year => $year])
+            ->mapWithKeys(fn ($year): array => [$year => $year])
             ->reverse();
 
         return Inertia::render('Funds/Index', [
@@ -247,7 +247,7 @@ class FundController extends Controller
         }
     }
 
-    private function replaceProjectDocument(Project $project, string $relation, UploadedFile $file, string $directory, string $modelClass): Model
+    private function replaceProjectDocument(Project $project, string $relation, UploadedFile $uploadedFile, string $directory, string $modelClass): Model
     {
         $existingDocument = $project->{$relation};
 
@@ -256,7 +256,7 @@ class FundController extends Controller
             $existingDocument->delete();
         }
 
-        $filePath = $file->store($directory, 'public');
+        $filePath = $uploadedFile->store($directory, 'public');
 
         return $modelClass::create([
             'project_id' => $project->id,

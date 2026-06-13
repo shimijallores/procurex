@@ -60,7 +60,7 @@ class POTransmittalController extends Controller
                 });
             });
 
-        $poTransmittals = (clone $query)->latest('created_at')->paginate(10)->withQueryString();
+        $lengthAwarePaginator = (clone $query)->latest('created_at')->paginate(10)->withQueryString();
 
         $stats = [
             'total' => (clone $query)->count(),
@@ -72,7 +72,7 @@ class POTransmittalController extends Controller
         $batches = Batch::orderByDesc('batch_no')->get(['id', 'batch_no']);
 
         return Inertia::render('POTransmittals/Index', [
-            'poTransmittals' => $poTransmittals,
+            'poTransmittals' => $lengthAwarePaginator,
             'stats' => $stats,
             'offices' => $offices,
             'batches' => $batches,
@@ -122,25 +122,25 @@ class POTransmittalController extends Controller
             ->whereDoesntHave('poTransmittals')
             ->latest('po_date')
             ->get()
-            ->map(function (PurchaseOrder $po): PurchaseOrder {
-                $svpNo = $po->noa?->aoq?->rfq?->svp_no
-                    ?? $po->noa?->bacResolution?->aoq?->rfq?->svp_no
+            ->map(function (PurchaseOrder $purchaseOrder): PurchaseOrder {
+                $svpNo = $purchaseOrder->noa?->aoq?->rfq?->svp_no
+                    ?? $purchaseOrder->noa?->bacResolution?->aoq?->rfq?->svp_no
                     ?? '';
 
-                $po->setAttribute('_svp_no', $svpNo);
-                $po->setAttribute('_coa_transmittal_no', $svpNo !== '' ? 'COA-'.$svpNo : '');
-                $po->setAttribute('_opg_transmittal_no', $svpNo !== '' ? 'OPG-'.$svpNo : '');
+                $purchaseOrder->setAttribute('_svp_no', $svpNo);
+                $purchaseOrder->setAttribute('_coa_transmittal_no', $svpNo !== '' ? 'COA-'.$svpNo : '');
+                $purchaseOrder->setAttribute('_opg_transmittal_no', $svpNo !== '' ? 'OPG-'.$svpNo : '');
 
-                return $po;
+                return $purchaseOrder;
             })
             ->values();
 
         return response()->json(['purchaseOrders' => $purchaseOrders]);
     }
 
-    public function store(StorePOTransmittalRequest $request): RedirectResponse
+    public function store(StorePOTransmittalRequest $storePOTransmittalRequest): RedirectResponse
     {
-        $validated = $request->validated();
+        $validated = $storePOTransmittalRequest->validated();
 
         $purchaseOrderId = (int) $validated['purchase_order_id'];
 
@@ -177,7 +177,7 @@ class POTransmittalController extends Controller
             ]);
 
             DB::commit();
-        } catch (\Throwable $exception) {
+        } catch (\Throwable $throwable) {
             DB::rollBack();
 
             return redirect()->back()->with('error', 'Failed to create PO Transmittals. Please try again.');
@@ -208,17 +208,17 @@ class POTransmittalController extends Controller
             'poTransmittal' => $coaTransmittal,
             'coaTransmittal' => $coaTransmittal,
             'opgTransmittal' => $opgTransmittal,
-            'relatedTransmittals' => $relatedTransmittals->map(fn (POTransmittal $entry): array => [
-                'id' => $entry->id,
-                'type' => $entry->type,
-                'transmittal_no' => $entry->transmittal_no,
+            'relatedTransmittals' => $relatedTransmittals->map(fn (POTransmittal $poTransmittal): array => [
+                'id' => $poTransmittal->id,
+                'type' => $poTransmittal->type,
+                'transmittal_no' => $poTransmittal->transmittal_no,
             ])->values(),
         ]);
     }
 
-    public function update(UpdatePOTransmittalRequest $request, POTransmittal $poTransmittal): RedirectResponse
+    public function update(UpdatePOTransmittalRequest $updatePOTransmittalRequest, POTransmittal $poTransmittal): RedirectResponse
     {
-        $validated = $request->validated();
+        $validated = $updatePOTransmittalRequest->validated();
 
         $relatedTransmittals = POTransmittal::query()
             ->where('purchase_order_id', $poTransmittal->purchase_order_id)
@@ -259,7 +259,7 @@ class POTransmittalController extends Controller
             ->with('success', 'PO Transmittal deleted successfully.');
     }
 
-    public function printPdf(POTransmittal $poTransmittal)
+    public function printPdf(POTransmittal $poTransmittal): \Spatie\LaravelPdf\PdfBuilder
     {
         $poTransmittal->load([
             'purchaseOrder.noa.aoq.rfq.purchaseRequest.office',

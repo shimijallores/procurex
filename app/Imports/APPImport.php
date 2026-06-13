@@ -121,7 +121,7 @@ class APPImport implements ToCollection, WithStartRow
                     'co_amount' => $coAmount,
                     'remarks' => $remarks,
                 ]);
-                $this->categoriesCreated++;
+                ++$this->categoriesCreated;
             } elseif ($name !== '' && $name !== '0' && $this->currentCategory) {
                 // This is an item row (no PAP code or simple number, but has name)
                 APPItem::create([
@@ -132,7 +132,7 @@ class APPImport implements ToCollection, WithStartRow
                     'co_amount' => $coAmount,
                     'remarks' => $remarks,
                 ]);
-                $this->itemsCreated++;
+                ++$this->itemsCreated;
             }
         }
     }
@@ -163,9 +163,7 @@ class APPImport implements ToCollection, WithStartRow
             return $primaryName;
         }
 
-        $fallbackName = trim((string) ($rowData[$columnOffset + 2] ?? ''));
-
-        return $fallbackName;
+        return trim((string) ($rowData[$columnOffset + 2] ?? ''));
     }
 
     /**

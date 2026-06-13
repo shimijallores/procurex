@@ -91,12 +91,12 @@ class DashboardController extends Controller
                 ->latest('resolution_date')
                 ->limit(6)
                 ->get()
-                ->map(fn (BACResolution $item) => [
-                    'title' => $item->resolution_no ?: ('BAC #'.$item->id),
-                    'subtitle' => $item->project_name ?: 'No project name',
-                    'meta' => $item->isFinalized() ? 'Finalized' : 'Draft',
-                    'date' => optional($item->resolution_date)->format('M d, Y') ?: '—',
-                    'link' => route('bac-resolutions.show', $item),
+                ->map(fn (BACResolution $bacResolution): array => [
+                    'title' => $bacResolution->resolution_no ?: ('BAC #'.$bacResolution->id),
+                    'subtitle' => $bacResolution->project_name ?: 'No project name',
+                    'meta' => $bacResolution->isFinalized() ? 'Finalized' : 'Draft',
+                    'date' => optional($bacResolution->resolution_date)->format('M d, Y') ?: '—',
+                    'link' => route('bac-resolutions.show', $bacResolution),
                 ])->values();
 
             $payload['quickLinks'] = [
@@ -122,12 +122,12 @@ class DashboardController extends Controller
                 ->latest('pr_date')
                 ->limit(6)
                 ->get()
-                ->map(fn (PurchaseRequest $item) => [
-                    'title' => $item->pr_no ?: ('PR #'.$item->id),
-                    'subtitle' => $item->office?->name ?: 'No office',
-                    'meta' => ucfirst(str_replace('_', ' ', (string) $item->status)),
-                    'date' => optional($item->pr_date)->format('M d, Y') ?: '—',
-                    'link' => route('purchase-requests.show', $item),
+                ->map(fn (PurchaseRequest $purchaseRequest): array => [
+                    'title' => $purchaseRequest->pr_no ?: ('PR #'.$purchaseRequest->id),
+                    'subtitle' => $purchaseRequest->office?->name ?: 'No office',
+                    'meta' => ucfirst(str_replace('_', ' ', (string) $purchaseRequest->status)),
+                    'date' => optional($purchaseRequest->pr_date)->format('M d, Y') ?: '—',
+                    'link' => route('purchase-requests.show', $purchaseRequest),
                 ])->values();
 
             $payload['quickLinks'] = [
@@ -152,12 +152,12 @@ class DashboardController extends Controller
                 ->latest()
                 ->limit(6)
                 ->get()
-                ->map(fn (Canvas $item) => [
-                    'title' => 'Canvas #'.$item->id,
-                    'subtitle' => $item->emanating?->project?->name ?: 'No project',
-                    'meta' => ucfirst((string) $item->status),
-                    'date' => optional($item->created_at)->format('M d, Y') ?: '—',
-                    'link' => route('canvasses.show', $item),
+                ->map(fn (Canvas $canvas): array => [
+                    'title' => 'Canvas #'.$canvas->id,
+                    'subtitle' => $canvas->emanating?->project?->name ?: 'No project',
+                    'meta' => ucfirst((string) $canvas->status),
+                    'date' => optional($canvas->created_at)->format('M d, Y') ?: '—',
+                    'link' => route('canvasses.show', $canvas),
                 ])->values();
 
             $payload['quickLinks'] = [
@@ -183,12 +183,12 @@ class DashboardController extends Controller
                 ->latest('pr_date')
                 ->limit(6)
                 ->get()
-                ->map(fn (PurchaseRequest $item) => [
-                    'title' => $item->pr_no ?: ('PR #'.$item->id),
-                    'subtitle' => $item->office?->name ?: 'No office',
-                    'meta' => ucfirst(str_replace('_', ' ', (string) $item->status)),
-                    'date' => optional($item->pr_date)->format('M d, Y') ?: '—',
-                    'link' => route('purchase-requests.show', $item),
+                ->map(fn (PurchaseRequest $purchaseRequest): array => [
+                    'title' => $purchaseRequest->pr_no ?: ('PR #'.$purchaseRequest->id),
+                    'subtitle' => $purchaseRequest->office?->name ?: 'No office',
+                    'meta' => ucfirst(str_replace('_', ' ', (string) $purchaseRequest->status)),
+                    'date' => optional($purchaseRequest->pr_date)->format('M d, Y') ?: '—',
+                    'link' => route('purchase-requests.show', $purchaseRequest),
                 ])->values();
 
             $payload['quickLinks'] = [
@@ -213,19 +213,19 @@ class DashboardController extends Controller
                 ->latest('rfq_date')
                 ->limit(6)
                 ->get()
-                ->map(fn (RFQ $item) => [
-                    'title' => $item->svp_no ?: ('RFQ #'.$item->id),
-                    'subtitle' => $item->project_name ?: 'No project name',
-                    'meta' => $item->purchaseRequest?->office?->name ?: 'No office',
-                    'date' => optional($item->rfq_date)->format('M d, Y') ?: '—',
-                    'link' => route('rfqs.show', $item),
+                ->map(fn (RFQ $rfq): array => [
+                    'title' => $rfq->svp_no ?: ('RFQ #'.$rfq->id),
+                    'subtitle' => $rfq->project_name ?: 'No project name',
+                    'meta' => $rfq->purchaseRequest?->office?->name ?: 'No office',
+                    'date' => optional($rfq->rfq_date)->format('M d, Y') ?: '—',
+                    'link' => route('rfqs.show', $rfq),
                 ])->values();
 
             $payload['quickLinks'] = [
                 $this->quickLink('RFQs', route('rfqs.index'), 'lucide:file-text'),
                 $this->quickLink('AOQs', route('aoqs.index'), 'lucide:file-spreadsheet'),
             ];
-        } elseif ($roleName === RoleType::NOA_ADMIN->value || $roleName === RoleType::PO_ADMIN->value || $roleName === RoleType::INSPECTION_ADMIN->value) {
+        } elseif (in_array($roleName, [RoleType::NOA_ADMIN->value, RoleType::PO_ADMIN->value, RoleType::INSPECTION_ADMIN->value], true)) {
             $payload['metrics'] = [
                 $this->metric('Notices of Award', NOA::count(), 'lucide:file-badge', 'Issued NOA records'),
                 $this->metric('Purchase Orders', PurchaseOrder::count(), 'lucide:file-signature', 'Generated POs'),
@@ -243,12 +243,12 @@ class DashboardController extends Controller
                 ->latest('transmittal_date')
                 ->limit(6)
                 ->get()
-                ->map(fn (POTransmittal $item) => [
-                    'title' => strtoupper((string) $item->type).' - '.($item->transmittal_no ?: ('#'.$item->id)),
-                    'subtitle' => $item->purchaseOrder?->po_no ?: 'No PO',
-                    'meta' => $item->signatory_name ?: 'No signatory',
-                    'date' => optional($item->transmittal_date)->format('M d, Y') ?: '—',
-                    'link' => route('po-transmittals.show', $item),
+                ->map(fn (POTransmittal $poTransmittal): array => [
+                    'title' => strtoupper((string) $poTransmittal->type).' - '.($poTransmittal->transmittal_no ?: ('#'.$poTransmittal->id)),
+                    'subtitle' => $poTransmittal->purchaseOrder?->po_no ?: 'No PO',
+                    'meta' => $poTransmittal->signatory_name ?: 'No signatory',
+                    'date' => optional($poTransmittal->transmittal_date)->format('M d, Y') ?: '—',
+                    'link' => route('po-transmittals.show', $poTransmittal),
                 ])->values();
 
             $payload['quickLinks'] = [
@@ -280,12 +280,12 @@ class DashboardController extends Controller
                 ->latest('pr_date')
                 ->limit(6)
                 ->get()
-                ->map(fn (PurchaseRequest $item) => [
-                    'title' => $item->pr_no ?: ('PR #'.$item->id),
-                    'subtitle' => $item->purpose ?: 'No purpose provided',
-                    'meta' => ucfirst(str_replace('_', ' ', (string) $item->status)),
-                    'date' => optional($item->pr_date)->format('M d, Y') ?: '—',
-                    'link' => route('purchase-requests.show', $item),
+                ->map(fn (PurchaseRequest $purchaseRequest): array => [
+                    'title' => $purchaseRequest->pr_no ?: ('PR #'.$purchaseRequest->id),
+                    'subtitle' => $purchaseRequest->purpose ?: 'No purpose provided',
+                    'meta' => ucfirst(str_replace('_', ' ', (string) $purchaseRequest->status)),
+                    'date' => optional($purchaseRequest->pr_date)->format('M d, Y') ?: '—',
+                    'link' => route('purchase-requests.show', $purchaseRequest),
                 ])->values();
 
             $payload['quickLinks'] = [
@@ -345,12 +345,12 @@ class DashboardController extends Controller
             ->latest('po_date')
             ->limit(6)
             ->get()
-            ->map(fn (PurchaseOrder $item) => [
-                'title' => $item->po_no,
-                'subtitle' => $item->noa?->bacResolution?->project_name ?: 'No project name',
-                'meta' => 'PO Amount: ₱'.number_format((float) $item->total_amount, 2),
-                'date' => optional($item->po_date)->format('M d, Y') ?: '—',
-                'link' => route('purchase-orders.show', $item),
+            ->map(fn (PurchaseOrder $purchaseOrder): array => [
+                'title' => $purchaseOrder->po_no,
+                'subtitle' => $purchaseOrder->noa?->bacResolution?->project_name ?: 'No project name',
+                'meta' => 'PO Amount: ₱'.number_format((float) $purchaseOrder->total_amount, 2),
+                'date' => optional($purchaseOrder->po_date)->format('M d, Y') ?: '—',
+                'link' => route('purchase-orders.show', $purchaseOrder),
             ])->values();
     }
 }
