@@ -2,14 +2,13 @@
 import { Link } from "@inertiajs/vue3";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@iconify/vue";
+import PageTitle from "@/components/PageTitle.vue";
 </script>
 
 <template>
     <div class="flex items-center justify-between">
         <div class="space-y-1">
-            <h1 class="text-2xl font-bold tracking-tight md:text-3xl">
-                Purchase Requests
-            </h1>
+            <PageTitle title="Purchase Requests" />
             <p class="text-muted-foreground">
                 Manage all purchase requests from canvassed emanating requests
             </p>

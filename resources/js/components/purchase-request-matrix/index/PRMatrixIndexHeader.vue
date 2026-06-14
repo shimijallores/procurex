@@ -1,6 +1,7 @@
 <script setup>
 import { Icon } from "@iconify/vue";
 import { Button } from "@/components/ui/button";
+import PageTitle from "@/components/PageTitle.vue";
 
 defineProps({
     exportUrl: {
@@ -13,9 +14,7 @@ defineProps({
 <template>
     <div class="flex items-center justify-between">
         <div class="space-y-1">
-            <h1 class="text-2xl font-bold tracking-tight md:text-3xl">
-                PR Matrix
-            </h1>
+            <PageTitle title="PR Matrix" />
             <p class="text-muted-foreground">
                 Ongoing Purchase Request monitoring matrix per approved request.
             </p>

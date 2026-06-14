@@ -8,14 +8,13 @@ defineProps({
         required: true,
     },
 });
+import PageTitle from "@/components/PageTitle.vue";
 </script>
 
 <template>
     <div class="flex items-center justify-between">
         <div class="space-y-1">
-            <h1 class="text-2xl font-bold tracking-tight md:text-3xl">
-                System Calendar
-            </h1>
+            <PageTitle title="System Calendar" />
             <p class="text-muted-foreground">
                 Manage holidays, special workdays, and unavailable dates
             </p>

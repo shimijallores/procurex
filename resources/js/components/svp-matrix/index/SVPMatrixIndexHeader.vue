@@ -6,14 +6,13 @@ import { Button } from "@/components/ui/button";
 defineProps({
     exportUrl: String,
 });
+import PageTitle from "@/components/PageTitle.vue";
 </script>
 
 <template>
     <div class="flex items-center justify-between">
         <div class="space-y-1">
-            <h1 class="text-2xl font-bold tracking-tight md:text-3xl">
-                SVP Matrix
-            </h1>
+            <PageTitle title="SVP Matrix" />
             <p class="text-muted-foreground">
                 End-to-end procurement matrix for SVP purchase orders.
             </p>

@@ -2,14 +2,13 @@
 import { Link } from "@inertiajs/vue3";
 import { Icon } from "@iconify/vue";
 import { Button } from "@/components/ui/button";
+import PageTitle from "@/components/PageTitle.vue";
 </script>
 
 <template>
     <div class="flex items-start justify-between">
         <div>
-            <h1 class="text-2xl font-semibold tracking-tight">
-                Purchase Order
-            </h1>
+            <PageTitle title="Purchase Order" />
             <p class="text-sm text-muted-foreground mt-1">
                 Manage generated Purchase Order documents.
             </p>

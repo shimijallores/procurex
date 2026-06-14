@@ -2,14 +2,13 @@
 import { Icon } from "@iconify/vue";
 import { Link } from "@inertiajs/vue3";
 import { Button } from "@/components/ui/button";
+import PageTitle from "@/components/PageTitle.vue";
 </script>
 
 <template>
     <div class="flex items-start justify-between">
         <div>
-            <h1 class="text-2xl font-semibold tracking-tight">
-                BAC Resolutions
-            </h1>
+            <PageTitle title="BAC Resolutions" />
             <p class="text-sm text-muted-foreground mt-1">
                 Manage BAC resolution documents linked to AOQs.
             </p>

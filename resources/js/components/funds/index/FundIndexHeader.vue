@@ -8,12 +8,13 @@ defineProps({
 });
 
 defineEmits(["update:search", "clear"]);
+import PageTitle from "@/components/PageTitle.vue";
 </script>
 
 <template>
     <div class="flex items-center justify-between">
         <div class="space-y-1">
-            <h1 class="text-2xl font-bold tracking-tight md:text-3xl">Funds</h1>
+            <PageTitle title="Funds" />
             <p class="text-muted-foreground">
                 Manage all funds and their allocations
             </p>

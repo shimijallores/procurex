@@ -6,14 +6,13 @@ import { Button } from "@/components/ui/button";
 defineProps({
     onCreateClick: Function,
 });
+import PageTitle from "@/components/PageTitle.vue";
 </script>
 
 <template>
     <div class="flex items-center justify-between">
         <div class="space-y-1">
-            <h1 class="text-2xl font-bold tracking-tight md:text-3xl">
-                Project Procurement Management Plan
-            </h1>
+            <PageTitle title="Project Procurement Management Plan" />
             <p class="text-muted-foreground">
                 Manage all project procurement plans and their items
             </p>

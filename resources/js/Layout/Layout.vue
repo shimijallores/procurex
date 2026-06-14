@@ -6,10 +6,13 @@ import {
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "@inertiajs/vue3";
+import { route } from "ziggy-js";
 import AppSidebar from "@/components/AppSidebar.vue";
 import DarkModeButton from "@/components/DarkModeButton.vue";
 import FlashMessage from "@/components/FlashMessage.vue";
 import GlobalSearchBar from "@/components/GlobalSearchBar.vue";
+import { Button } from "@/components/ui/button";
+import { Icon } from "@iconify/vue";
 
 defineProps({
     title: {

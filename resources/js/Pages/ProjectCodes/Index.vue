@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import DeleteModal from "@/components/DeleteModal.vue";
+import PageTitle from "@/components/PageTitle.vue";
 
 defineOptions({
     layout: (h, page) =>
@@ -67,9 +68,7 @@ const openDeleteModal = (projectCode) => {
     <div class="space-y-6">
         <div class="flex items-center justify-between">
             <div class="space-y-1">
-                <h1 class="text-2xl font-bold tracking-tight md:text-3xl">
-                    Project Codes
-                </h1>
+                <PageTitle title="Project Codes" />
                 <p class="text-muted-foreground">
                     Manage all office project code references
                 </p>

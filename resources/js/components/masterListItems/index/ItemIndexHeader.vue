@@ -9,14 +9,13 @@ defineProps({
         required: true,
     },
 });
+import PageTitle from "@/components/PageTitle.vue";
 </script>
 
 <template>
     <div class="flex items-center justify-between">
         <div class="space-y-1">
-            <h1 class="text-2xl font-bold tracking-tight md:text-3xl">
-                Master List
-            </h1>
+            <PageTitle title="Master List" />
             <p class="text-muted-foreground">
                 Manage all canvassable items and their default prices
             </p>

@@ -257,11 +257,18 @@ const mainNavItems = computed(() => {
 const secondaryNavItems = computed(() => {
     const items = [
         {
+            title: "Templates",
+            url: route("templates.index"),
+            icon: "lucide:file-down",
+            isActive: route().current("templates.*"),
+            roles: ["all"],
+        },
+        {
             title: "Calendar",
             url: route("calendars.index"),
             icon: "lucide:calendar",
             isActive: route().current("calendars.*"),
-            roles: ["all"], // Available to all
+            roles: ["all"],
         },
     ];
 

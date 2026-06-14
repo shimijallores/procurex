@@ -11,6 +11,7 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import PageTitle from "@/components/PageTitle.vue";
 
 defineOptions({
     layout: Layout,
@@ -44,9 +45,7 @@ const user = computed(() => page.props.auth?.user);
 <template>
     <div class="space-y-6">
         <div class="space-y-1">
-            <h1 class="text-2xl font-bold tracking-tight md:text-3xl">
-                Welcome back, {{ user?.name?.split(" ")?.[0] ?? "User" }}!
-            </h1>
+            <PageTitle :title="'Welcome back, ' + (user?.name?.split(' ')?.[0] ?? 'User') + '!'" />
             <p class="text-muted-foreground">
                 Crucial {{ scopeLabel?.toLowerCase() }} procurement updates for
                 {{ roleName || "your role" }}.

@@ -2,14 +2,13 @@
 import { Link } from "@inertiajs/vue3";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@iconify/vue";
+import PageTitle from "@/components/PageTitle.vue";
 </script>
 
 <template>
     <div class="flex items-center justify-between">
         <div class="space-y-1">
-            <h1 class="text-2xl font-bold tracking-tight md:text-3xl">
-                Emanating Requests
-            </h1>
+            <PageTitle title="Emanating Requests" />
             <p class="text-muted-foreground">
                 Manage all emanating procurement requests
             </p>
