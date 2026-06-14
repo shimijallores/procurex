@@ -54,6 +54,7 @@ class DashboardController extends Controller
             'pipeline' => [],
             'recentActivities' => [],
             'quickLinks' => [],
+            'monthlyTrends' => [],
         ];
 
         if ($roleName === RoleType::SUPERADMIN->value) {
@@ -66,11 +67,13 @@ class DashboardController extends Controller
 
             $payload['pipeline'] = $this->systemPipeline();
             $payload['recentActivities'] = $this->superadminRecent();
+            $payload['monthlyTrends'] = $this->monthlyCounts(PurchaseRequest::class);
             $payload['quickLinks'] = [
                 $this->quickLink('Purchase Requests', route('purchase-requests.index'), 'lucide:file-plus-2'),
                 $this->quickLink('Request for Quotation', route('rfqs.index'), 'lucide:file-text'),
                 $this->quickLink('Purchase Orders', route('purchase-orders.index'), 'lucide:file-signature'),
                 $this->quickLink('PO Transmittals', route('po-transmittals.index'), 'lucide:files'),
+                $this->quickLink('Templates', route('templates.index'), 'lucide:file-down'),
             ];
         } elseif ($roleName === RoleType::RESOLUTION_ADMIN->value) {
             $payload['metrics'] = [
@@ -99,10 +102,12 @@ class DashboardController extends Controller
                     'link' => route('bac-resolutions.show', $bacResolution),
                 ])->values();
 
+            $payload['monthlyTrends'] = $this->monthlyCounts(BACResolution::class);
             $payload['quickLinks'] = [
                 $this->quickLink('BAC Resolutions', route('bac-resolutions.index'), 'lucide:files'),
                 $this->quickLink('Notices of Award', route('noas.index'), 'lucide:file-badge'),
                 $this->quickLink('AOQ List', route('aoqs.index'), 'lucide:file-spreadsheet'),
+                $this->quickLink('Templates', route('templates.index'), 'lucide:file-down'),
             ];
         } elseif ($roleName === RoleType::CHECKING_ADMIN->value) {
             $payload['metrics'] = [
@@ -130,10 +135,12 @@ class DashboardController extends Controller
                     'link' => route('purchase-requests.show', $purchaseRequest),
                 ])->values();
 
+            $payload['monthlyTrends'] = $this->monthlyCounts(PurchaseRequest::class);
             $payload['quickLinks'] = [
                 $this->quickLink('APPs', route('apps.index'), 'lucide:layout-grid'),
                 $this->quickLink('PPMPs', route('ppmps.index'), 'lucide:clipboard-list'),
                 $this->quickLink('Emanatings', route('emanatings.index'), 'lucide:clipboard-minus'),
+                $this->quickLink('Templates', route('templates.index'), 'lucide:file-down'),
             ];
         } elseif ($roleName === RoleType::CANVASSING_ADMIN->value) {
             $payload['metrics'] = [
@@ -160,10 +167,12 @@ class DashboardController extends Controller
                     'link' => route('canvasses.show', $canvas),
                 ])->values();
 
+            $payload['monthlyTrends'] = $this->monthlyCounts(Canvas::class);
             $payload['quickLinks'] = [
                 $this->quickLink('Canvassing', route('canvasses.index'), 'lucide:shopping-cart'),
                 $this->quickLink('Suppliers', route('suppliers.index'), 'lucide:truck'),
                 $this->quickLink('Master List', route('master-list-items.index'), 'lucide:list-checks'),
+                $this->quickLink('Templates', route('templates.index'), 'lucide:file-down'),
             ];
         } elseif ($roleName === RoleType::PR_ADMIN->value) {
             $payload['metrics'] = [
@@ -191,9 +200,11 @@ class DashboardController extends Controller
                     'link' => route('purchase-requests.show', $purchaseRequest),
                 ])->values();
 
+            $payload['monthlyTrends'] = $this->monthlyCounts(PurchaseRequest::class);
             $payload['quickLinks'] = [
                 $this->quickLink('Purchase Requests', route('purchase-requests.index'), 'lucide:file-plus-2'),
                 $this->quickLink('Create PR', route('purchase-requests.create'), 'lucide:plus-circle'),
+                $this->quickLink('Templates', route('templates.index'), 'lucide:file-down'),
             ];
         } elseif ($roleName === RoleType::RFQ_ADMIN->value || $roleName === RoleType::ABSTRACT_ADMIN->value) {
             $payload['metrics'] = [
@@ -221,9 +232,11 @@ class DashboardController extends Controller
                     'link' => route('rfqs.show', $rfq),
                 ])->values();
 
+            $payload['monthlyTrends'] = $this->monthlyCounts(RFQ::class);
             $payload['quickLinks'] = [
                 $this->quickLink('RFQs', route('rfqs.index'), 'lucide:file-text'),
                 $this->quickLink('AOQs', route('aoqs.index'), 'lucide:file-spreadsheet'),
+                $this->quickLink('Templates', route('templates.index'), 'lucide:file-down'),
             ];
         } elseif (in_array($roleName, [RoleType::NOA_ADMIN->value, RoleType::PO_ADMIN->value, RoleType::INSPECTION_ADMIN->value], true)) {
             $payload['metrics'] = [
@@ -251,10 +264,12 @@ class DashboardController extends Controller
                     'link' => route('po-transmittals.show', $poTransmittal),
                 ])->values();
 
+            $payload['monthlyTrends'] = $this->monthlyCounts(PurchaseOrder::class);
             $payload['quickLinks'] = [
                 $this->quickLink('Notice of Award', route('noas.index'), 'lucide:file-badge'),
                 $this->quickLink('Purchase Order', route('purchase-orders.index'), 'lucide:file-signature'),
                 $this->quickLink('PO Transmittal', route('po-transmittals.index'), 'lucide:files'),
+                $this->quickLink('Templates', route('templates.index'), 'lucide:file-down'),
             ];
         } else {
             $officeId = $user?->office_id;
@@ -288,11 +303,13 @@ class DashboardController extends Controller
                     'link' => route('purchase-requests.show', $purchaseRequest),
                 ])->values();
 
+            $payload['monthlyTrends'] = $this->monthlyCounts(PurchaseRequest::class);
             $payload['quickLinks'] = [
                 $this->quickLink('APPs', route('apps.index'), 'lucide:layout-grid'),
                 $this->quickLink('PPMPs', route('ppmps.index'), 'lucide:clipboard-list'),
                 $this->quickLink('Emanatings', route('emanatings.index'), 'lucide:clipboard-minus'),
                 $this->quickLink('Purchase Requests', route('purchase-requests.index'), 'lucide:file-plus-2'),
+                $this->quickLink('Templates', route('templates.index'), 'lucide:file-down'),
             ];
         }
 
@@ -324,6 +341,20 @@ class DashboardController extends Controller
             'href' => $href,
             'icon' => $icon,
         ];
+    }
+
+    private function monthlyCounts(string $model): array
+    {
+        return collect(range(5, 0))->map(function (int $monthsAgo) use ($model): array {
+            $date = now()->subMonths($monthsAgo);
+
+            return [
+                'label' => $date->format('M'),
+                'count' => $model::whereYear('created_at', $date->year)
+                    ->whereMonth('created_at', $date->month)
+                    ->count(),
+            ];
+        })->values()->all();
     }
 
     private function systemPipeline(): array

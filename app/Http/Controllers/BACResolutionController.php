@@ -415,7 +415,7 @@ class BACResolutionController extends Controller
 
         do {
             $resolutionNo = sprintf('%s%04d', $prefix, $next);
-            ++$next;
+            $next++;
         } while (BACResolution::where('resolution_no', $resolutionNo)->exists());
 
         return $resolutionNo;
@@ -497,7 +497,7 @@ class BACResolutionController extends Controller
             }
 
             if ($hasAtLeastOnePrice) {
-                ++$count;
+                $count++;
             }
         }
 

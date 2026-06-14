@@ -191,7 +191,7 @@ class ProcurementMapController extends Controller
         $resolveYearColumn = function (string $officeKey, string $yearKey) use (&$officeIndexes, &$officeYearCounts, &$yearColumns, &$nextOfficeIndex, &$officeYearMinColumns, &$officeYearMaxColumns, $officeColumnGap): int {
             if (! isset($officeIndexes[$officeKey])) {
                 $officeIndexes[$officeKey] = $nextOfficeIndex;
-                ++$nextOfficeIndex;
+                $nextOfficeIndex++;
                 $officeYearCounts[$officeKey] = 0;
             }
 
@@ -199,7 +199,7 @@ class ProcurementMapController extends Controller
 
             if (! isset($yearColumns[$yearKey])) {
                 $yearColumns[$yearKey] = $officeColumnStart + $officeYearCounts[$officeKey];
-                ++$officeYearCounts[$officeKey];
+                $officeYearCounts[$officeKey]++;
             }
 
             $currentYearColumn = $yearColumns[$yearKey];
@@ -816,7 +816,7 @@ class ProcurementMapController extends Controller
                 }
 
                 $x += 140;
-                ++$attempts;
+                $attempts++;
             }
 
             $node['position']['x'] = $x;
