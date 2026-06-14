@@ -19,9 +19,9 @@ class DatabaseSeeder extends Seeder
             CalendarSeeder::class,
             SupplierSeeder::class,
             MasterListSeeder::class,
-            // SampleDataSeeder::class,
-            // FullDataSeeder::class,
-            // TestDataSeeder::class,
+            SampleDataSeeder::class,
+            FullDataSeeder::class,
+            TestDataSeeder::class,
         ]);
     }
 }
