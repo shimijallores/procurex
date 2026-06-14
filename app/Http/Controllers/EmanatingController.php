@@ -186,7 +186,7 @@ class EmanatingController extends Controller
                 ->firstOrFail();
             $ppmp = $this->resolvePpmpForFund($fund);
 
-            if (!$ppmp instanceof \App\Models\PPMP) {
+            if (! $ppmp instanceof \App\Models\PPMP) {
                 return back()->withErrors([
                     'fund_id' => 'No PPMP is connected to the selected fund.',
                 ])->withInput();
@@ -282,12 +282,11 @@ class EmanatingController extends Controller
                 ->value('name');
         }
 
-        $emanating->setAttribute('charged_to_project_code_name', $chargedToProjectCodeName);
-
         $comparisonData = $this->compareWithDocuments($emanating);
 
         return Inertia::render('Emanatings/Show', [
             'emanating' => $emanating,
+            'chargedToProjectCodeName' => $chargedToProjectCodeName,
             'comparison' => $comparisonData,
         ]);
     }
@@ -556,7 +555,7 @@ class EmanatingController extends Controller
                 }
             }
 
-            if (!$appMatch instanceof \App\Models\APPItem) {
+            if (! $appMatch instanceof \App\Models\APPItem) {
                 $issues[] = 'Missing in APP';
             }
 

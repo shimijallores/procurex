@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             SupplierSeeder::class,
             MasterListSeeder::class,
             FullDataSeeder::class,
+            TestDataSeeder::class,
         ]);
     }
 }

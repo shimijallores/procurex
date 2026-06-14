@@ -32,6 +32,7 @@ defineOptions({
 const props = defineProps({
     emanating: Object,
     comparison: Object,
+    chargedToProjectCodeName: String,
 });
 
 const showDeleteModal = ref(false);
@@ -113,7 +114,10 @@ const rejectEmanating = () => {
         />
 
         <!-- Summary -->
-        <EmanatingShowSummary :emanating="emanating" />
+        <EmanatingShowSummary
+            :emanating="emanating"
+            :charged-to-project-code-name="chargedToProjectCodeName"
+        />
 
         <EmanatingProjectDocumentsCard :fund="emanating.fund" />
 

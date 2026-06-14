@@ -112,7 +112,7 @@ class CanvasController extends Controller
 
                 $matchedMasterListItem = $this->findBestMasterListItemMatch($emanatingItem, $masterListItems);
 
-                if (!$matchedMasterListItem instanceof \App\Models\MasterListItem) {
+                if (! $matchedMasterListItem instanceof \App\Models\MasterListItem) {
                     $allItemsAutoPriced = false;
                     $missingItems[] = (string) ($emanatingItem->name ?: $emanatingItem->ppmpItem?->name ?: ('Item #'.$emanatingItem->id));
 

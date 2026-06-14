@@ -24,7 +24,7 @@ const openPdf = () => {
                         Back
                     </Button>
                 </Link>
-                <div>
+                <div class="min-w-0 break-words">
                     <h1 class="text-2xl font-bold tracking-tight md:text-3xl">
                         Request for Quotation
                         <span class="text-primary">{{ rfq.svp_no }}</span>
@@ -36,7 +36,7 @@ const openPdf = () => {
                 </div>
             </div>
 
-            <div class="flex flex-wrap items-center justify-end gap-2">
+            <div class="flex shrink-0 items-center justify-end gap-2">
                 <Button variant="outline" @click="openPdf">
                     <Icon icon="lucide:printer" class="mr-2 h-4 w-4" />
                     Print RFQ

@@ -1,4 +1,5 @@
 <script setup>
+import { Link } from "@inertiajs/vue3";
 import { Icon } from "@iconify/vue";
 import { Button } from "@/components/ui/button";
 
@@ -17,13 +18,21 @@ const openPdf = () => {
     <div
         class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"
     >
-        <div>
-            <h1 class="text-2xl font-semibold tracking-tight">
-                {{ coaInspection.purchase_order?.po_no || "COA Inspection" }}
-            </h1>
-            <p class="text-sm text-muted-foreground mt-1">
-                Combined SVP and Bidding COA inspection letters.
-            </p>
+        <div class="flex items-center gap-4">
+            <Link :href="route('coa-inspections.index')">
+                <Button variant="ghost" size="sm">
+                    <Icon icon="lucide:arrow-left" class="mr-2 h-4 w-4" />
+                    Back
+                </Button>
+            </Link>
+            <div>
+                <h1 class="text-2xl font-semibold tracking-tight">
+                    {{ coaInspection.purchase_order?.po_no || "COA Inspection" }}
+                </h1>
+                <p class="text-sm text-muted-foreground mt-1">
+                    Combined SVP and Bidding COA inspection letters.
+                </p>
+            </div>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">

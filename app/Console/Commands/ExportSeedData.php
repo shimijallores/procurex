@@ -65,7 +65,7 @@ class ExportSeedData extends Command
         // Copy uploaded files to seeders/files/
         $this->copyUploadedFiles();
 
-        $this->info('Exported to ' . $path);
+        $this->info('Exported to '.$path);
 
         return self::SUCCESS;
     }

@@ -187,7 +187,7 @@ class COAInspectionController extends Controller
 
     private function buildItemSummary(?PurchaseOrder $purchaseOrder): string
     {
-        if (!$purchaseOrder instanceof \App\Models\PurchaseOrder) {
+        if (! $purchaseOrder instanceof \App\Models\PurchaseOrder) {
             return 'items';
         }
 

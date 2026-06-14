@@ -18,13 +18,21 @@ const openPdf = () => {
     <div
         class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"
     >
-        <div>
-            <h1 class="text-2xl font-semibold tracking-tight">
-                {{ noa.noa_no }}
-            </h1>
-            <p class="text-sm text-muted-foreground mt-1">
-                Notice of Award details and print preview.
-            </p>
+        <div class="flex items-center gap-4">
+            <Link :href="route('noas.index')">
+                <Button variant="ghost" size="sm">
+                    <Icon icon="lucide:arrow-left" class="mr-2 h-4 w-4" />
+                    Back
+                </Button>
+            </Link>
+            <div>
+                <h1 class="text-2xl font-semibold tracking-tight">
+                    {{ noa.noa_no }}
+                </h1>
+                <p class="text-sm text-muted-foreground mt-1">
+                    Notice of Award details and print preview.
+                </p>
+            </div>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">

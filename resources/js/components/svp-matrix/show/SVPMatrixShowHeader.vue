@@ -10,13 +10,21 @@ defineProps({
 
 <template>
     <div class="flex items-start justify-between">
-        <div>
-            <h1 class="text-2xl font-semibold tracking-tight">
-                SVP Matrix Row
-            </h1>
-            <p class="text-sm text-muted-foreground mt-1">
-                {{ matrixRow.po_no || "-" }} • {{ matrixRow.office || "-" }}
-            </p>
+        <div class="flex items-center gap-4">
+            <Link :href="route('svp-matrix.index')">
+                <Button variant="ghost" size="sm">
+                    <Icon icon="lucide:arrow-left" class="mr-2 h-4 w-4" />
+                    Back
+                </Button>
+            </Link>
+            <div>
+                <h1 class="text-2xl font-semibold tracking-tight">
+                    SVP Matrix Row
+                </h1>
+                <p class="text-sm text-muted-foreground mt-1">
+                    {{ matrixRow.po_no || "-" }} • {{ matrixRow.office || "-" }}
+                </p>
+            </div>
         </div>
 
         <Link :href="route('svp-matrix.edit', matrixRow.id)">

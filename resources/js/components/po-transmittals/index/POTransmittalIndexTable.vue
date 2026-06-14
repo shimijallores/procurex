@@ -268,7 +268,7 @@ const getTransmittalByType = (entry, type) => {
                                     >
                                         <Button variant="ghost" size="sm">
                                             <Icon
-                                                icon="lucide:eye"
+                                                icon="lucide:pencil"
                                                 class="h-4 w-4"
                                             />
                                         </Button>

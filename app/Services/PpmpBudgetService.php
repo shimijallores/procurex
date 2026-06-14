@@ -57,7 +57,7 @@ class PpmpBudgetService
 
         $ppmpItemIds = collect($ppmpItemIds)
             ->filter()
-            ->map(fn ($id): int => (int) $id)
+            ->map(fn ($id): int => $id)
             ->unique()
             ->values();
 
@@ -99,7 +99,7 @@ class PpmpBudgetService
 
         $ppmpCategoryIds = collect($ppmpCategoryIds)
             ->filter()
-            ->map(fn ($id): int => (int) $id)
+            ->map(fn ($id): int => $id)
             ->unique()
             ->values();
 

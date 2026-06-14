@@ -104,7 +104,7 @@ class PPMPController extends Controller
                 (int) $validated['office_id']
             );
 
-            if (!$resolvedProjectCode instanceof \App\Models\ProjectCode) {
+            if (! $resolvedProjectCode instanceof \App\Models\ProjectCode) {
                 return back()->withErrors([
                     'xlsx_file' => 'Unable to match the PPMP project code to the selected office project codes.',
                 ]);

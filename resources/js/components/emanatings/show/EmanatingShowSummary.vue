@@ -4,6 +4,10 @@ import { Icon } from "@iconify/vue";
 
 const props = defineProps({
     emanating: Object,
+    chargedToProjectCodeName: {
+        type: String,
+        default: null,
+    },
 });
 
 const monthNames = [
@@ -82,7 +86,7 @@ const getMonthName = (month) => {
                 <div class="flex justify-between">
                     <span class="text-muted-foreground">Office:</span>
                     <span class="font-medium">{{
-                        emanating.charged_to_project_code_name || "N/A"
+                        chargedToProjectCodeName || "N/A"
                     }}</span>
                 </div>
                 <div class="flex justify-between">

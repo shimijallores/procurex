@@ -89,7 +89,7 @@ class EmanatingImport implements ToCollection
             }
         }
 
-        if (!$this->fund instanceof \App\Models\Fund) {
+        if (! $this->fund instanceof \App\Models\Fund) {
             throw new RuntimeException('No matching Fund found for selected PPMP (office, project code, fiscal year).');
         }
 

@@ -203,7 +203,7 @@ class NOAController extends Controller
         $count = count($created);
 
         return redirect()->route('noas.index')
-            ->with('success', $count . ' Notice(s) of Award created successfully.');
+            ->with('success', $count.' Notice(s) of Award created successfully.');
     }
 
     public function edit(NOA $noa): Response
