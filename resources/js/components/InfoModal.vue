@@ -60,7 +60,7 @@ defineProps({
                         </h4>
                     </div>
                     <p
-                        class="mt-1.5 text-sm leading-relaxed text-muted-foreground"
+                        class="mt-1.5 text-sm leading-relaxed text-muted-foreground text-justify"
                     >
                         {{ section.content }}
                     </p>

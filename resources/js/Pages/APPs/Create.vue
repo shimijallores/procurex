@@ -24,6 +24,7 @@ defineOptions({
 
 const props = defineProps({
     offices: Array,
+    existingApps: Array,
 });
 
 const form = useForm({
@@ -52,6 +53,7 @@ const submit = () => {
             :form="form"
             :offices="offices"
             :csv-file-name="csvFileName"
+            :existing-apps="existingApps"
             @submit="submit"
             @file-change="handleFileChange"
         />

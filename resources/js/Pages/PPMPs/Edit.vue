@@ -24,6 +24,7 @@ defineOptions({
 const props = defineProps({
     ppmp: Object,
     offices: Array,
+    existingPpmps: Array,
 });
 
 const form = useForm({
@@ -50,6 +51,7 @@ const submit = () => {
             :form="form"
             :ppmp="ppmp"
             :offices="offices"
+            :existing-ppmps="existingPpmps"
             @submit="submit"
         />
     </div>

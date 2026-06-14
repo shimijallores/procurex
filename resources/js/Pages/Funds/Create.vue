@@ -24,6 +24,7 @@ defineOptions({
 
 const props = defineProps({
     offices: Array,
+    existingFunds: Array,
 });
 
 const form = useForm({
@@ -67,6 +68,7 @@ const submit = () => {
             :offices="offices"
             :fund-type="fundType"
             :show-project-fields="showProjectFields"
+            :existing-funds="existingFunds"
             @update:fundType="(value) => (fundType = value)"
             @submit="submit"
         />

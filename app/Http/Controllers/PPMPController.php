@@ -79,6 +79,7 @@ class PPMPController extends Controller
                     ->select(['id', 'office_id', 'name', 'type', 'project_code_id', 'fiscal_year'])
                     ->with('projectCode:id,code,name'),
             ])->get(['id', 'name', 'code']),
+            'existingPpmps' => PPMP::select(['office_id', 'project_code_id', 'fiscal_year'])->get(),
         ]);
     }
 
@@ -232,6 +233,7 @@ class PPMPController extends Controller
                     ->select(['id', 'office_id', 'name', 'type', 'project_code_id', 'fiscal_year'])
                     ->with('projectCode:id,code,name'),
             ])->get(['id', 'name', 'code']),
+            'existingPpmps' => PPMP::where('id', '!=', $ppmp->id)->select(['office_id', 'project_code_id', 'fiscal_year'])->get(),
         ]);
     }
 

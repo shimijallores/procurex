@@ -24,6 +24,7 @@ defineOptions({
 
 const props = defineProps({
     funds: Array,
+    existingEmanatings: Array,
 });
 
 const form = useForm({
@@ -69,6 +70,7 @@ const submit = () => {
             :form="form"
             :funds="funds"
             :xlsx-file-name="xlsxFileName"
+            :existing-emanatings="existingEmanatings"
             @submit="submit"
             @file-change="handleFileChange"
         />

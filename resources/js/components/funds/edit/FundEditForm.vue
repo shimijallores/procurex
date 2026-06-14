@@ -1,5 +1,5 @@
 <script setup>
-import { computed, watch } from "vue";
+import { computed, watch, ref } from "vue";
 import { Link } from "@inertiajs/vue3";
 import { Icon } from "@iconify/vue";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ const props = defineProps({
     offices: Array,
     fundType: String,
     showProjectFields: Boolean,
+    existingFunds: Array,
 });
 
 const availableProjectCodes = computed(() => {
@@ -33,6 +34,19 @@ const availableProjectCodes = computed(() => {
 
     return selectedOffice?.project_codes ?? [];
 });
+
+const hasExistingFund = computed(() => {
+    if (!props.form.office_id) return false;
+    const projectCodeId = props.showProjectFields ? props.form.project_code_id : null;
+    return (props.existingFunds || []).some(
+        (fund) =>
+            String(fund.office_id) === String(props.form.office_id) &&
+            String(fund.project_code_id) === String(projectCodeId) &&
+            fund.type === props.fundType,
+    );
+});
+
+const showWarning = ref(false);
 
 watch(
     () => props.form.office_id,
@@ -57,7 +71,20 @@ watch(
     },
 );
 
-defineEmits(["update:fundType", "submit"]);
+const emit = defineEmits(["update:fundType", "submit"]);
+
+const handleSubmit = () => {
+    if (hasExistingFund.value) {
+        showWarning.value = true;
+    } else {
+        emit("submit");
+    }
+};
+
+const confirmSubmit = () => {
+    showWarning.value = false;
+    emit("submit");
+};
 </script>
 
 <template>
@@ -69,7 +96,7 @@ defineEmits(["update:fundType", "submit"]);
             </CardDescription>
         </CardHeader>
         <CardContent>
-            <form @submit.prevent="$emit('submit')" class="space-y-6">
+            <form @submit.prevent="handleSubmit" class="space-y-6">
                 <div class="space-y-2">
                     <Label for="office_id">Office</Label>
                     <select
@@ -468,5 +495,51 @@ defineEmits(["update:fundType", "submit"]);
                 </div>
             </div>
         </CardContent>
+
+        <!-- Warning Modal -->
+        <div
+            v-if="showWarning"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4 backdrop-blur-[1px]"
+            @click.self="showWarning = false"
+        >
+            <div
+                class="w-full max-w-md rounded-xl border border-border bg-background p-6 shadow-xl"
+            >
+                <div class="flex items-center gap-3 mb-4">
+                    <div
+                        class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30"
+                    >
+                        <Icon
+                            icon="lucide:alert-triangle"
+                            class="h-5 w-5 text-amber-600 dark:text-amber-400"
+                        />
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold">
+                            Existing Fund Found
+                        </h3>
+                        <p class="text-sm text-muted-foreground">
+                            This office {{ showProjectFields ? "and project code " : "" }}already has a
+                            {{ fundType }} fund.
+                        </p>
+                    </div>
+                </div>
+                <div class="border-t my-4" />
+                <p class="text-sm text-muted-foreground mb-6 text-justify">
+                    Saving with these values will
+                    <strong>create a duplicate entry</strong> for the same
+                    office{{ showProjectFields ? " and project code" : "" }}.
+                    Consider reviewing existing funds to avoid redundancy.
+                </p>
+                <div class="flex justify-end gap-3">
+                    <Button variant="outline" @click="showWarning = false">
+                        Cancel
+                    </Button>
+                    <Button variant="default" @click="confirmSubmit">
+                        Continue Anyway
+                    </Button>
+                </div>
+            </div>
+        </div>
     </Card>
 </template>

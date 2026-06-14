@@ -77,6 +77,7 @@ class FundController extends Controller
         return Inertia::render('Funds/Create', [
             'offices' => Office::with(['projectCodes:id,office_id,code,name'])
                 ->get(['id', 'name']),
+            'existingFunds' => Fund::select(['office_id', 'project_code_id', 'type'])->get(),
         ]);
     }
 
@@ -148,6 +149,7 @@ class FundController extends Controller
             'fund' => $fund,
             'offices' => Office::with(['projectCodes:id,office_id,code,name'])
                 ->get(['id', 'name']),
+            'existingFunds' => Fund::where('id', '!=', $fund->id)->select(['office_id', 'project_code_id', 'type'])->get(),
         ]);
     }
 

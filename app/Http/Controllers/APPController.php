@@ -71,6 +71,7 @@ class APPController extends Controller
     {
         return Inertia::render('APPs/Create', [
             'offices' => Office::all(['id', 'name']),
+            'existingApps' => APP::select(['office_id', 'fiscal_year'])->get(),
         ]);
     }
 
@@ -129,6 +130,7 @@ class APPController extends Controller
         return Inertia::render('APPs/Edit', [
             'app' => $app,
             'offices' => Office::all(['id', 'name']),
+            'existingApps' => APP::where('id', '!=', $app->id)->select(['office_id', 'fiscal_year'])->get(),
         ]);
     }
 

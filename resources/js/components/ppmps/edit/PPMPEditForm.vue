@@ -1,5 +1,5 @@
 <script setup>
-import { computed, watch } from "vue";
+import { computed, watch, ref } from "vue";
 import { Icon } from "@iconify/vue";
 import { Link } from "@inertiajs/vue3";
 import {
@@ -16,6 +16,7 @@ const props = defineProps({
     form: Object,
     ppmp: Object,
     offices: Array,
+    existingPpmps: Array,
 });
 
 const availableFunds = computed(() => {
@@ -31,6 +32,27 @@ const availableFunds = computed(() => {
 
     return selectedOffice?.funds ?? [];
 });
+
+const selectedFund = computed(() => {
+    if (!props.form.fund_id) return null;
+    return availableFunds.value.find(
+        (fund) => String(fund.id) === String(props.form.fund_id),
+    ) || null;
+});
+
+const hasExistingPpmp = computed(() => {
+    if (!selectedFund.value || !props.form.office_id) return false;
+    const projectCodeId = selectedFund.value.type === "project"
+        ? selectedFund.value.project_code_id
+        : null;
+    return (props.existingPpmps || []).some(
+        (ppmp) =>
+            String(ppmp.office_id) === String(props.form.office_id) &&
+            String(ppmp.project_code_id) === String(projectCodeId),
+    );
+});
+
+const showWarning = ref(false);
 
 watch(
     () => props.form.office_id,
@@ -48,6 +70,15 @@ watch(
 const emit = defineEmits(["submit"]);
 
 const handleSubmit = () => {
+    if (hasExistingPpmp.value) {
+        showWarning.value = true;
+    } else {
+        emit("submit");
+    }
+};
+
+const confirmSubmit = () => {
+    showWarning.value = false;
     emit("submit");
 };
 </script>
@@ -200,5 +231,49 @@ const handleSubmit = () => {
                 </div>
             </form>
         </CardContent>
+
+        <!-- Warning Modal -->
+        <div
+            v-if="showWarning"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4 backdrop-blur-[1px]"
+            @click.self="showWarning = false"
+        >
+            <div
+                class="w-full max-w-md rounded-xl border border-border bg-background p-6 shadow-xl"
+            >
+                <div class="flex items-center gap-3 mb-4">
+                    <div
+                        class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30"
+                    >
+                        <Icon
+                            icon="lucide:alert-triangle"
+                            class="h-5 w-5 text-amber-600 dark:text-amber-400"
+                        />
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold">
+                            Existing PPMP Found
+                        </h3>
+                        <p class="text-sm text-muted-foreground">
+                            This office and fund combination already has a PPMP.
+                        </p>
+                    </div>
+                </div>
+                <div class="border-t my-4" />
+                <p class="text-sm text-muted-foreground mb-6 text-justify">
+                    This office and fund combination already has a PPMP.
+                    Saving will <strong>create an addendum</strong> — the new
+                    items will be appended to the existing PPMP.
+                </p>
+                <div class="flex justify-end gap-3">
+                    <Button variant="outline" @click="showWarning = false">
+                        Cancel
+                    </Button>
+                    <Button variant="default" @click="confirmSubmit">
+                        Create Addendum
+                    </Button>
+                </div>
+            </div>
+        </div>
     </Card>
 </template>

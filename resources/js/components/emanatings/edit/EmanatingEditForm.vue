@@ -1,5 +1,5 @@
 <script setup>
-import { computed, watch } from "vue";
+import { computed, watch, ref } from "vue";
 import { Icon } from "@iconify/vue";
 import { Link } from "@inertiajs/vue3";
 import {
@@ -20,6 +20,7 @@ const props = defineProps({
     offices: Array,
     ppmps: Array,
     ppmpCategories: Array,
+    existingEmanatings: Array,
 });
 
 const filteredPpmps = computed(() => {
@@ -42,6 +43,23 @@ const filteredCategories = computed(() => {
     );
 });
 
+const selectedPpmp = computed(() => {
+    if (!props.form.ppmp_id) return null;
+    return props.ppmps.find(
+        (ppmp) => String(ppmp.id) === String(props.form.ppmp_id),
+    ) || null;
+});
+
+const hasExistingEmanating = computed(() => {
+    if (!selectedPpmp.value || !props.form.ppmp_category_id) return false;
+    return (props.existingEmanatings || []).some(
+        (em) =>
+            String(em.ppmp_category_id) === String(props.form.ppmp_category_id),
+    );
+});
+
+const showWarning = ref(false);
+
 watch(
     () => props.form.office_id,
     () => {
@@ -60,6 +78,15 @@ watch(
 const emit = defineEmits(["submit"]);
 
 const handleSubmit = () => {
+    if (hasExistingEmanating.value) {
+        showWarning.value = true;
+    } else {
+        emit("submit");
+    }
+};
+
+const confirmSubmit = () => {
+    showWarning.value = false;
     emit("submit");
 };
 
@@ -83,7 +110,6 @@ const formatPpmpLabel = (ppmp) => {
         </CardHeader>
         <CardContent>
             <form @submit.prevent="handleSubmit" class="space-y-6">
-                <!-- Same fields as Create form -->
                 <div class="space-y-2">
                     <Label for="office_id">Office *</Label>
                     <select
@@ -246,5 +272,51 @@ const formatPpmpLabel = (ppmp) => {
                 </div>
             </form>
         </CardContent>
+
+        <!-- Warning Modal -->
+        <div
+            v-if="showWarning"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4 backdrop-blur-[1px]"
+            @click.self="showWarning = false"
+        >
+            <div
+                class="w-full max-w-md rounded-xl border border-border bg-background p-6 shadow-xl"
+            >
+                <div class="flex items-center gap-3 mb-4">
+                    <div
+                        class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30"
+                    >
+                        <Icon
+                            icon="lucide:alert-triangle"
+                            class="h-5 w-5 text-amber-600 dark:text-amber-400"
+                        />
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold">
+                            Existing Emanating Found
+                        </h3>
+                        <p class="text-sm text-muted-foreground">
+                            This PPMP category combination already has an
+                            emanating request.
+                        </p>
+                    </div>
+                </div>
+                <div class="border-t my-4" />
+                <p class="text-sm text-muted-foreground mb-6 text-justify">
+                    Saving will
+                    <strong>replace any existing emanating</strong> for this
+                    PPMP category. Previously canvassed items and associated
+                    data may be affected. This action cannot be undone.
+                </p>
+                <div class="flex justify-end gap-3">
+                    <Button variant="outline" @click="showWarning = false">
+                        Cancel
+                    </Button>
+                    <Button variant="default" @click="confirmSubmit">
+                        Continue & Replace
+                    </Button>
+                </div>
+            </div>
+        </div>
     </Card>
 </template>

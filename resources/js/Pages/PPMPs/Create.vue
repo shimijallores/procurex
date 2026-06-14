@@ -24,6 +24,7 @@ defineOptions({
 
 const props = defineProps({
     offices: Array,
+    existingPpmps: Array,
 });
 
 const form = useForm({
@@ -65,6 +66,7 @@ const submit = () => {
             :form="form"
             :offices="offices"
             :xlsx-file-name="xlsxFileName"
+            :existing-ppmps="existingPpmps"
             @submit="submit"
             @file-change="handleFileChange"
         />

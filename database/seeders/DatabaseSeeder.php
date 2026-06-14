@@ -16,12 +16,12 @@ class DatabaseSeeder extends Seeder
             OfficeSeeder::class,
             ProjectCodeSeeder::class,
             AccountSeeder::class,
-            SampleDataSeeder::class,
             CalendarSeeder::class,
             SupplierSeeder::class,
             MasterListSeeder::class,
-            FullDataSeeder::class,
-            TestDataSeeder::class,
+            // SampleDataSeeder::class,
+            // FullDataSeeder::class,
+            // TestDataSeeder::class,
         ]);
     }
 }

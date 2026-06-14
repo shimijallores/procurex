@@ -31,6 +31,7 @@ const props = defineProps({
     offices: Array,
     ppmps: Array,
     ppmpCategories: Array,
+    existingEmanatings: Array,
 });
 
 const form = useForm({
@@ -66,6 +67,7 @@ const submit = () => {
             :offices="offices"
             :ppmps="ppmps"
             :ppmp-categories="ppmpCategories"
+            :existing-emanatings="existingEmanatings"
             @submit="submit"
         />
     </div>

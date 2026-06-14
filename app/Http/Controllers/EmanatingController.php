@@ -171,6 +171,7 @@ class EmanatingController extends Controller
 
         return Inertia::render('Emanatings/Create', [
             'funds' => $fundOptions,
+            'existingEmanatings' => Emanating::select(['fund_id', 'ppmp_category_id'])->get(),
         ]);
     }
 
@@ -302,6 +303,7 @@ class EmanatingController extends Controller
                 ->get(['id', 'office_id', 'project_code_id', 'fiscal_year']),
             'ppmpCategories' => PPMPCategory::with('ppmp.office', 'account')
                 ->get(['id', 'ppmp_id', 'account_id']),
+            'existingEmanatings' => Emanating::where('id', '!=', $emanating->id)->select(['fund_id', 'ppmp_category_id'])->get(),
         ]);
     }
 

@@ -24,6 +24,7 @@ defineOptions({
 const props = defineProps({
     app: Object,
     offices: Array,
+    existingApps: Array,
 });
 
 const form = useForm({
@@ -43,6 +44,7 @@ const submit = () => {
             :form="form"
             :app="app"
             :offices="offices"
+            :existing-apps="existingApps"
             @submit="submit"
         />
     </div>
