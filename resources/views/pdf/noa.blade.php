@@ -63,8 +63,7 @@
         }
 
         .gov-line {
-            text-transform: uppercase;
-            font-weight: 600;
+            font-weight: 300;
             line-height: 1.3;
         }
 
@@ -74,8 +73,8 @@
 
         .gov-office {
             margin-top: 4px;
-            font-size: 12pt;
-            font-weight: 700;
+            font-size: 16pt;
+            font-weight: 900;
             text-transform: uppercase;
         }
 
@@ -215,9 +214,9 @@
             </div>
             <div class="header-cell header-mid">
                 <div class="gov-line">Republic of the Philippines</div>
-                <div class="gov-line">Provincial Government of Batangas</div>
+                <div class="gov-line">Province of Batangas</div>
                 <div class="gov-office">Office of the Provincial Governor</div>
-                <div class="gov-sub">Capitol Site, Kumintang Ibaba, Batangas City 4200</div>
+                <div class="gov-sub">Capitol Building, Batangas City 4200</div>
             </div>
             <div class="header-cell header-right">
                 @if ($bagongLogo)
@@ -229,9 +228,6 @@
         <div class="divider"></div>
 
         <div class="noa-number">NOA No. {{ $noa->noa_no }}</div>
-        @if($rfq?->svp_no)
-            <div class="svp-number" style="font-size: 14px; margin-top: 4px;">SVP No. {{ $rfq->svp_no }}</div>
-        @endif
 
         <div class="title">Notice of Award</div>
 
@@ -247,7 +243,7 @@
         <div class="body">
             @php $_nameParts = explode(' ', $recipientName); $_surname = count($_nameParts) > 1 ? end($_nameParts) : $_nameParts[0]; @endphp
             Dear Ms/Mr {{ $_surname }},<br><br>
-            We would like to inform you that your company was declared as the supplier with <b>{{ $calculationLabel }}</b>@if($resolution), through BAC Resolution No. <b>{{ $resolution->resolution_no }}</b> dated <b>{{ optional($resolution->resolution_date)->format('F d, Y') }}</b>@endif, after passing all terms, conditions, and specifications stipulated in the Request for Quotation dated <b>{{ optional($rfq?->rfq_date)->format('F d, Y') }}</b>. Thus, you are hereby AWARDED of the project, as follows:
+            We would like to inform you that your company was declared as the supplier with <b style="text-transform: uppercase; font-weight: 300;">{{ $calculationLabel }}</b>@if($resolution), through <b>Resolution No. {{ $resolution->resolution_no }}</b>, <b>Series {{ optional($resolution->resolution_date)->format('Y') }}</b>@endif, after passing all the terms, conditions and /or specifications needed by the Procuring Entity as stipulated in the Request for Quotation, dated <b>{{ optional($rfq?->rfq_date)->format('F d, Y') }}</b>. Thus, you are hereby AWARDED of the project, as follows:
         </div>
 
         <div class="table-wrap">
@@ -267,8 +263,8 @@
                             @endif
                         </td>
                         <td>
-                            <span class="underline">{{ $amountWords }} Only</span>
-                            (Php {{ $amountFmt }})
+                            <span class="font-weight: 300;">{{ $amountWords }} Only</span>
+                            <span class="font-weight: bold;">(Php {{ $amountFmt }})</span>
                         </td>
                     </tr>
                 </tbody>
@@ -287,7 +283,8 @@
 
         <div class="conforme">
             <div style="font-weight:700;">CONFORME:</div>
-            <div style="margin-top: 28px;" class="underline">{{ $recipientName }}</div>
+            <div style="margin-top: 10px;"> _______________________</div>
+            <div style="margin-top: 5px; margin-bottom: 5px;">{{ $recipientName }}</div>
             <div style="font-weight:700; text-transform:uppercase;">{{ $supplierName }}</div>
             <div>Date: __________________</div>
         </div>

@@ -6,10 +6,12 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\UpdateNOARequest;
 use App\Models\AOQ;
+use App\Models\BACResolution;
 use App\Models\Batch;
 use App\Models\Calendar;
 use App\Models\NOA;
 use App\Models\Office;
+use App\Models\RFQ;
 use App\Models\Supplier;
 use Barryvdh\DomPDF\Facade\Pdf as DomPdf;
 use Illuminate\Http\JsonResponse;
@@ -110,11 +112,26 @@ class NOAController extends Controller
                 'owner',
             ]);
 
+        $svpOptions = AOQ::query()
+            ->whereDoesntHave('noa')
+            ->whereHas('rfq')
+            ->whereHas('batch')
+            ->with('rfq')
+            ->get()
+            ->map(fn (AOQ $aoq) => [
+                'svp_no' => $aoq->rfq->svp_no,
+                'project_name' => $aoq->rfq->project_name,
+                'batch_id' => $aoq->batch_id,
+            ])
+            ->sortBy('svp_no')
+            ->values();
+
         $suggestedDate = $this->suggestNextWorkingDay()->toDateString();
 
         return Inertia::render('NOAs/Create', [
             'batches' => $batches,
             'suppliers' => $suppliers,
+            'svpOptions' => $svpOptions,
             'defaultNoaDate' => $suggestedDate,
         ]);
     }
@@ -266,9 +283,50 @@ class NOAController extends Controller
                 'owner',
             ]);
 
+        $bacResolution = BACResolution::query()
+            ->whereHas('aoqs', fn ($q) => $q->where('batch_id', $batch->id))
+            ->orWhereHas('aoq', fn ($q) => $q->where('batch_id', $batch->id))
+            ->latest('resolution_date')
+            ->first(['id', 'resolution_no']);
+
         return response()->json([
             'aoqs' => $aoqs,
             'suppliers' => $suppliers,
+            'batch' => [
+                'id' => $batch->id,
+                'batch_no' => $batch->batch_no,
+            ],
+            'bac_resolution' => $bacResolution,
+        ]);
+    }
+
+    public function findBatchBySvp(Request $request): JsonResponse
+    {
+        $svpNo = $request->query('svp_no');
+
+        if (! $svpNo) {
+            return response()->json(['error' => 'SVP number is required.'], 422);
+        }
+
+        $rfq = RFQ::where('svp_no', $svpNo)->first();
+
+        if (! $rfq) {
+            return response()->json(['error' => 'No RFQ found with that SVP number.'], 404);
+        }
+
+        $aoq = AOQ::where('rfq_id', $rfq->id)->first();
+
+        if (! $aoq || ! $aoq->batch_id) {
+            return response()->json(['error' => 'No AOQ or batch found for this SVP number.'], 404);
+        }
+
+        $batch = Batch::find($aoq->batch_id);
+
+        return response()->json([
+            'batch' => [
+                'id' => $batch->id,
+                'batch_no' => $batch->batch_no,
+            ],
         ]);
     }
 

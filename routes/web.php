@@ -6,6 +6,7 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AOQController;
 use App\Http\Controllers\APPController;
 use App\Http\Controllers\BACResolutionController;
+use App\Http\Controllers\BatchController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CanvasController;
 use App\Http\Controllers\COAInspectionController;
@@ -323,15 +324,28 @@ Route::middleware(['auth'])->group(function (): void {
     Route::get('aoqs/{aoq}/pdf', [AOQController::class, 'printPdf'])
         ->middleware($aoqRoles)
         ->name('aoqs.pdf');
-    Route::get('aoqs/suggest-batch', [AOQController::class, 'suggestBatch'])
+    Route::get('aoqs/suggest-batch', [BatchController::class, 'suggestBatch'])
         ->middleware($aoqRoles)
         ->name('aoqs.suggest-batch');
-    Route::post('aoqs/store-batch', [AOQController::class, 'storeBatch'])
+    Route::post('aoqs/store-batch', [BatchController::class, 'storeBatch'])
         ->middleware($aoqRoles)
         ->name('aoqs.store-batch');
-    Route::delete('batches/{batch}', [AOQController::class, 'destroyBatch'])
-        ->middleware($aoqRoles)
-        ->name('batches.destroy');
+    // Batch module
+    $batchRoles =
+        'role:'.
+        implode(',', [
+            RoleType::SUPERADMIN->value,
+            RoleType::ABSTRACT_ADMIN->value,
+        ]);
+    Route::resource('batches', BatchController::class)
+        ->except(['update'])
+        ->middleware($batchRoles);
+    Route::put('batches/{batch}', [BatchController::class, 'update'])
+        ->middleware($batchRoles)
+        ->name('batches.update');
+    Route::get('batches/available-aoqs', [BatchController::class, 'availableAoqs'])
+        ->middleware($batchRoles)
+        ->name('batches.available-aoqs');
 
     // BAC Resolution module
     $bacResolutionRoles =
@@ -354,6 +368,14 @@ Route::middleware(['auth'])->group(function (): void {
     $noaRoles =
         'role:'.
         implode(',', [RoleType::SUPERADMIN->value, RoleType::NOA_ADMIN->value]);
+
+    Route::get('noas/find-batch-by-svp', [NOAController::class, 'findBatchBySvp'])
+        ->middleware($noaRoles)
+        ->name('noas.find-batch-by-svp');
+    Route::get('noas/batch-aoqs/{batch}', [NOAController::class, 'batchAoqs'])
+        ->middleware($noaRoles)
+        ->name('noas.batch-aoqs');
+
     Route::resource('noas', NOAController::class)
         ->except(['edit', 'update'])
         ->middleware($noaRoles);
@@ -369,9 +391,6 @@ Route::middleware(['auth'])->group(function (): void {
     Route::get('batches/{batch}/print-noas', [NOAController::class, 'printBatch'])
         ->middleware($noaRoles)
         ->name('noas.print-batch');
-    Route::get('noas/batch-aoqs/{batch}', [NOAController::class, 'batchAoqs'])
-        ->middleware($noaRoles)
-        ->name('noas.batch-aoqs');
 
     // Purchase Order module
     $poRoles =

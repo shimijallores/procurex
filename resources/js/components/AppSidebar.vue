@@ -207,6 +207,13 @@ const mainNavItems = computed(() => {
             roles: ["SuperAdmin", "Abstract Admin"],
         },
         {
+            title: "Batches",
+            url: route("batches.index"),
+            icon: "lucide:layers",
+            isActive: route().current("batches.*"),
+            roles: ["SuperAdmin", "Abstract Admin"],
+        },
+        {
             title: "Notice of Award",
             url: route("noas.index"),
             icon: "lucide:file-badge",
@@ -317,7 +324,7 @@ const matrixItems = computed(() => {
 
 const quotationItems = computed(() => {
     return mainNavItems.value.filter((item) =>
-        ["Request for Quotation", "Abstract of Quotation"].includes(item.title),
+        ["Request for Quotation", "Abstract of Quotation", "Batches"].includes(item.title),
     );
 });
 

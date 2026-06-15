@@ -7,9 +7,54 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
+const manualBatchNo = ref("");
+const creatingManualBatch = ref(false);
+const svpSearchNo = ref("");
+const searchingSvp = ref(false);
+const svpError = ref("");
+
+const useManualBatch = async () => {
+    const no = (manualBatchNo.value || "").trim();
+    if (!no || creatingManualBatch.value) return;
+    creatingManualBatch.value = true;
+
+    try {
+        const { data } = await axios.post(route("aoqs.store-batch"), { batch_no: no });
+        selectedBatchId.value = String(data.id);
+        manualBatchNo.value = "";
+    } catch (err) {
+        if (err?.response?.status === 409) {
+            const existing = err?.response?.data;
+            if (existing?.id) selectedBatchId.value = String(existing.id);
+        }
+    } finally {
+        creatingManualBatch.value = false;
+    }
+};
+
+const findBatchBySvp = async () => {
+    const svp = (svpSearchNo.value || "").trim();
+    if (!svp || searchingSvp.value) return;
+    searchingSvp.value = true;
+    svpError.value = "";
+
+    try {
+        const res = await axios.get(route("noas.find-batch-by-svp"), {
+            params: { svp_no: svp },
+        });
+        selectedBatchId.value = String(res.data.batch.id);
+        svpSearchNo.value = "";
+    } catch (err) {
+        svpError.value = err?.response?.data?.error || "SVP not found. Make sure the AOQ has a batch assigned.";
+    } finally {
+        searchingSvp.value = false;
+    }
+};
+
 const props = defineProps({
     batches: Array,
     suppliers: Array,
+    svpOptions: Array,
     defaultNoaDate: String,
 });
 
@@ -18,6 +63,8 @@ const aoqs = ref([]);
 const noaRows = ref([]);
 const loadingAoqs = ref(false);
 const submitting = ref(false);
+const selectedBatchInfo = ref(null);
+const selectedBacResolution = ref(null);
 
 const showRecipientSuggestions = ref(null);
 const showTitleSuggestions = ref(null);
@@ -45,6 +92,8 @@ const fetchAoqs = async (batchId) => {
     try {
         const res = await axios.get(route("noas.batch-aoqs", batchId));
         aoqs.value = res.data.aoqs || [];
+        selectedBatchInfo.value = res.data.batch || null;
+        selectedBacResolution.value = res.data.bac_resolution || null;
         noaRows.value = (res.data.aoqs || []).map((aoq) => ({
             aoq_id: String(aoq.id),
             noa_date: formatDate(props.defaultNoaDate || ""),
@@ -62,9 +111,12 @@ const fetchAoqs = async (batchId) => {
             _supplier: aoq.winner_supplier || null,
             _aoq: aoq,
         }));
-    } catch {
+    } catch (err) {
         aoqs.value = [];
         noaRows.value = [];
+        selectedBatchInfo.value = null;
+        selectedBacResolution.value = null;
+        console.error("fetchAoqs error:", err);
     } finally {
         loadingAoqs.value = false;
     }
@@ -144,26 +196,109 @@ watch(selectedBatchId, (id) => {
                     Select Batch
                 </CardTitle>
             </CardHeader>
-            <CardContent class="space-y-3">
-                <div class="space-y-2">
-                    <Label for="batch_id">Batch</Label>
-                    <select
-                        id="batch_id"
-                        v-model="selectedBatchId"
-                        class="flex h-10 w-full max-w-md rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    >
-                        <option value="">— Select Batch —</option>
-                        <option
-                            v-for="batch in batches"
-                            :key="batch.id"
-                            :value="String(batch.id)"
-                        >
-                            {{ batch.batch_no }}
-                            ({{ batch.aoqs_count }} AOQ{{ batch.aoqs_count !== 1 ? "s" : "" }})
-                        </option>
-                    </select>
+            <CardContent>
+                <div class="grid gap-6 md:grid-cols-2">
+                    <!-- Left: Batch selection -->
+                    <div class="space-y-3">
+                        <div class="space-y-2">
+                            <Label for="batch_id">Batch</Label>
+                            <select
+                                id="batch_id"
+                                v-model="selectedBatchId"
+                                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            >
+                                <option value="">— Select Batch —</option>
+                                <option
+                                    v-for="batch in batches"
+                                    :key="batch.id"
+                                    :value="String(batch.id)"
+                                >
+                                    {{ batch.batch_no }}
+                                    ({{ batch.aoqs_count }} AOQ{{ batch.aoqs_count !== 1 ? "s" : "" }})
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="flex items-end gap-2">
+                            <div class="space-y-1.5 flex-1">
+                                <Label for="manual_batch_no">Or type a Batch No.</Label>
+                                <input
+                                    id="manual_batch_no"
+                                    v-model="manualBatchNo"
+                                    type="text"
+                                    placeholder="e.g. 260088"
+                                    class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
+                                    @keyup.enter="useManualBatch"
+                                />
+                            </div>
+                            <Button
+                                type="button"
+                                variant="default"
+                                size="sm"
+                                :disabled="!manualBatchNo.trim() || creatingManualBatch"
+                                @click="useManualBatch"
+                            >
+                                <Icon
+                                    v-if="creatingManualBatch"
+                                    icon="lucide:loader-2"
+                                    class="mr-1 h-3.5 w-3.5 animate-spin"
+                                />
+                                Use
+                            </Button>
+                        </div>
+                    </div>
+
+                    <!-- Right: SVP selection -->
+                    <div class="space-y-3">
+                        <div class="flex items-end gap-2">
+                            <div class="space-y-1.5 flex-1">
+                                <Label for="svp_search">Or select by SVP No.</Label>
+                                <input
+                                    id="svp_search"
+                                    v-model="svpSearchNo"
+                                    type="text"
+                                    placeholder="e.g. 2026-0001"
+                                    class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
+                                    @keyup.enter="findBatchBySvp"
+                                />
+                            </div>
+                            <div class="space-y-1.5">
+                                <Label class="invisible">SVP Dropdown</Label>
+                                <select
+                                    v-model="svpSearchNo"
+                                    class="flex h-9 rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
+                                    @change="findBatchBySvp"
+                                >
+                                    <option value="">— Pick SVP —</option>
+                                    <option
+                                        v-for="opt in svpOptions"
+                                        :key="opt.svp_no"
+                                        :value="opt.svp_no"
+                                    >
+                                        {{ opt.svp_no }}
+                                    </option>
+                                </select>
+                            </div>
+                            <Button
+                                type="button"
+                                variant="default"
+                                size="sm"
+                                :disabled="!svpSearchNo.trim() || searchingSvp"
+                                @click="findBatchBySvp"
+                            >
+                                <Icon
+                                    v-if="searchingSvp"
+                                    icon="lucide:loader-2"
+                                    class="mr-1 h-3.5 w-3.5 animate-spin"
+                                />
+                                Find
+                            </Button>
+                        </div>
+                    </div>
+                    <p v-if="svpError" class="text-xs text-destructive">{{ svpError }}</p>
                 </div>
-                <p class="text-xs text-muted-foreground">
+
+                <p class="mt-3 text-xs text-muted-foreground">
                     Select a batch to load AOQs that need Notices of Award.
                 </p>
             </CardContent>
@@ -178,6 +313,18 @@ watch(selectedBatchId, (id) => {
                         <Icon icon="lucide:loader-2" class="h-4 w-4 animate-spin text-muted-foreground" />
                     </span>
                 </CardTitle>
+                <div v-if="selectedBatchInfo" class="mt-2 flex flex-wrap items-center gap-4 text-sm">
+                    <div class="flex items-center gap-1.5 rounded-md border border-border bg-muted/40 px-3 py-1.5">
+                        <Icon icon="lucide:layers" class="h-3.5 w-3.5 text-muted-foreground" />
+                        <span class="text-muted-foreground">Batch:</span>
+                        <span class="font-mono font-semibold">{{ selectedBatchInfo.batch_no }}</span>
+                    </div>
+                    <div v-if="selectedBacResolution" class="flex items-center gap-1.5 rounded-md border border-border bg-primary/5 px-3 py-1.5">
+                        <Icon icon="lucide:file-check" class="h-3.5 w-3.5 text-primary" />
+                        <span class="text-muted-foreground">BAC Resolution:</span>
+                        <span class="font-mono font-semibold">{{ selectedBacResolution.resolution_no }}</span>
+                    </div>
+                </div>
             </CardHeader>
             <CardContent class="space-y-4">
                 <div v-if="!noaRows.length && !loadingAoqs" class="py-6 text-center text-sm text-muted-foreground">

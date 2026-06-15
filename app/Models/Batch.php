@@ -13,6 +13,14 @@ class Batch extends Model
         'batch_no',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+        ];
+    }
+
     public function aoqs(): HasMany
     {
         return $this->hasMany(AOQ::class, 'batch_id');

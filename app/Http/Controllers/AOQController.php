@@ -67,11 +67,11 @@ class AOQController extends Controller
         foreach ($all as $aoq) {
             $calculation = $this->calculateSupplierTotals($aoq->rfq);
             if ($calculation['calculation_mode'] === 'single_calculated') {
-                ++$singleCalculated;
+                $singleCalculated++;
             }
 
             if ($calculation['calculation_mode'] === 'lowest_calculated') {
-                ++$lowestCalculated;
+                $lowestCalculated++;
             }
         }
 
@@ -134,8 +134,22 @@ class AOQController extends Controller
         ]);
     }
 
-    public function storeBatch(): JsonResponse
+    public function storeBatch(Request $request): JsonResponse
     {
+        $customBatchNo = $request->input('batch_no');
+
+        if ($customBatchNo !== null && $customBatchNo !== '') {
+            $existing = Batch::where('batch_no', $customBatchNo)->first();
+
+            if ($existing) {
+                return response()->json($existing, 409);
+            }
+
+            $batch = Batch::create(['batch_no' => $customBatchNo]);
+
+            return response()->json($batch);
+        }
+
         $year = now()->format('y');
         $prefix = $year;
 
@@ -152,7 +166,7 @@ class AOQController extends Controller
         $batchNo = sprintf('%s%04d', $prefix, $next);
 
         while (Batch::where('batch_no', $batchNo)->exists()) {
-            ++$next;
+            $next++;
             $batchNo = sprintf('%s%04d', $prefix, $next);
         }
 

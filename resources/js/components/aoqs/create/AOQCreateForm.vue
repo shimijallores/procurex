@@ -260,6 +260,30 @@ const quotationTotal = (quotation) => {
     return total;
 };
 
+const manualBatchNo = ref("");
+const creatingManualBatch = ref(false);
+
+const useManualBatch = async () => {
+    const no = (manualBatchNo.value || "").trim();
+    if (!no || creatingManualBatch.value) return;
+    creatingManualBatch.value = true;
+
+    try {
+        const { data } = await axios.post(route("aoqs.store-batch"), { batch_no: no });
+        props.form.batch_id = String(data.id);
+        batchList.value.push({ ...data, aoqs_count: 0 });
+        manualBatchNo.value = "";
+    } catch (err) {
+        const msg = err?.response?.data?.error || "Failed to create batch.";
+        if (err?.response?.status === 409) {
+            const existing = batchList.value.find((b) => b.batch_no === no);
+            if (existing) props.form.batch_id = String(existing.id);
+        }
+    } finally {
+        creatingManualBatch.value = false;
+    }
+};
+
 const createNewBatch = async () => {
     if (creatingBatch.value) return;
     creatingBatch.value = true;
@@ -431,6 +455,34 @@ const calculationMessage = computed(() => {
                 </div>
             </CardHeader>
             <CardContent class="space-y-3">
+                <div class="flex items-end gap-2">
+                    <div class="space-y-1.5 flex-1">
+                        <Label for="manual_batch_no">Batch No. (manual)</Label>
+                        <input
+                            id="manual_batch_no"
+                            v-model="manualBatchNo"
+                            type="text"
+                            placeholder="e.g. 260088"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
+                            @keyup.enter="useManualBatch"
+                        />
+                    </div>
+                    <Button
+                        type="button"
+                        variant="default"
+                        size="sm"
+                        :disabled="!manualBatchNo.trim() || creatingManualBatch"
+                        @click="useManualBatch"
+                    >
+                        <Icon
+                            v-if="creatingManualBatch"
+                            icon="lucide:loader-2"
+                            class="mr-1 h-3.5 w-3.5 animate-spin"
+                        />
+                        Use Batch No
+                    </Button>
+                </div>
+
                 <div class="flex items-center gap-2">
                     <Icon icon="lucide:calendar" class="h-4 w-4 text-muted-foreground shrink-0" />
                     <select

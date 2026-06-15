@@ -768,7 +768,7 @@ class EmanatingController extends Controller
         $decoded = trim($text);
 
         // Handle encoded names such as "Meals &amp; Snacks" from uploaded docs.
-        for ($i = 0; $i < 2; ++$i) {
+        for ($i = 0; $i < 2; $i++) {
             $next = html_entity_decode($decoded, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
             if ($next === $decoded) {

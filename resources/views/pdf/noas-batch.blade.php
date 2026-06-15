@@ -278,7 +278,7 @@
                 <div class="body">
                     @php $_nameParts = explode(' ', $recipientName); $_surname = count($_nameParts) > 1 ? end($_nameParts) : $_nameParts[0]; @endphp
                     Dear Ms/Mr {{ $_surname }},<br><br>
-                    We would like to inform you that your company was declared as the supplier with <b>{{ $calculationLabel }}</b>@if($resolution), through BAC Resolution No. <b>{{ $resolution->resolution_no }}</b> dated <b>{{ optional($resolution->resolution_date)->format('F d, Y') }}</b>@endif, after passing all terms, conditions, and specifications stipulated in the Request for Quotation dated <b>{{ optional($rfq?->rfq_date)->format('F d, Y') }}</b>. Thus, you are hereby AWARDED of the project, as follows:
+                    We would like to inform you that your company was declared as the supplier with <b style="text-transform: uppercase;">{{ $calculationLabel }}</b>@if($resolution), through <b>Resolution No. {{ $resolution->resolution_no }}</b>, <b>Series {{ optional($resolution->resolution_date)->format('Y') }}</b>@endif, after passing all the terms, conditions and /or specifications needed by the Procuring Entity as stipulated in the Request for Quotation, dated <b>{{ optional($rfq?->rfq_date)->format('F d, Y') }}</b>. Thus, you are hereby AWARDED of the project, as follows:
                 </div>
 
                 <div class="table-wrap">

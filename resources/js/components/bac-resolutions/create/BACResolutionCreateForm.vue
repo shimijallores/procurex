@@ -1,6 +1,7 @@
 <script setup>
-import { computed, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { Icon } from "@iconify/vue";
+import axios from "axios";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,28 @@ const props = defineProps({
 });
 
 defineEmits(["submit"]);
+
+const manualBatchNo = ref("");
+const creatingManualBatch = ref(false);
+
+const useManualBatch = async () => {
+    const no = (manualBatchNo.value || "").trim();
+    if (!no || creatingManualBatch.value) return;
+    creatingManualBatch.value = true;
+
+    try {
+        const { data } = await axios.post(route("aoqs.store-batch"), { batch_no: no });
+        props.form.batch_id = String(data.id);
+        manualBatchNo.value = "";
+    } catch (err) {
+        if (err?.response?.status === 409) {
+            const existing = err?.response?.data;
+            if (existing?.id) props.form.batch_id = String(existing.id);
+        }
+    } finally {
+        creatingManualBatch.value = false;
+    }
+};
 
 const { enforceWorkingDay, getDateNotice, getDateNoticeClass } =
     useWorkingDayInputGuard(props.form);
@@ -144,6 +167,34 @@ watch(
                     >
                         {{ form.errors.batch_id }}
                     </p>
+                </div>
+
+                <div class="flex items-end gap-2">
+                    <div class="space-y-1.5 flex-1">
+                        <Label for="manual_batch_no">Or type a Batch No.</Label>
+                        <input
+                            id="manual_batch_no"
+                            v-model="manualBatchNo"
+                            type="text"
+                            placeholder="e.g. 260088"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
+                            @keyup.enter="useManualBatch"
+                        />
+                    </div>
+                    <Button
+                        type="button"
+                        variant="default"
+                        size="sm"
+                        :disabled="!manualBatchNo.trim() || creatingManualBatch"
+                        @click="useManualBatch"
+                    >
+                        <Icon
+                            v-if="creatingManualBatch"
+                            icon="lucide:loader-2"
+                            class="mr-1 h-3.5 w-3.5 animate-spin"
+                        />
+                        Use
+                    </Button>
                 </div>
 
                 <div class="grid gap-3 md:grid-cols-2">

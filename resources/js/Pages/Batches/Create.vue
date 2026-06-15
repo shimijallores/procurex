@@ -1,0 +1,112 @@
+<script setup>
+import { Link, Form } from "@inertiajs/vue3";
+import { Icon } from "@iconify/vue";
+import Layout from "@/Layout/Layout.vue";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+
+defineOptions({
+    layout: (h, page) =>
+        h(
+            Layout,
+            {
+                breadcrumbs: [
+                    { label: "Batches", href: route("batches.index") },
+                    { label: "Create" },
+                ],
+            },
+            () => page,
+        ),
+});
+</script>
+
+<template>
+    <div class="space-y-6">
+        <!-- Header -->
+        <div class="flex items-center gap-4">
+            <Link :href="route('batches.index')">
+                <Button variant="ghost" size="sm">
+                    <Icon icon="lucide:arrow-left" class="mr-2 h-4 w-4" />
+                    Back
+                </Button>
+            </Link>
+            <div class="space-y-1">
+                <h1 class="text-2xl font-bold tracking-tight md:text-3xl">
+                    Create Batch
+                </h1>
+                <p class="text-muted-foreground">
+                    Add a new batch number to the system
+                </p>
+            </div>
+        </div>
+
+        <!-- Form Card -->
+        <Card class="max-w-2xl">
+            <CardHeader>
+                <CardTitle>Batch Details</CardTitle>
+                <CardDescription>
+                    Enter the batch number for the new batch
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Form
+                    :action="route('batches.store')"
+                    method="post"
+                    class="space-y-6"
+                    #default="{ errors, processing }"
+                >
+                    <div class="space-y-2">
+                        <Label for="batch_no">Batch Number</Label>
+                        <input
+                            id="batch_no"
+                            name="batch_no"
+                            type="text"
+                            placeholder="Enter batch number"
+                            :class="[
+                                'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
+                                'ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium',
+                                'placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2',
+                                'focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+                                errors.batch_no ? 'border-destructive' : '',
+                            ]"
+                        />
+                        <p
+                            v-if="errors.batch_no"
+                            class="text-sm text-destructive"
+                        >
+                            {{ errors.batch_no }}
+                        </p>
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <Button type="submit" :disabled="processing">
+                            <Icon
+                                v-if="processing"
+                                icon="lucide:loader-2"
+                                class="mr-2 h-4 w-4 animate-spin"
+                            />
+                            <Icon
+                                v-else
+                                icon="lucide:plus"
+                                class="mr-2 h-4 w-4"
+                            />
+                            Create Batch
+                        </Button>
+                        <Link :href="route('batches.index')">
+                            <Button type="button" variant="outline">
+                                Cancel
+                            </Button>
+                        </Link>
+                    </div>
+                </Form>
+            </CardContent>
+        </Card>
+    </div>
+</template>
