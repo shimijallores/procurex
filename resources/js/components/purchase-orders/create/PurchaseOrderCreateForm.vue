@@ -98,7 +98,7 @@ const numberToWords = (num) => {
         .join(" ");
 
     if (cents > 0) {
-        return `${wholeWords} Pesos and ${String(cents).padStart(2, "0")}/100 Only`;
+        return `${wholeWords} Pesos and ${String(cents).padStart(2, "0")}/100`;
     }
 
     return `${wholeWords} Pesos Only`;

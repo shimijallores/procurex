@@ -245,7 +245,8 @@
         </div>
 
         <div class="body">
-            Dear {{ explode(' ', $recipientName)[0] ?? 'Sir/Madam' }},<br><br>
+            @php $_nameParts = explode(' ', $recipientName); $_surname = count($_nameParts) > 1 ? end($_nameParts) : $_nameParts[0]; @endphp
+            Dear Ms/Mr {{ $_surname }},<br><br>
             We would like to inform you that your company was declared as the supplier with <b>{{ $calculationLabel }}</b>@if($resolution), through BAC Resolution No. <b>{{ $resolution->resolution_no }}</b> dated <b>{{ optional($resolution->resolution_date)->format('F d, Y') }}</b>@endif, after passing all terms, conditions, and specifications stipulated in the Request for Quotation dated <b>{{ optional($rfq?->rfq_date)->format('F d, Y') }}</b>. Thus, you are hereby AWARDED of the project, as follows:
         </div>
 
@@ -266,7 +267,7 @@
                             @endif
                         </td>
                         <td>
-                            <span class="underline">{{ $amountWords }}</span>
+                            <span class="underline">{{ $amountWords }} Only</span>
                             (Php {{ $amountFmt }})
                         </td>
                     </tr>

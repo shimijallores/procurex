@@ -39,7 +39,7 @@ class NumberToWords
                 $result .= ' and '.$centsWords.' Centavos';
             }
         } elseif ($cents > 0) {
-            $result .= ' and '.str_pad((string) $cents, 2, '0', STR_PAD_LEFT).'/100 Only';
+            $result .= ' and '.str_pad((string) $cents, 2, '0', STR_PAD_LEFT).'/100';
         } else {
             $result .= ' Only';
         }

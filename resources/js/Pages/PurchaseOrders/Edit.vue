@@ -46,7 +46,7 @@ const numberToWords = (num) => {
     const whole = Math.floor(amount);
     const cents = Math.round((amount - whole) * 100);
     const wholeWords = convert(whole).split(" ").filter(Boolean).map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(" ");
-    if (cents > 0) return `${wholeWords} Pesos and ${String(cents).padStart(2, "0")}/100 Only`;
+    if (cents > 0) return `${wholeWords} Pesos and ${String(cents).padStart(2, "0")}/100`;
     return `${wholeWords} Pesos Only`;
 };
 

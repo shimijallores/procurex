@@ -147,7 +147,7 @@
 
     $headerLines = collect(preg_split('/\r\n|\r|\n/', trim((string) ($poTransmittal->header_text ?? ''))))->filter();
     $supplier = strtoupper((string) ($winnerSupplier?->name ?? '—'));
-    $projectName = (string) ($resolution?->project_name ?? '—');
+    $projectName = (string) ($rfq?->project_name ?? $resolution?->project_name ?? '—');
     @endphp
 
     <div class="page">

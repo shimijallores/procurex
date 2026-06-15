@@ -225,7 +225,7 @@ class RFQController extends Controller
 
         do {
             $svpNo = sprintf('%s%04d', $prefix, $next);
-            $next++;
+            ++$next;
         } while (RFQ::where('svp_no', $svpNo)->exists());
 
         return $svpNo;

@@ -207,7 +207,7 @@
     : '________________________';
 
     $poAmount = (float) ($purchaseOrder->total_amount ?? 0);
-    $poAmountWords = \App\Helpers\NumberToWords::convert($poAmount, 'centavos');
+    $poAmountWords = \App\Helpers\NumberToWords::convert($poAmount);
     @endphp
 
     <div class="page">

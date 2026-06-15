@@ -185,11 +185,9 @@ class BACResolutionController extends Controller
             $projectName = (string) ($validated['project_name'] ?? 'Batch of Projects');
             $winnerSupplierName = (string) ($validated['winner_supplier_name'] ?? 'Multiple Suppliers');
 
-            $resolutionDate = Carbon::parse($validated['resolution_date']);
-
             $resolution = BACResolution::create([
                 'aoq_id' => $primaryAoq?->id,
-                'resolution_no' => $this->generateResolutionNumber($resolutionDate),
+                'resolution_no' => $this->generateResolutionNumber($batch, $winnerAmount),
                 'resolution_date' => $validated['resolution_date'],
                 'meeting_date' => $validated['meeting_date'] ?? null,
                 'project_name' => $projectName,
@@ -398,27 +396,12 @@ class BACResolutionController extends Controller
             ->inline();
     }
 
-    private function generateResolutionNumber(Carbon $resolutionDate): string
+    private function generateResolutionNumber(Batch $batch, float $winnerAmount): string
     {
-        $year = $resolutionDate->format('Y');
-        $prefix = $year.'-';
+        $batchSequence = str_pad((string) ((int) substr((string) $batch->batch_no, -4)), 4, '0', STR_PAD_LEFT);
+        $bracket = $winnerAmount < 200000 ? 'B200K' : 'A200K';
 
-        $latest = BACResolution::query()
-            ->where('resolution_no', 'like', $prefix.'%')
-            ->orderByDesc('resolution_no')
-            ->value('resolution_no');
-
-        $next = 1;
-        if ($latest && preg_match('/^\d{4}-(\d{4})$/', $latest, $matches) === 1) {
-            $next = (int) $matches[1] + 1;
-        }
-
-        do {
-            $resolutionNo = sprintf('%s%04d', $prefix, $next);
-            $next++;
-        } while (BACResolution::where('resolution_no', $resolutionNo)->exists());
-
-        return $resolutionNo;
+        return sprintf('BAC-SVP-%s-%s', $bracket, $batchSequence);
     }
 
     private function isWorkingDay(?string $date): bool
@@ -497,7 +480,7 @@ class BACResolutionController extends Controller
             }
 
             if ($hasAtLeastOnePrice) {
-                $count++;
+                ++$count;
             }
         }
 

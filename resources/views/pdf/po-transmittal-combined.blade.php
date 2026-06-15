@@ -150,7 +150,7 @@
     $bagongLogo = $imagePath(['bagong-pilipinas.png']);
 
     $supplier = strtoupper((string) ($winnerSupplier?->name ?? '—'));
-    $projectName = (string) ($resolution?->project_name ?? '—');
+    $projectName = (string) ($rfq?->project_name ?? $resolution?->project_name ?? '—');
 
     $coaHeaderLines = collect(preg_split('/\r\n|\r|\n/', trim((string) ($coaTransmittal?->header_text ?? ''))))->filter();
     $opgHeaderLines = collect(preg_split('/\r\n|\r|\n/', trim((string) ($opgTransmittal?->header_text ?? ''))))->filter();
