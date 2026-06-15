@@ -187,7 +187,7 @@ class BACResolutionController extends Controller
 
             $resolution = BACResolution::create([
                 'aoq_id' => $primaryAoq?->id,
-                'resolution_no' => $this->generateResolutionNumber($batch, $winnerAmount),
+                'resolution_no' => $batch->generateResolutionNo(),
                 'resolution_date' => $validated['resolution_date'],
                 'meeting_date' => $validated['meeting_date'] ?? null,
                 'project_name' => $projectName,
@@ -394,14 +394,6 @@ class BACResolutionController extends Controller
             ->format('a4')
             ->name('BAC-Resolution-'.$bacResolution->resolution_no.'.pdf')
             ->inline();
-    }
-
-    private function generateResolutionNumber(Batch $batch, float $winnerAmount): string
-    {
-        $batchSequence = str_pad((string) ((int) substr((string) $batch->batch_no, -4)), 4, '0', STR_PAD_LEFT);
-        $bracket = $winnerAmount < 200000 ? 'B200K' : 'A200K';
-
-        return sprintf('BAC - SVP - %s - %s', $bracket, $batchSequence);
     }
 
     private function isWorkingDay(?string $date): bool

@@ -233,6 +233,13 @@
             $recipientAddress = $addressedSupplier?->address ?? $winnerSupplier?->address ?? 'Batangas';
             $calculationLabel = strtoupper((string) ($resolution?->calculation_label ?: 'LOWEST CALCULATED AND RESPONSIVE QUOTATION'));
             $projectName = (string) ($rfq?->project_name ?: $resolution?->project_name);
+
+            $resolutionNo = $resolution?->resolution_no;
+            if (! $resolutionNo && $aoq?->batch) {
+                $resolutionNo = $aoq->batch->generateResolutionNo($aoq);
+            }
+            $resolutionSeries = $resolution?->resolution_date ? $resolution->resolution_date->format('Y') : ($noa->noa_date ? $noa->noa_date->format('Y') : date('Y'));
+
             $amount = (float) ($noa->winner_amount ?: ($resolution?->winner_amount ?? 0));
             $amountFmt = number_format($amount, 2);
             $amountWords = \App\Helpers\NumberToWords::convert($amount, 'centavos');
@@ -278,7 +285,7 @@
                 <div class="body">
                     @php $_nameParts = explode(' ', $recipientName); $_surname = count($_nameParts) > 1 ? end($_nameParts) : $_nameParts[0]; @endphp
                     Dear Ms/Mr {{ $_surname }},<br><br>
-                    We would like to inform you that your company was declared as the supplier with <b style="text-transform: uppercase;">{{ $calculationLabel }}</b>@if($resolution), through <b>Resolution No. {{ $resolution->resolution_no }}</b>, <b>Series {{ optional($resolution->resolution_date)->format('Y') }}</b>@endif, after passing all the terms, conditions and /or specifications needed by the Procuring Entity as stipulated in the Request for Quotation, dated <b>{{ optional($rfq?->rfq_date)->format('F d, Y') }}</b>. Thus, you are hereby AWARDED of the project, as follows:
+                    We would like to inform you that your company was declared as the supplier with <b style="text-transform: uppercase;">{{ $calculationLabel }}</b>@if($resolutionNo), through <b>Resolution No. {{ $resolutionNo }}</b>, <b>Series {{ $resolutionSeries }}</b>@endif, after passing all the terms, conditions and /or specifications needed by the Procuring Entity as stipulated in the Request for Quotation, dated <b>{{ optional($rfq?->rfq_date)->format('F d, Y') }}</b>. Thus, you are hereby AWARDED of the project, as follows:
                 </div>
 
                 <div class="table-wrap">
