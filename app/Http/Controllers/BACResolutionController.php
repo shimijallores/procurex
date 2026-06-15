@@ -401,7 +401,7 @@ class BACResolutionController extends Controller
         $batchSequence = str_pad((string) ((int) substr((string) $batch->batch_no, -4)), 4, '0', STR_PAD_LEFT);
         $bracket = $winnerAmount < 200000 ? 'B200K' : 'A200K';
 
-        return sprintf('BAC-SVP-%s-%s', $bracket, $batchSequence);
+        return sprintf('BAC - SVP - %s - %s', $bracket, $batchSequence);
     }
 
     private function isWorkingDay(?string $date): bool

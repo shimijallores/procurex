@@ -277,7 +277,7 @@
         </table>
 
         <div class="resolution-no">
-            RESOLUTION NO. BAC - SVP - B200K - ___, Series of {{ $resolutionYear }}
+            RESOLUTION NO. {{ $resolution->resolution_no }}, SERIES OF {{ $resolutionYear }}
         </div>
 
         <div class="resolution-main">
