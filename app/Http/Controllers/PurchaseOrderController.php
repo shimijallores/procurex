@@ -103,13 +103,6 @@ class PurchaseOrderController extends Controller
         $batchId = $request->query('batch_id');
         $noaId = $request->query('noa_id');
 
-        $batches = Batch::withCount(['aoqs' => function ($q): void {
-            $q->whereHas('noa')->whereDoesntHave('noa.purchaseOrder');
-        }])
-            ->whereHas('aoqs', fn ($q) => $q->whereHas('noa')->whereDoesntHave('noa.purchaseOrder'))
-            ->latest()
-            ->get(['id', 'batch_no', 'created_at']);
-
         $eligibleNoas = NOA::with([
             'aoq.rfq.purchaseRequest.office',
             'aoq.rfq.items.purchaseRequestItem',
@@ -140,7 +133,6 @@ class PurchaseOrderController extends Controller
             : $this->suggestNextWorkingDay()->toDateString();
 
         return Inertia::render('PurchaseOrders/Create', [
-            'batches' => $batches,
             'eligibleNoas' => $eligibleNoas,
             'selectedBatchId' => $batchId,
             'selectedNoaId' => $noaId,

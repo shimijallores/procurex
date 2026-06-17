@@ -1,7 +1,8 @@
 <script setup>
 import { useForm, router } from "@inertiajs/vue3";
-import { ref, watch } from "vue";
+import { ref } from "vue";
 import axios from "axios";
+import SvpSmartInput from "@/components/SvpSmartInput.vue";
 import Layout from "@/Layout/Layout.vue";
 import PurchaseOrderCreateHeader from "@/components/purchase-orders/create/PurchaseOrderCreateHeader.vue";
 import PurchaseOrderCreateForm from "@/components/purchase-orders/create/PurchaseOrderCreateForm.vue";
@@ -28,7 +29,6 @@ defineOptions({
 });
 
 const props = defineProps({
-    batches: Array,
     eligibleNoas: Array,
     selectedBatchId: String,
     selectedNoaId: String,
@@ -54,38 +54,30 @@ const submit = () => {
     form.post(route("purchase-orders.store"));
 };
 
-const selectedBatchDisplay = ref(props.selectedBatchId || "");
-const manualBatchNo = ref("");
-const creatingManualBatch = ref(false);
+const svpSearchNo = ref("");
+const searchingSvp = ref(false);
+const svpError = ref("");
 
-const useManualBatch = async () => {
-    const no = (manualBatchNo.value || "").trim();
-    if (!no || creatingManualBatch.value) return;
-    creatingManualBatch.value = true;
+const findBatchBySvp = async (svp) => {
+    if (!svp || searchingSvp.value) return;
+    searchingSvp.value = true;
+    svpError.value = "";
 
     try {
-        const { data } = await axios.post(route("aoqs.store-batch"), { batch_no: no });
-        selectedBatchDisplay.value = String(data.id);
-        manualBatchNo.value = "";
-    } catch (err) {
-        if (err?.response?.status === 409) {
-            const existing = err?.response?.data;
-            if (existing?.id) selectedBatchDisplay.value = String(existing.id);
-        }
-    } finally {
-        creatingManualBatch.value = false;
-    }
-};
-
-watch(selectedBatchDisplay, (id) => {
-    if (id) {
+        const res = await axios.get(route("noas.find-batch-by-svp"), {
+            params: { svp_no: svp },
+        });
         router.get(
             route("purchase-orders.create"),
-            { batch_id: id },
+            { batch_id: res.data.batch.id },
             { preserveState: false, preserveScroll: true, replace: true },
         );
+    } catch (err) {
+        svpError.value = err?.response?.data?.error || "SVP not found. Make sure the AOQ has a batch assigned.";
+    } finally {
+        searchingSvp.value = false;
     }
-});
+};
 </script>
 
 <template>
@@ -95,66 +87,47 @@ watch(selectedBatchDisplay, (id) => {
         <Card>
             <CardHeader>
                 <CardTitle class="flex items-center gap-2 text-base">
-                    <Icon icon="lucide:layers" class="h-4 w-4 text-primary" />
-                    Select Batch
+                    <Icon icon="lucide:search" class="h-4 w-4 text-primary" />
+                    Find by SVP Number
                 </CardTitle>
             </CardHeader>
-            <CardContent class="space-y-3">
-                <div class="space-y-2">
-                    <Label for="batch_id">Batch</Label>
-                    <select
-                        id="batch_id"
-                        v-model="selectedBatchDisplay"
-                        class="flex h-10 w-full max-w-md rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    >
-                        <option value="">— Select Batch —</option>
-                        <option
-                            v-for="batch in batches"
-                            :key="batch.id"
-                            :value="String(batch.id)"
-                        >
-                            {{ batch.batch_no }}
-                            ({{ batch.aoqs_count }} NOA{{ batch.aoqs_count !== 1 ? "s" : "" }})
-                        </option>
-                    </select>
-                </div>
-
-                <div class="flex items-end gap-2">
-                    <div class="space-y-1.5 flex-1">
-                        <Label for="manual_batch_no">Or type a Batch No.</Label>
-                        <input
-                            id="manual_batch_no"
-                            v-model="manualBatchNo"
-                            type="text"
-                            placeholder="e.g. 260088"
-                            class="flex h-9 w-full max-w-md rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
-                            @keyup.enter="useManualBatch"
+            <CardContent>
+                <div class="max-w-md space-y-3">
+                    <div class="space-y-2">
+                        <Label for="svp_search">SVP Number</Label>
+                        <SvpSmartInput
+                            v-model="svpSearchNo"
+                            :disabled="searchingSvp"
+                            @select="findBatchBySvp"
                         />
                     </div>
+
                     <Button
                         type="button"
                         variant="default"
                         size="sm"
-                        :disabled="!manualBatchNo.trim() || creatingManualBatch"
-                        @click="useManualBatch"
+                        :disabled="!svpSearchNo.trim() || searchingSvp"
+                        @click="findBatchBySvp(svpSearchNo)"
                     >
                         <Icon
-                            v-if="creatingManualBatch"
+                            v-if="searchingSvp"
                             icon="lucide:loader-2"
                             class="mr-1 h-3.5 w-3.5 animate-spin"
                         />
-                        Use
+                        Find NOAs
                     </Button>
-                </div>
 
-                <p class="text-xs text-muted-foreground">
-                    Select a batch to show eligible NOAs for Purchase Order creation.
-                </p>
+                    <p v-if="svpError" class="text-xs text-destructive">{{ svpError }}</p>
+
+                    <p class="text-xs text-muted-foreground">
+                        Enter an SVP number to find the batch and load eligible NOAs for Purchase Order creation.
+                    </p>
+                </div>
             </CardContent>
         </Card>
 
         <PurchaseOrderCreateForm
-            v-if="selectedBatchDisplay"
+            v-if="selectedBatchId"
             :form="form"
             :eligible-noas="eligibleNoas"
             :defaults="defaults"

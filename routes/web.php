@@ -301,6 +301,9 @@ Route::middleware(['auth'])->group(function (): void {
     $rfqRoles =
         'role:'.
         implode(',', [RoleType::SUPERADMIN->value, RoleType::RFQ_ADMIN->value]);
+    Route::get('rfqs/recent-svps', [RFQController::class, 'recentSvps'])
+        ->middleware($rfqRoles)
+        ->name('rfqs.recent-svps');
     Route::resource('rfqs', RFQController::class)
         ->only(['index', 'create', 'store', 'show', 'destroy'])
         ->middleware($rfqRoles);

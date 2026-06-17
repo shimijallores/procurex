@@ -94,13 +94,6 @@ class NOAController extends Controller
 
     public function create(): Response
     {
-        $batches = Batch::withCount(['aoqs' => function ($q): void {
-            $q->whereDoesntHave('noa');
-        }])
-            ->whereHas('aoqs', fn ($q) => $q->whereDoesntHave('noa'))
-            ->latest()
-            ->get();
-
         $suppliers = Supplier::query()
             ->where('is_active', true)
             ->orderBy('name')
@@ -112,26 +105,10 @@ class NOAController extends Controller
                 'owner',
             ]);
 
-        $svpOptions = AOQ::query()
-            ->whereDoesntHave('noa')
-            ->whereHas('rfq')
-            ->whereHas('batch')
-            ->with('rfq')
-            ->get()
-            ->map(fn (AOQ $aoq) => [
-                'svp_no' => $aoq->rfq->svp_no,
-                'project_name' => $aoq->rfq->project_name,
-                'batch_id' => $aoq->batch_id,
-            ])
-            ->sortBy('svp_no')
-            ->values();
-
         $suggestedDate = $this->suggestNextWorkingDay()->toDateString();
 
         return Inertia::render('NOAs/Create', [
-            'batches' => $batches,
             'suppliers' => $suppliers,
-            'svpOptions' => $svpOptions,
             'defaultNoaDate' => $suggestedDate,
         ]);
     }

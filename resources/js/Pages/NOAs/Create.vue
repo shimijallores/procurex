@@ -18,9 +18,7 @@ defineOptions({
 });
 
 const props = defineProps({
-    batches: Array,
     suppliers: Array,
-    svpOptions: Array,
     defaultNoaDate: String,
 });
 </script>
@@ -30,9 +28,7 @@ const props = defineProps({
         <NOACreateHeader />
 
         <NOACreateForm
-            :batches="batches"
             :suppliers="suppliers"
-            :svp-options="svpOptions"
             :default-noa-date="defaultNoaDate"
         />
     </div>

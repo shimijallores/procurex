@@ -193,6 +193,17 @@ class RFQController extends Controller
         return redirect()->route('rfqs.index')->with('success', 'RFQ deleted successfully.');
     }
 
+    public function recentSvps(): JsonResponse
+    {
+        $svps = RFQ::query()
+            ->whereNotNull('svp_no')
+            ->latest('rfq_date')
+            ->take(5)
+            ->pluck('svp_no');
+
+        return response()->json(['svps' => $svps]);
+    }
+
     public function printPdf(RFQ $rfq): \Spatie\LaravelPdf\PdfBuilder
     {
         $rfq->load([
@@ -210,8 +221,7 @@ class RFQController extends Controller
 
     private function generateSvpNo(Carbon $rfqDate): string
     {
-        $year = $rfqDate->format('Y');
-        $prefix = $year.'-';
+        $prefix = $rfqDate->format('my').'-';
 
         $latest = RFQ::query()
             ->where('svp_no', 'like', $prefix.'%')
