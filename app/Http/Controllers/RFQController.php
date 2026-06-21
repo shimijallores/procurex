@@ -199,7 +199,7 @@ class RFQController extends Controller
             ->whereNotNull('svp_no')
             ->latest('rfq_date')
             ->take(5)
-            ->pluck('svp_no');
+            ->get(['id', 'svp_no']);
 
         return response()->json(['svps' => $svps]);
     }

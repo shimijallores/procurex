@@ -9,6 +9,7 @@ use App\Models\AOQ;
 use App\Models\Batch;
 use App\Models\Calendar;
 use App\Models\RFQ;
+use App\Models\RFQItem;
 use App\Models\RFQSupplier;
 use App\Models\RFQSupplierItem;
 use App\Models\Supplier;
@@ -108,15 +109,6 @@ class AOQController extends Controller
 
     public function create(): Response
     {
-        $eligibleRfqs = RFQ::with([
-            'purchaseRequest.office',
-            'items.purchaseRequestItem',
-        ])
-            ->whereNotNull('pr_id')
-            ->whereDoesntHave('aoq')
-            ->latest('rfq_date')
-            ->get();
-
         $suppliers = Supplier::query()
             ->where('is_active', true)
             ->orderBy('name')
@@ -127,11 +119,34 @@ class AOQController extends Controller
             ->get();
 
         return Inertia::render('AOQs/Create', [
-            'eligibleRfqs' => $eligibleRfqs,
             'suppliers' => $suppliers,
             'batches' => $batches,
             'defaultAoqDate' => $this->suggestNextWorkingDay()->toDateString(),
         ]);
+    }
+
+    public function findRfqBySvp(Request $request): JsonResponse
+    {
+        $svpNo = $request->query('svp_no');
+
+        if (! $svpNo) {
+            return response()->json(['error' => 'SVP number is required.'], 422);
+        }
+
+        $rfq = RFQ::with([
+            'purchaseRequest.office',
+            'items.purchaseRequestItem',
+        ])
+            ->where('svp_no', $svpNo)
+            ->whereNotNull('pr_id')
+            ->whereDoesntHave('aoq')
+            ->first();
+
+        if (! $rfq) {
+            return response()->json(['error' => 'RFQ not found or already has an AOQ.'], 404);
+        }
+
+        return response()->json(['rfq' => $rfq]);
     }
 
     public function storeBatch(Request $request): JsonResponse
@@ -305,7 +320,7 @@ class AOQController extends Controller
 
             $aoq = AOQ::create([
                 'rfq_id' => $rfq->id,
-                'batch_id' => $validated['batch_id'] ?? null,
+                'batch_id' => $validated['batch_id'],
                 'aoq_date' => $validated['aoq_date'],
                 'winner_supplier_id' => $winnerSupplierId,
             ]);

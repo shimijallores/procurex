@@ -2,18 +2,25 @@
 import { computed, ref, watch } from "vue";
 import { Icon } from "@iconify/vue";
 import axios from "axios";
-import { router } from "@inertiajs/vue3";
+import { route } from "ziggy-js";
 import { useWorkingDayInputGuard } from "@/composables/useWorkingDayInputGuard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import SvpSmartInput from "@/components/SvpSmartInput.vue";
+import SupplierSmartInput from "@/components/SupplierSmartInput.vue";
 
 const props = defineProps({
     form: Object,
-    eligibleRfqs: Array,
     suppliers: Array,
     batches: Array,
 });
+
+const emit = defineEmits(["submit"]);
+
+const rfqData = ref(null);
+const loadingRfq = ref(false);
+const rfqError = ref("");
 
 const creatingBatch = ref(false);
 const batchList = ref([...(props.batches || [])]);
@@ -53,7 +60,7 @@ const deleteBatch = async (batch) => {
             form.batch_id = "";
         }
     } catch {
-        // noop
+        //
     } finally {
         deletingBatchId.value = null;
     }
@@ -70,57 +77,26 @@ const formatDate = (date) => {
     });
 };
 
-defineEmits(["submit"]);
-const selectedOfficeId = ref("");
 const { enforceWorkingDay, getDateNotice, getDateNoticeClass } =
     useWorkingDayInputGuard(props.form);
 
-const officeOptions = computed(() => {
-    const map = new Map();
-
-    for (const rfq of props.eligibleRfqs || []) {
-        const officeId = rfq?.purchase_request?.office?.id;
-        const officeName =
-            rfq?.purchase_request?.office?.name || "Unknown Office";
-
-        if (!officeId || map.has(String(officeId))) {
-            continue;
-        }
-
-        map.set(String(officeId), {
-            id: String(officeId),
-            name: officeName,
-        });
-    }
-
-    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
-});
-
-const filteredRfqs = computed(() => {
-    if (!selectedOfficeId.value) {
-        return [];
-    }
-
-    return (props.eligibleRfqs || []).filter(
-        (rfq) =>
-            String(rfq?.purchase_request?.office?.id || "") ===
-            selectedOfficeId.value,
-    );
-});
-
-const selectedRfq = computed(() =>
-    props.eligibleRfqs?.find(
-        (rfq) => String(rfq.id) === String(props.form.rfq_id),
-    ),
-);
-
-const selectedItems = computed(() => selectedRfq.value?.items || []);
+const selectedItems = computed(() => rfqData.value?.items || []);
 
 const formatCurrency = (value) =>
     new Intl.NumberFormat("en-PH", {
         style: "currency",
         currency: "PHP",
     }).format(value || 0);
+
+const selectedSupplierIds = computed(() => {
+    return (props.form.quotations || [])
+        .map((q) => String(q.supplier_id))
+        .filter(Boolean);
+});
+
+const maxColumnsReached = computed(
+    () => (props.form.quotations || []).length >= 3,
+);
 
 const createQuotation = () => ({
     supplier_id: "",
@@ -142,47 +118,42 @@ const normalizeQuotationUnitPrices = (quotation, itemIds) => {
     };
 };
 
-watch(
-    () => props.form.rfq_id,
-    (newRfqId, oldRfqId) => {
-        if (!newRfqId || newRfqId === oldRfqId) {
-            return;
-        }
-
-        if (!props.form.quotations?.length) {
-            props.form.quotations = [createQuotation()];
-        }
-
-        const itemIds = selectedItems.value.map((item) => item.id);
-
-        props.form.quotations = props.form.quotations.map((quotation) => {
-            return normalizeQuotationUnitPrices(quotation, itemIds);
-        });
-    },
-    { immediate: true },
-);
-
-watch(selectedOfficeId, (officeId) => {
-    if (!officeId) {
+const loadRfq = async (svpNo) => {
+    if (!svpNo) {
+        rfqData.value = null;
         props.form.rfq_id = "";
         props.form.quotations = [];
-
         return;
     }
 
-    if (!props.form.rfq_id) {
-        return;
-    }
+    loadingRfq.value = true;
+    rfqError.value = "";
 
-    const stillValid = filteredRfqs.value.some(
-        (rfq) => String(rfq.id) === String(props.form.rfq_id),
-    );
+    try {
+        const { data } = await axios.get(
+            route("aoqs.find-rfq-by-svp", { svp_no: svpNo }),
+        );
+        rfqData.value = data.rfq;
+        props.form.rfq_id = String(data.rfq.id);
 
-    if (!stillValid) {
+        const itemIds = (data.rfq.items || []).map((item) => item.id);
+        props.form.quotations = [
+            normalizeQuotationUnitPrices(createQuotation(), itemIds),
+        ];
+    } catch (err) {
+        rfqData.value = null;
         props.form.rfq_id = "";
         props.form.quotations = [];
+        rfqError.value =
+            err?.response?.data?.error || "Failed to load RFQ data.";
+    } finally {
+        loadingRfq.value = false;
     }
-});
+};
+
+const onSvpSelect = (svp) => {
+    loadRfq(svp.svp_no);
+};
 
 watch(
     () => props.form.aoq_date,
@@ -208,9 +179,7 @@ watch(
 
         for (const [index, quotation] of quotations.entries()) {
             const submittedAt = quotation.submitted_at;
-            if (!submittedAt) {
-                continue;
-            }
+            if (!submittedAt) continue;
 
             await enforceWorkingDay({
                 dateValue: submittedAt,
@@ -269,12 +238,13 @@ const useManualBatch = async () => {
     creatingManualBatch.value = true;
 
     try {
-        const { data } = await axios.post(route("aoqs.store-batch"), { batch_no: no });
+        const { data } = await axios.post(route("aoqs.store-batch"), {
+            batch_no: no,
+        });
         props.form.batch_id = String(data.id);
         batchList.value.push({ ...data, aoqs_count: 0 });
         manualBatchNo.value = "";
     } catch (err) {
-        const msg = err?.response?.data?.error || "Failed to create batch.";
         if (err?.response?.status === 409) {
             const existing = batchList.value.find((b) => b.batch_no === no);
             if (existing) props.form.batch_id = String(existing.id);
@@ -293,7 +263,7 @@ const createNewBatch = async () => {
         props.form.batch_id = String(data.id);
         batchList.value.push({ ...data, aoqs_count: 0 });
     } catch {
-        // noop
+        //
     } finally {
         creatingBatch.value = false;
     }
@@ -323,6 +293,16 @@ const calculationMessage = computed(() => {
 
     return "";
 });
+
+const svpInputValue = ref("");
+const onSvpInput = (val) => {
+    svpInputValue.value = val;
+    if (!val) {
+        rfqData.value = null;
+        props.form.rfq_id = "";
+        props.form.quotations = [];
+    }
+};
 </script>
 
 <template>
@@ -334,108 +314,141 @@ const calculationMessage = computed(() => {
                     Source RFQ
                 </CardTitle>
             </CardHeader>
-            <CardContent class="grid gap-4 sm:grid-cols-2">
-                <div class="space-y-2">
-                    <Label for="office_filter_id">Office</Label>
-                    <select
-                        id="office_filter_id"
-                        v-model="selectedOfficeId"
-                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    >
-                        <option value="">— Select office first —</option>
-                        <option
-                            v-for="office in officeOptions"
-                            :key="office.id"
-                            :value="office.id"
+            <CardContent class="space-y-4">
+                <div class="flex gap-2 items-end w-100 justify-center">
+                    <div class="flex-1 space-y-2">
+                        <Label for="svp_search">
+                            SVP Number
+                            <span class="text-destructive">*</span>
+                        </Label>
+                        <SvpSmartInput
+                            :model-value="svpInputValue"
+                            @update:model-value="onSvpInput"
+                            @select="onSvpSelect"
+                        />
+                        <p v-if="rfqError" class="text-xs text-destructive">
+                            {{ rfqError }}
+                        </p>
+                        <p
+                            v-if="form.errors?.rfq_id"
+                            class="text-xs text-destructive"
                         >
-                            {{ office.name }}
-                        </option>
-                    </select>
-                </div>
-
-                <div class="space-y-2">
-                    <Label for="rfq_id">RFQ</Label>
-                    <select
-                        id="rfq_id"
-                        :value="form.rfq_id"
-                        @change="form.rfq_id = $event.target.value"
-                        :disabled="!selectedOfficeId"
-                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            {{ form.errors.rfq_id }}
+                        </p>
+                    </div>
+                    <Button
+                        type="button"
+                        variant="default"
+                        class="mb-0.5"
+                        :disabled="!svpInputValue.trim() || loadingRfq"
+                        @click="loadRfq(svpInputValue)"
                     >
-                        <option value="">
-                            {{
-                                selectedOfficeId
-                                    ? "— Select RFQ —"
-                                    : "— Select office first —"
-                            }}
-                        </option>
-                        <option
-                            v-for="rfq in filteredRfqs"
-                            :key="rfq.id"
-                            :value="rfq.id"
-                        >
-                            {{ rfq.svp_no }} — {{ rfq.project_name }}
-                        </option>
-                    </select>
-                    <p
-                        v-if="form.errors?.rfq_id"
-                        class="text-xs text-destructive"
-                    >
-                        {{ form.errors.rfq_id }}
-                    </p>
-                </div>
-
-                <div class="space-y-2">
-                    <Label for="aoq_date">AOQ Date</Label>
-                    <input
-                        id="aoq_date"
-                        v-model="form.aoq_date"
-                        type="date"
-                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    />
-                    <p :class="getDateNoticeClass('aoq_date')">
-                        {{ getDateNotice("aoq_date") }}
-                    </p>
-                    <p
-                        v-if="form.errors?.aoq_date"
-                        class="text-xs text-destructive"
-                    >
-                        {{ form.errors.aoq_date }}
-                    </p>
+                        <Icon
+                            v-if="loadingRfq"
+                            icon="lucide:loader-2"
+                            class="mr-1 h-4 w-4 animate-spin"
+                        />
+                        <Icon
+                            v-else
+                            icon="lucide:search"
+                            class="mr-1 h-4 w-4"
+                        />
+                        Find
+                    </Button>
                 </div>
 
                 <div
-                    v-if="selectedRfq"
-                    class="sm:col-span-2 rounded-md border border-border bg-muted/40 p-3 text-sm space-y-1"
+                    v-if="loadingRfq"
+                    class="flex items-center gap-2 rounded-md border border-border bg-muted/40 p-3 text-sm"
+                >
+                    <Icon
+                        icon="lucide:loader-2"
+                        class="h-4 w-4 animate-spin text-muted-foreground"
+                    />
+                    Loading RFQ data...
+                </div>
+
+                <div
+                    v-if="rfqData && !loadingRfq"
+                    class="rounded-md border border-border bg-muted/40 p-3 text-sm space-y-1"
                 >
                     <div>
+                        <span class="text-muted-foreground">SVP No:</span>
+                        <span class="font-medium font-mono ml-1">{{
+                            rfqData.svp_no
+                        }}</span>
+                    </div>
+                    <div>
                         <span class="text-muted-foreground">Project:</span>
-                        <span class="font-medium">{{
-                            selectedRfq.project_name
+                        <span class="font-medium ml-1">{{
+                            rfqData.project_name
                         }}</span>
                     </div>
                     <div>
                         <span class="text-muted-foreground">Office:</span>
-                        <span class="font-medium">{{
-                            selectedRfq.purchase_request?.office?.name || "—"
+                        <span class="font-medium ml-1">{{
+                            rfqData.purchase_request?.office?.name || "—"
                         }}</span>
                     </div>
                     <div>
                         <span class="text-muted-foreground">ABC:</span>
-                        <span class="font-medium">{{
-                            formatCurrency(selectedRfq.abc_amount)
+                        <span class="font-medium ml-1">{{
+                            formatCurrency(rfqData.abc_amount)
+                        }}</span>
+                    </div>
+                    <div>
+                        <span class="text-muted-foreground">PR No:</span>
+                        <span class="font-medium font-mono ml-1">{{
+                            rfqData.purchase_request?.pr_no || "—"
                         }}</span>
                     </div>
                 </div>
             </CardContent>
         </Card>
 
-        <Card>
+        <Card v-if="rfqData">
+            <CardHeader>
+                <CardTitle class="flex items-center gap-2 text-base">
+                    <Icon
+                        icon="lucide:calendar-days"
+                        class="h-4 w-4 text-primary"
+                    />
+                    AOQ Date
+                </CardTitle>
+            </CardHeader>
+            <CardContent class="space-y-2">
+                <Label for="aoq_date">
+                    AOQ Date
+                    <span class="text-destructive">*</span>
+                </Label>
+                <input
+                    id="aoq_date"
+                    v-model="form.aoq_date"
+                    type="date"
+                    class="flex h-10 w-full max-w-xs rounded-md border border-input bg-background px-3 py-2 text-sm"
+                />
+                <p :class="getDateNoticeClass('aoq_date')">
+                    {{ getDateNotice("aoq_date") }}
+                </p>
+                <p
+                    v-if="form.errors?.aoq_date"
+                    class="text-xs text-destructive"
+                >
+                    {{ form.errors.aoq_date }}
+                </p>
+            </CardContent>
+        </Card>
+
+        <Card v-if="rfqData">
             <CardHeader>
                 <div class="flex items-center justify-between">
                     <CardTitle class="flex items-center gap-2 text-base">
-                        <Icon icon="lucide:layers" class="h-4 w-4 text-primary" />
+                        <Icon
+                            icon="lucide:layers"
+                            class="h-4 w-4 text-primary"
+                        />
                         Batch Assignment
+                        <span class="text-destructive">*</span>
                     </CardTitle>
                     <Button
                         type="button"
@@ -449,7 +462,11 @@ const calculationMessage = computed(() => {
                             icon="lucide:loader-2"
                             class="mr-1 h-3.5 w-3.5 animate-spin"
                         />
-                        <Icon v-else icon="lucide:plus" class="mr-1 h-3.5 w-3.5" />
+                        <Icon
+                            v-else
+                            icon="lucide:plus"
+                            class="mr-1 h-3.5 w-3.5"
+                        />
                         New Batch
                     </Button>
                 </div>
@@ -484,13 +501,20 @@ const calculationMessage = computed(() => {
                 </div>
 
                 <div class="flex items-center gap-2">
-                    <Icon icon="lucide:calendar" class="h-4 w-4 text-muted-foreground shrink-0" />
+                    <Icon
+                        icon="lucide:calendar"
+                        class="h-4 w-4 text-muted-foreground shrink-0"
+                    />
                     <select
                         v-model="selectedBatchYear"
                         class="flex h-9 w-40 rounded-md border border-input bg-background px-3 py-2 text-sm"
                     >
                         <option value="">All Years</option>
-                        <option v-for="year in batchYears" :key="year" :value="year">
+                        <option
+                            v-for="year in batchYears"
+                            :key="year"
+                            :value="year"
+                        >
                             {{ year }}
                         </option>
                     </select>
@@ -501,23 +525,43 @@ const calculationMessage = computed(() => {
                         <thead class="bg-muted/40">
                             <tr>
                                 <th class="w-8 px-2 py-2"></th>
-                                <th class="px-2 py-2 text-left font-medium text-muted-foreground">Batch No.</th>
-                                <th class="px-2 py-2 text-center font-medium text-muted-foreground">AOQs</th>
-                                <th class="px-2 py-2 text-left font-medium text-muted-foreground">Created</th>
-                                <th class="px-2 py-2 text-right font-medium text-muted-foreground"></th>
+                                <th
+                                    class="px-2 py-2 text-left font-medium text-muted-foreground"
+                                >
+                                    Batch No.
+                                </th>
+                                <th
+                                    class="px-2 py-2 text-center font-medium text-muted-foreground"
+                                >
+                                    AOQs
+                                </th>
+                                <th
+                                    class="px-2 py-2 text-left font-medium text-muted-foreground"
+                                >
+                                    Created
+                                </th>
+                                <th
+                                    class="px-2 py-2 text-right font-medium text-muted-foreground"
+                                ></th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-if="!displayBatches.length">
-                                <td colspan="5" class="px-3 py-6 text-center text-sm text-muted-foreground">
-                                    No batches yet. Click "New Batch" to create one.
+                                <td
+colspan="4"
+                                    class="px-3 py-6 text-center text-sm text-muted-foreground"
+                                >
+                                    No batches yet. Click "New Batch" to create
+                                    one.
                                 </td>
                             </tr>
                             <tr
                                 v-for="batch in displayBatches"
                                 :key="batch.id"
                                 class="cursor-pointer border-b transition-colors hover:bg-primary/5"
-                                :class="isSelected(batch) ? 'bg-primary/10' : ''"
+                                :class="
+                                    isSelected(batch) ? 'bg-primary/10' : ''
+                                "
                                 @click="form.batch_id = String(batch.id)"
                             >
                                 <td class="w-8 px-2 py-2.5 text-center">
@@ -534,7 +578,9 @@ const calculationMessage = computed(() => {
                                 </td>
                                 <td class="px-2 py-2.5">
                                     <div class="flex items-center gap-2">
-                                        <span class="font-mono font-medium">{{ batch.batch_no }}</span>
+                                        <span class="font-mono font-medium">{{
+                                            batch.batch_no
+                                        }}</span>
                                         <span
                                             v-if="isSelected(batch)"
                                             class="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium leading-none text-primary"
@@ -543,7 +589,9 @@ const calculationMessage = computed(() => {
                                         </span>
                                     </div>
                                 </td>
-                                <td class="px-2 py-2.5 text-center text-muted-foreground">
+                                <td
+                                    class="px-2 py-2.5 text-center text-muted-foreground"
+                                >
                                     {{ batch.aoqs_count || 0 }}
                                 </td>
                                 <td class="px-2 py-2.5 text-muted-foreground">
@@ -555,16 +603,29 @@ const calculationMessage = computed(() => {
                                         type="button"
                                         :disabled="deletingBatchId === batch.id"
                                         class="inline-flex items-center justify-center rounded-md p-1 text-muted-foreground opacity-0 transition-all hover:bg-destructive/10 hover:text-destructive"
-                                        :class="[deletingBatchId === batch.id ? 'opacity-50' : '', isSelected(batch) ? 'opacity-100' : 'hover:opacity-100']"
+                                        :class="[
+                                            deletingBatchId === batch.id
+                                                ? 'opacity-50'
+                                                : '',
+                                            isSelected(batch)
+                                                ? 'opacity-100'
+                                                : 'hover:opacity-100',
+                                        ]"
                                         @click.stop="deleteBatch(batch)"
-                                        :title="'Delete batch ' + batch.batch_no"
+                                        :title="
+                                            'Delete batch ' + batch.batch_no
+                                        "
                                     >
                                         <Icon
                                             v-if="deletingBatchId === batch.id"
                                             icon="lucide:loader-2"
                                             class="h-4 w-4 animate-spin"
                                         />
-                                        <Icon v-else icon="lucide:trash-2" class="h-4 w-4" />
+                                        <Icon
+                                            v-else
+                                            icon="lucide:trash-2"
+                                            class="h-4 w-4"
+                                        />
                                     </button>
                                 </td>
                             </tr>
@@ -573,15 +634,19 @@ const calculationMessage = computed(() => {
                 </div>
 
                 <p class="text-xs text-muted-foreground">
-                    Batches group AOQs for later BAC Resolution batching. Click a row to select. Batch number is auto-generated.
+                    Batches group AOQs for later BAC Resolution batching. Click
+                    a row to select. Batch number is auto-generated.
                 </p>
-                <p v-if="form.errors?.batch_id" class="text-xs text-destructive">
+                <p
+                    v-if="form.errors?.batch_id"
+                    class="text-xs text-destructive"
+                >
                     {{ form.errors.batch_id }}
                 </p>
             </CardContent>
         </Card>
 
-        <Card>
+        <Card v-if="rfqData">
             <CardHeader class="flex flex-row items-center justify-between">
                 <CardTitle class="flex items-center gap-2 text-base">
                     <Icon
@@ -589,47 +654,72 @@ const calculationMessage = computed(() => {
                         class="h-4 w-4 text-primary"
                     />
                     Supplier Matrix Setup
+                    <span class="text-destructive">*</span>
                 </CardTitle>
-                <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    :disabled="!selectedRfq"
-                    @click="addQuotation"
-                >
-                    <Icon icon="lucide:plus" class="mr-1 h-3.5 w-3.5" />
-                    Add Supplier Column
-                </Button>
+                <div class="flex items-center gap-2">
+                    <span
+                        v-if="form.quotations?.length"
+                        class="text-xs text-muted-foreground"
+                    >
+                        {{ form.quotations.length }}/3
+                    </span>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        :disabled="!rfqData || maxColumnsReached"
+                        @click="addQuotation"
+                    >
+                        <Icon icon="lucide:plus" class="mr-1 h-3.5 w-3.5" />
+                        Add Supplier Column
+                    </Button>
+                </div>
             </CardHeader>
             <CardContent class="space-y-4">
-                <p v-if="!selectedRfq" class="text-sm text-muted-foreground">
-                    Select an RFQ first to build the quotation matrix.
+                <p v-if="!rfqData" class="text-sm text-muted-foreground">
+                    Select an SVP first to build the quotation matrix.
                 </p>
 
-                <div
-                    v-if="selectedRfq && form.quotations?.length"
-                    class="space-y-3"
-                >
+                <div v-if="form.quotations?.length" class="space-y-3">
                     <div
                         v-for="(quotation, quotationIndex) in form.quotations"
                         :key="quotationIndex"
                         class="grid gap-3 rounded-md border border-border p-3 lg:grid-cols-12"
                     >
                         <div class="space-y-2 lg:col-span-3">
-                            <Label>Supplier</Label>
-                            <select
-                                v-model="quotation.supplier_id"
-                                class="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                            <Label>
+                                Supplier
+                                <span class="text-destructive">*</span>
+                            </Label>
+                            <SupplierSmartInput
+                                :model-value="quotation.supplier_id"
+                                :suppliers="suppliers"
+                                :selected-ids="
+                                    selectedSupplierIds.filter(
+                                        (id) =>
+                                            id !==
+                                            String(quotation.supplier_id),
+                                    )
+                                "
+                                placeholder="Search supplier..."
+                                @update:model-value="
+                                    quotation.supplier_id = $event
+                                "
+                            />
+                            <p
+                                v-if="
+                                    form.errors?.[
+                                        `quotations.${quotationIndex}.supplier_id`
+                                    ]
+                                "
+                                class="text-xs text-destructive"
                             >
-                                <option value="">— Select Supplier —</option>
-                                <option
-                                    v-for="supplier in suppliers"
-                                    :key="supplier.id"
-                                    :value="supplier.id"
-                                >
-                                    {{ supplier.name }}
-                                </option>
-                            </select>
+                                {{
+                                    form.errors[
+                                        `quotations.${quotationIndex}.supplier_id`
+                                    ]
+                                }}
+                            </p>
                         </div>
 
                         <div class="space-y-2 lg:col-span-3">
@@ -688,20 +778,24 @@ const calculationMessage = computed(() => {
             </CardContent>
         </Card>
 
-        <Card>
+        <Card v-if="rfqData">
             <CardHeader>
-                <CardTitle class="flex items-center gap-2 text-base">
-                    <Icon icon="lucide:grid-2x2" class="h-4 w-4 text-primary" />
-                    Quotation Matrix
-                </CardTitle>
+                <div class="flex items-center justify-between">
+                    <CardTitle class="flex items-center gap-2 text-base">
+                        <Icon icon="lucide:grid-2x2" class="h-4 w-4 text-primary" />
+                        Quotation Matrix
+                    </CardTitle>
+                    <div class="text-sm">
+                        <span class="text-muted-foreground">ABC:</span>
+                        <span class="font-semibold ml-1">{{
+                            formatCurrency(rfqData.abc_amount)
+                        }}</span>
+                    </div>
+                </div>
             </CardHeader>
             <CardContent class="space-y-4">
-                <p v-if="!selectedRfq" class="text-sm text-muted-foreground">
-                    Matrix preview is available once an RFQ is selected.
-                </p>
-
                 <div
-                    v-if="selectedRfq && form.quotations?.length"
+                    v-if="form.quotations?.length"
                     class="relative w-full overflow-auto rounded-md border"
                 >
                     <table class="w-full text-sm">
@@ -773,7 +867,7 @@ const calculationMessage = computed(() => {
                         </tbody>
                         <tfoot>
                             <tr class="bg-muted/20 font-semibold">
-                                <td colspan="4" class="px-3 py-2 text-right">
+                                <td colspan="5" class="px-3 py-2 text-right">
                                     Supplier Totals
                                 </td>
                                 <td

@@ -55,14 +55,6 @@
             margin-top: 16px;
         }
 
-        .top-right-meta {
-            width: 100%;
-            text-align: right;
-            font-size: 10pt;
-            line-height: 1.3;
-            margin-bottom: 8px;
-        }
-
         .header-layout {
             width: 100%;
             border-collapse: collapse;
@@ -173,11 +165,6 @@
     @endphp
 
     <div class="page">
-        <div class="top-right-meta">
-            <div><strong>PR No.:</strong> {{ $rfq->purchaseRequest?->pr_no }}</div>
-            <div><strong>SVP No.:</strong> {{ $rfq->svp_no }}</div>
-        </div>
-
         <table class="header-layout">
             <tr>
                 <td class="header-logo-cell">
@@ -202,7 +189,7 @@
         </table>
 
         <div class="mt-3"><strong>Project Name:</strong> {{ $rfq->project_name }}</div>
-        <div class="mt-1"><strong>Date:</strong> {{ \Carbon\Carbon::parse($aoq->aoq_date)->format('F d, Y') }}</div>
+        <div class="mt-1"><strong>Date:</strong> {{ \Carbon\Carbon::parse($aoq->aoq_date)->format('m/d/y') }}</div>
 
         @php
         $supplierTotals = collect($calculation['supplier_totals'] ?? [])->take(3)->values();

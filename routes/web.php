@@ -301,8 +301,15 @@ Route::middleware(['auth'])->group(function (): void {
     $rfqRoles =
         'role:'.
         implode(',', [RoleType::SUPERADMIN->value, RoleType::RFQ_ADMIN->value]);
+    $rfqAndAoqRoles = [
+        'role:'.implode(',', [
+            RoleType::SUPERADMIN->value,
+            RoleType::RFQ_ADMIN->value,
+            RoleType::ABSTRACT_ADMIN->value,
+        ]),
+    ];
     Route::get('rfqs/recent-svps', [RFQController::class, 'recentSvps'])
-        ->middleware($rfqRoles)
+        ->middleware($rfqAndAoqRoles)
         ->name('rfqs.recent-svps');
     Route::resource('rfqs', RFQController::class)
         ->only(['index', 'create', 'store', 'show', 'destroy'])
@@ -321,6 +328,9 @@ Route::middleware(['auth'])->group(function (): void {
             RoleType::SUPERADMIN->value,
             RoleType::ABSTRACT_ADMIN->value,
         ]);
+    Route::get('aoqs/find-rfq-by-svp', [AOQController::class, 'findRfqBySvp'])
+        ->middleware($aoqRoles)
+        ->name('aoqs.find-rfq-by-svp');
     Route::resource('aoqs', AOQController::class)
         ->only(['index', 'create', 'store', 'show', 'destroy'])
         ->middleware($aoqRoles);
