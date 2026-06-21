@@ -51,7 +51,9 @@ const findBatchBySvp = async (svp) => {
         });
         selectedBatchId.value = String(res.data.batch.id);
     } catch (err) {
-        svpError.value = err?.response?.data?.error || "SVP not found. Make sure the AOQ has a batch assigned.";
+        svpError.value =
+            err?.response?.data?.error ||
+            "SVP not found. Make sure the AOQ has a batch assigned.";
         selectedBatchId.value = "";
     } finally {
         searchingSvp.value = false;
@@ -74,17 +76,18 @@ const fetchAoqs = async (batchId) => {
         noaRows.value = (res.data.aoqs || []).map((aoq) => ({
             aoq_id: String(aoq.id),
             noa_date: formatDate(props.defaultNoaDate || ""),
-            recipient_name: aoq.winner_supplier?.proprietor
-                || aoq.winner_supplier?.authorized_representative
-                || aoq.winner_supplier?.owner
-                || "",
+            recipient_name:
+                aoq.winner_supplier?.proprietor ||
+                aoq.winner_supplier?.authorized_representative ||
+                aoq.winner_supplier?.owner ||
+                "",
             recipient_title: aoq.winner_supplier?.proprietor
                 ? "Proprietor"
                 : aoq.winner_supplier?.authorized_representative
-                    ? "Authorized Representative"
-                    : aoq.winner_supplier?.owner
-                        ? "Owner"
-                        : "",
+                  ? "Authorized Representative"
+                  : aoq.winner_supplier?.owner
+                    ? "Owner"
+                    : "",
             _supplier: aoq.winner_supplier || null,
             _aoq: aoq,
         }));
@@ -101,9 +104,11 @@ const fetchAoqs = async (batchId) => {
 const findSupplier = (row) => {
     const name = row._supplier?.name || "";
     if (!name) return null;
-    return props.suppliers?.find(
-        (s) => s.name?.toLowerCase() === name.toLowerCase(),
-    ) || null;
+    return (
+        props.suppliers?.find(
+            (s) => s.name?.toLowerCase() === name.toLowerCase(),
+        ) || null
+    );
 };
 
 const repSuggestions = (row) => {
@@ -126,7 +131,8 @@ const selectRecipient = (row, name) => {
     if (!supplier) return;
 
     if (name === supplier.proprietor) row.recipient_title = "Proprietor";
-    else if (name === supplier.authorized_representative) row.recipient_title = "Authorized Representative";
+    else if (name === supplier.authorized_representative)
+        row.recipient_title = "Authorized Representative";
     else if (name === supplier.owner) row.recipient_title = "Owner";
 };
 
@@ -151,10 +157,18 @@ const submitAll = async () => {
 
     router.post(route("noas.store"), payload, {
         preserveScroll: true,
-        onStart: () => { submitting.value = true; },
-        onSuccess: () => { submitting.value = false; },
-        onError: () => { submitting.value = false; },
-        onFinish: () => { submitting.value = false; },
+        onStart: () => {
+            submitting.value = true;
+        },
+        onSuccess: () => {
+            submitting.value = false;
+        },
+        onError: () => {
+            submitting.value = false;
+        },
+        onFinish: () => {
+            submitting.value = false;
+        },
     });
 };
 
@@ -198,7 +212,9 @@ watch(selectedBatchId, (id) => {
                         Find Batch
                     </Button>
 
-                    <p v-if="svpError" class="text-xs text-destructive">{{ svpError }}</p>
+                    <p v-if="svpError" class="text-xs text-destructive">
+                        {{ svpError }}
+                    </p>
                 </div>
             </CardContent>
         </Card>
@@ -206,65 +222,45 @@ watch(selectedBatchId, (id) => {
         <Card v-if="selectedBatchId">
             <CardHeader>
                 <CardTitle class="flex items-center gap-2 text-base">
-                    <Icon icon="lucide:file-text" class="h-4 w-4 text-primary" />
+                    <Icon
+                        icon="lucide:file-text"
+                        class="h-4 w-4 text-primary"
+                    />
                     AOQs in Batch
                     <span v-if="loadingAoqs" class="ml-2">
-                        <Icon icon="lucide:loader-2" class="h-4 w-4 animate-spin text-muted-foreground" />
+                        <Icon
+                            icon="lucide:loader-2"
+                            class="h-4 w-4 animate-spin text-muted-foreground"
+                        />
                     </span>
                 </CardTitle>
-                <div v-if="selectedBatchInfo" class="mt-2 flex flex-wrap items-center gap-4 text-sm">
-                    <div class="flex items-center gap-1.5 rounded-md border border-border bg-muted/40 px-3 py-1.5">
-                        <Icon icon="lucide:layers" class="h-3.5 w-3.5 text-muted-foreground" />
-                        <span class="text-muted-foreground">Batch:</span>
-                        <span class="font-mono font-semibold">{{ selectedBatchInfo.batch_no }}</span>
-                    </div>
-                    <div v-if="selectedBacResolution" class="flex items-center gap-1.5 rounded-md border border-border bg-primary/5 px-3 py-1.5">
-                        <Icon icon="lucide:file-check" class="h-3.5 w-3.5 text-primary" />
-                        <span class="text-muted-foreground">BAC Resolution:</span>
-                        <span class="font-mono font-semibold">{{ selectedBacResolution.resolution_no }}</span>
-                    </div>
-                </div>
             </CardHeader>
             <CardContent class="space-y-4">
-                <div v-if="!noaRows.length && !loadingAoqs" class="py-6 text-center text-sm text-muted-foreground">
+                <div
+                    v-if="!noaRows.length && !loadingAoqs"
+                    class="py-6 text-center text-sm text-muted-foreground"
+                >
                     All AOQs in this batch already have NOAs.
                 </div>
 
+                <!-- AOQ Info -->
                 <div
                     v-for="(row, i) in noaRows"
                     :key="row.aoq_id"
-                    class="rounded-lg border p-4 space-y-3"
+                    class="rounded-lg border p-4 space-y-4"
                 >
-                    <div class="grid gap-2 text-sm md:grid-cols-3">
+                    <!-- Row 1: NOA Number, NOA Date, Batch/BAC info -->
+                    <div class="grid gap-6 md:grid-cols-3">
                         <div>
-                            <p class="text-xs text-muted-foreground">SVP No.</p>
-                            <p class="font-medium">{{ row._aoq.rfq?.svp_no || "—" }}</p>
+                            <p class="text-xs text-muted-foreground">
+                                NOA Number
+                            </p>
+                            <p
+                                class="font-mono text-sm text-muted-foreground italic"
+                            >
+                                Will be auto-generated after submission
+                            </p>
                         </div>
-                        <div>
-                            <p class="text-xs text-muted-foreground">Project</p>
-                            <p class="font-medium truncate">{{ row._aoq.rfq?.project_name || "—" }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-muted-foreground">Winner Supplier</p>
-                            <p class="font-medium">{{ row._supplier?.name || "—" }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-muted-foreground">Office</p>
-                            <p class="font-medium">{{ row._aoq.rfq?.purchase_request?.office?.name || "—" }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-muted-foreground">Winner Amount</p>
-                            <p class="font-medium">{{ row._aoq.winner_amount ?? "—" }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-muted-foreground">NOA Number</p>
-                            <p class="font-mono font-medium">{{ row._aoq.rfq?.svp_no || "—" }}</p>
-                        </div>
-                    </div>
-
-                    <hr class="border-border" />
-
-                    <div class="grid gap-4 md:grid-cols-3">
                         <div class="space-y-1.5">
                             <Label :for="'noa_date_' + i">NOA Date</Label>
                             <input
@@ -273,23 +269,99 @@ watch(selectedBatchId, (id) => {
                                 type="date"
                                 class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                             />
-                            <p v-if="usePage().props.errors?.['noas.' + i + '.noa_date']" class="text-xs text-destructive">
-                                {{ usePage().props.errors['noas.' + i + '.noa_date'] }}
+                            <p
+                                v-if="
+                                    usePage().props.errors?.[
+                                        'noas.' + i + '.noa_date'
+                                    ]
+                                "
+                                class="text-xs text-destructive"
+                            >
+                                {{
+                                    usePage().props.errors[
+                                        "noas." + i + ".noa_date"
+                                    ]
+                                }}
                             </p>
                         </div>
+                        <div
+                            v-if="selectedBatchInfo"
+                            class="flex flex-wrap items-start gap-x-6 gap-y-1"
+                        >
+                            <div>
+                                <p class="text-xs text-muted-foreground">
+                                    Batch
+                                </p>
+                                <p class="font-mono text-base font-semibold">
+                                    {{ selectedBatchInfo.batch_no }}
+                                </p>
+                            </div>
+                            <div v-if="selectedBacResolution">
+                                <p class="text-xs text-muted-foreground">
+                                    BAC Resolution
+                                </p>
+                                <p class="font-mono text-base font-semibold">
+                                    {{ selectedBacResolution.resolution_no }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
 
+                    <!-- Row 2: Project, Office -->
+                    <div class="grid gap-6 mb-8 md:grid-cols-3">
+                        <div class="md:col-span-2">
+                            <p class="text-xs text-muted-foreground">Project</p>
+                            <p class="font-medium">
+                                {{ row._aoq.rfq?.project_name || "—" }}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-muted-foreground">Office</p>
+                            <p class="font-medium">
+                                {{
+                                    row._aoq.rfq?.purchase_request?.office
+                                        ?.name || "—"
+                                }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Row 3: Winner Supplier, Recipient Name, Recipient Title, Amount -->
+                    <div class="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
+                        <div>
+                            <p class="text-xs text-muted-foreground">
+                                Winner Supplier
+                            </p>
+                            <p class="font-medium">
+                                {{ row._supplier?.name || "—" }}
+                            </p>
+                        </div>
                         <div class="space-y-1.5">
-                            <Label :for="'recipient_name_' + i">Recipient Name</Label>
+                            <Label :for="'recipient_name_' + i"
+                                >Recipient Name</Label
+                            >
                             <div class="relative">
                                 <input
                                     :id="'recipient_name_' + i"
                                     v-model="row.recipient_name"
                                     class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                     @focus="showRecipientSuggestions = i"
-                                    @blur="setTimeout(() => showRecipientSuggestions === i && (showRecipientSuggestions = null), 150)"
+                                    @blur="
+                                        setTimeout(
+                                            () =>
+                                                showRecipientSuggestions ===
+                                                    i &&
+                                                (showRecipientSuggestions =
+                                                    null),
+                                            150,
+                                        )
+                                    "
                                 />
                                 <div
-                                    v-if="showRecipientSuggestions === i && repSuggestions(row).length"
+                                    v-if="
+                                        showRecipientSuggestions === i &&
+                                        repSuggestions(row).length
+                                    "
                                     class="absolute z-20 mt-1 max-h-36 w-full overflow-auto rounded-md border border-input bg-background shadow-sm"
                                 >
                                     <button
@@ -297,23 +369,33 @@ watch(selectedBatchId, (id) => {
                                         :key="person"
                                         type="button"
                                         class="block w-full px-3 py-1.5 text-left text-sm hover:bg-muted"
-                                        @mousedown.prevent="selectRecipient(row, person)"
+                                        @mousedown.prevent="
+                                            selectRecipient(row, person)
+                                        "
                                     >
                                         {{ person }}
                                     </button>
                                 </div>
                             </div>
                         </div>
-
                         <div class="space-y-1.5">
-                            <Label :for="'recipient_title_' + i">Recipient Title</Label>
+                            <Label :for="'recipient_title_' + i"
+                                >Recipient Title</Label
+                            >
                             <div class="relative">
                                 <input
                                     :id="'recipient_title_' + i"
                                     v-model="row.recipient_title"
                                     class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                     @focus="showTitleSuggestions = i"
-                                    @blur="setTimeout(() => showTitleSuggestions === i && (showTitleSuggestions = null), 150)"
+                                    @blur="
+                                        setTimeout(
+                                            () =>
+                                                showTitleSuggestions === i &&
+                                                (showTitleSuggestions = null),
+                                            150,
+                                        )
+                                    "
                                 />
                                 <div
                                     v-if="showTitleSuggestions === i"
@@ -324,22 +406,41 @@ watch(selectedBatchId, (id) => {
                                         :key="title"
                                         type="button"
                                         class="block w-full px-3 py-1.5 text-left text-sm hover:bg-muted"
-                                        @mousedown.prevent="selectTitle(row, title)"
+                                        @mousedown.prevent="
+                                            selectTitle(row, title)
+                                        "
                                     >
                                         {{ title }}
                                     </button>
                                 </div>
                             </div>
                         </div>
+                        <div>
+                            <p class="text-xs text-muted-foreground">Amount</p>
+                            <p class="font-semibold">
+                                ₱{{
+                                    Number(row._aoq.winner_amount ?? 0).toFixed(
+                                        2,
+                                    )
+                                }}
+                            </p>
+                        </div>
                     </div>
 
-                    <p v-if="usePage().props.errors?.['noas.' + i + '.aoq_id']" class="text-xs text-destructive">
-                        {{ usePage().props.errors['noas.' + i + '.aoq_id'] }}
+                    <p
+                        v-if="usePage().props.errors?.['noas.' + i + '.aoq_id']"
+                        class="text-xs text-destructive"
+                    >
+                        {{ usePage().props.errors["noas." + i + ".aoq_id"] }}
                     </p>
                 </div>
 
                 <div v-if="noaRows.length" class="flex justify-end gap-3 pt-2">
-                    <Button type="button" variant="outline" @click="selectedBatchId = ''">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        @click="selectedBatchId = ''"
+                    >
                         Cancel
                     </Button>
                     <Button
@@ -352,7 +453,9 @@ watch(selectedBatchId, (id) => {
                             icon="lucide:loader-2"
                             class="mr-2 h-4 w-4 animate-spin"
                         />
-                        Create {{ noaRows.length }} NOA{{ noaRows.length !== 1 ? "s" : "" }}
+                        Create {{ noaRows.length }} NOA{{
+                            noaRows.length !== 1 ? "s" : ""
+                        }}
                     </Button>
                 </div>
             </CardContent>
