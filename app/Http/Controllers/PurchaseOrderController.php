@@ -160,6 +160,17 @@ class PurchaseOrderController extends Controller
                         });
                     }
 
+                    $deliveryDays = $winnerAmount >= 200000 ? 30 : 15;
+                    $purposeDate = $this->extractDateFromPurpose($rfq?->purchaseRequest?->purpose);
+                    $purposeDateLabel = null;
+                    if ($purposeDate) {
+                        $diffDays = (int) Carbon::parse($suggestedDate)->diffInDays($purposeDate, false);
+                        if ($diffDays >= 1 && $diffDays <= 365) {
+                            $deliveryDays = $diffDays;
+                            $purposeDateLabel = $purposeDate->format('F j, Y');
+                        }
+                    }
+
                     $batchNoas[] = [
                         'id' => $noa->id,
                         'noa_no' => $noa->noa_no,
@@ -172,6 +183,8 @@ class PurchaseOrderController extends Controller
                         'winner_amount' => $winnerAmount,
                         'items' => $items->values()->all(),
                         'suggested_po_no' => $prefix.str_pad((string) $nextSequence, 4, '0', STR_PAD_LEFT),
+                        'suggested_delivery_days' => $deliveryDays,
+                        'purpose_date_label' => $purposeDateLabel,
                     ];
 
                     $nextSequence++;
@@ -313,8 +326,32 @@ class PurchaseOrderController extends Controller
             return redirect()->back()->with('error', 'Failed to create Purchase Orders. Please try again.');
         }
 
-        return redirect()->route('purchase-orders.index')
+        $batchId = null;
+        $firstPo = $created[0] ?? null;
+        if ($firstPo) {
+            $firstPo->load('noa.aoq');
+            $batchId = $firstPo->noa?->aoq?->batch_id;
+        }
+
+        $redirect = redirect()->route('purchase-orders.index')
             ->with('success', count($created).' Purchase Order(s) created successfully.');
+
+        if ($batchId) {
+            $redirect->with('print_batch_id', $batchId);
+        }
+
+        return $redirect;
+    }
+
+    public function recentPos(): \Illuminate\Http\JsonResponse
+    {
+        $pos = PurchaseOrder::query()
+            ->whereNotNull('po_no')
+            ->latest()
+            ->take(5)
+            ->pluck('po_no');
+
+        return response()->json(['pos' => $pos]);
     }
 
     public function edit(PurchaseOrder $purchaseOrder): Response
@@ -418,7 +455,7 @@ class PurchaseOrderController extends Controller
             'batch' => $batch,
         ]);
 
-        return $pdf->setPaper('a4')
+        return $pdf->setPaper('legal')
             ->stream(sprintf('POs-Batch-%s.pdf', $batch->batch_no));
     }
 
@@ -526,5 +563,35 @@ class PurchaseOrderController extends Controller
     private function convertAmountToWords(float $amount): string
     {
         return NumberToWords::convert($amount);
+    }
+
+    private function extractDateFromPurpose(?string $purpose): ?Carbon
+    {
+        if (! $purpose) {
+            return null;
+        }
+
+        $patterns = [
+            '/\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4}\b/i',
+            '/\b\d{1,2}\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\b/i',
+            '/\b\d{4}-\d{2}-\d{2}\b/',
+            '/\b\d{1,2}\/\d{1,2}\/\d{4}\b/',
+        ];
+
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $purpose, $matches) === 1) {
+                try {
+                    $date = Carbon::parse($matches[0]);
+
+                    if ($date->isFuture()) {
+                        return $date;
+                    }
+                } catch (\Exception) {
+                    continue;
+                }
+            }
+        }
+
+        return null;
     }
 }

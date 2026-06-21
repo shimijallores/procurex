@@ -479,9 +479,12 @@ watch(selectedBatchId, (id) => {
                             <p class="text-xs text-muted-foreground">Amount</p>
                             <p class="font-semibold">
                                 ₱{{
-                                    Number(row._aoq.winner_amount ?? 0).toFixed(
-                                        2,
-                                    )
+                                    Number(
+                                        row._aoq.winner_amount ?? 0,
+                                    ).toLocaleString("en-PH", {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                    })
                                 }}
                             </p>
                         </div>

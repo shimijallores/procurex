@@ -414,7 +414,7 @@ class NOAController extends Controller
             'batch' => $batch,
         ]);
 
-        return $pdf->setPaper('a4')
+        return $pdf->setPaper('legal')
             ->stream(sprintf('NOAs-Batch-%s.pdf', $batch->batch_no));
     }
 

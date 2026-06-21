@@ -42,7 +42,7 @@ function buildInitialNoas(batchNoas, defaults) {
         selected: true,
         po_date: defaults?.po_date || "",
         mode_of_procurement: defaults?.mode_of_procurement || "Small Value",
-        delivery_term_days: (noa.winner_amount || 0) >= 200000 ? 30 : 15,
+        delivery_term_days: noa.suggested_delivery_days ?? ((noa.winner_amount || 0) >= 200000 ? 30 : 15),
         payment_term: defaults?.payment_term || "upon 100% completion /delivery",
         place_of_delivery: noa.office_name || "",
         remarks: "",

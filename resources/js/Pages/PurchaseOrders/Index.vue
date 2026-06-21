@@ -1,9 +1,11 @@
 <script setup>
-import { ref, watch } from "vue";
-import { router } from "@inertiajs/vue3";
+import { onMounted, ref, watch } from "vue";
+import { router, usePage } from "@inertiajs/vue3";
 import { Icon } from "@iconify/vue";
 import { useDebounceFn } from "@vueuse/core";
+import { route } from "ziggy-js";
 import Layout from "@/Layout/Layout.vue";
+import PoSmartInput from "@/components/PoSmartInput.vue";
 import DeleteModal from "@/components/DeleteModal.vue";
 import PurchaseOrderIndexHeader from "@/components/purchase-orders/index/PurchaseOrderIndexHeader.vue";
 import PurchaseOrderIndexStats from "@/components/purchase-orders/index/PurchaseOrderIndexStats.vue";
@@ -46,6 +48,15 @@ watch([search, selectedOffice, selectedFiscalYear, selectedBatch], () => applyFi
 const showDeleteModal = ref(false);
 const purchaseOrderToDelete = ref(null);
 
+onMounted(() => {
+    const page = usePage();
+    const batchId = page.props.flash?.print_batch_id;
+    if (batchId) {
+        const url = route("purchase-orders.print-batch", batchId);
+        window.open(url, "_blank");
+    }
+});
+
 const openDeleteModal = (purchaseOrder) => {
     purchaseOrderToDelete.value = purchaseOrder;
     showDeleteModal.value = true;
@@ -72,25 +83,12 @@ const openDeleteModal = (purchaseOrder) => {
             @update:selected-batch="selectedBatch = $event"
         >
             <template #search>
-                <div class="relative w-64">
-                    <Icon
-                        icon="lucide:search"
-                        class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                    />
-                    <input
+                <div class="relative w-72">
+                    <PoSmartInput
                         :model-value="search"
-                        @input="search = $event.target.value"
-                        type="text"
-                        placeholder="Search PO..."
-                        class="flex h-10 w-full rounded-md border border-input bg-background pl-9 pr-9 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        @update:model-value="search = $event"
+                        @select="search = $event"
                     />
-                    <button
-                        v-if="search"
-                        @click="search = ''"
-                        class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                        <Icon icon="lucide:x" class="h-4 w-4" />
-                    </button>
                 </div>
             </template>
         </PurchaseOrderIndexTable>

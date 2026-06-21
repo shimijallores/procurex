@@ -266,17 +266,35 @@ const computeAmount = (items) =>
                                 <Label :for="`delivery_${noa.id}`"
                                     >Date of Delivery</Label
                                 >
-                                <select
-                                    :id="`delivery_${noa.id}`"
-                                    v-model.number="
-                                        getNoaForm(noa.id).delivery_term_days
-                                    "
-                                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                >
-                                    <option :value="15">15 days</option>
-                                    <option :value="30">30 days</option>
-                                    <option :value="45">45 days</option>
-                                </select>
+                                <template v-if="noa.purpose_date_label">
+                                    <input
+                                        :id="`delivery_${noa.id}`"
+                                        :value="getNoaForm(noa.id).delivery_term_days"
+                                        readonly
+                                        class="flex h-10 w-full cursor-not-allowed rounded-md border border-input bg-muted px-3 py-2 text-sm opacity-70"
+                                    />
+                                    <p class="text-xs text-muted-foreground">
+                                        Based on purpose: {{ noa.purpose_date_label }}
+                                    </p>
+                                </template>
+                                <template v-else>
+                                    <select
+                                        :id="`delivery_${noa.id}`"
+                                        v-model.number="
+                                            getNoaForm(noa.id).delivery_term_days
+                                        "
+                                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    >
+                                        <option :value="15">15 days</option>
+                                        <option :value="30">30 days</option>
+                                        <option :value="45">45 days</option>
+                                        <option :value="60">60 days</option>
+                                        <option :value="90">90 days</option>
+                                    </select>
+                                    <p class="text-xs text-muted-foreground">
+                                        Editable in case of event date.
+                                    </p>
+                                </template>
                             </div>
                             <div class="space-y-2">
                                 <Label :for="`payment_${noa.id}`"

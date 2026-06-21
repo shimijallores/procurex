@@ -211,7 +211,7 @@
             $projectName = (string) ($rfq?->project_name ?? $resolution?->project_name ?? '');
 
             $rows = collect($purchaseOrder->items ?? [])->values();
-            $minRows = 15;
+            $minRows = 10;
             $displayRows = $rows->take($minRows);
             $blankRows = max(0, $minRows - $displayRows->count());
 

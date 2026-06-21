@@ -405,6 +405,15 @@ Route::middleware(['auth'])->group(function (): void {
     $poRoles =
         'role:'.
         implode(',', [RoleType::SUPERADMIN->value, RoleType::PO_ADMIN->value]);
+    Route::get('purchase-orders/recent-pos', [PurchaseOrderController::class, 'recentPos'])
+        ->middleware($poRoles)
+        ->name('purchase-orders.recent-pos');
+    Route::post('purchase-orders/suggest-po-no', [
+        PurchaseOrderController::class,
+        'suggestPoNo',
+    ])
+        ->middleware($poRoles)
+        ->name('purchase-orders.suggest-po-no');
     Route::resource('purchase-orders', PurchaseOrderController::class)
         ->except(['edit', 'update'])
         ->middleware($poRoles);
@@ -414,12 +423,6 @@ Route::middleware(['auth'])->group(function (): void {
     Route::put('purchase-orders/{purchase_order}', [PurchaseOrderController::class, 'update'])
         ->middleware($poRoles)
         ->name('purchase-orders.update');
-    Route::post('purchase-orders/suggest-po-no', [
-        PurchaseOrderController::class,
-        'suggestPoNo',
-    ])
-        ->middleware($poRoles)
-        ->name('purchase-orders.suggest-po-no');
     Route::get('purchase-orders/{purchase_order}/pdf', [
         PurchaseOrderController::class,
         'printPdf',
