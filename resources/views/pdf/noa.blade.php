@@ -202,7 +202,6 @@
     $supplierName = strtoupper((string) ($resolution?->winner_supplier_name ?? $winnerSupplier?->name ?? 'SUPPLIER'));
     $recipientAddress = $addressedSupplier?->address ?? $winnerSupplier?->address ?? 'Batangas';
 
-    $calculationLabel = strtoupper((string) ($resolution?->calculation_label ?: 'LOWEST CALCULATED AND RESPONSIVE QUOTATION'));
     $projectName = (string) ($rfq?->project_name ?: $resolution?->project_name);
 
     $amount = (float) ($noa->winner_amount ?: ($resolution?->winner_amount ?? 0));

@@ -4533,7 +4533,7 @@
         {
             "pr_emanating_no": "2026-001",
             "pr_no": "0626-0001",
-            "svp_no": "0626-0001",
+            "svp_no": "2026-0001",
             "rfq_date": "2026-06-15T00:00:00.000000Z",
             "submission_deadline": "2026-06-22T00:00:00.000000Z",
             "project_name": "Purchase of Training Expenses (Training Kit, Honorarium for Resource Person, Meals & Snacks (AM Snacks & Lunch), Tshirt with collar and print premium dry fit) for use of Provincial Veterinary Office.",
@@ -4647,7 +4647,7 @@
     ],
     "aoqs": [
         {
-            "rfq_svp_no": "0626-0001",
+            "rfq_svp_no": "2026-0001",
             "aoq_date": "2026-06-15T00:00:00.000000Z",
             "winner_supplier_name": "ASTROPHIL TRADING"
         }

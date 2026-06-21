@@ -18,9 +18,7 @@ const focused = ref(false);
 
 const currentPrefix = computed(() => {
     const now = new Date();
-    const mm = String(now.getMonth() + 1).padStart(2, "0");
-    const yy = String(now.getFullYear()).slice(-2);
-    return mm + yy + "-";
+    return String(now.getFullYear()) + "-";
 });
 
 watch(
@@ -170,7 +168,7 @@ const filteredSuggestions = computed(() => {
         </div>
 
         <p class="mt-1 text-xs text-muted-foreground">
-            Type the last 4 digits (e.g. 0001 → {{ currentPrefix }}0001) or pick a recent SVP.
+            Type the last 4 digits (e.g. 0001 → {{ currentPrefix }}0001) or pick from recent.
         </p>
     </div>
 </template>

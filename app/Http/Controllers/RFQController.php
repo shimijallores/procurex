@@ -221,7 +221,7 @@ class RFQController extends Controller
 
     private function generateSvpNo(Carbon $rfqDate): string
     {
-        $prefix = $rfqDate->format('my').'-';
+        $prefix = $rfqDate->format('Y').'-';
 
         $latest = RFQ::query()
             ->where('svp_no', 'like', $prefix.'%')

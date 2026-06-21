@@ -325,6 +325,7 @@ class NOAController extends Controller
     {
         $noas = NOA::with([
             'aoq.rfq.purchaseRequest.office',
+            'aoq.rfq.suppliers.supplierItems.rfqItem',
             'aoq.winnerSupplier',
             'bacResolution.aoq.rfq.purchaseRequest.office',
             'bacResolution.aoq.winnerSupplier',
@@ -335,6 +336,36 @@ class NOAController extends Controller
         if ($noas->isEmpty()) {
             return redirect()->back()->with('error', 'No NOAs found in this batch.');
         }
+
+        $noas->each(function (NOA $noa): void {
+            $aoq = $noa->aoq ?? $noa->bacResolution?->aoq;
+            $rfq = $aoq?->rfq;
+
+            $calculatedSupplierCount = 0;
+            foreach ($rfq?->suppliers ?? collect() as $entry) {
+                if (! $entry->submitted_at) {
+                    continue;
+                }
+
+                $hasAtLeastOnePrice = false;
+                foreach ($entry->supplierItems as $supplierItem) {
+                    if ($supplierItem->unit_price !== null) {
+                        $hasAtLeastOnePrice = true;
+                        break;
+                    }
+                }
+
+                if ($hasAtLeastOnePrice) {
+                    $calculatedSupplierCount++;
+                }
+            }
+
+            $label = $calculatedSupplierCount <= 1
+                ? 'Single Calculated and Responsive Quotation'
+                : 'Lowest Calculated and Responsive Quotation';
+
+            $noa->setAttribute('_calculation_label', strtoupper($label));
+        });
 
         $pdf = DomPdf::loadView('pdf.noas-batch', [
             'noas' => $noas,
@@ -400,6 +431,7 @@ class NOAController extends Controller
     {
         $noa->load([
             'aoq.rfq.purchaseRequest.office',
+            'aoq.rfq.suppliers.supplierItems.rfqItem',
             'aoq.winnerSupplier',
             'bacResolution.aoq.rfq.purchaseRequest.office',
             'bacResolution.aoq.winnerSupplier',
@@ -416,6 +448,31 @@ class NOAController extends Controller
                 ->where('name', $supplierName)
                 ->first();
         }
+
+        $calculatedSupplierCount = 0;
+        foreach ($rfq?->suppliers ?? collect() as $entry) {
+            if (! $entry->submitted_at) {
+                continue;
+            }
+
+            $hasAtLeastOnePrice = false;
+            foreach ($entry->supplierItems as $supplierItem) {
+                if ($supplierItem->unit_price !== null) {
+                    $hasAtLeastOnePrice = true;
+                    break;
+                }
+            }
+
+            if ($hasAtLeastOnePrice) {
+                $calculatedSupplierCount++;
+            }
+        }
+
+        $calculationLabel = $calculatedSupplierCount <= 1
+            ? 'Single Calculated and Responsive Quotation'
+            : 'Lowest Calculated and Responsive Quotation';
+
+        $calculationLabel = strtoupper($calculationLabel);
 
         $recipientTitle = trim((string) ($noa->recipient_title ?? ''));
 
@@ -443,6 +500,7 @@ class NOAController extends Controller
             'winnerSupplier' => $aoq?->winnerSupplier,
             'addressedSupplier' => $addressedSupplier,
             'recipientTitle' => $recipientTitle,
+            'calculationLabel' => $calculationLabel,
         ])
             ->format('a4')
             ->name('NOA-'.$noa->noa_no.'.pdf')
