@@ -24,6 +24,7 @@ const loadingAoqs = ref(false);
 const submitting = ref(false);
 const selectedBatchInfo = ref(null);
 const selectedBacResolution = ref(null);
+const selectedAoqIds = ref([]);
 
 const showRecipientSuggestions = ref(null);
 const showTitleSuggestions = ref(null);
@@ -73,7 +74,9 @@ const fetchAoqs = async (batchId) => {
         aoqs.value = res.data.aoqs || [];
         selectedBatchInfo.value = res.data.batch || null;
         selectedBacResolution.value = res.data.bac_resolution || null;
-        noaRows.value = (res.data.aoqs || []).map((aoq) => ({
+        const aoqList = res.data.aoqs || [];
+        selectedAoqIds.value = aoqList.map((aoq) => String(aoq.id));
+        noaRows.value = aoqList.map((aoq) => ({
             aoq_id: String(aoq.id),
             noa_date: formatDate(props.defaultNoaDate || ""),
             recipient_name:
@@ -147,12 +150,14 @@ const submitAll = async () => {
 
     const payload = {
         batch_id: selectedBatchId.value,
-        noas: noaRows.value.map((row) => ({
-            aoq_id: row.aoq_id,
-            noa_date: row.noa_date,
-            recipient_name: row.recipient_name,
-            recipient_title: row.recipient_title,
-        })),
+        noas: noaRows.value
+            .filter((row) => selectedAoqIds.value.includes(row.aoq_id))
+            .map((row) => ({
+                aoq_id: row.aoq_id,
+                noa_date: row.noa_date,
+                recipient_name: row.recipient_name,
+                recipient_title: row.recipient_title,
+            })),
     };
 
     router.post(route("noas.store"), payload, {
@@ -170,6 +175,25 @@ const submitAll = async () => {
             submitting.value = false;
         },
     });
+};
+
+const selectedCount = computed(() => selectedAoqIds.value.length);
+
+const toggleAoq = (id) => {
+    const idx = selectedAoqIds.value.indexOf(id);
+    if (idx === -1) {
+        selectedAoqIds.value = [...selectedAoqIds.value, id];
+    } else {
+        selectedAoqIds.value = selectedAoqIds.value.filter((v) => v !== id);
+    }
+};
+
+const selectAllAoqs = () => {
+    selectedAoqIds.value = noaRows.value.map((r) => r.aoq_id);
+};
+
+const deselectAllAoqs = () => {
+    selectedAoqIds.value = [];
 };
 
 watch(selectedBatchId, (id) => {
@@ -243,14 +267,50 @@ watch(selectedBatchId, (id) => {
                     All AOQs in this batch already have NOAs.
                 </div>
 
+                <div
+                    v-if="noaRows.length"
+                    class="flex items-center justify-between"
+                >
+                    <p class="text-sm text-muted-foreground">
+                        {{ selectedCount }} of {{ noaRows.length }} AOQ(s) selected
+                    </p>
+                    <div class="flex gap-2">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            @click="selectAllAoqs"
+                        >
+                            Select All
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            @click="deselectAllAoqs"
+                        >
+                            Deselect All
+                        </Button>
+                    </div>
+                </div>
+
                 <!-- AOQ Info -->
                 <div
                     v-for="(row, i) in noaRows"
                     :key="row.aoq_id"
-                    class="rounded-lg border p-4 space-y-4"
+                    class="rounded-lg border p-4 space-y-4 transition-colors"
+                    :class="selectedAoqIds.includes(row.aoq_id) ? 'border-l-primary border-l-4' : 'opacity-60'"
                 >
-                    <!-- Row 1: NOA Number, NOA Date, Batch/BAC info -->
-                    <div class="grid gap-6 md:grid-cols-3">
+                    <!-- Row 1: Checkbox, NOA Number, NOA Date, Batch/BAC info -->
+                    <div class="grid gap-6 md:grid-cols-[auto_1fr_1fr_1fr]">
+                        <div class="flex items-start pt-1">
+                            <input
+                                type="checkbox"
+                                :checked="selectedAoqIds.includes(row.aoq_id)"
+                                @change="toggleAoq(row.aoq_id)"
+                                class="h-5 w-5 rounded border-gray-300 text-primary"
+                            />
+                        </div>
                         <div>
                             <p class="text-xs text-muted-foreground">
                                 NOA Number
@@ -445,7 +505,7 @@ watch(selectedBatchId, (id) => {
                     </Button>
                     <Button
                         type="button"
-                        :disabled="submitting || loadingAoqs"
+                        :disabled="submitting || loadingAoqs || !selectedCount"
                         @click="submitAll"
                     >
                         <Icon
@@ -453,8 +513,8 @@ watch(selectedBatchId, (id) => {
                             icon="lucide:loader-2"
                             class="mr-2 h-4 w-4 animate-spin"
                         />
-                        Create {{ noaRows.length }} NOA{{
-                            noaRows.length !== 1 ? "s" : ""
+                        Create {{ selectedCount }} NOA{{
+                            selectedCount !== 1 ? "s" : ""
                         }}
                     </Button>
                 </div>

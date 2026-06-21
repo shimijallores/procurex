@@ -101,47 +101,91 @@ class PurchaseOrderController extends Controller
     public function create(Request $request): Response
     {
         $batchId = $request->query('batch_id');
-        $noaId = $request->query('noa_id');
 
-        $eligibleNoas = NOA::with([
-            'aoq.rfq.purchaseRequest.office',
-            'aoq.rfq.items.purchaseRequestItem',
-            'aoq.rfq.suppliers.supplierItems.rfqItem',
-            'aoq.winnerSupplier',
-            'aoq.batch',
-            'bacResolution.aoq.rfq.purchaseRequest.office',
-            'bacResolution.aoq.rfq.items.purchaseRequestItem',
-            'bacResolution.aoq.rfq.suppliers.supplier',
-            'bacResolution.aoq.rfq.suppliers.supplierItems.rfqItem.purchaseRequestItem',
-            'bacResolution.aoq.winnerSupplier',
-        ])
-            ->whereDoesntHave('purchaseOrder')
-            ->when($batchId, fn ($q) => $q->whereHas('aoq', fn ($aoq) => $aoq->where('batch_id', $batchId)))
-            ->latest('noa_date')
-            ->get()
-            ->map(function (NOA $noa): NOA {
-                $aoq = $noa->aoq ?? $noa->bacResolution?->aoq;
-                $noa->setAttribute('_project_name', $aoq?->rfq?->project_name ?? '—');
-                $noa->setAttribute('_winner_supplier_name', $aoq?->winnerSupplier?->name ?? '—');
-                $noa->setAttribute('_office_name', $aoq?->rfq?->purchaseRequest?->office?->name ?? '—');
+        $batchNoas = [];
 
-                return $noa;
-            });
+        if ($batchId) {
+            $batch = Batch::find($batchId);
 
-        $suggestedDate = $noaId
-            ? Carbon::parse(NOA::findOrFail((int) $noaId)->noa_date)->addDay()->toDateString()
-            : $this->suggestNextWorkingDay()->toDateString();
+            if ($batch) {
+                $suggestedDate = $this->suggestNextWorkingDay()->toDateString();
+
+                $prefix = Carbon::parse($suggestedDate)->format('my').'-';
+                $nextSequence = PurchaseOrder::query()
+                    ->whereYear('po_date', Carbon::parse($suggestedDate)->year)
+                    ->pluck('po_no')
+                    ->map(fn ($poNo): int => preg_match('/^\d{4}-(\d{4})$/', (string) $poNo, $m) === 1 ? (int) $m[1] : 0)
+                    ->max() + 1;
+
+                $noas = NOA::with([
+                    'aoq.winnerSupplier',
+                    'aoq.rfq.purchaseRequest.office',
+                    'aoq.rfq.items.purchaseRequestItem',
+                    'aoq.rfq.suppliers.supplier',
+                    'aoq.rfq.suppliers.supplierItems',
+                ])
+                    ->whereDoesntHave('purchaseOrder')
+                    ->whereHas('aoq', fn ($q) => $q->where('batch_id', $batchId))
+                    ->latest('noa_date')
+                    ->get();
+
+                foreach ($noas as $noa) {
+                    $aoq = $noa->aoq;
+                    $rfq = $aoq?->rfq;
+                    $winnerSupplierId = $aoq?->winner_supplier_id;
+                    $winnerAmount = (float) ($noa->winner_amount ?? 0);
+
+                    $winnerQuote = $rfq?->suppliers
+                        ->firstWhere('supplier_id', (int) $winnerSupplierId);
+
+                    $supplierName = $winnerQuote?->supplier?->name ?? '—';
+                    $supplierAddress = $winnerQuote?->supplier?->address ?? '—';
+                    $winnerSupplierItems = $winnerQuote?->supplierItems
+                        ->keyBy(fn ($i): int => (int) $i->rfq_item_id) ?? collect();
+
+                    $items = collect();
+                    if ($rfq) {
+                        $items = $rfq->items->map(function ($rfqItem) use ($winnerSupplierItems): array {
+                            $supplierItem = $winnerSupplierItems->get((int) $rfqItem->id);
+                            $quantity = (int) ($rfqItem->purchaseRequestItem?->quantity ?? 0);
+                            $unitCost = (float) ($supplierItem?->unit_price ?? 0);
+
+                            return [
+                                'item_name' => $rfqItem->purchaseRequestItem?->item_name ?? '—',
+                                'unit' => $rfqItem->purchaseRequestItem?->unit ?? '',
+                                'quantity' => $quantity,
+                                'unit_cost' => $unitCost,
+                                'amount' => $quantity * $unitCost,
+                            ];
+                        });
+                    }
+
+                    $batchNoas[] = [
+                        'id' => $noa->id,
+                        'noa_no' => $noa->noa_no,
+                        'noa_date' => $noa->noa_date?->toDateString(),
+                        'project_name' => $rfq?->project_name ?? '—',
+                        'supplier_name' => $supplierName,
+                        'supplier_address' => $supplierAddress,
+                        'office_name' => $rfq?->purchaseRequest?->office?->name ?? '—',
+                        'pr_no' => $rfq?->purchaseRequest?->pr_no ?? '',
+                        'winner_amount' => $winnerAmount,
+                        'items' => $items->values()->all(),
+                        'suggested_po_no' => $prefix.str_pad((string) $nextSequence, 4, '0', STR_PAD_LEFT),
+                    ];
+
+                    $nextSequence++;
+                }
+            }
+        }
 
         return Inertia::render('PurchaseOrders/Create', [
-            'eligibleNoas' => $eligibleNoas,
-            'selectedBatchId' => $batchId,
-            'selectedNoaId' => $noaId,
+            'batchNoas' => $batchNoas,
+            'batchId' => $batchId,
             'defaults' => [
-                'po_date' => $suggestedDate,
+                'po_date' => $suggestedDate ?? $this->suggestNextWorkingDay()->toDateString(),
                 'mode_of_procurement' => 'Small Value',
-                'delivery_term_days' => 15,
                 'payment_term' => 'upon 100% completion /delivery',
-                'po_no' => $this->generatePoNumber($suggestedDate),
             ],
         ]);
     }
@@ -157,130 +201,120 @@ class PurchaseOrderController extends Controller
         ]);
     }
 
-    public function store(StorePurchaseOrderRequest $storePurchaseOrderRequest): RedirectResponse
+    public function store(StorePurchaseOrderRequest $request): RedirectResponse
     {
-        $validated = $storePurchaseOrderRequest->validated();
+        $validated = $request->validated();
+        $noaEntries = $validated['noas'];
 
-        $noa = NOA::with([
+        $noaIds = collect($noaEntries)->pluck('noa_id')->all();
+
+        $noas = NOA::with([
             'aoq.rfq.purchaseRequest.office',
             'aoq.rfq.items.purchaseRequestItem',
             'aoq.rfq.suppliers.supplierItems.rfqItem',
             'aoq.winnerSupplier',
-            'bacResolution.aoq.rfq.purchaseRequest.office',
-            'bacResolution.aoq.rfq.items.purchaseRequestItem',
-            'bacResolution.aoq.rfq.suppliers.supplierItems.rfqItem',
-            'bacResolution.aoq.winnerSupplier',
-        ])->findOrFail($validated['noa_id']);
+        ])
+            ->whereIn('id', $noaIds)
+            ->whereDoesntHave('purchaseOrder')
+            ->get()
+            ->keyBy('id');
 
-        $aoq = $noa->aoq ?? $noa->bacResolution?->aoq;
-        $rfq = $aoq?->rfq;
-        $winnerSupplierId = $aoq?->winner_supplier_id;
-
-        if (! $rfq || ! $winnerSupplierId) {
-            return redirect()->back()->withErrors([
-                'noa_id' => 'Selected NOA has incomplete AOQ/RFQ data.',
-            ]);
-        }
-
-        if ($noa->purchaseOrder()->exists()) {
-            return redirect()->back()->withErrors([
-                'noa_id' => 'A Purchase Order already exists for this NOA.',
-            ]);
-        }
-
-        $allowedRfqItemIds = $rfq->items->pluck('id')->map(fn ($id): int => (int) $id)->all();
-        $submittedRfqItemIds = collect($validated['items'])->pluck('rfq_item_id')->map(fn ($id): int => (int) $id)->all();
-        $hasInvalidItems = collect($submittedRfqItemIds)->diff($allowedRfqItemIds)->isNotEmpty();
-        $hasMissingItems = collect($allowedRfqItemIds)->diff($submittedRfqItemIds)->isNotEmpty();
-
-        if ($hasInvalidItems || $hasMissingItems) {
-            return redirect()->back()->withErrors([
-                'items' => 'PO item set must exactly match the AOQ-awarded item list for the selected NOA.',
-            ]);
-        }
-
-        $winnerQuote = $rfq->suppliers
-            ->firstWhere('supplier_id', (int) $winnerSupplierId);
-
-        if (! $winnerQuote) {
-            return redirect()->back()->withErrors([
-                'noa_id' => 'Unable to locate winner quotation details for this NOA.',
-            ]);
-        }
-
-        $winnerSupplierItems = $winnerQuote->supplierItems
-            ->keyBy(fn ($item): int => (int) $item->rfq_item_id);
-
-        $rfqItemsById = $rfq->items->keyBy(fn ($item): int => (int) $item->id);
-
-        $computedItems = collect($validated['items'])
-            ->map(function (array $item) use ($winnerSupplierItems, $rfqItemsById): array {
-                $rfqItemId = (int) $item['rfq_item_id'];
-                $supplierItem = $winnerSupplierItems->get($rfqItemId);
-                $rfqItem = $rfqItemsById->get($rfqItemId);
-
-                $quantity = (int) ($rfqItem?->purchaseRequestItem?->quantity ?? 0);
-                $unitCost = (float) ($supplierItem?->unit_price ?? 0);
-                $amount = $quantity * $unitCost;
-
-                return [
-                    'rfq_item_id' => $rfqItemId,
-                    'quantity_snapshot' => $quantity,
-                    'unit_cost_snapshot' => $unitCost,
-                    'amount_snapshot' => $amount,
-                ];
-            })
-            ->values();
-
-        $computedTotalAmount = (float) $computedItems->sum('amount_snapshot');
-        $computedTotalAmountWords = $this->convertAmountToWords($computedTotalAmount);
-
-        $officeName = $rfq->purchaseRequest?->office?->name;
-
-        if (! $officeName) {
-            return redirect()->back()->withErrors([
-                'noa_id' => 'Unable to determine office/place of delivery from the selected NOA.',
-            ]);
-        }
+        $created = [];
+        $errors = [];
 
         DB::beginTransaction();
         try {
-            $purchaseOrder = PurchaseOrder::create([
-                'noa_id' => $validated['noa_id'],
-                'po_no' => $this->generatePoNumber($validated['po_date']),
-                'po_date' => $validated['po_date'],
-                'mode_of_procurement' => $validated['mode_of_procurement'],
-                'place_of_delivery' => $officeName,
-                'delivery_term_days' => $validated['delivery_term_days'] ?? 15,
-                'payment_term' => $validated['payment_term'] ?? null,
-                'total_amount' => $computedTotalAmount,
-                'total_amount_words' => $computedTotalAmountWords,
-                'remarks' => $validated['remarks'] ?? null,
-            ]);
+            foreach ($noaEntries as $entry) {
+                $noa = $noas->get($entry['noa_id']);
 
-            foreach ($computedItems as $computedItem) {
-                $purchaseOrder->items()->create([
-                    'rfq_item_id' => $computedItem['rfq_item_id'],
-                    'quantity_snapshot' => $computedItem['quantity_snapshot'],
-                    'unit_cost_snapshot' => $computedItem['unit_cost_snapshot'],
-                    'amount_snapshot' => $computedItem['amount_snapshot'],
+                if (! $noa) {
+                    $errors[] = "NOA ID {$entry['noa_id']} not found or already has a PO.";
+
+                    continue;
+                }
+
+                $aoq = $noa->aoq;
+                $rfq = $aoq?->rfq;
+                $winnerSupplierId = $aoq?->winner_supplier_id;
+
+                if (! $rfq || ! $winnerSupplierId) {
+                    $errors[] = "NOA {$noa->noa_no} has incomplete AOQ/RFQ data.";
+
+                    continue;
+                }
+
+                $winnerQuote = $rfq->suppliers
+                    ->firstWhere('supplier_id', (int) $winnerSupplierId);
+
+                if (! $winnerQuote) {
+                    $errors[] = "Unable to locate winner quotation for NOA {$noa->noa_no}.";
+
+                    continue;
+                }
+
+                $winnerSupplierItems = $winnerQuote->supplierItems
+                    ->keyBy(fn ($item): int => (int) $item->rfq_item_id);
+
+                $computedItems = $rfq->items->map(function ($rfqItem) use ($winnerSupplierItems): array {
+                    $rfqItemId = (int) $rfqItem->id;
+                    $supplierItem = $winnerSupplierItems->get($rfqItemId);
+
+                    $quantity = (int) ($rfqItem->purchaseRequestItem?->quantity ?? 0);
+                    $unitCost = (float) ($supplierItem?->unit_price ?? 0);
+
+                    return [
+                        'rfq_item_id' => $rfqItemId,
+                        'quantity_snapshot' => $quantity,
+                        'unit_cost_snapshot' => $unitCost,
+                        'amount_snapshot' => $quantity * $unitCost,
+                    ];
+                });
+
+                $totalAmount = (float) $computedItems->sum('amount_snapshot');
+                $officeName = $rfq->purchaseRequest?->office?->name ?? '';
+
+                $po = PurchaseOrder::create([
+                    'noa_id' => $noa->id,
+                    'po_no' => $this->generatePoNumber($entry['po_date']),
+                    'po_date' => $entry['po_date'],
+                    'mode_of_procurement' => $entry['mode_of_procurement'],
+                    'place_of_delivery' => $entry['place_of_delivery'] ?: $officeName,
+                    'delivery_term_days' => $entry['delivery_term_days'] ?? 15,
+                    'payment_term' => $entry['payment_term'] ?? null,
+                    'total_amount' => $totalAmount,
+                    'total_amount_words' => NumberToWords::convert($totalAmount),
+                    'remarks' => $entry['remarks'] ?? null,
                 ]);
+
+                foreach ($computedItems as $computedItem) {
+                    $po->items()->create($computedItem);
+                }
+
+                SvpMatrix::query()->firstOrCreate(
+                    ['purchase_order_id' => $po->id],
+                    ['admin_value' => auth()->user()?->name],
+                );
+
+                $created[] = $po;
             }
 
-            SvpMatrix::query()->firstOrCreate(
-                ['purchase_order_id' => $purchaseOrder->id],
-                ['admin_value' => auth()->user()?->name],
-            );
+            if (! empty($errors)) {
+                DB::rollBack();
+
+                return redirect()->back()->withErrors([
+                    'noas' => implode(' ', $errors),
+                ]);
+            }
 
             DB::commit();
         } catch (\Throwable $throwable) {
             DB::rollBack();
 
-            return redirect()->back()->with('error', 'Failed to create Purchase Order. Please try again.');
+            return redirect()->back()->with('error', 'Failed to create Purchase Orders. Please try again.');
         }
 
-        return redirect()->route('purchase-orders.show', $purchaseOrder)
-            ->with('success', 'Purchase Order created successfully.');
+        return redirect()->route('purchase-orders.index')
+            ->with('success', count($created).' Purchase Order(s) created successfully.');
     }
 
     public function edit(PurchaseOrder $purchaseOrder): Response

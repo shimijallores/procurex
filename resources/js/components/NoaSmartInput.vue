@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref, watch } from "vue";
 import axios from "axios";
+import { route } from "ziggy-js";
 import { Icon } from "@iconify/vue";
 
 const props = defineProps({

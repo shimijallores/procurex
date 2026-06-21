@@ -11,6 +11,7 @@ use App\Models\Batch;
 use App\Models\Calendar;
 use App\Models\NOA;
 use App\Models\Office;
+use App\Models\PurchaseOrder;
 use App\Models\RFQ;
 use App\Models\Supplier;
 use Barryvdh\DomPDF\Facade\Pdf as DomPdf;
@@ -278,6 +279,35 @@ class NOAController extends Controller
         ]);
     }
 
+    public function findBatchByNoa(Request $request): JsonResponse
+    {
+        $noaNo = $request->query('noa_no');
+
+        if (! $noaNo) {
+            return response()->json(['error' => 'NOA number is required.'], 422);
+        }
+
+        $noa = NOA::where('noa_no', $noaNo)->first();
+
+        if (! $noa) {
+            return response()->json(['error' => 'No NOA found with that number.'], 404);
+        }
+
+        $aoq = $noa->aoq;
+        if (! $aoq || ! $aoq->batch_id) {
+            return response()->json(['error' => 'This NOA has no corresponding batch.'], 404);
+        }
+
+        $batch = Batch::find($aoq->batch_id);
+
+        return response()->json([
+            'batch' => [
+                'id' => $batch->id,
+                'batch_no' => $batch->batch_no,
+            ],
+        ]);
+    }
+
     public function findBatchBySvp(Request $request): JsonResponse
     {
         $svpNo = $request->query('svp_no');
@@ -289,13 +319,13 @@ class NOAController extends Controller
         $rfq = RFQ::where('svp_no', $svpNo)->first();
 
         if (! $rfq) {
-            return response()->json(['error' => 'No RFQ found with that SVP number.'], 404);
+            return response()->json(['error' => 'SVP not found.'], 404);
         }
 
         $aoq = AOQ::where('rfq_id', $rfq->id)->first();
 
         if (! $aoq || ! $aoq->batch_id) {
-            return response()->json(['error' => 'No AOQ or batch found for this SVP number.'], 404);
+            return response()->json(['error' => 'SVP not found. Make sure the AOQ has a batch assigned.'], 404);
         }
 
         $batch = Batch::find($aoq->batch_id);
@@ -313,7 +343,7 @@ class NOAController extends Controller
         $noas = NOA::query()
             ->whereNotNull('noa_no')
             ->latest()
-            ->take(10)
+            ->take(5)
             ->pluck('noa_no');
 
         return response()->json(['noas' => $noas]);

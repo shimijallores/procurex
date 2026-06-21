@@ -1,8 +1,6 @@
 <script setup>
-import { computed, ref, watch } from "vue";
-import axios from "axios";
+import { computed } from "vue";
 import { Icon } from "@iconify/vue";
-import { useWorkingDayInputGuard } from "@/composables/useWorkingDayInputGuard";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,30 +8,44 @@ import { Label } from "@/components/ui/label";
 
 const props = defineProps({
     form: Object,
-    eligibleNoas: Array,
+    batchNoas: Array,
     defaults: Object,
+    formatCurrency: Function,
 });
 
-defineEmits(["submit"]);
-const { enforceWorkingDay, getDateNotice, getDateNoticeClass } =
-    useWorkingDayInputGuard(props.form);
+const emit = defineEmits([
+    "submit",
+    "toggleNoa",
+    "selectAll",
+    "deselectAll",
+    "reset",
+]);
 
-const selectedNoa = computed(() =>
-    props.eligibleNoas?.find(
-        (noa) => String(noa.id) === String(props.form.noa_id),
-    ),
-);
-
-const selectedAoq = computed(
-    () => selectedNoa.value?.aoq || selectedNoa.value?.bac_resolution?.aoq,
-);
-
-const winnerSupplierQuote = computed(() => {
-    const winnerSupplierId = selectedAoq.value?.winner_supplier_id;
-    return selectedAoq.value?.rfq?.suppliers?.find(
-        (supplier) => String(supplier.supplier_id) === String(winnerSupplierId),
-    );
+const noaFormMap = computed(() => {
+    const map = {};
+    if (props.batchNoas && props.form?.noas) {
+        props.batchNoas.forEach((noa) => {
+            map[noa.id] = props.form.noas.find((n) => n.noa_id === noa.id);
+        });
+    }
+    return map;
 });
+
+const selectedCount = computed(
+    () => props.form?.noas?.filter((n) => n.selected).length ?? 0,
+);
+
+const totalSelectedAmount = computed(() => {
+    if (!props.batchNoas || !props.form?.noas) return 0;
+    const selectedIds = props.form.noas
+        .filter((n) => n.selected)
+        .map((n) => n.noa_id);
+    return props.batchNoas
+        .filter((n) => selectedIds.includes(n.id))
+        .reduce((sum, n) => sum + (n.winner_amount || 0), 0);
+});
+
+const getNoaForm = (noaId) => noaFormMap.value[noaId] ?? null;
 
 const numberToWords = (num) => {
     const ones = [
@@ -70,482 +82,357 @@ const numberToWords = (num) => {
         "eighty",
         "ninety",
     ];
-
     const convert = (n) => {
         if (n < 20) return ones[n];
-        if (n < 100) {
+        if (n < 100)
             return `${tens[Math.floor(n / 10)]}${n % 10 ? ` ${ones[n % 10]}` : ""}`;
-        }
-        if (n < 1000) {
+        if (n < 1000)
             return `${ones[Math.floor(n / 100)]} hundred${n % 100 ? ` ${convert(n % 100)}` : ""}`;
-        }
-        if (n < 1000000) {
+        if (n < 1000000)
             return `${convert(Math.floor(n / 1000))} thousand${n % 1000 ? ` ${convert(n % 1000)}` : ""}`;
-        }
         return `${convert(Math.floor(n / 1000000))} million${n % 1000000 ? ` ${convert(n % 1000000)}` : ""}`;
     };
 
     const amount = Number(num || 0);
     if (amount <= 0) return "Zero Pesos Only";
-
     const whole = Math.floor(amount);
     const cents = Math.round((amount - whole) * 100);
-
     const wholeWords = convert(whole)
         .split(" ")
         .filter(Boolean)
         .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
         .join(" ");
-
-    if (cents > 0) {
+    if (cents > 0)
         return `${wholeWords} Pesos and ${String(cents).padStart(2, "0")}/100`;
-    }
-
     return `${wholeWords} Pesos Only`;
 };
 
-const refreshPoNo = async () => {
-    if (!props.form.po_date) return;
-
-    try {
-        const { data } = await axios.post(
-            route("purchase-orders.suggest-po-no"),
-            {
-                po_date: props.form.po_date,
-            },
-        );
-        props.form.po_no = data.po_no;
-    } catch {
-        // noop
-    }
-};
-
-watch(
-    () => props.form.noa_id,
-    async () => {
-        const noa = selectedNoa.value;
-        if (!noa) return;
-
-        if (!props.form.mode_of_procurement) {
-            props.form.mode_of_procurement =
-                props.defaults?.mode_of_procurement || "Small Value";
-        }
-
-        if (!props.form.payment_term) {
-            props.form.payment_term =
-                props.defaults?.payment_term ||
-                "upon 100% completion /delivery";
-        }
-
-        const winnerAmount = Number(noa.winner_amount ?? 0);
-        props.form.delivery_term_days = winnerAmount >= 200000 ? 30 : 15;
-
-        const noaDate = noa.noa_date?.slice(0, 10);
-        if (noaDate) {
-            const nextDay = new Date(noaDate);
-            nextDay.setDate(nextDay.getDate() + 1);
-            props.form.po_date = nextDay.toISOString().slice(0, 10);
-        }
-
-        const officeName =
-            selectedAoq.value?.rfq?.purchase_request?.office?.name || "";
-        props.form.place_of_delivery = officeName;
-
-        const rfqItems = selectedAoq.value?.rfq?.items || [];
-        const supplierItems = winnerSupplierQuote.value?.supplier_items || [];
-
-        props.form.items = rfqItems.map((rfqItem) => {
-            const matchedSupplierItem = supplierItems.find(
-                (entry) => String(entry.rfq_item_id) === String(rfqItem.id),
-            );
-
-            const quantity = Number(
-                rfqItem.purchase_request_item?.quantity || 0,
-            );
-            const unitCost = Number(matchedSupplierItem?.unit_price || 0);
-
-            return {
-                rfq_item_id: rfqItem.id,
-                quantity_snapshot: quantity,
-                unit_cost_snapshot: unitCost,
-                amount_snapshot: quantity * unitCost,
-                _name:
-                    rfqItem.purchase_request_item?.item_name || "Unknown Item",
-                _unit: rfqItem.purchase_request_item?.unit || "",
-            };
-        });
-
-        props.form.total_amount = props.form.items.reduce(
-            (sum, item) => sum + Number(item.amount_snapshot || 0),
-            0,
-        );
-
-        props.form.total_amount_words = numberToWords(props.form.total_amount);
-
-        await refreshPoNo();
-    },
-);
-
-watch(
-    () => props.form.po_date,
-    async () => {
-        await refreshPoNo();
-    },
-);
-
-watch(
-    () => props.form.po_date,
-    async (date) => {
-        await enforceWorkingDay({
-            dateValue: date,
-            errorKey: "po_date",
-            statusKey: "po_date",
-            clearDate: () => {
-                props.form.po_date = "";
-                props.form.po_no = "";
-            },
-        });
-    },
-);
-
-watch(
-    () => props.form.items,
-    (items) => {
-        props.form.total_amount = (items || []).reduce(
-            (sum, item) => sum + Number(item.amount_snapshot || 0),
-            0,
-        );
-
-        props.form.total_amount_words = numberToWords(props.form.total_amount);
-    },
-    { deep: true },
-);
-
-const formatCurrency = (value) =>
-    new Intl.NumberFormat("en-PH", {
-        style: "currency",
-        currency: "PHP",
-    }).format(value || 0);
+const computeAmount = (items) =>
+    (items || []).reduce((sum, item) => sum + Number(item.amount || 0), 0);
 </script>
 
 <template>
-    <form @submit.prevent="$emit('submit')" class="space-y-6">
+    <form @submit.prevent="emit('submit')" class="space-y-6">
         <Card>
             <CardHeader>
                 <CardTitle class="flex items-center gap-2 text-base">
-                    <Icon icon="lucide:link" class="h-4 w-4 text-primary" />
-                    Source Notice of Award
+                    <Icon icon="lucide:layers" class="h-4 w-4 text-primary" />
+                    Batch Purchase Orders
                 </CardTitle>
             </CardHeader>
             <CardContent class="space-y-4">
-                <div class="space-y-2">
-                    <Label for="noa_id">Notice of Award</Label>
-                    <NativeSelect
-                        id="noa_id"
-                        :model-value="form.noa_id"
-                        @update:model-value="form.noa_id = $event"
-                        class="w-full"
-                    >
-                        <option value="">— Select NOA —</option>
-                        <option
-                            v-for="noa in eligibleNoas"
-                            :key="noa.id"
-                            :value="noa.id"
+                <div class="flex items-center justify-between">
+                    <p class="text-sm text-muted-foreground">
+                        {{ selectedCount }} of
+                        {{ batchNoas?.length ?? 0 }} NOA(s) selected
+                    </p>
+                    <div class="flex gap-2">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            @click="emit('selectAll')"
                         >
-                            {{ noa.noa_no }} —
-                            {{ noa._project_name }}
-                        </option>
-                    </NativeSelect>
-                    <p
-                        v-if="form.errors?.noa_id"
-                        class="text-xs text-destructive"
-                    >
-                        {{ form.errors.noa_id }}
-                    </p>
-                </div>
-
-                <div
-                    v-if="selectedNoa"
-                    class="grid gap-3 text-sm md:grid-cols-2"
-                >
-                    <div>
-                        <p class="text-muted-foreground">Project</p>
-                        <p class="font-medium">
-                            {{ selectedNoa._project_name || "—" }}
-                        </p>
-                    </div>
-                    <div>
-                        <p class="text-muted-foreground">Winner Supplier</p>
-                        <p class="font-medium">
-                            {{ selectedNoa._winner_supplier_name || "—" }}
-                        </p>
+                            Select All
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            @click="emit('deselectAll')"
+                        >
+                            Deselect All
+                        </Button>
                     </div>
                 </div>
-            </CardContent>
-        </Card>
 
-        <Card>
-            <CardHeader>
-                <CardTitle class="text-base">Purchase Order Details</CardTitle>
-            </CardHeader>
-            <CardContent class="grid gap-4 md:grid-cols-2">
-                <div class="space-y-2">
-                    <Label for="po_no">PO No.</Label>
-                    <input
-                        id="po_no"
-                        v-model="form.po_no"
-                        readonly
-                        placeholder="mmyy-####"
-                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    />
-                    <p class="text-xs text-muted-foreground">
-                        Auto-generated using MMYY-XXXX format.
-                    </p>
-                    <p
-                        v-if="form.errors?.po_no"
-                        class="text-xs text-destructive"
-                    >
-                        {{ form.errors.po_no }}
-                    </p>
-                </div>
-
-                <div class="space-y-2">
-                    <Label for="po_date">PO Date</Label>
-                    <input
-                        id="po_date"
-                        v-model="form.po_date"
-                        type="date"
-                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    />
-                    <p :class="getDateNoticeClass('po_date')">
-                        {{ getDateNotice("po_date") }}
-                    </p>
-                    <p
-                        v-if="form.errors?.po_date"
-                        class="text-xs text-destructive"
-                    >
-                        {{ form.errors.po_date }}
-                    </p>
-                </div>
-
-                <div class="space-y-2">
-                    <Label for="mode_of_procurement">Mode of Procurement</Label>
-                    <NativeSelect
-                        id="mode_of_procurement"
-                        :model-value="form.mode_of_procurement"
-                        @update:model-value="form.mode_of_procurement = $event"
-                        class="w-full"
-                    >
-                        <option value="Small Value">Small Value</option>
-                        <option value="Direct Contracting">
-                            Direct Contracting
-                        </option>
-                        <option value="Direct Acquisition">
-                            Direct Acquisition
-                        </option>
-                    </NativeSelect>
-                    <p
-                        v-if="form.errors?.mode_of_procurement"
-                        class="text-xs text-destructive"
-                    >
-                        {{ form.errors.mode_of_procurement }}
-                    </p>
-                </div>
-
-                <div class="space-y-2">
-                    <Label for="place_of_delivery">Place of Delivery</Label>
-                    <input
-                        id="place_of_delivery"
-                        v-model="form.place_of_delivery"
-                        readonly
-                        class="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm"
-                    />
-                    <p
-                        v-if="form.errors?.place_of_delivery"
-                        class="text-xs text-destructive"
-                    >
-                        {{ form.errors.place_of_delivery }}
-                    </p>
-                </div>
-
-                <div class="space-y-2">
-                    <Label for="delivery_term_days">Delivery Term (days)</Label>
-                    <input
-                        id="delivery_term_days"
-                        v-model.number="form.delivery_term_days"
-                        type="number"
-                        min="1"
-                        max="30"
-                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    />
-                    <p class="text-xs text-muted-foreground">
-                        Default is 15. Allowed range is 1 to 30 days.
-                    </p>
-                    <p
-                        v-if="form.errors?.delivery_term_days"
-                        class="text-xs text-destructive"
-                    >
-                        {{ form.errors.delivery_term_days }}
-                    </p>
-                </div>
-
-                <div class="space-y-2">
-                    <Label for="payment_term">Payment Term</Label>
-                    <input
-                        id="payment_term"
-                        v-model="form.payment_term"
-                        list="payment-options"
-                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    />
-                    <datalist id="payment-options">
-                        <option value="upon 100% completion /delivery" />
-                        <option value="Progress billing" />
-                        <option value="Net 30 days" />
-                    </datalist>
-                    <p
-                        v-if="form.errors?.payment_term"
-                        class="text-xs text-destructive"
-                    >
-                        {{ form.errors.payment_term }}
-                    </p>
-                </div>
-            </CardContent>
-        </Card>
-
-        <Card>
-            <CardHeader>
-                <CardTitle class="text-base">Purchase Order Items</CardTitle>
-            </CardHeader>
-            <CardContent class="space-y-4">
-                <div class="overflow-auto">
-                    <table class="w-full text-sm">
-                        <thead class="border-b bg-muted/40">
-                            <tr>
-                                <th class="px-3 py-2 text-left font-medium">
-                                    Item
-                                </th>
-                                <th class="px-3 py-2 text-center font-medium">
-                                    Qty
-                                </th>
-                                <th class="px-3 py-2 text-left font-medium">
-                                    Unit
-                                </th>
-                                <th class="px-3 py-2 text-right font-medium">
-                                    Unit Cost
-                                </th>
-                                <th class="px-3 py-2 text-right font-medium">
-                                    Amount
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-if="!form.items?.length" class="border-b">
-                                <td
-                                    colspan="5"
-                                    class="px-3 py-4 text-center text-muted-foreground"
-                                >
-                                    Select an NOA to load awarded item
-                                    snapshots.
-                                </td>
-                            </tr>
-                            <tr
-                                v-for="(item, index) in form.items"
-                                :key="item.rfq_item_id"
-                                class="border-b"
-                            >
-                                <td class="px-3 py-2">{{ item._name }}</td>
-                                <td class="px-3 py-2 text-center">
-                                    {{ item.quantity_snapshot }}
-                                </td>
-                                <td class="px-3 py-2">
-                                    {{ item._unit || "—" }}
-                                </td>
-                                <td class="px-3 py-2 text-right">
-                                    {{
-                                        formatCurrency(item.unit_cost_snapshot)
-                                    }}
-                                </td>
-                                <td class="px-3 py-2 text-right font-medium">
-                                    {{ formatCurrency(item.amount_snapshot) }}
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <p v-if="form.errors?.items" class="text-xs text-destructive">
-                    {{ form.errors.items }}
+                <p v-if="form.errors?.noas" class="text-xs text-destructive">
+                    {{ form.errors.noas }}
                 </p>
-
-                <div class="grid gap-4 md:grid-cols-2">
-                    <div class="space-y-2">
-                        <Label for="total_amount">Total Amount (PHP)</Label>
-                        <input
-                            id="total_amount"
-                            v-model.number="form.total_amount"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            readonly
-                            class="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm"
-                        />
-                        <p
-                            v-if="form.errors?.total_amount"
-                            class="text-xs text-destructive"
-                        >
-                            {{ form.errors.total_amount }}
-                        </p>
-                    </div>
-
-                    <div class="space-y-2">
-                        <Label for="total_amount_words"
-                            >Total Amount in Words</Label
-                        >
-                        <textarea
-                            id="total_amount_words"
-                            v-model="form.total_amount_words"
-                            rows="2"
-                            readonly
-                            class="w-full rounded-md border border-input bg-muted px-3 py-2 text-sm"
-                        />
-                        <p
-                            v-if="form.errors?.total_amount_words"
-                            class="text-xs text-destructive"
-                        >
-                            {{ form.errors.total_amount_words }}
-                        </p>
-                    </div>
-                </div>
-
-                <div class="space-y-2">
-                    <Label for="remarks">Remarks</Label>
-                    <textarea
-                        id="remarks"
-                        v-model="form.remarks"
-                        rows="2"
-                        class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    />
-                    <p
-                        v-if="form.errors?.remarks"
-                        class="text-xs text-destructive"
-                    >
-                        {{ form.errors.remarks }}
-                    </p>
-                </div>
             </CardContent>
         </Card>
 
-        <div class="flex justify-end gap-2">
-            <Button type="button" variant="outline" @click="form.reset()"
-                >Reset</Button
+        <div v-for="noa in batchNoas" :key="noa.id" class="space-y-4">
+            <Card
+                class="border-l-4 transition-colors"
+                :class="
+                    getNoaForm(noa.id)?.selected
+                        ? 'border-l-primary'
+                        : 'border-l-muted opacity-60'
+                "
             >
-            <Button type="submit" :disabled="form.processing">
-                <Icon
-                    v-if="form.processing"
-                    icon="lucide:loader-2"
-                    class="mr-2 h-4 w-4 animate-spin"
-                />
-                Create PO
-            </Button>
+                <CardHeader class="flex flex-row items-center gap-3 pb-0">
+                    <input
+                        type="checkbox"
+                        :checked="getNoaForm(noa.id)?.selected ?? false"
+                        @change="emit('toggleNoa', noa.id)"
+                        class="h-5 w-5 rounded border-gray-300 text-primary"
+                    />
+                    <div class="flex-1">
+                        <CardTitle class="text-base">
+                            {{ noa.noa_no }} — {{ noa.project_name }}
+                        </CardTitle>
+                    </div>
+                    <p class="text-sm font-medium text-muted-foreground">
+                        {{ props.formatCurrency(noa.winner_amount) }}
+                    </p>
+                </CardHeader>
+                <CardContent class="space-y-4 pt-4">
+                    <template v-if="getNoaForm(noa.id)">
+                        <div class="grid gap-4 md:grid-cols-2">
+                            <div class="space-y-2">
+                                <div class="space-y-1">
+                                    <Label>Supplier Name</Label>
+                                    <p class="text-sm font-medium">
+                                        {{ noa.supplier_name }}
+                                    </p>
+                                </div>
+                                <div class="space-y-1">
+                                    <Label>Address</Label>
+                                    <p class="text-sm text-muted-foreground">
+                                        {{ noa.supplier_address }}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="space-y-2">
+                                <div class="space-y-1">
+                                    <Label>PO No.</Label>
+                                    <p class="text-sm font-medium">
+                                        {{ noa.suggested_po_no }}
+                                    </p>
+                                </div>
+                                <div class="space-y-1">
+                                    <Label>PR No.</Label>
+                                    <p class="text-sm text-muted-foreground">
+                                        {{ noa.pr_no || "—" }}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="col-start-2 space-y-2">
+                                <div class="space-y-2">
+                                    <Label for="po_date">PO Date</Label>
+                                    <input
+                                        :id="`po_date_${noa.id}`"
+                                        v-model="getNoaForm(noa.id).po_date"
+                                        type="date"
+                                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    />
+                                    <p
+                                        v-if="
+                                            form.errors?.[
+                                                `noas.${form.noas.indexOf(getNoaForm(noa.id))}.po_date`
+                                            ]
+                                        "
+                                        class="text-xs text-destructive"
+                                    >
+                                        {{
+                                            form.errors[
+                                                `noas.${form.noas.indexOf(getNoaForm(noa.id))}.po_date`
+                                            ]
+                                        }}
+                                    </p>
+                                </div>
+                                <div class="space-y-2">
+                                    <Label :for="`mode_${noa.id}`"
+                                        >Mode of Procurement</Label
+                                    >
+                                    <NativeSelect
+                                        :id="`mode_${noa.id}`"
+                                        :model-value="
+                                            getNoaForm(noa.id)
+                                                .mode_of_procurement
+                                        "
+                                        @update:model-value="
+                                            getNoaForm(
+                                                noa.id,
+                                            ).mode_of_procurement = $event
+                                        "
+                                        class="w-full"
+                                    >
+                                        <option value="Small Value">
+                                            Small Value
+                                        </option>
+                                        <option value="Direct Contracting">
+                                            Direct Contracting
+                                        </option>
+                                        <option value="Direct Acquisition">
+                                            Direct Acquisition
+                                        </option>
+                                    </NativeSelect>
+                                </div>
+                            </div>
+
+                            <div class="space-y-2">
+                                <Label :for="`delivery_${noa.id}`"
+                                    >Date of Delivery</Label
+                                >
+                                <select
+                                    :id="`delivery_${noa.id}`"
+                                    v-model.number="
+                                        getNoaForm(noa.id).delivery_term_days
+                                    "
+                                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                >
+                                    <option :value="15">15 days</option>
+                                    <option :value="30">30 days</option>
+                                    <option :value="45">45 days</option>
+                                </select>
+                            </div>
+                            <div class="space-y-2">
+                                <Label :for="`payment_${noa.id}`"
+                                    >Payment Term</Label
+                                >
+                                <input
+                                    :id="`payment_${noa.id}`"
+                                    v-model="getNoaForm(noa.id).payment_term"
+                                    list="payment-options"
+                                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                />
+                            </div>
+                            <div class="space-y-2 md:col-span-2">
+                                <Label :for="`pod_${noa.id}`"
+                                    >Place of Delivery</Label
+                                >
+                                <input
+                                    :id="`pod_${noa.id}`"
+                                    v-model="
+                                        getNoaForm(noa.id).place_of_delivery
+                                    "
+                                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                />
+                            </div>
+                        </div>
+
+                        <div class="overflow-auto rounded-md border">
+                            <table class="w-full text-sm">
+                                <thead class="bg-muted/40">
+                                    <tr>
+                                        <th
+                                            class="w-16 px-3 py-2 text-center font-medium"
+                                        >
+                                            Qty
+                                        </th>
+                                        <th
+                                            class="w-20 px-3 py-2 text-left font-medium"
+                                        >
+                                            Unit
+                                        </th>
+                                        <th
+                                            class="px-3 py-2 text-left font-medium"
+                                        >
+                                            Item Description
+                                        </th>
+                                        <th
+                                            class="w-28 px-3 py-2 text-right font-medium"
+                                        >
+                                            Unit Cost
+                                        </th>
+                                        <th
+                                            class="w-28 px-3 py-2 text-right font-medium"
+                                        >
+                                            Amount
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr
+                                        v-for="(item, i) in noa.items"
+                                        :key="i"
+                                        class="border-t"
+                                    >
+                                        <td class="px-3 py-2 text-center">
+                                            {{ item.quantity }}
+                                        </td>
+                                        <td class="px-3 py-2">
+                                            {{ item.unit || "—" }}
+                                        </td>
+                                        <td class="px-3 py-2">
+                                            {{ item.item_name }}
+                                        </td>
+                                        <td class="px-3 py-2 text-right">
+                                            {{
+                                                props.formatCurrency(
+                                                    item.unit_cost,
+                                                )
+                                            }}
+                                        </td>
+                                        <td
+                                            class="px-3 py-2 text-right font-medium"
+                                        >
+                                            {{
+                                                props.formatCurrency(
+                                                    item.amount,
+                                                )
+                                            }}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="grid gap-2 text-sm md:grid-cols-2">
+                            <div class="space-y-1">
+                                <Label>Total Amount</Label>
+                                <p class="text-lg font-bold">
+                                    {{
+                                        props.formatCurrency(
+                                            computeAmount(noa.items),
+                                        )
+                                    }}
+                                </p>
+                            </div>
+                            <div class="space-y-1">
+                                <Label>Total Amount in Words</Label>
+                                <p class="text-sm italic text-muted-foreground">
+                                    {{
+                                        numberToWords(computeAmount(noa.items))
+                                    }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <Label :for="`remarks_${noa.id}`">Remarks</Label>
+                            <textarea
+                                :id="`remarks_${noa.id}`"
+                                v-model="getNoaForm(noa.id).remarks"
+                                rows="2"
+                                class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            />
+                        </div>
+                    </template>
+                </CardContent>
+            </Card>
+        </div>
+
+        <datalist id="payment-options">
+            <option value="upon 100% completion /delivery" />
+            <option value="Progress billing" />
+            <option value="Net 30 days" />
+        </datalist>
+
+        <div class="flex items-center justify-between">
+            <p class="text-sm text-muted-foreground">
+                Creating POs for
+                <strong>{{ selectedCount }}</strong> NOA(s) — total
+                <strong>{{ props.formatCurrency(totalSelectedAmount) }}</strong>
+            </p>
+            <div class="flex gap-2">
+                <Button type="button" variant="outline" @click="emit('reset')">
+                    Reset
+                </Button>
+                <Button
+                    type="submit"
+                    :disabled="form.processing || !selectedCount"
+                >
+                    <Icon
+                        v-if="form.processing"
+                        icon="lucide:loader-2"
+                        class="mr-2 h-4 w-4 animate-spin"
+                    />
+                    Save &amp; Print
+                </Button>
+            </div>
         </div>
     </form>
 </template>

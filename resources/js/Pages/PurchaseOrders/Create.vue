@@ -1,8 +1,9 @@
 <script setup>
 import { useForm, router } from "@inertiajs/vue3";
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import axios from "axios";
-import SvpSmartInput from "@/components/SvpSmartInput.vue";
+import { route } from "ziggy-js";
+import NoaSmartInput from "@/components/NoaSmartInput.vue";
 import Layout from "@/Layout/Layout.vue";
 import PurchaseOrderCreateHeader from "@/components/purchase-orders/create/PurchaseOrderCreateHeader.vue";
 import PurchaseOrderCreateForm from "@/components/purchase-orders/create/PurchaseOrderCreateForm.vue";
@@ -29,43 +30,79 @@ defineOptions({
 });
 
 const props = defineProps({
-    eligibleNoas: Array,
-    selectedBatchId: String,
-    selectedNoaId: String,
+    batchNoas: Array,
+    batchId: String,
     defaults: Object,
 });
 
+function buildInitialNoas(batchNoas, defaults) {
+    if (!batchNoas?.length) return [];
+    return batchNoas.map((noa) => ({
+        noa_id: noa.id,
+        selected: true,
+        po_date: defaults?.po_date || "",
+        mode_of_procurement: defaults?.mode_of_procurement || "Small Value",
+        delivery_term_days: (noa.winner_amount || 0) >= 200000 ? 30 : 15,
+        payment_term: defaults?.payment_term || "upon 100% completion /delivery",
+        place_of_delivery: noa.office_name || "",
+        remarks: "",
+    }));
+}
+
 const form = useForm({
-    noa_id: props.selectedNoaId || "",
-    po_no: props.defaults?.po_no || "",
-    po_date: props.defaults?.po_date || "",
-    mode_of_procurement: props.defaults?.mode_of_procurement || "Small Value",
-    place_of_delivery: "",
-    delivery_term_days: props.defaults?.delivery_term_days || 15,
-    payment_term:
-        props.defaults?.payment_term || "upon 100% completion /delivery",
-    total_amount: 0,
-    total_amount_words: "",
-    remarks: "",
-    items: [],
+    noas: buildInitialNoas(props.batchNoas, props.defaults),
 });
 
 const submit = () => {
-    form.post(route("purchase-orders.store"));
+    form.transform((data) => ({
+        noas: data.noas.filter((n) => n.selected),
+    })).post(route("purchase-orders.store"));
 };
 
-const svpSearchNo = ref("");
-const searchingSvp = ref(false);
-const svpError = ref("");
+const toggleNoa = (id) => {
+    const noa = form.noas.find((n) => n.noa_id === id);
+    if (noa) noa.selected = !noa.selected;
+};
 
-const findBatchBySvp = async (svp) => {
-    if (!svp || searchingSvp.value) return;
-    searchingSvp.value = true;
-    svpError.value = "";
+const selectAll = () => {
+    form.noas.forEach((n) => (n.selected = true));
+};
+
+const deselectAll = () => {
+    form.noas.forEach((n) => (n.selected = false));
+};
+
+const resetForm = () => {
+    form.reset();
+};
+
+const noaSearchNo = ref("");
+const searchingNoa = ref(false);
+const noaError = ref("");
+
+const autoCompleteNoa = (raw) => {
+    const val = (raw || "").trim();
+    if (!val) return val;
+
+    if (/^\d{4}-\d{4}$/.test(val)) return val;
+
+    if (/^\d{1,4}$/.test(val)) {
+        const padded = val.padStart(4, "0");
+        return String(new Date().getFullYear()) + "-" + padded;
+    }
+
+    return val;
+};
+
+const findBatchByNoa = async (noa) => {
+    const fullNoa = autoCompleteNoa(noa);
+    if (!fullNoa || searchingNoa.value) return;
+    searchingNoa.value = true;
+    noaError.value = "";
 
     try {
-        const res = await axios.get(route("noas.find-batch-by-svp"), {
-            params: { svp_no: svp },
+        const res = await axios.get(route("noas.find-batch-by-noa"), {
+            params: { noa_no: fullNoa },
         });
         router.get(
             route("purchase-orders.create"),
@@ -73,11 +110,17 @@ const findBatchBySvp = async (svp) => {
             { preserveState: false, preserveScroll: true, replace: true },
         );
     } catch (err) {
-        svpError.value = err?.response?.data?.error || "SVP not found. Make sure the AOQ has a batch assigned.";
+        noaError.value = err?.response?.data?.error || `NOA "${fullNoa}" not found or has no batch.`;
     } finally {
-        searchingSvp.value = false;
+        searchingNoa.value = false;
     }
 };
+
+const formatCurrency = (value) =>
+    new Intl.NumberFormat("en-PH", {
+        style: "currency",
+        currency: "PHP",
+    }).format(value || 0);
 </script>
 
 <template>
@@ -88,17 +131,18 @@ const findBatchBySvp = async (svp) => {
             <CardHeader>
                 <CardTitle class="flex items-center gap-2 text-base">
                     <Icon icon="lucide:search" class="h-4 w-4 text-primary" />
-                    Find by SVP Number
+                    Find by NOA Number
                 </CardTitle>
             </CardHeader>
             <CardContent>
                 <div class="max-w-md space-y-3">
                     <div class="space-y-2">
-                        <Label for="svp_search">SVP Number</Label>
-                        <SvpSmartInput
-                            v-model="svpSearchNo"
-                            :disabled="searchingSvp"
-                            @select="findBatchBySvp"
+                        <Label for="noa_search">NOA Number</Label>
+                        <NoaSmartInput
+                            :model-value="noaSearchNo"
+                            :disabled="searchingNoa"
+                            @update:model-value="noaSearchNo = String($event)"
+                            @select="findBatchByNoa"
                         />
                     </div>
 
@@ -106,32 +150,37 @@ const findBatchBySvp = async (svp) => {
                         type="button"
                         variant="default"
                         size="sm"
-                        :disabled="!svpSearchNo.trim() || searchingSvp"
-                        @click="findBatchBySvp(svpSearchNo)"
+                        :disabled="!String(noaSearchNo ?? '').trim() || searchingNoa"
+                        @click="findBatchByNoa(String(noaSearchNo ?? ''))"
                     >
                         <Icon
-                            v-if="searchingSvp"
+                            v-if="searchingNoa"
                             icon="lucide:loader-2"
                             class="mr-1 h-3.5 w-3.5 animate-spin"
                         />
                         Find NOAs
                     </Button>
 
-                    <p v-if="svpError" class="text-xs text-destructive">{{ svpError }}</p>
+                    <p v-if="noaError" class="text-xs text-destructive">{{ noaError }}</p>
 
                     <p class="text-xs text-muted-foreground">
-                        Enter an SVP number to find the batch and load eligible NOAs for Purchase Order creation.
+                        Enter a NOA number (last 4 digits) to find its batch and load all NOAs for PO creation.
                     </p>
                 </div>
             </CardContent>
         </Card>
 
         <PurchaseOrderCreateForm
-            v-if="selectedBatchId"
+            v-if="batchId"
             :form="form"
-            :eligible-noas="eligibleNoas"
+            :batch-noas="batchNoas"
             :defaults="defaults"
+            :format-currency="formatCurrency"
             @submit="submit"
+            @toggle-noa="toggleNoa"
+            @select-all="selectAll"
+            @deselect-all="deselectAll"
+            @reset="resetForm"
         />
     </div>
 </template>
