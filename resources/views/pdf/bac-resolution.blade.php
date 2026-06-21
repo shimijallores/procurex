@@ -7,8 +7,8 @@
     <title>BAC Resolution - {{ $resolution->resolution_no }}</title>
     <style>
         @page {
-            size: A4;
-            margin: 1in;
+            size: Legal;
+            margin: 0.7in 0.75in 0.7in 0.75in;
         }
 
         * {
@@ -19,9 +19,9 @@
 
         body {
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 10.5pt;
+            font-size: 12pt;
             color: #000;
-            line-height: 1.35;
+            line-height: 1.5;
             margin: 0;
             padding: 0;
         }
@@ -68,47 +68,47 @@
         }
 
         .gov-title {
-            font-size: 13pt;
+            font-size: 15pt;
             font-weight: 700;
             text-transform: uppercase;
-            line-height: 1.2;
+            line-height: 1.25;
         }
 
         .gov-sub {
-            font-size: 10pt;
+            font-size: 11pt;
             line-height: 1.2;
         }
 
         .bac-title {
-            margin-top: 6px;
-            font-size: 16pt;
+            margin-top: 8px;
+            font-size: 18pt;
             font-weight: 700;
             text-decoration: underline;
             text-transform: uppercase;
         }
 
         .resolution-no {
-            margin-top: 14px;
+            margin-top: 16px;
             text-align: center;
-            font-size: 12pt;
+            font-size: 14pt;
             font-weight: 700;
             text-transform: uppercase;
         }
 
         .resolution-main {
-            margin-top: 12px;
+            margin-top: 14px;
             text-align: center;
-            font-size: 11pt;
+            font-size: 13pt;
             font-weight: 700;
             text-transform: uppercase;
-            line-height: 1.35;
+            line-height: 1.4;
         }
 
         .whereas {
-            margin-top: 9px;
+            margin-top: 10px;
             text-align: justify;
-            line-height: 1.35;
-            text-indent: 26px;
+            line-height: 1.5;
+            text-indent: 30px;
         }
 
         .whereas strong,
@@ -117,17 +117,17 @@
         }
 
         .section-title {
-            margin-top: 12px;
+            margin-top: 14px;
             text-align: center;
-            font-size: 16pt;
+            font-size: 18pt;
             font-weight: 700;
             text-decoration: underline;
             text-transform: uppercase;
         }
 
         .meta-line {
-            margin-top: 6px;
-            font-size: 11pt;
+            margin-top: 8px;
+            font-size: 12pt;
         }
 
         .meta-line strong {
@@ -137,14 +137,14 @@
         .block-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 6px;
-            font-size: 10pt;
+            margin-top: 8px;
+            font-size: 11pt;
         }
 
         .block-table th,
         .block-table td {
             border: 1px solid #000;
-            padding: 4px 5px;
+            padding: 5px 6px;
             vertical-align: top;
         }
 
@@ -167,20 +167,21 @@
         }
 
         .resolved {
-            margin-top: 10px;
+            margin-top: 12px;
             text-align: justify;
-            line-height: 1.4;
-            text-indent: 26px;
+            line-height: 1.5;
+            text-indent: 30px;
         }
 
         .approval-line {
-            margin-top: 18px;
+            margin-top: 22px;
             text-align: center;
             font-weight: 700;
+            font-size: 13pt;
         }
 
         .certification {
-            margin-top: 6px;
+            margin-top: 8px;
             text-align: center;
             font-weight: 700;
             text-transform: uppercase;
@@ -188,12 +189,12 @@
 
         .signatory-grid {
             width: 100%;
-            margin-top: 14px;
+            margin-top: 18px;
         }
 
         .signatory-row {
             width: 100%;
-            margin-top: 16px;
+            margin-top: 18px;
         }
 
         .signatory-cell {
@@ -209,16 +210,16 @@
         }
 
         .role {
-            margin-top: 2px;
+            margin-top: 3px;
         }
 
         .chair {
-            margin-top: 20px;
+            margin-top: 24px;
             text-align: center;
         }
 
         .approved {
-            margin-top: 14px;
+            margin-top: 18px;
             text-align: center;
         }
     </style>

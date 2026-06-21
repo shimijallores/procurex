@@ -391,7 +391,7 @@ class BACResolutionController extends Controller
             'summaryRows' => $summaryRows,
             'abstracts' => $abstracts,
         ])
-            ->format('a4')
+            ->format('legal')
             ->name('BAC-Resolution-'.$bacResolution->resolution_no.'.pdf')
             ->inline();
     }

@@ -217,7 +217,7 @@ watch(selectedBatchId, (id) => {
                         <SvpSmartInput
                             v-model="svpSearchNo"
                             :disabled="searchingSvp"
-                            @select="findBatchBySvp"
+                            @select="(svp) => findBatchBySvp(svp.svp_no)"
                         />
                     </div>
 
