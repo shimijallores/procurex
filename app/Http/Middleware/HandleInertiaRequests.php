@@ -47,6 +47,7 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'success' => $request->session()->get('success', false),
                 'error' => $request->session()->get('error', false),
+                'print_batch_id' => $request->session()->get('print_batch_id', false),
             ],
         ];
     }

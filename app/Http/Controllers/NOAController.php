@@ -197,7 +197,8 @@ class NOAController extends Controller
         $count = count($created);
 
         return redirect()->route('noas.index')
-            ->with('success', $count.' Notice(s) of Award created successfully.');
+            ->with('success', $count.' Notice(s) of Award created successfully.')
+            ->with('print_batch_id', $batch->id);
     }
 
     public function edit(NOA $noa): Response
@@ -305,6 +306,17 @@ class NOAController extends Controller
                 'batch_no' => $batch->batch_no,
             ],
         ]);
+    }
+
+    public function recentNoas(): JsonResponse
+    {
+        $noas = NOA::query()
+            ->whereNotNull('noa_no')
+            ->latest()
+            ->take(10)
+            ->pluck('noa_no');
+
+        return response()->json(['noas' => $noas]);
     }
 
     public function update(UpdateNOARequest $updateNOARequest, NOA $noa): RedirectResponse

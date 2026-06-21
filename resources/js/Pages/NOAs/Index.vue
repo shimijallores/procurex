@@ -1,6 +1,6 @@
 <script setup>
-import { ref, watch } from "vue";
-import { router } from "@inertiajs/vue3";
+import { ref, watch, onMounted } from "vue";
+import { router, usePage } from "@inertiajs/vue3";
 import { Icon } from "@iconify/vue";
 import { useDebounceFn } from "@vueuse/core";
 import Layout from "@/Layout/Layout.vue";
@@ -8,6 +8,7 @@ import DeleteModal from "@/components/DeleteModal.vue";
 import NOAIndexHeader from "@/components/noas/index/NOAIndexHeader.vue";
 import NOAIndexStats from "@/components/noas/index/NOAIndexStats.vue";
 import NOAIndexTable from "@/components/noas/index/NOAIndexTable.vue";
+import NoaSmartInput from "@/components/NoaSmartInput.vue";
 
 defineOptions({
     layout: (h, page) =>
@@ -43,6 +44,11 @@ const applyFilters = useDebounceFn(() => {
 
 watch([search, selectedOffice, selectedFiscalYear, selectedBatch], () => applyFilters());
 
+const onNoaSelect = (noa) => {
+    search.value = noa;
+    applyFilters();
+};
+
 const showDeleteModal = ref(false);
 const noaToDelete = ref(null);
 
@@ -50,6 +56,15 @@ const openDeleteModal = (noa) => {
     noaToDelete.value = noa;
     showDeleteModal.value = true;
 };
+
+onMounted(() => {
+    const page = usePage();
+    const batchId = page.props.flash?.print_batch_id;
+    if (batchId) {
+        const url = route("noas.print-batch", batchId);
+        window.open(url, "_blank");
+    }
+});
 </script>
 
 <template>
@@ -72,26 +87,11 @@ const openDeleteModal = (noa) => {
             @update:selected-batch="selectedBatch = $event"
         >
             <template #search>
-                <div class="relative w-64">
-                    <Icon
-                        icon="lucide:search"
-                        class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                    />
-                    <input
-                        :model-value="search"
-                        @input="search = $event.target.value"
-                        type="text"
-                        placeholder="Search NOAs..."
-                        class="flex h-10 w-full rounded-md border border-input bg-background pl-9 pr-9 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    />
-                    <button
-                        v-if="search"
-                        @click="search = ''"
-                        class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                        <Icon icon="lucide:x" class="h-4 w-4" />
-                    </button>
-                </div>
+                <NoaSmartInput
+                    :model-value="search"
+                    @update:model-value="search = $event"
+                    @select="onNoaSelect"
+                />
             </template>
         </NOAIndexTable>
 

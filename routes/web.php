@@ -372,6 +372,9 @@ Route::middleware(['auth'])->group(function (): void {
         'role:'.
         implode(',', [RoleType::SUPERADMIN->value, RoleType::NOA_ADMIN->value]);
 
+    Route::get('noas/recent-noas', [NOAController::class, 'recentNoas'])
+        ->middleware($noaRoles)
+        ->name('noas.recent-noas');
     Route::get('noas/find-batch-by-svp', [NOAController::class, 'findBatchBySvp'])
         ->middleware($noaRoles)
         ->name('noas.find-batch-by-svp');
