@@ -245,6 +245,14 @@ const formatDate = (date) => {
                                             />
                                         </Button>
                                     </a>
+                                    <Link :href="route('aoqs.edit', aoq.id)">
+                                        <Button variant="ghost" size="sm">
+                                            <Icon
+                                                icon="lucide:pencil"
+                                                class="h-4 w-4"
+                                            />
+                                        </Button>
+                                    </Link>
                                     <Link :href="route('aoqs.show', aoq.id)">
                                         <Button variant="ghost" size="sm">
                                             <Icon

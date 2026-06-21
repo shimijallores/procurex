@@ -163,7 +163,7 @@ class PurchaseOrderController extends Controller
                     $deliveryDays = $winnerAmount >= 200000 ? 30 : 15;
                     $purposeDate = $this->extractDateFromPurpose($rfq?->purchaseRequest?->purpose);
                     $purposeDateLabel = null;
-                    if ($purposeDate) {
+                    if ($purposeDate instanceof \Illuminate\Support\Carbon) {
                         $diffDays = (int) Carbon::parse($suggestedDate)->diffInDays($purposeDate, false);
                         if ($diffDays >= 1 && $diffDays <= 365) {
                             $deliveryDays = $diffDays;
@@ -187,7 +187,7 @@ class PurchaseOrderController extends Controller
                         'purpose_date_label' => $purposeDateLabel,
                     ];
 
-                    $nextSequence++;
+                    ++$nextSequence;
                 }
             }
         }
@@ -214,9 +214,9 @@ class PurchaseOrderController extends Controller
         ]);
     }
 
-    public function store(StorePurchaseOrderRequest $request): RedirectResponse
+    public function store(StorePurchaseOrderRequest $storePurchaseOrderRequest): RedirectResponse
     {
-        $validated = $request->validated();
+        $validated = $storePurchaseOrderRequest->validated();
         $noaEntries = $validated['noas'];
 
         $noaIds = collect($noaEntries)->pluck('noa_id')->all();
@@ -237,11 +237,11 @@ class PurchaseOrderController extends Controller
 
         DB::beginTransaction();
         try {
-            foreach ($noaEntries as $entry) {
-                $noa = $noas->get($entry['noa_id']);
+            foreach ($noaEntries as $noaEntry) {
+                $noa = $noas->get($noaEntry['noa_id']);
 
                 if (! $noa) {
-                    $errors[] = "NOA ID {$entry['noa_id']} not found or already has a PO.";
+                    $errors[] = sprintf('NOA ID %s not found or already has a PO.', $noaEntry['noa_id']);
 
                     continue;
                 }
@@ -251,7 +251,7 @@ class PurchaseOrderController extends Controller
                 $winnerSupplierId = $aoq?->winner_supplier_id;
 
                 if (! $rfq || ! $winnerSupplierId) {
-                    $errors[] = "NOA {$noa->noa_no} has incomplete AOQ/RFQ data.";
+                    $errors[] = sprintf('NOA %s has incomplete AOQ/RFQ data.', $noa->noa_no);
 
                     continue;
                 }
@@ -260,7 +260,7 @@ class PurchaseOrderController extends Controller
                     ->firstWhere('supplier_id', (int) $winnerSupplierId);
 
                 if (! $winnerQuote) {
-                    $errors[] = "Unable to locate winner quotation for NOA {$noa->noa_no}.";
+                    $errors[] = sprintf('Unable to locate winner quotation for NOA %s.', $noa->noa_no);
 
                     continue;
                 }
@@ -288,15 +288,15 @@ class PurchaseOrderController extends Controller
 
                 $po = PurchaseOrder::create([
                     'noa_id' => $noa->id,
-                    'po_no' => $this->generatePoNumber($entry['po_date']),
-                    'po_date' => $entry['po_date'],
-                    'mode_of_procurement' => $entry['mode_of_procurement'],
-                    'place_of_delivery' => $entry['place_of_delivery'] ?: $officeName,
-                    'delivery_term_days' => $entry['delivery_term_days'] ?? 15,
-                    'payment_term' => $entry['payment_term'] ?? null,
+                    'po_no' => $this->generatePoNumber($noaEntry['po_date']),
+                    'po_date' => $noaEntry['po_date'],
+                    'mode_of_procurement' => $noaEntry['mode_of_procurement'],
+                    'place_of_delivery' => $noaEntry['place_of_delivery'] ?: $officeName,
+                    'delivery_term_days' => $noaEntry['delivery_term_days'] ?? 15,
+                    'payment_term' => $noaEntry['payment_term'] ?? null,
                     'total_amount' => $totalAmount,
                     'total_amount_words' => NumberToWords::convert($totalAmount),
-                    'remarks' => $entry['remarks'] ?? null,
+                    'remarks' => $noaEntry['remarks'] ?? null,
                 ]);
 
                 foreach ($computedItems as $computedItem) {
@@ -311,7 +311,7 @@ class PurchaseOrderController extends Controller
                 $created[] = $po;
             }
 
-            if (! empty($errors)) {
+            if ($errors !== []) {
                 DB::rollBack();
 
                 return redirect()->back()->withErrors([
@@ -333,14 +333,14 @@ class PurchaseOrderController extends Controller
             $batchId = $firstPo->noa?->aoq?->batch_id;
         }
 
-        $redirect = redirect()->route('purchase-orders.index')
+        $redirectResponse = redirect()->route('purchase-orders.index')
             ->with('success', count($created).' Purchase Order(s) created successfully.');
 
         if ($batchId) {
-            $redirect->with('print_batch_id', $batchId);
+            $redirectResponse->with('print_batch_id', $batchId);
         }
 
-        return $redirect;
+        return $redirectResponse;
     }
 
     public function recentPos(): \Illuminate\Http\JsonResponse
@@ -529,7 +529,7 @@ class PurchaseOrderController extends Controller
 
         do {
             $poNo = $prefix.str_pad((string) $next, 4, '0', STR_PAD_LEFT);
-            $next++;
+            ++$next;
         } while (PurchaseOrder::where('po_no', $poNo)->exists());
 
         return $poNo;

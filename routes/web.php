@@ -332,11 +332,17 @@ Route::middleware(['auth'])->group(function (): void {
         ->middleware($aoqRoles)
         ->name('aoqs.find-rfq-by-svp');
     Route::resource('aoqs', AOQController::class)
-        ->only(['index', 'create', 'store', 'show', 'destroy'])
+        ->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy'])
         ->middleware($aoqRoles);
     Route::get('aoqs/{aoq}/pdf', [AOQController::class, 'printPdf'])
         ->middleware($aoqRoles)
         ->name('aoqs.pdf');
+    Route::get('aoqs/{aoq}/template', [AOQController::class, 'downloadTemplate'])
+        ->middleware($aoqRoles)
+        ->name('aoqs.template');
+    Route::post('aoqs/import-matrix', [AOQController::class, 'importMatrix'])
+        ->middleware($aoqRoles)
+        ->name('aoqs.import-matrix');
     Route::get('aoqs/suggest-batch', [BatchController::class, 'suggestBatch'])
         ->middleware($aoqRoles)
         ->name('aoqs.suggest-batch');

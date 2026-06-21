@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Exports\AOQTemplateExport;
 use App\Http\Requests\StoreAOQRequest;
+use App\Http\Requests\UpdateAOQRequest;
+use App\Imports\AOQMatrixImport;
 use App\Models\AOQ;
 use App\Models\Batch;
 use App\Models\Calendar;
 use App\Models\RFQ;
-use App\Models\RFQItem;
 use App\Models\RFQSupplier;
 use App\Models\RFQSupplierItem;
 use App\Models\Supplier;
@@ -20,7 +22,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
+use Maatwebsite\Excel\Facades\Excel;
 use Spatie\LaravelPdf\Facades\Pdf;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class AOQController extends Controller
 {
@@ -68,11 +72,11 @@ class AOQController extends Controller
         foreach ($all as $aoq) {
             $calculation = $this->calculateSupplierTotals($aoq->rfq);
             if ($calculation['calculation_mode'] === 'single_calculated') {
-                $singleCalculated++;
+                ++$singleCalculated;
             }
 
             if ($calculation['calculation_mode'] === 'lowest_calculated') {
-                $lowestCalculated++;
+                ++$lowestCalculated;
             }
         }
 
@@ -181,7 +185,7 @@ class AOQController extends Controller
         $batchNo = sprintf('%s%04d', $prefix, $next);
 
         while (Batch::where('batch_no', $batchNo)->exists()) {
-            $next++;
+            ++$next;
             $batchNo = sprintf('%s%04d', $prefix, $next);
         }
 
@@ -369,6 +373,173 @@ class AOQController extends Controller
         });
 
         return redirect()->route('aoqs.index')->with('success', 'AOQ deleted successfully.');
+    }
+
+    public function downloadTemplate(AOQ $aoq): BinaryFileResponse
+    {
+        $aoq->load([
+            'rfq.items.purchaseRequestItem',
+            'rfq.suppliers.supplier',
+        ]);
+
+        $base = $aoq->rfq->suppliers->pluck('supplier.name')->filter()->values()->all();
+        $supplierNames = [];
+        foreach ($base as $i => $name) {
+            $supplierNames[$i] = $name;
+        }
+
+        $supplierCount = count($supplierNames);
+
+        $aoqTemplateExport = new AOQTemplateExport($aoq->rfq, $supplierCount, $supplierNames);
+
+        return Excel::download($aoqTemplateExport, sprintf('aoq-template-%s.xlsx', $aoq->rfq->svp_no ?? $aoq->id));
+    }
+
+    public function importMatrix(Request $request): JsonResponse
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,csv', 'max:10240'],
+            'rfq_id' => ['required', 'integer', 'exists:rfqs,id'],
+            'supplier_count' => ['required', 'integer', 'min:1', 'max:3'],
+        ]);
+
+        $rfq = RFQ::with('items.purchaseRequestItem')->findOrFail((int) $request->rfq_id);
+        $supplierCount = (int) $request->supplier_count;
+
+        $aoqMatrixImport = new AOQMatrixImport($rfq, $supplierCount);
+        Excel::import($aoqMatrixImport, $request->file('file'));
+
+        return response()->json([
+            'unit_prices' => $aoqMatrixImport->parsedUnitPrices,
+        ]);
+    }
+
+    public function edit(AOQ $aoq): Response
+    {
+        $aoq->load([
+            'rfq.purchaseRequest.office',
+            'rfq.items.purchaseRequestItem',
+            'rfq.suppliers.supplier',
+            'rfq.suppliers.supplierItems.rfqItem.purchaseRequestItem',
+        ]);
+
+        $suppliers = Supplier::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'address', 'contact_number']);
+
+        $batches = Batch::withCount('aoqs')
+            ->orderByDesc('id')
+            ->get();
+
+        return Inertia::render('AOQs/Edit', [
+            'aoq' => $aoq,
+            'suppliers' => $suppliers,
+            'batches' => $batches,
+        ]);
+    }
+
+    public function update(UpdateAOQRequest $updateAOQRequest, AOQ $aoq): RedirectResponse
+    {
+        $validated = $updateAOQRequest->validated();
+
+        DB::beginTransaction();
+        try {
+            $rfq = $aoq->rfq()->with([
+                'items.purchaseRequestItem',
+                'suppliers.supplierItems',
+            ])->firstOrFail();
+
+            if (! $rfq->purchaseRequest) {
+                return redirect()->back()->with('error', 'The associated RFQ is not linked to a Purchase Request.');
+            }
+
+            // Clear existing supplier quotation data
+            foreach ($rfq->suppliers as $existingSupplier) {
+                $existingSupplier->supplierItems()->delete();
+            }
+
+            $rfq->suppliers()->delete();
+
+            // Recreate from form data
+            foreach ($validated['quotations'] as $quotation) {
+                $rfqSupplier = RFQSupplier::create([
+                    'rfq_id' => $rfq->id,
+                    'supplier_id' => $quotation['supplier_id'],
+                ]);
+
+                $submittedAt = $quotation['submitted_at'] ?? null;
+                $isLate = false;
+                if ($submittedAt && $rfq->submission_deadline) {
+                    $isLate = Carbon::parse($submittedAt)->greaterThan(Carbon::parse($rfq->submission_deadline)->endOfDay());
+                }
+
+                $rfqSupplier->update([
+                    'submitted_at' => $submittedAt,
+                    'is_late' => $isLate,
+                    'remarks' => $quotation['remarks'] ?? null,
+                ]);
+
+                $unitPrices = $quotation['unit_prices'] ?? [];
+                foreach ($rfq->items as $rfqItem) {
+                    $rawPrice = $unitPrices[$rfqItem->id] ?? null;
+
+                    RFQSupplierItem::create([
+                        'rfq_supplier_id' => $rfqSupplier->id,
+                        'rfq_item_id' => $rfqItem->id,
+                        'unit_price' => $rawPrice === '' ? null : $rawPrice,
+                    ]);
+                }
+            }
+
+            // Recalculate winner
+            $rfq->load('suppliers.supplierItems.rfqItem');
+            $supplierTotals = [];
+            foreach ($rfq->suppliers as $rfqSupplier) {
+                $total = 0.0;
+                $hasPrice = false;
+
+                foreach ($rfqSupplier->supplierItems as $supplierItem) {
+                    if ($supplierItem->unit_price === null) {
+                        continue;
+                    }
+
+                    $quantity = (float) ($supplierItem->rfqItem?->quantity ?? 0);
+                    $total += $quantity * (float) $supplierItem->unit_price;
+                    $hasPrice = true;
+                }
+
+                if (! $hasPrice) {
+                    continue;
+                }
+
+                $supplierTotals[] = [
+                    'supplier_id' => $rfqSupplier->supplier_id,
+                    'total_amount' => round($total, 2),
+                ];
+            }
+
+            $winnerSupplierId = null;
+            if ($supplierTotals !== []) {
+                usort($supplierTotals, fn (array $a, array $b): int => $a['total_amount'] <=> $b['total_amount']);
+                $winnerSupplierId = $supplierTotals[0]['supplier_id'];
+            }
+
+            $aoq->update([
+                'batch_id' => $validated['batch_id'],
+                'aoq_date' => $validated['aoq_date'],
+                'winner_supplier_id' => $winnerSupplierId,
+            ]);
+
+            DB::commit();
+        } catch (\Throwable $throwable) {
+            DB::rollBack();
+
+            return redirect()->back()->with('error', 'Failed to update AOQ. Please try again.');
+        }
+
+        return redirect()->route('aoqs.show', $aoq)
+            ->with('success', 'AOQ updated successfully.');
     }
 
     public function printPdf(AOQ $aoq): \Spatie\LaravelPdf\PdfBuilder

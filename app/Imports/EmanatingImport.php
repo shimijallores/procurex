@@ -206,7 +206,7 @@ class EmanatingImport implements ToCollection
             $title = null;
             $counter = count($rows);
 
-            for ($i = $underlineRow + 1; $i < $counter; $i++) {
+            for ($i = $underlineRow + 1; $i < $counter; ++$i) {
                 $candidate = trim((string) ($rows[$i][1] ?? ''));
                 if ($candidate === '') {
                     continue;
@@ -293,7 +293,7 @@ class EmanatingImport implements ToCollection
             }
 
             if (! $hasStartedItemSection && ($columnA === '' || preg_match('/\d/', $columnA) !== 1)) {
-                $skippedBeforeStart++;
+                ++$skippedBeforeStart;
 
                 continue;
             }
@@ -304,7 +304,7 @@ class EmanatingImport implements ToCollection
             }
 
             if ($description === '') {
-                $skippedMissingDescription++;
+                ++$skippedMissingDescription;
 
                 continue;
             }
@@ -353,7 +353,7 @@ class EmanatingImport implements ToCollection
             ]);
 
             $items[] = $emanatingItem;
-            $this->itemsCreated++;
+            ++$this->itemsCreated;
         }
 
         return $items;

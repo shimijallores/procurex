@@ -8,11 +8,11 @@ import { useWorkingDayInputGuard } from "@/composables/useWorkingDayInputGuard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import SvpSmartInput from "@/components/SvpSmartInput.vue";
 import SupplierSmartInput from "@/components/SupplierSmartInput.vue";
 
 const props = defineProps({
     form: Object,
+    aoq: Object,
     suppliers: Array,
     batches: Array,
 });
@@ -21,7 +21,6 @@ const emit = defineEmits(["submit"]);
 
 const rfqData = ref(null);
 const loadingRfq = ref(false);
-const rfqError = ref("");
 
 const creatingBatch = ref(false);
 const batchList = ref([...(props.batches || [])]);
@@ -119,42 +118,42 @@ const normalizeQuotationUnitPrices = (quotation, itemIds) => {
     };
 };
 
-const loadRfq = async (svpNo) => {
-    if (!svpNo) {
-        rfqData.value = null;
-        props.form.rfq_id = "";
-        props.form.quotations = [];
-        return;
+const initFromAoq = () => {
+    const aoq = props.aoq;
+    const rfq = aoq.rfq;
+
+    rfqData.value = rfq;
+    props.form.rfq_id = String(rfq.id);
+
+    const itemIds = (rfq.items || []).map((item) => item.id);
+    const quotations = [];
+
+    for (const rfqSupplier of rfq.suppliers || []) {
+        const unitPrices = {};
+
+        for (const itemId of itemIds) {
+            const match = (rfqSupplier.supplier_items || rfqSupplier.supplierItems || []).find(
+                (si) => String(si.rfq_item_id) === String(itemId),
+            );
+            unitPrices[itemId] = match?.unit_price ?? "";
+        }
+
+        quotations.push({
+            supplier_id: String(rfqSupplier.supplier_id),
+            submitted_at: rfqSupplier.submitted_at?.slice(0, 10) || "",
+            remarks: rfqSupplier.remarks || "",
+            unit_prices: unitPrices,
+        });
     }
 
-    loadingRfq.value = true;
-    rfqError.value = "";
-
-    try {
-        const { data } = await axios.get(
-            route("aoqs.find-rfq-by-svp", { svp_no: svpNo }),
-        );
-        rfqData.value = data.rfq;
-        props.form.rfq_id = String(data.rfq.id);
-
-        const itemIds = (data.rfq.items || []).map((item) => item.id);
-        props.form.quotations = [
-            normalizeQuotationUnitPrices(createQuotation(), itemIds),
-        ];
-    } catch (err) {
-        rfqData.value = null;
-        props.form.rfq_id = "";
-        props.form.quotations = [];
-        rfqError.value =
-            err?.response?.data?.error || "Failed to load RFQ data.";
-    } finally {
-        loadingRfq.value = false;
+    if (quotations.length === 0) {
+        quotations.push(normalizeQuotationUnitPrices(createQuotation(), itemIds));
     }
+
+    props.form.quotations = quotations;
 };
 
-const onSvpSelect = (svp) => {
-    loadRfq(svp.svp_no);
-};
+initFromAoq();
 
 watch(
     () => props.form.aoq_date,
@@ -343,7 +342,7 @@ watch(
 
 const rankingBadge = (supplierId) => {
     const rank = supplierRankings.value[supplierId];
-    if (!rank) return null;
+    if (!rank) return "";
 
     if (rank === "winner") {
         return {
@@ -420,16 +419,6 @@ const onFileSelected = (e) => {
     const file = e.target.files?.[0];
     if (file) importMatrix(file);
 };
-
-const svpInputValue = ref("");
-const onSvpInput = (val) => {
-    svpInputValue.value = val;
-    if (!val) {
-        rfqData.value = null;
-        props.form.rfq_id = "";
-        props.form.quotations = [];
-    }
-};
 </script>
 
 <template>
@@ -441,62 +430,9 @@ const onSvpInput = (val) => {
                     Source RFQ
                 </CardTitle>
             </CardHeader>
-            <CardContent class="space-y-4">
-                <div class="flex gap-2 items-end w-100 justify-center">
-                    <div class="flex-1 space-y-2">
-                        <Label for="svp_search">
-                            SVP Number
-                            <span class="text-destructive">*</span>
-                        </Label>
-                        <SvpSmartInput
-                            :model-value="svpInputValue"
-                            @update:model-value="onSvpInput"
-                            @select="onSvpSelect"
-                        />
-                        <p v-if="rfqError" class="text-xs text-destructive">
-                            {{ rfqError }}
-                        </p>
-                        <p
-                            v-if="form.errors?.rfq_id"
-                            class="text-xs text-destructive"
-                        >
-                            {{ form.errors.rfq_id }}
-                        </p>
-                    </div>
-                    <Button
-                        type="button"
-                        variant="default"
-                        class="mb-0.5"
-                        :disabled="!svpInputValue.trim() || loadingRfq"
-                        @click="loadRfq(svpInputValue)"
-                    >
-                        <Icon
-                            v-if="loadingRfq"
-                            icon="lucide:loader-2"
-                            class="mr-1 h-4 w-4 animate-spin"
-                        />
-                        <Icon
-                            v-else
-                            icon="lucide:search"
-                            class="mr-1 h-4 w-4"
-                        />
-                        Find
-                    </Button>
-                </div>
-
+            <CardContent>
                 <div
-                    v-if="loadingRfq"
-                    class="flex items-center gap-2 rounded-md border border-border bg-muted/40 p-3 text-sm"
-                >
-                    <Icon
-                        icon="lucide:loader-2"
-                        class="h-4 w-4 animate-spin text-muted-foreground"
-                    />
-                    Loading RFQ data...
-                </div>
-
-                <div
-                    v-if="rfqData && !loadingRfq"
+                    v-if="rfqData"
                     class="rounded-md border border-border bg-muted/40 p-3 text-sm space-y-1"
                 >
                     <div>
@@ -533,7 +469,7 @@ const onSvpInput = (val) => {
             </CardContent>
         </Card>
 
-        <Card v-if="rfqData">
+        <Card>
             <CardHeader>
                 <CardTitle class="flex items-center gap-2 text-base">
                     <Icon
@@ -566,7 +502,7 @@ const onSvpInput = (val) => {
             </CardContent>
         </Card>
 
-        <Card v-if="rfqData">
+        <Card>
             <CardHeader>
                 <div class="flex items-center justify-between">
                     <CardTitle class="flex items-center gap-2 text-base">
@@ -675,7 +611,7 @@ const onSvpInput = (val) => {
                         <tbody>
                             <tr v-if="!displayBatches.length">
                                 <td
-colspan="5"
+                                    colspan="5"
                                     class="px-3 py-6 text-center text-sm text-muted-foreground"
                                 >
                                     No batches yet. Click "New Batch" to create
@@ -773,7 +709,7 @@ colspan="5"
             </CardContent>
         </Card>
 
-        <Card v-if="rfqData">
+        <Card>
             <CardHeader class="flex flex-row items-center justify-between">
                 <CardTitle class="flex items-center gap-2 text-base">
                     <Icon
@@ -813,10 +749,6 @@ colspan="5"
                 </div>
             </CardHeader>
             <CardContent class="space-y-4">
-                <p v-if="!rfqData" class="text-sm text-muted-foreground">
-                    Select an SVP first to build the quotation matrix.
-                </p>
-
                 <div v-if="form.quotations?.length" class="space-y-3">
                     <div
                         v-for="(quotation, quotationIndex) in form.quotations"
@@ -915,7 +847,7 @@ colspan="5"
             </CardContent>
         </Card>
 
-        <Card v-if="rfqData">
+        <Card>
             <CardHeader>
                 <div class="flex items-center justify-between">
                     <CardTitle class="flex items-center gap-2 text-base">
@@ -958,7 +890,7 @@ colspan="5"
                         <div class="text-sm">
                             <span class="text-muted-foreground">ABC:</span>
                             <span class="font-semibold ml-1">{{
-                                formatCurrency(rfqData.abc_amount)
+                                formatCurrency(rfqData?.abc_amount)
                             }}</span>
                         </div>
                     </div>
@@ -1119,7 +1051,7 @@ colspan="5"
                     icon="lucide:loader-2"
                     class="mr-2 h-4 w-4 animate-spin"
                 />
-                Create AOQ
+                Update AOQ
             </Button>
         </div>
     </form>

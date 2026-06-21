@@ -45,7 +45,7 @@ class Batch extends Model
 
         $amountForBracket = 0;
 
-        if ($currentAoq) {
+        if ($currentAoq instanceof \App\Models\AOQ) {
             // Find the NOA for this AOQ to get the winner_amount
             $noa = $currentAoq->noa;
             if ($noa) {
@@ -55,7 +55,7 @@ class Batch extends Model
                 $amountForBracket = (float) ($currentAoq->rfq?->abc_amount ?? 0);
             }
         } else {
-            $amountForBracket = $this->aoqs()->with('rfq')->get()->sum(function ($aoq) {
+            $amountForBracket = $this->aoqs()->with('rfq')->get()->sum(function ($aoq): float {
                 return (float) ($aoq->rfq?->abc_amount ?? 0);
             });
         }

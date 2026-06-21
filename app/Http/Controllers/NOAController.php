@@ -11,7 +11,6 @@ use App\Models\Batch;
 use App\Models\Calendar;
 use App\Models\NOA;
 use App\Models\Office;
-use App\Models\PurchaseOrder;
 use App\Models\RFQ;
 use App\Models\Supplier;
 use Barryvdh\DomPDF\Facade\Pdf as DomPdf;
@@ -398,7 +397,7 @@ class NOAController extends Controller
                 }
 
                 if ($hasAtLeastOnePrice) {
-                    $calculatedSupplierCount++;
+                    ++$calculatedSupplierCount;
                 }
             }
 
@@ -506,7 +505,7 @@ class NOAController extends Controller
             }
 
             if ($hasAtLeastOnePrice) {
-                $calculatedSupplierCount++;
+                ++$calculatedSupplierCount;
             }
         }
 
