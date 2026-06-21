@@ -11,11 +11,21 @@ class Batch extends Model
 {
     protected $fillable = [
         'batch_no',
+        'rfq_date',
+        'aoq_date',
+        'bac_date',
+        'noa_date',
+        'po_date',
     ];
 
     protected function casts(): array
     {
         return [
+            'rfq_date' => 'date',
+            'aoq_date' => 'date',
+            'bac_date' => 'date',
+            'noa_date' => 'date',
+            'po_date' => 'date',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];

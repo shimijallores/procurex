@@ -77,9 +77,7 @@ class BatchController extends Controller
 
     public function update(UpdateBatchRequest $updateBatchRequest, Batch $batch): RedirectResponse
     {
-        $batch->update([
-            'batch_no' => $updateBatchRequest->input('batch_no'),
-        ]);
+        $batch->update($updateBatchRequest->validated());
 
         return redirect()->route('batches.show', $batch)
             ->with('success', 'Batch updated successfully.');
@@ -144,6 +142,31 @@ class BatchController extends Controller
         $batch = Batch::create(['batch_no' => $batchNo]);
 
         return response()->json($batch);
+    }
+
+    public function recentBatches(): JsonResponse
+    {
+        $batches = Batch::query()
+            ->latest()
+            ->take(5)
+            ->get(['id', 'batch_no']);
+
+        return response()->json(['batches' => $batches]);
+    }
+
+    public function updateDates(Request $request, Batch $batch): JsonResponse
+    {
+        $validated = $request->validate([
+            'rfq_date' => ['nullable', 'date'],
+            'aoq_date' => ['nullable', 'date'],
+            'bac_date' => ['nullable', 'date'],
+            'noa_date' => ['nullable', 'date'],
+            'po_date' => ['nullable', 'date'],
+        ]);
+
+        $batch->update($validated);
+
+        return response()->json(['success' => true, 'batch' => $batch]);
     }
 
     public function suggestBatch(): JsonResponse

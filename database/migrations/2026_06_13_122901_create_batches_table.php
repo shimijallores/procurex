@@ -14,6 +14,11 @@ return new class extends Migration
         Schema::create('batches', function (Blueprint $table) {
             $table->id();
             $table->string('batch_no', 6)->unique();
+            $table->date('rfq_date')->nullable();
+            $table->date('aoq_date')->nullable();
+            $table->date('bac_date')->nullable();
+            $table->date('noa_date')->nullable();
+            $table->date('po_date')->nullable();
             $table->timestamps();
         });
     }

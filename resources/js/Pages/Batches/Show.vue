@@ -60,7 +60,7 @@ const showDeleteModal = ref(false);
                         Batch {{ batch.batch_no }}
                     </h1>
                     <p class="text-muted-foreground">
-                        Batch details and associated AOQs
+                        Batch details and associated Projects
                     </p>
                 </div>
             </div>
@@ -85,9 +85,7 @@ const showDeleteModal = ref(false);
                     <Icon icon="lucide:layers" class="h-5 w-5" />
                     Batch Information
                 </CardTitle>
-                <CardDescription>
-                    Details about this batch
-                </CardDescription>
+                <CardDescription> Details about this batch </CardDescription>
             </CardHeader>
             <CardContent class="space-y-4">
                 <div class="grid gap-1">
@@ -120,30 +118,45 @@ const showDeleteModal = ref(false);
             <CardHeader>
                 <CardTitle class="flex items-center gap-2">
                     <Icon icon="lucide:file-spreadsheet" class="h-5 w-5" />
-                    Associated AOQs
+                    Associated Projects
                 </CardTitle>
                 <CardDescription>
-                    Abstracts of Quotation under this batch
+                    SVP Projects under this batch
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <div v-if="batch.aoqs.length > 0" class="relative w-full overflow-auto">
+                <div
+                    v-if="batch.aoqs.length > 0"
+                    class="relative w-full overflow-auto"
+                >
                     <table class="w-full caption-bottom text-sm">
                         <thead class="border-b">
-                            <tr class="border-b transition-colors hover:bg-muted/50">
-                                <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                            <tr
+                                class="border-b transition-colors hover:bg-muted/50"
+                            >
+                                <th
+                                    class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
+                                >
                                     AOQ Date
                                 </th>
-                                <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                                <th
+                                    class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
+                                >
                                     SVP No.
                                 </th>
-                                <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                                <th
+                                    class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
+                                >
                                     Project Name
                                 </th>
-                                <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                                <th
+                                    class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
+                                >
                                     Office
                                 </th>
-                                <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                                <th
+                                    class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
+                                >
                                     Winner Supplier
                                 </th>
                             </tr>
@@ -155,34 +168,46 @@ const showDeleteModal = ref(false);
                                 class="border-b transition-colors hover:bg-muted/50"
                             >
                                 <td class="p-4 align-middle">
-                                    {{ aoq.aoq_date ? formatDate(aoq.aoq_date) : '—' }}
+                                    {{
+                                        aoq.aoq_date
+                                            ? formatDate(aoq.aoq_date)
+                                            : "—"
+                                    }}
                                 </td>
                                 <td class="p-4 align-middle font-medium">
-                                    {{ aoq.rfq?.svp_no ?? '—' }}
+                                    {{ aoq.rfq?.svp_no ?? "—" }}
                                 </td>
                                 <td class="p-4 align-middle">
                                     <Link
                                         v-if="aoq.id"
                                         :href="route('aoqs.show', aoq.id)"
-                                        class="font-medium text-primary hover:text-primary/80 hover:underline"
+                                        class="font-medium text-blue-700 hover:text-blue-900 hover:underline"
                                     >
-                                        {{ aoq.rfq?.project_name ?? '—' }}
+                                        {{ aoq.rfq?.project_name ?? "—" }}
                                     </Link>
                                     <span v-else>—</span>
                                 </td>
                                 <td class="p-4 align-middle">
-                                    {{ aoq.rfq?.purchase_request?.office?.name ?? '—' }}
+                                    {{
+                                        aoq.rfq?.purchase_request?.office
+                                            ?.name ?? "—"
+                                    }}
                                 </td>
                                 <td class="p-4 align-middle">
-                                    {{ aoq.winner_supplier?.name ?? '—' }}
+                                    {{ aoq.winner_supplier?.name ?? "—" }}
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
                 <div v-else class="flex flex-col items-center gap-2 py-8">
-                    <Icon icon="lucide:inbox" class="h-12 w-12 text-muted-foreground/50" />
-                    <p class="text-muted-foreground">No AOQs assigned to this batch</p>
+                    <Icon
+                        icon="lucide:inbox"
+                        class="h-12 w-12 text-muted-foreground/50"
+                    />
+                    <p class="text-muted-foreground">
+                        No AOQs assigned to this batch
+                    </p>
                 </div>
             </CardContent>
         </Card>

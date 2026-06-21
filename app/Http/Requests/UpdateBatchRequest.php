@@ -17,6 +17,11 @@ class UpdateBatchRequest extends FormRequest
     {
         return [
             'batch_no' => ['required', 'string', 'max:255', 'unique:batches,batch_no,'.$this->route('batch')?->id],
+            'rfq_date' => ['nullable', 'date'],
+            'aoq_date' => ['nullable', 'date'],
+            'bac_date' => ['nullable', 'date'],
+            'noa_date' => ['nullable', 'date'],
+            'po_date' => ['nullable', 'date'],
         ];
     }
 

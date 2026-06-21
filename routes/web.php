@@ -340,6 +340,12 @@ Route::middleware(['auth'])->group(function (): void {
             RoleType::SUPERADMIN->value,
             RoleType::ABSTRACT_ADMIN->value,
         ]);
+    Route::get('batches/recent-batches', [BatchController::class, 'recentBatches'])
+        ->middleware($batchRoles)
+        ->name('batches.recent-batches');
+    Route::put('batches/{batch}/update-dates', [BatchController::class, 'updateDates'])
+        ->middleware($batchRoles)
+        ->name('batches.update-dates');
     Route::resource('batches', BatchController::class)
         ->except(['update'])
         ->middleware($batchRoles);
