@@ -108,7 +108,7 @@ class PurchaseOrderController extends Controller
             $batch = Batch::find($batchId);
 
             if ($batch) {
-                $suggestedDate = $this->suggestNextWorkingDay()->toDateString();
+                $suggestedDate = $batch->po_date?->toDateString() ?? $this->suggestNextWorkingDay()->toDateString();
 
                 $prefix = Carbon::parse($suggestedDate)->format('my').'-';
                 $nextSequence = PurchaseOrder::query()

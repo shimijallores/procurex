@@ -24,8 +24,6 @@ const editField = ref(null);
 const editValue = ref("");
 
 const dateFields = [
-    { key: "rfq_date", label: "RFQ" },
-    { key: "aoq_date", label: "AOQ" },
     { key: "bac_date", label: "BAC" },
     { key: "noa_date", label: "NOA" },
     { key: "po_date", label: "PO" },

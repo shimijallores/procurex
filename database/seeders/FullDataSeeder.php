@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
-use App\Models\AOQ;
 use App\Models\Canvas;
 use App\Models\CanvasItem;
 use App\Models\CanvasItemSelection;
@@ -233,25 +232,6 @@ class FullDataSeeder extends Seeder
                     ]);
                 }
             }
-        }
-
-        // ── 4. AOQs ───────────────────────────────────────────────────
-        foreach ($data['aoqs'] ?? [] as $aoqData) {
-            $rfq = RFQ::where('svp_no', $aoqData['rfq_svp_no'])->first();
-
-            if (! $rfq) {
-                continue;
-            }
-
-            $winner = $aoqData['winner_supplier_name']
-                ? Supplier::where('name', $aoqData['winner_supplier_name'])->first()
-                : null;
-
-            AOQ::create([
-                'rfq_id' => $rfq->id,
-                'aoq_date' => $aoqData['aoq_date'],
-                'winner_supplier_id' => $winner?->id,
-            ]);
         }
     }
 

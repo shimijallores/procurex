@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import DeleteModal from "@/components/DeleteModal.vue";
+import BatchDatesForm from "@/components/batches/show/BatchDatesForm.vue";
 
 defineOptions({
     layout: (h, page) =>
@@ -31,6 +32,11 @@ const props = defineProps({
     batch: Object,
 });
 
+const batch = ref(props.batch);
+
+const onDatesSaved = (updatedBatch) => {
+    batch.value = updatedBatch;
+};
 const formatDate = (date, withTime = true) => {
     if (!date) return "—";
     return new Date(date).toLocaleDateString("en-US", {
@@ -141,6 +147,11 @@ const showDeleteModal = ref(false);
                 </div>
             </CardContent>
         </Card>
+
+        <BatchDatesForm
+            :batch="batch"
+            @saved="onDatesSaved"
+        />
 
         <!-- AOQs Card -->
         <Card>

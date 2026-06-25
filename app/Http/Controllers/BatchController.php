@@ -162,6 +162,7 @@ class BatchController extends Controller
             'bac_date' => ['nullable', 'date'],
             'noa_date' => ['nullable', 'date'],
             'po_date' => ['nullable', 'date'],
+            'po_transmittal_date' => ['nullable', 'date'],
         ]);
 
         $batch->update($validated);

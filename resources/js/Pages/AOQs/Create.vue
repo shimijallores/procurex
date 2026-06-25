@@ -50,19 +50,25 @@ const form = useForm({
 
 const showConfirm = ref(false);
 const pendingNewBatch = ref(false);
+const newBatchId = ref(null);
 
-const onBatchAssigned = ({ isNew }) => {
+const onBatchAssigned = ({ isNew, batchId }) => {
     pendingNewBatch.value = isNew;
+    if (isNew && batchId) {
+        newBatchId.value = batchId;
+    }
 };
 
 const confirmSubmit = () => {
     form.post(route("aoqs.store"), {
         onSuccess: () => {
             showConfirm.value = false;
-            if (pendingNewBatch.value) {
+            if (pendingNewBatch.value && newBatchId.value) {
+                const id = newBatchId.value;
                 pendingNewBatch.value = false;
+                newBatchId.value = null;
                 window.open(
-                    route("batches.index"),
+                    route("batches.show", id),
                     "_blank",
                     "noopener,noreferrer",
                 );

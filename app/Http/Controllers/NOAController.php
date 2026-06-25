@@ -273,6 +273,7 @@ class NOAController extends Controller
             'batch' => [
                 'id' => $batch->id,
                 'batch_no' => $batch->batch_no,
+                'noa_date' => $batch->noa_date?->toDateString(),
             ],
             'bac_resolution' => $bacResolution,
         ]);

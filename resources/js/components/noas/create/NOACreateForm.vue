@@ -78,7 +78,9 @@ const fetchAoqs = async (batchId) => {
         selectedAoqIds.value = aoqList.map((aoq) => String(aoq.id));
         noaRows.value = aoqList.map((aoq) => ({
             aoq_id: String(aoq.id),
-            noa_date: formatDate(props.defaultNoaDate || ""),
+            noa_date: formatDate(
+                res.data.batch?.noa_date || props.defaultNoaDate || "",
+            ),
             recipient_name:
                 aoq.winner_supplier?.proprietor ||
                 aoq.winner_supplier?.authorized_representative ||

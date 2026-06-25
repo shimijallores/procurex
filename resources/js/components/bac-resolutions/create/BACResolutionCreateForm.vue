@@ -87,6 +87,18 @@ watch(
                 : `Multiple suppliers (${supplierNames.length})`;
         props.form.winner_amount = String(totalWinnerAmount.toFixed(2));
         props.form.calculation_label = "Lowest/Single Calculated";
+
+        if (batch?.bac_date) {
+            const d = new Date(batch.bac_date);
+            if (!isNaN(d.getTime())) {
+                const mm = String(d.getMonth() + 1).padStart(2, "0");
+                const dd = String(d.getDate()).padStart(2, "0");
+                const val = `${d.getFullYear()}-${mm}-${dd}`;
+                props.form.resolution_date = val;
+                props.form.meeting_date = val;
+            }
+        }
+
         props.form.justification =
             "for being the suppliers with the Lowest/Single Calculated and Responsive Quotations which are advantageous to the Provincial Government of Batangas.";
         props.form.signatory_chairperson =

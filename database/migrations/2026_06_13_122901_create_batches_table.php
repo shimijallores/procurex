@@ -19,6 +19,7 @@ return new class extends Migration
             $table->date('bac_date')->nullable();
             $table->date('noa_date')->nullable();
             $table->date('po_date')->nullable();
+            $table->date('po_transmittal_date')->nullable();
             $table->date('earmark_date_from')->nullable();
             $table->date('earmark_date_to')->nullable();
             $table->boolean('is_locked')->default(false);

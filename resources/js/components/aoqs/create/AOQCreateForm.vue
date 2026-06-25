@@ -78,7 +78,7 @@ const findOrCreateBatch = async () => {
         assignedBatch.value = data.batch;
         isNewBatch.value = data.is_new;
         props.form.batch_id = String(data.batch.id);
-        emit("batch-assigned", { isNew: data.is_new, batchNo: data.batch.batch_no });
+        emit("batch-assigned", { isNew: data.is_new, batchNo: data.batch.batch_no, batchId: data.batch.id });
     } catch {
         //
     } finally {
