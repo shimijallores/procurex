@@ -214,6 +214,13 @@ const mainNavItems = computed(() => {
             roles: ["SuperAdmin", "Abstract Admin"],
         },
         {
+            title: "Batch AOQ Requests",
+            url: route("batch-aoq-requests.index"),
+            icon: "lucide:mail-question",
+            isActive: route().current("batch-aoq-requests.*"),
+            roles: ["SuperAdmin"],
+        },
+        {
             title: "Notice of Award",
             url: route("noas.index"),
             icon: "lucide:file-badge",

@@ -134,17 +134,20 @@ class BACResolutionController extends Controller
     public function store(StoreBACResolutionRequest $storeBACResolutionRequest): RedirectResponse
     {
         $validated = $storeBACResolutionRequest->validated();
+        $saveDraft = (bool) ($validated['save_draft'] ?? false);
 
-        if (! $this->isWorkingDay($validated['resolution_date'] ?? null)) {
-            return redirect()->back()->withErrors([
-                'resolution_date' => 'Resolution date must be a working day (not weekend/holiday).',
-            ])->withInput();
-        }
+        if (! $saveDraft) {
+            if (! $this->isWorkingDay($validated['resolution_date'] ?? null)) {
+                return redirect()->back()->withErrors([
+                    'resolution_date' => 'Resolution date must be a working day (not weekend/holiday).',
+                ])->withInput();
+            }
 
-        if (! $this->isWorkingDay($validated['meeting_date'] ?? null)) {
-            return redirect()->back()->withErrors([
-                'meeting_date' => 'Meeting date must be a working day (not weekend/holiday).',
-            ])->withInput();
+            if (! $this->isWorkingDay($validated['meeting_date'] ?? null)) {
+                return redirect()->back()->withErrors([
+                    'meeting_date' => 'Meeting date must be a working day (not weekend/holiday).',
+                ])->withInput();
+            }
         }
 
         DB::beginTransaction();
@@ -170,12 +173,14 @@ class BACResolutionController extends Controller
                 ])->withInput();
             }
 
-            $alreadyLinked = $aoqs->first(function (AOQ $aoq): bool {
-                return $aoq->bacResolution()->exists() || $aoq->bacResolutions()->exists();
-            });
+            if (! $saveDraft) {
+                $alreadyLinked = $aoqs->first(function (AOQ $aoq): bool {
+                    return $aoq->bacResolution()->exists() || $aoq->bacResolutions()->exists();
+                });
 
-            if ($alreadyLinked) {
-                return redirect()->back()->with('error', 'One or more AOQs in this batch are already linked to an existing BAC Resolution.');
+                if ($alreadyLinked) {
+                    return redirect()->back()->with('error', 'One or more AOQs in this batch are already linked to an existing BAC Resolution.');
+                }
             }
 
             $primaryAoq = $aoqs->first();
@@ -188,7 +193,7 @@ class BACResolutionController extends Controller
             $resolution = BACResolution::create([
                 'aoq_id' => $primaryAoq?->id,
                 'resolution_no' => $batch->generateResolutionNo(),
-                'resolution_date' => $validated['resolution_date'],
+                'resolution_date' => $validated['resolution_date'] ?? now()->toDateString(),
                 'meeting_date' => $validated['meeting_date'] ?? null,
                 'project_name' => $projectName,
                 'winner_supplier_name' => $winnerSupplierName,
@@ -203,8 +208,15 @@ class BACResolutionController extends Controller
                 'signatory_member_one' => $validated['signatory_member_one'] ?? 'BAC Member',
                 'signatory_member_two' => $validated['signatory_member_two'] ?? 'BAC Member',
                 'signatory_member_three' => $validated['signatory_member_three'] ?? 'BAC Member',
-                'finalized_at' => now(),
+                'finalized_at' => $saveDraft ? null : now(),
             ]);
+
+            if ($saveDraft) {
+                DB::commit();
+
+                return redirect()->route('bac-resolutions.show', $resolution)
+                    ->with('success', 'BAC Resolution draft saved successfully.');
+            }
 
             $syncPayload = [];
             foreach ($aoqs as $index => $aoq) {
@@ -252,6 +264,48 @@ class BACResolutionController extends Controller
         ]);
     }
 
+    public function edit(BACResolution $bacResolution): Response
+    {
+        if ($bacResolution->isFinalized()) {
+            return redirect()->route('bac-resolutions.show', $bacResolution)
+                ->with('error', 'Finalized BAC Resolution cannot be edited.');
+        }
+
+        $eligibleBatches = Batch::with([
+            'aoqs.rfq.purchaseRequest.office',
+            'aoqs.rfq.suppliers.supplierItems.rfqItem',
+            'aoqs.winnerSupplier',
+        ])
+            ->has('aoqs')
+            ->withCount('aoqs')
+            ->orderByDesc('id')
+            ->get()
+            ->map(function (Batch $batch): Batch {
+                $batch->aoqs->each(function (AOQ $aoq): void {
+                    $calculatedSupplierCount = $this->countCalculatedSuppliers($aoq);
+                    $calculationLabel = $calculatedSupplierCount <= 1
+                        ? 'Single Calculated'
+                        : 'Lowest Calculated';
+
+                    $aoq->setAttribute('calculated_supplier_count', $calculatedSupplierCount);
+                    $aoq->setAttribute('calculation_label', $calculationLabel);
+                    $aoq->setAttribute('winner_amount', $this->calculateWinnerAmount($aoq));
+                });
+
+                return $batch;
+            })
+            ->values();
+
+        $suggestedDate = $this->suggestNextWorkingDay()->toDateString();
+
+        return Inertia::render('BACResolutions/Edit', [
+            'resolution' => $bacResolution,
+            'eligibleBatches' => $eligibleBatches,
+            'defaultResolutionDate' => $suggestedDate,
+            'defaultMeetingDate' => $suggestedDate,
+        ]);
+    }
+
     public function update(UpdateBACResolutionRequest $updateBACResolutionRequest, BACResolution $bacResolution): RedirectResponse
     {
         if ($bacResolution->isFinalized()) {
@@ -284,9 +338,46 @@ class BACResolutionController extends Controller
             return redirect()->back()->with('error', 'BAC Resolution is already finalized.');
         }
 
-        $bacResolution->update([
-            'finalized_at' => now(),
-        ]);
+        DB::beginTransaction();
+
+        try {
+            $bacResolution->update([
+                'finalized_at' => now(),
+            ]);
+
+            // Sync AOQs and link NOAs if not already done (e.g., saved as draft)
+            $aoqs = $bacResolution->aoqs;
+            if ($aoqs->isEmpty() && $bacResolution->aoq) {
+                $aoqs = collect([$bacResolution->aoq]);
+            }
+
+            if ($aoqs->isNotEmpty()) {
+                // Sync AOQs with sort_order
+                $syncPayload = [];
+                foreach ($aoqs as $index => $aoq) {
+                    $syncPayload[(int) $aoq->id] = ['sort_order' => $index + 1];
+                }
+                $bacResolution->aoqs()->syncWithoutDetaching($syncPayload);
+
+                // Link NOAs
+                $aoqIds = $aoqs->pluck('id')->toArray();
+                NOA::whereIn('aoq_id', $aoqIds)
+                    ->whereNull('bac_resolution_id')
+                    ->update(['bac_resolution_id' => $bacResolution->id]);
+
+                // Lock the batch
+                $batchId = $aoqs->first()->batch_id;
+                if ($batchId) {
+                    Batch::where('id', $batchId)->update(['is_locked' => true]);
+                }
+            }
+
+            DB::commit();
+        } catch (\Throwable $throwable) {
+            DB::rollBack();
+
+            return redirect()->back()->with('error', 'Failed to finalize BAC Resolution.');
+        }
 
         return redirect()->route('bac-resolutions.show', $bacResolution)
             ->with('success', 'BAC Resolution finalized successfully.');

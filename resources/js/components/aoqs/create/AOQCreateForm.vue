@@ -1,8 +1,10 @@
 <script setup>
 import { computed, onMounted, ref, watch } from "vue";
+import { router } from "@inertiajs/vue3";
 import { Icon } from "@iconify/vue";
 import axios from "axios";
 import { route } from "ziggy-js";
+import { toast } from "vue-sonner";
 import { useDebounceFn } from "@vueuse/core";
 import { useWorkingDayInputGuard } from "@/composables/useWorkingDayInputGuard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,6 +32,61 @@ const earmarkTo = ref("");
 const findingBatch = ref(false);
 const assignedBatch = ref(props.activeEarmarkBatch || null);
 const isNewBatch = ref(false);
+
+// Request access to locked batch
+const showRequestModal = ref(false);
+const lockedBatches = ref([]);
+const selectedLockedBatchId = ref("");
+const requestReason = ref("");
+const requestingAccess = ref(false);
+const loadingLockedBatches = ref(false);
+
+const openRequestModal = async () => {
+    selectedLockedBatchId.value = "";
+    requestReason.value = "";
+    loadingLockedBatches.value = true;
+    showRequestModal.value = true;
+    try {
+        const { data } = await axios.get(route("batch-aoq-requests.locked-batches"));
+        lockedBatches.value = data;
+    } catch {
+        lockedBatches.value = [];
+        toast.error("Failed to load locked batches.");
+    } finally {
+        loadingLockedBatches.value = false;
+    }
+};
+
+const submitRequest = async () => {
+    if (!selectedLockedBatchId.value) {
+        toast.error("Please select a locked batch.");
+        return;
+    }
+
+    if (!props.form.rfq_id) {
+        toast.error("Please select an RFQ first.");
+        return;
+    }
+
+    requestingAccess.value = true;
+    try {
+        await axios.post(route("batch-aoq-requests.store"), {
+            batch_id: selectedLockedBatchId.value,
+            reason: requestReason.value,
+            request_data: {
+                rfq_id: props.form.rfq_id,
+                aoq_date: props.form.aoq_date,
+                quotations: props.form.quotations,
+            },
+        });
+        showRequestModal.value = false;
+        router.get(route("aoqs.index"));
+    } catch (err) {
+        toast.error(err?.response?.data?.error || "Failed to submit request.");
+    } finally {
+        requestingAccess.value = false;
+    }
+};
 
 if (props.activeEarmarkBatch) {
     props.form.batch_id = String(props.activeEarmarkBatch.id);
@@ -1029,6 +1086,15 @@ const onSvpInput = (val) => {
             <Button type="button" variant="outline" @click="form.reset()"
                 >Reset</Button
             >
+            <Button
+                type="button"
+                variant="secondary"
+                :disabled="!form.rfq_id || form.processing"
+                @click="openRequestModal"
+            >
+                <Icon icon="lucide:mail-question" class="mr-2 h-4 w-4" />
+                Request Batch Access
+            </Button>
             <Button type="submit" :disabled="form.processing">
                 <Icon
                     v-if="form.processing"
@@ -1037,6 +1103,67 @@ const onSvpInput = (val) => {
                 />
                 Create AOQ
             </Button>
+        </div>
+
+        <!-- Request Access Modal -->
+        <div
+            v-if="showRequestModal"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            @click.self="showRequestModal = false"
+        >
+            <div class="w-full max-w-lg rounded-lg bg-background p-6 shadow-lg">
+                <h3 class="text-lg font-semibold mb-2">Request Batch Access</h3>
+                <p class="text-sm text-muted-foreground mb-4">
+                    The current batch is locked or unavailable. Select a locked batch to request
+                    SuperAdmin approval for adding this AOQ.
+                </p>
+
+                <div class="space-y-4">
+                    <div class="space-y-1.5">
+                        <label class="text-sm font-medium">Select Locked Batch</label>
+                        <select
+                            v-model="selectedLockedBatchId"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        >
+                            <option value="" disabled>
+                                {{ loadingLockedBatches ? "Loading..." : "— Select —" }}
+                            </option>
+                            <option
+                                v-for="batch in lockedBatches"
+                                :key="batch.id"
+                                :value="String(batch.id)"
+                            >
+                                {{ batch.batch_no }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-sm font-medium">Reason (optional)</label>
+                        <textarea
+                            v-model="requestReason"
+                            rows="3"
+                            class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            placeholder="Why do you need to add an AOQ to this locked batch?"
+                        />
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 mt-4">
+                    <Button variant="outline" @click="showRequestModal = false">Cancel</Button>
+                    <Button
+                        :disabled="requestingAccess || !selectedLockedBatchId"
+                        @click="submitRequest"
+                    >
+                        <Icon
+                            v-if="requestingAccess"
+                            icon="lucide:loader-2"
+                            class="mr-2 h-4 w-4 animate-spin"
+                        />
+                        Submit Request
+                    </Button>
+                </div>
+            </div>
         </div>
     </form>
 </template>

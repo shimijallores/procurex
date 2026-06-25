@@ -7,6 +7,7 @@ use App\Http\Controllers\AOQController;
 use App\Http\Controllers\APPController;
 use App\Http\Controllers\BACResolutionController;
 use App\Http\Controllers\BatchController;
+use App\Http\Controllers\BatchAoqRequestController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CanvasController;
 use App\Http\Controllers\COAInspectionController;
@@ -378,6 +379,29 @@ Route::middleware(['auth'])->group(function (): void {
         ->middleware($batchRoles)
         ->name('batches.available-aoqs');
 
+    // Batch AOQ Requests module
+    $batchAoqRequestRoles =
+        'role:'.
+        implode(',', [
+            RoleType::SUPERADMIN->value,
+            RoleType::ABSTRACT_ADMIN->value,
+        ]);
+    Route::get('batch-aoq-requests/locked-batches', [BatchAoqRequestController::class, 'lockedBatches'])
+        ->middleware('auth')
+        ->name('batch-aoq-requests.locked-batches');
+    Route::post('batch-aoq-requests', [BatchAoqRequestController::class, 'store'])
+        ->middleware('auth')
+        ->name('batch-aoq-requests.store');
+    Route::get('batch-aoq-requests', [BatchAoqRequestController::class, 'index'])
+        ->middleware('role:'.RoleType::SUPERADMIN->value)
+        ->name('batch-aoq-requests.index');
+    Route::post('batch-aoq-requests/{batch_aoq_request}/approve', [BatchAoqRequestController::class, 'approve'])
+        ->middleware('role:'.RoleType::SUPERADMIN->value)
+        ->name('batch-aoq-requests.approve');
+    Route::post('batch-aoq-requests/{batch_aoq_request}/reject', [BatchAoqRequestController::class, 'reject'])
+        ->middleware('role:'.RoleType::SUPERADMIN->value)
+        ->name('batch-aoq-requests.reject');
+
     // BAC Resolution module
     $bacResolutionRoles =
         'role:'.
@@ -386,7 +410,7 @@ Route::middleware(['auth'])->group(function (): void {
             RoleType::RESOLUTION_ADMIN->value,
         ]);
     Route::resource('bac-resolutions', BACResolutionController::class)
-        ->only(['index', 'create', 'store', 'show', 'destroy'])
+        ->only(['index', 'create', 'store', 'edit', 'update', 'show', 'destroy'])
         ->middleware($bacResolutionRoles);
     Route::get('bac-resolutions/{bac_resolution}/pdf', [
         BACResolutionController::class,
@@ -394,6 +418,12 @@ Route::middleware(['auth'])->group(function (): void {
     ])
         ->middleware($bacResolutionRoles)
         ->name('bac-resolutions.pdf');
+    Route::post('bac-resolutions/{bac_resolution}/finalize', [
+        BACResolutionController::class,
+        'finalize',
+    ])
+        ->middleware($bacResolutionRoles)
+        ->name('bac-resolutions.finalize');
 
     // Notice of Award module
     $noaRoles =

@@ -40,9 +40,16 @@ const form = useForm({
     signatory_member_one: "",
     signatory_member_two: "",
     signatory_member_three: "",
+    save_draft: false,
 });
 
 const submit = () => {
+    form.save_draft = false;
+    form.post(route("bac-resolutions.store"));
+};
+
+const saveDraft = () => {
+    form.save_draft = true;
     form.post(route("bac-resolutions.store"));
 };
 </script>
@@ -55,6 +62,7 @@ const submit = () => {
             :form="form"
             :eligible-batches="eligibleBatches"
             @submit="submit"
+            @save-draft="saveDraft"
         />
     </div>
 </template>

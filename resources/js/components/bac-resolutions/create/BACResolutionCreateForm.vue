@@ -13,7 +13,7 @@ const props = defineProps({
     eligibleBatches: Array,
 });
 
-defineEmits(["submit"]);
+defineEmits(["submit", "save-draft"]);
 
 const manualBatchNo = ref("");
 const creatingManualBatch = ref(false);
@@ -452,6 +452,19 @@ watch(
             <Button type="button" variant="outline" @click="form.reset()"
                 >Reset</Button
             >
+            <Button
+                type="button"
+                variant="secondary"
+                :disabled="form.processing"
+                @click="$emit('save-draft')"
+            >
+                <Icon
+                    v-if="form.processing"
+                    icon="lucide:loader-2"
+                    class="mr-2 h-4 w-4 animate-spin"
+                />
+                Save as Draft
+            </Button>
             <Button
                 type="submit"
                 :disabled="
