@@ -122,10 +122,36 @@ class AOQController extends Controller
             ->orderByDesc('id')
             ->get();
 
+        $today = Carbon::now('Asia/Manila')->toDateString();
+
+        $displayBatch = Batch::whereNotNull('earmark_date_from')
+            ->whereNotNull('earmark_date_to')
+            ->latest('id')
+            ->first();
+
         return Inertia::render('AOQs/Create', [
             'suppliers' => $suppliers,
             'batches' => $batches,
             'defaultAoqDate' => $this->suggestNextWorkingDay()->toDateString(),
+            'activeEarmarkBatch' => $displayBatch,
+            'displayBatch' => $displayBatch,
+        ]);
+    }
+
+    public function checkActiveEarmark(): JsonResponse
+    {
+        $today = Carbon::now('Asia/Manila')->toDateString();
+
+        $batch = Batch::whereNotNull('earmark_date_from')
+            ->whereNotNull('earmark_date_to')
+            ->where('earmark_date_from', '<=', $today)
+            ->where('earmark_date_to', '>=', $today)
+            ->where('is_locked', false)
+            ->latest('id')
+            ->first();
+
+        return response()->json([
+            'batch' => $batch,
         ]);
     }
 
@@ -151,6 +177,80 @@ class AOQController extends Controller
         }
 
         return response()->json(['rfq' => $rfq]);
+    }
+
+    public function findOrCreateBatch(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'earmark_date_from' => ['required', 'date'],
+            'earmark_date_to' => ['required', 'date', 'after_or_equal:earmark_date_from'],
+        ]);
+
+        $earmarkFrom = $validated['earmark_date_from'];
+        $earmarkTo = $validated['earmark_date_to'];
+
+        // If today falls within an existing non-locked batch's earmark range,
+        // use that batch regardless of the submitted dates
+        $activeBatch = Batch::whereNotNull('earmark_date_from')
+            ->whereNotNull('earmark_date_to')
+            ->where('earmark_date_from', '<=', Carbon::now('Asia/Manila')->toDateString())
+            ->where('earmark_date_to', '>=', Carbon::now('Asia/Manila')->toDateString())
+            ->where('is_locked', false)
+            ->latest('id')
+            ->first();
+
+        if ($activeBatch) {
+            return response()->json([
+                'batch' => $activeBatch,
+                'is_new' => false,
+            ]);
+        }
+
+        // If no active batch covers today, look for an exact match of the submitted earmark dates.
+        $existing = Batch::where('earmark_date_from', $earmarkFrom)
+            ->where('earmark_date_to', $earmarkTo)
+            ->where('is_locked', false)
+            ->latest('id') // Add latest('id') for consistency
+            ->first();
+
+        if ($existing) {
+            return response()->json([
+                'batch' => $existing,
+                'is_new' => false,
+            ]);
+        }
+
+        // If no active or exact match, create a new batch.
+        $year = now()->format('y');
+        $prefix = $year;
+
+        $latest = Batch::query()
+            ->where('batch_no', 'like', $prefix.'%')
+            ->orderByDesc('batch_no')
+            ->value('batch_no');
+
+        $next = 1;
+        if ($latest && preg_match('/^\d{2}(\d{4})$/', $latest, $matches) === 1) {
+            $next = (int) $matches[1] + 1;
+        }
+
+        $batchNo = sprintf('%s%04d', $prefix, $next);
+
+        while (Batch::where('batch_no', $batchNo)->exists()) {
+            ++$next;
+            $batchNo = sprintf('%s%04d', $prefix, $next);
+        }
+
+        $batch = Batch::create([
+            'batch_no' => $batchNo,
+            'earmark_date_from' => $earmarkFrom,
+            'earmark_date_to' => $earmarkTo,
+        ]);
+
+        return response()->json([
+            'batch' => $batch,
+            'is_new' => true,
+        ]);
     }
 
     public function storeBatch(Request $request): JsonResponse
@@ -647,5 +747,10 @@ class AOQController extends Controller
         }
 
         return $date;
+    }
+
+    protected function today(): Carbon
+    {
+        return now()->startOfDay();
     }
 }

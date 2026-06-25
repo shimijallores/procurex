@@ -22,6 +22,8 @@ class UpdateBatchRequest extends FormRequest
             'bac_date' => ['nullable', 'date'],
             'noa_date' => ['nullable', 'date'],
             'po_date' => ['nullable', 'date'],
+            'earmark_date_from' => ['nullable', 'date'],
+            'earmark_date_to' => ['nullable', 'date'],
         ];
     }
 

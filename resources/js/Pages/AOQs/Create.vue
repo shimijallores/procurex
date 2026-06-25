@@ -37,6 +37,8 @@ const props = defineProps({
     suppliers: Array,
     batches: Array,
     defaultAoqDate: String,
+    activeEarmarkBatch: Object,
+    displayBatch: Object,
 });
 
 const form = useForm({
@@ -47,11 +49,24 @@ const form = useForm({
 });
 
 const showConfirm = ref(false);
+const pendingNewBatch = ref(false);
+
+const onBatchAssigned = ({ isNew }) => {
+    pendingNewBatch.value = isNew;
+};
 
 const confirmSubmit = () => {
     form.post(route("aoqs.store"), {
         onSuccess: () => {
             showConfirm.value = false;
+            if (pendingNewBatch.value) {
+                pendingNewBatch.value = false;
+                window.open(
+                    route("batches.index"),
+                    "_blank",
+                    "noopener,noreferrer",
+                );
+            }
         },
         onError: () => {
             showConfirm.value = false;
@@ -68,7 +83,10 @@ const confirmSubmit = () => {
             :form="form"
             :suppliers="suppliers"
             :batches="batches"
+            :active-earmark-batch="activeEarmarkBatch"
+            :display-batch="displayBatch"
             @submit="showConfirm = true"
+            @batch-assigned="onBatchAssigned"
         />
 
         <AlertDialog v-model:open="showConfirm">

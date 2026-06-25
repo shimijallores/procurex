@@ -219,6 +219,9 @@ class BACResolutionController extends Controller
                 ->whereNull('bac_resolution_id')
                 ->update(['bac_resolution_id' => $resolution->id]);
 
+            // Lock the batch so no new AOQs can be added
+            $batch->update(['is_locked' => true]);
+
             DB::commit();
         } catch (\Throwable $throwable) {
             DB::rollBack();

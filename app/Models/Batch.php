@@ -16,6 +16,9 @@ class Batch extends Model
         'bac_date',
         'noa_date',
         'po_date',
+        'earmark_date_from',
+        'earmark_date_to',
+        'is_locked',
     ];
 
     protected function casts(): array
@@ -26,6 +29,9 @@ class Batch extends Model
             'bac_date' => 'date',
             'noa_date' => 'date',
             'po_date' => 'date',
+            'earmark_date_from' => 'date',
+            'earmark_date_to' => 'date',
+            'is_locked' => 'boolean',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];

@@ -31,13 +31,13 @@ const props = defineProps({
     batch: Object,
 });
 
-const formatDate = (date) => {
+const formatDate = (date, withTime = true) => {
+    if (!date) return "—";
     return new Date(date).toLocaleDateString("en-US", {
         year: "numeric",
         month: "long",
         day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
+        ...(withTime ? { hour: "2-digit", minute: "2-digit" } : {}),
     });
 };
 
@@ -108,6 +108,35 @@ const showDeleteModal = ref(false);
                     </p>
                     <p class="font-medium">
                         {{ formatDate(batch.updated_at) }}
+                    </p>
+                </div>
+                <div v-if="batch.earmark_date_from || batch.earmark_date_to" class="grid gap-1">
+                    <p class="text-sm font-medium text-muted-foreground">
+                        Earmark Date Range
+                    </p>
+                    <p class="font-medium">
+                        {{ formatDate(batch.earmark_date_from, false) }} — {{ formatDate(batch.earmark_date_to, false) }}
+                    </p>
+                </div>
+                <div class="grid gap-1">
+                    <p class="text-sm font-medium text-muted-foreground">
+                        Status
+                    </p>
+                    <p class="font-medium">
+                        <span
+                            v-if="batch.is_locked"
+                            class="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900 dark:text-red-300"
+                        >
+                            <Icon icon="lucide:lock" class="mr-1 h-3 w-3" />
+                            Locked
+                        </span>
+                        <span
+                            v-else
+                            class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300"
+                        >
+                            <Icon icon="lucide:unlock" class="mr-1 h-3 w-3" />
+                            Active
+                        </span>
                     </p>
                 </div>
             </CardContent>

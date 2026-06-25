@@ -331,6 +331,9 @@ Route::middleware(['auth'])->group(function (): void {
     Route::get('aoqs/find-rfq-by-svp', [AOQController::class, 'findRfqBySvp'])
         ->middleware($aoqRoles)
         ->name('aoqs.find-rfq-by-svp');
+    Route::get('aoqs/active-earmark', [AOQController::class, 'checkActiveEarmark'])
+        ->middleware($aoqRoles)
+        ->name('aoqs.active-earmark');
     Route::resource('aoqs', AOQController::class)
         ->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy'])
         ->middleware($aoqRoles);
@@ -349,6 +352,9 @@ Route::middleware(['auth'])->group(function (): void {
     Route::post('aoqs/store-batch', [BatchController::class, 'storeBatch'])
         ->middleware($aoqRoles)
         ->name('aoqs.store-batch');
+    Route::post('aoqs/find-or-create-batch', [AOQController::class, 'findOrCreateBatch'])
+        ->middleware($aoqRoles)
+        ->name('aoqs.find-or-create-batch');
     // Batch module
     $batchRoles =
         'role:'.
