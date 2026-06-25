@@ -24,7 +24,7 @@ class BatchAoqRequestController extends Controller
 {
     public function index(): Response
     {
-        $requests = BatchAoqRequest::with([
+        $lengthAwarePaginator = BatchAoqRequest::with([
             'batch',
             'requester',
             'approver',
@@ -33,7 +33,7 @@ class BatchAoqRequestController extends Controller
             ->paginate(20);
 
         return Inertia::render('BatchAoqRequests/Index', [
-            'requests' => $requests,
+            'requests' => $lengthAwarePaginator,
         ]);
     }
 
@@ -215,7 +215,7 @@ class BatchAoqRequestController extends Controller
         }
 
         return redirect()->route('batch-aoq-requests.index')
-            ->with('success', "Request approved. AOQ #{$aoq->id} has been created.");
+            ->with('success', sprintf('Request approved. AOQ #%s has been created.', $aoq->id));
     }
 
     public function reject(Request $request, BatchAoqRequest $batchAoqRequest): RedirectResponse
@@ -249,5 +249,21 @@ class BatchAoqRequestController extends Controller
             ->get(['id', 'batch_no']);
 
         return response()->json($batches);
+    }
+
+    public function myRequests(): Response
+    {
+        $requests = BatchAoqRequest::with([
+            'batch',
+            'requester',
+            'approver',
+        ])
+            ->where('requested_by', Auth::id())
+            ->latest()
+            ->paginate(20);
+
+        return Inertia::render('BatchAoqRequests/MyRequests', [
+            'requests' => $requests,
+        ]);
     }
 }

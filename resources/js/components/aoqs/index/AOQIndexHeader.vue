@@ -21,6 +21,12 @@ const isSuperAdmin = computed(() =>
             </p>
         </div>
         <div class="flex items-center gap-2">
+            <Link :href="route('batch-aoq-requests.my-requests')">
+                <Button variant="outline">
+                    <Icon icon="lucide:file-clock" class="mr-2 h-4 w-4" />
+                    My Requests
+                </Button>
+            </Link>
             <Link v-if="isSuperAdmin" :href="route('batch-aoq-requests.index')">
                 <Button variant="outline">
                     <Icon icon="lucide:mail-question" class="mr-2 h-4 w-4" />

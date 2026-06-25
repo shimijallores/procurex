@@ -80,7 +80,7 @@ const submitRequest = async () => {
             },
         });
         showRequestModal.value = false;
-        router.get(route("aoqs.index"));
+        router.get(route("batch-aoq-requests.my-requests"));
     } catch (err) {
         toast.error(err?.response?.data?.error || "Failed to submit request.");
     } finally {

@@ -357,6 +357,7 @@ class BACResolutionController extends Controller
                 foreach ($aoqs as $index => $aoq) {
                     $syncPayload[(int) $aoq->id] = ['sort_order' => $index + 1];
                 }
+
                 $bacResolution->aoqs()->syncWithoutDetaching($syncPayload);
 
                 // Link NOAs

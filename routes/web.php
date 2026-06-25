@@ -6,8 +6,8 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AOQController;
 use App\Http\Controllers\APPController;
 use App\Http\Controllers\BACResolutionController;
-use App\Http\Controllers\BatchController;
 use App\Http\Controllers\BatchAoqRequestController;
+use App\Http\Controllers\BatchController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CanvasController;
 use App\Http\Controllers\COAInspectionController;
@@ -386,6 +386,9 @@ Route::middleware(['auth'])->group(function (): void {
             RoleType::SUPERADMIN->value,
             RoleType::ABSTRACT_ADMIN->value,
         ]);
+    Route::get('batch-aoq-requests/my-requests', [BatchAoqRequestController::class, 'myRequests'])
+        ->middleware('auth')
+        ->name('batch-aoq-requests.my-requests');
     Route::get('batch-aoq-requests/locked-batches', [BatchAoqRequestController::class, 'lockedBatches'])
         ->middleware('auth')
         ->name('batch-aoq-requests.locked-batches');
