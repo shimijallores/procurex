@@ -115,6 +115,16 @@ const formatDateInput = (date) => {
                                 {{ df.label }}
                             </th>
                             <th
+                                class="h-12 px-3 text-center align-middle font-medium text-muted-foreground"
+                            >
+                                Earmark Range
+                            </th>
+                            <th
+                                class="h-12 px-3 text-center align-middle font-medium text-muted-foreground"
+                            >
+                                Projects
+                            </th>
+                            <th
                                 class="h-12 px-3 text-right align-middle font-medium text-muted-foreground"
                             >
                                 Actions
@@ -187,6 +197,15 @@ const formatDateInput = (date) => {
                                     {{ formatDate(batch[df.key]) }}
                                 </button>
                             </td>
+                            <td class="p-3 align-middle text-center text-xs text-muted-foreground">
+                                <template v-if="batch.earmark_date_from && batch.earmark_date_to">
+                                    {{ formatDate(batch.earmark_date_from) }} — {{ formatDate(batch.earmark_date_to) }}
+                                </template>
+                                <span v-else class="text-muted-foreground">—</span>
+                            </td>
+                            <td class="p-3 align-middle text-center">
+                                {{ batch.aoqs_count ?? 0 }}
+                            </td>
                             <td class="p-3 align-middle text-right">
                                 <div
                                     class="flex items-center justify-end gap-2"
@@ -226,7 +245,7 @@ const formatDateInput = (date) => {
                         </tr>
                         <tr v-if="batches.data.length === 0">
                             <td
-                                :colspan="dateFields.length + 2"
+                                :colspan="dateFields.length + 4"
                                 class="p-8 text-center"
                             >
                                 <div class="flex flex-col items-center gap-2">

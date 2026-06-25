@@ -122,18 +122,20 @@ class AOQController extends Controller
             ->orderByDesc('id')
             ->get();
 
-        $today = Carbon::now('Asia/Manila')->toDateString();
-
-        $displayBatch = Batch::whereNotNull('earmark_date_from')
+        $batch = Batch::whereNotNull('earmark_date_from')
             ->whereNotNull('earmark_date_to')
+            ->where('is_locked', false)
             ->latest('id')
             ->first();
+
+        $displayBatch = $batch;
+        $activeEarmarkBatch = $batch;
 
         return Inertia::render('AOQs/Create', [
             'suppliers' => $suppliers,
             'batches' => $batches,
             'defaultAoqDate' => $this->suggestNextWorkingDay()->toDateString(),
-            'activeEarmarkBatch' => $displayBatch,
+            'activeEarmarkBatch' => $activeEarmarkBatch,
             'displayBatch' => $displayBatch,
         ]);
     }
@@ -449,6 +451,7 @@ class AOQController extends Controller
             'rfq.suppliers.supplier',
             'rfq.suppliers.supplierItems.rfqItem.purchaseRequestItem',
             'winnerSupplier',
+            'batch',
         ]);
 
         $calculation = $this->calculateSupplierTotals($aoq->rfq);
