@@ -8,6 +8,7 @@ use App\Http\Requests\StoreBatchRequest;
 use App\Http\Requests\UpdateBatchRequest;
 use App\Models\AOQ;
 use App\Models\Batch;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,6 +19,11 @@ class BatchController extends Controller
 {
     public function index(Request $request): Response
     {
+        Batch::where('is_locked', false)
+            ->whereNotNull('earmark_date_to')
+            ->whereDate('earmark_date_to', '<', Carbon::now('Asia/Manila')->toDateString())
+            ->update(['is_locked' => true]);
+
         $query = Batch::withCount('aoqs')
             ->when($request->search, function ($q, string $search): void {
                 $q->where('batch_no', 'like', sprintf('%%%s%%', $search));
@@ -59,6 +65,14 @@ class BatchController extends Controller
 
     public function show(Batch $batch): Response
     {
+        if (
+            ! $batch->is_locked
+            && $batch->earmark_date_to
+            && $batch->earmark_date_to->toDateString() < Carbon::now('Asia/Manila')->toDateString()
+        ) {
+            $batch->update(['is_locked' => true]);
+        }
+
         $batch->load(['aoqs.rfq.purchaseRequest.office', 'aoqs.winnerSupplier']);
 
         return Inertia::render('Batches/Show', [
@@ -68,6 +82,14 @@ class BatchController extends Controller
 
     public function edit(Batch $batch): Response
     {
+        if (
+            ! $batch->is_locked
+            && $batch->earmark_date_to
+            && $batch->earmark_date_to->toDateString() < Carbon::now('Asia/Manila')->toDateString()
+        ) {
+            $batch->update(['is_locked' => true]);
+        }
+
         $batch->load(['aoqs.rfq.purchaseRequest.office', 'aoqs.winnerSupplier']);
 
         return Inertia::render('Batches/Edit', [

@@ -253,7 +253,7 @@ class BatchAoqRequestController extends Controller
 
     public function myRequests(): Response
     {
-        $requests = BatchAoqRequest::with([
+        $lengthAwarePaginator = BatchAoqRequest::with([
             'batch',
             'requester',
             'approver',
@@ -263,7 +263,7 @@ class BatchAoqRequestController extends Controller
             ->paginate(20);
 
         return Inertia::render('BatchAoqRequests/MyRequests', [
-            'requests' => $requests,
+            'requests' => $lengthAwarePaginator,
         ]);
     }
 }

@@ -74,6 +74,11 @@ const formatDateInput = (date) => {
     const yyyy = d.getFullYear();
     return `${yyyy}-${mm}-${dd}`;
 };
+
+const batchStatus = (batch) => {
+    if (batch.is_locked) return { label: "Locked", class: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300", icon: "lucide:lock" };
+    return { label: "Active", class: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300", icon: "lucide:unlock" };
+};
 </script>
 
 <template>
@@ -116,6 +121,11 @@ const formatDateInput = (date) => {
                                 class="h-12 px-3 text-center align-middle font-medium text-muted-foreground"
                             >
                                 Earmark Range
+                            </th>
+                            <th
+                                class="h-12 px-3 text-center align-middle font-medium text-muted-foreground"
+                            >
+                                Status
                             </th>
                             <th
                                 class="h-12 px-3 text-center align-middle font-medium text-muted-foreground"
@@ -202,6 +212,15 @@ const formatDateInput = (date) => {
                                 <span v-else class="text-muted-foreground">—</span>
                             </td>
                             <td class="p-3 align-middle text-center">
+                                <span
+                                    class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium"
+                                    :class="batchStatus(batch).class"
+                                >
+                                    <Icon :icon="batchStatus(batch).icon" class="h-3 w-3" />
+                                    {{ batchStatus(batch).label }}
+                                </span>
+                            </td>
+                            <td class="p-3 align-middle text-center">
                                 {{ batch.aoqs_count ?? 0 }}
                             </td>
                             <td class="p-3 align-middle text-right">
@@ -243,7 +262,7 @@ const formatDateInput = (date) => {
                         </tr>
                         <tr v-if="batches.data.length === 0">
                             <td
-                                :colspan="dateFields.length + 4"
+                                :colspan="dateFields.length + 5"
                                 class="p-8 text-center"
                             >
                                 <div class="flex flex-col items-center gap-2">
