@@ -384,6 +384,44 @@ class BACResolutionController extends Controller
             ->with('success', 'BAC Resolution finalized successfully.');
     }
 
+    public function regenerate(BACResolution $bacResolution): RedirectResponse
+    {
+        DB::beginTransaction();
+
+        try {
+            $primaryAoq = $bacResolution->aoq;
+            if (! $primaryAoq?->batch) {
+                return redirect()->back()->with('error', 'This BAC Resolution has no associated batch.');
+            }
+
+            $batch = $primaryAoq->batch->load(['aoqs.rfq.purchaseRequest.office']);
+
+            $aoqs = $batch->aoqs;
+
+            $syncPayload = [];
+            foreach ($aoqs as $index => $aoq) {
+                $syncPayload[(int) $aoq->id] = ['sort_order' => $index + 1];
+            }
+
+            $bacResolution->aoqs()->sync($syncPayload);
+
+            NOA::whereIn('aoq_id', $aoqs->pluck('id'))
+                ->whereNull('bac_resolution_id')
+                ->update(['bac_resolution_id' => $bacResolution->id]);
+
+            $batch->update(['is_locked' => true]);
+
+            DB::commit();
+        } catch (\Throwable $throwable) {
+            DB::rollBack();
+
+            return redirect()->back()->with('error', 'Failed to regenerate BAC Resolution.');
+        }
+
+        return redirect()->route('bac-resolutions.show', $bacResolution)
+            ->with('success', 'BAC Resolution regenerated successfully.');
+    }
+
     public function destroy(BACResolution $bacResolution): RedirectResponse
     {
         DB::beginTransaction();

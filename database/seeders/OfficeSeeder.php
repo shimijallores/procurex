@@ -18,7 +18,7 @@ class OfficeSeeder extends Seeder
             ['code' => '1015', 'acronym' => 'PDRRMO', 'name' => 'Provincial Disaster Risk Reduction and Management Office'],
             ['code' => '1016', 'acronym' => 'OVG', 'name' => 'Office of the Vice Governor'],
             ['code' => '1021', 'acronym' => 'SP', 'name' => 'Sangguniang Panlalawigan'],
-            ['code' => '1022', 'acronym' => null, 'name' => 'Provincial Library'],
+            ['code' => '1022', 'acronym' => 'LIBRARY', 'name' => 'Provincial Library'],
             ['code' => '1031', 'acronym' => null, 'name' => 'Office of the Provincial Administrator'],
             ['code' => '1032', 'acronym' => 'HRMO', 'name' => 'Human Resource Management Office'],
             ['code' => '1041', 'acronym' => 'OPPDC', 'name' => 'Office of the Provincial Planning and Development Coordinator'],

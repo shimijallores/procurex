@@ -435,6 +435,12 @@ Route::middleware(['auth'])->group(function (): void {
     ])
         ->middleware($bacResolutionRoles)
         ->name('bac-resolutions.finalize');
+    Route::post('bac-resolutions/{bac_resolution}/regenerate', [
+        BACResolutionController::class,
+        'regenerate',
+    ])
+        ->middleware($bacResolutionRoles)
+        ->name('bac-resolutions.regenerate');
 
     // Notice of Award module
     $noaRoles =

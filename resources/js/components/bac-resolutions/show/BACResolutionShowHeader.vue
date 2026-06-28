@@ -17,6 +17,11 @@ const finalize = () => {
     if (!confirm("Finalize this BAC Resolution? This will lock the batch and prevent new AOQs from being added.")) return;
     router.post(route("bac-resolutions.finalize", props.resolution.id));
 };
+
+const regenerate = () => {
+    if (!confirm("Regenerate BAC Resolution? This will re-sync all AOQs from the batch and update the PDF.")) return;
+    router.post(route("bac-resolutions.regenerate", props.resolution.id));
+};
 </script>
 
 <template>
@@ -58,6 +63,10 @@ const finalize = () => {
                     Finalize
                 </Button>
             </template>
+            <Button v-if="resolution.finalized_at" variant="outline" @click="regenerate">
+                <Icon icon="lucide:refresh-cw" class="mr-2 h-4 w-4" />
+                Regenerate
+            </Button>
             <Button variant="outline" @click="openPdf">
                 <Icon icon="lucide:printer" class="mr-2 h-4 w-4" />
                 Print PDF
