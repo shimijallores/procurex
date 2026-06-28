@@ -10,7 +10,7 @@ use App\Models\PurchaseRequestItem;
 use Carbon\Carbon;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Http\UploadedFile;
-use PhpOffice\PhpSpreadsheet\Reader\Xls;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class PrExcelImportService
 {
@@ -30,10 +30,7 @@ class PrExcelImportService
         $this->created = [];
         $this->pendingMultiPage = [];
 
-        $xls = new Xls;
-        $xls->setReadDataOnly(true);
-
-        $spreadsheet = $xls->load($uploadedFile->getRealPath());
+        $spreadsheet = IOFactory::load($uploadedFile->getRealPath());
 
         $sheetCount = $spreadsheet->getSheetCount();
 
