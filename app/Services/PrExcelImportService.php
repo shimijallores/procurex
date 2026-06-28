@@ -90,12 +90,6 @@ class PrExcelImportService
         $prNo = $this->parsePrNo($prNoRaw);
         $prDate = $this->parseDate($prDateRaw);
 
-        // Row +39 — Grand Total (or Sub Total for multi-page)
-        $grandTotal = $this->cell($rows, $start + 39, 5);
-        if ($grandTotal === '' || (float) $grandTotal === 0.0) {
-            $grandTotal = $this->cell($rows, $start + 39, 6);
-        }
-
         // Row +40, +41 — Purpose / Remarks
         $remarksMain = $this->cell($rows, $start + 40, 0);
         $remarksCont = $this->cell($rows, $start + 41, 2);
@@ -113,7 +107,11 @@ class PrExcelImportService
         // Line items — rows +9 to +38
         $items = $this->parseItems($rows, $start + 9, $start + 38);
 
+        // Grand Total — find dynamically instead of hardcoded offset
+        $grandTotal = $this->findGrandTotal($rows, $start + 9, $start + 45);
+
         $grandTotal = preg_replace('/[^0-9.\-]/', '', $grandTotal);
+
         $totalAmount = is_numeric($grandTotal) ? (float) $grandTotal : 0.0;
 
         // If multi-page continuation (page > 1)
@@ -488,6 +486,63 @@ class PrExcelImportService
         }
 
         return trim($main.' '.$cont);
+    }
+
+    private function findGrandTotal(array $rows, int $from, int $to): string
+    {
+        $itemCount = count($rows);
+
+        for ($offset = $from; $offset <= $to && $offset < $itemCount; ++$offset) {
+            $colA = $this->cell($rows, $offset, 0);
+
+            if (preg_match('/grand\s*total/i', $colA)) {
+                $value = $this->grandTotalValue($rows, $offset);
+
+                if ($value !== null) {
+                    return $value;
+                }
+            }
+        }
+
+        // Fallback: scan any cell in the range for a grand-total-like value
+        for ($offset = $from; $offset <= $to && $offset < $itemCount; ++$offset) {
+            for ($col = 0; $col <= 6; ++$col) {
+                $cell = $this->cell($rows, $offset, $col);
+
+                if (preg_match('/grand\s*total/i', $cell) || preg_match('/^total\s+amount/i', $cell)) {
+                    $value = $this->grandTotalValue($rows, $offset);
+
+                    if ($value !== null) {
+                        return $value;
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        return '0';
+    }
+
+    private function grandTotalValue(array $rows, int $offset): ?string
+    {
+        $candidates = [5, 6, 1, 2, 3, 4, 0];
+
+        foreach ($candidates as $candidate) {
+            $raw = $this->cell($rows, $offset, $candidate);
+
+            if ($raw === '') {
+                continue;
+            }
+
+            $cleaned = preg_replace('/[^0-9.\-]/', '', $raw);
+
+            if ($cleaned !== '' && is_numeric($cleaned) && (float) $cleaned !== 0.0) {
+                return $cleaned;
+            }
+        }
+
+        return null;
     }
 
     private function cell(array $rows, int $row, int $col): string
