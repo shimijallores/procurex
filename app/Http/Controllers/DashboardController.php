@@ -27,8 +27,8 @@ class DashboardController extends Controller
 {
     public function index(Request $request): Response
     {
-        $user = $request->user()?->loadMissing(['roles', 'office']);
-        $roleNames = $user?->roles?->pluck('name')->all() ?? [];
+        $user = $request->user()?->loadMissing(["roles", "office"]);
+        $roleNames = $user?->roles?->pluck("name")->all() ?? [];
         $rolePriority = [
             RoleType::SUPERADMIN->value,
             RoleType::CHECKING_ADMIN->value,
@@ -42,346 +42,855 @@ class DashboardController extends Controller
             RoleType::INSPECTION_ADMIN->value,
         ];
 
-        $roleName = collect($rolePriority)->first(fn (string $role): bool => in_array($role, $roleNames, true));
+        $roleName = collect($rolePriority)->first(
+            fn(string $role): bool => in_array($role, $roleNames, true),
+        );
         $scopeLabel = $roleName
-            ? 'System-wide'
-            : ($user?->office?->name ?? 'Office');
+            ? "System-wide"
+            : $user?->office?->name ?? "Office";
 
         $payload = [
-            'roleName' => $roleName,
-            'scopeLabel' => $scopeLabel,
-            'metrics' => [],
-            'pipeline' => [],
-            'recentActivities' => [],
-            'quickLinks' => [],
-            'monthlyTrends' => [],
+            "roleName" => $roleName,
+            "scopeLabel" => $scopeLabel,
+            "metrics" => [],
+            "pipeline" => [],
+            "recentActivities" => [],
+            "quickLinks" => [],
+            "monthlyTrends" => [],
+            "secondaryTrends" => [],
         ];
 
         if ($roleName === RoleType::SUPERADMIN->value) {
-            $payload['metrics'] = [
-                $this->metric('Total Users', User::count(), 'lucide:users', 'All authenticated accounts'),
-                $this->metric('Purchase Requests', PurchaseRequest::count(), 'lucide:file-plus-2', 'End-to-end request volume'),
-                $this->metric('Purchase Orders', PurchaseOrder::count(), 'lucide:file-signature', 'Awarded and generated POs'),
-                $this->metric('PO Transmittals', POTransmittal::count(), 'lucide:files', 'COA and OPG transmittals'),
+            $payload["metrics"] = [
+                $this->metric(
+                    "Total Users",
+                    User::count(),
+                    "lucide:users",
+                    "All authenticated accounts",
+                ),
+                $this->metric(
+                    "Purchase Requests",
+                    PurchaseRequest::count(),
+                    "lucide:file-plus-2",
+                    "End-to-end request volume",
+                ),
+                $this->metric(
+                    "Purchase Orders",
+                    PurchaseOrder::count(),
+                    "lucide:file-signature",
+                    "Awarded and generated POs",
+                ),
+                $this->metric(
+                    "PO Transmittals",
+                    POTransmittal::count(),
+                    "lucide:files",
+                    "COA and OPG transmittals",
+                ),
             ];
 
-            $payload['pipeline'] = $this->systemPipeline();
-            $payload['recentActivities'] = $this->superadminRecent();
-            $payload['monthlyTrends'] = $this->monthlyCounts(PurchaseRequest::class);
-            $payload['quickLinks'] = [
-                $this->quickLink('Purchase Requests', route('purchase-requests.index'), 'lucide:file-plus-2'),
-                $this->quickLink('Request for Quotation', route('rfqs.index'), 'lucide:file-text'),
-                $this->quickLink('Purchase Orders', route('purchase-orders.index'), 'lucide:file-signature'),
-                $this->quickLink('PO Transmittals', route('po-transmittals.index'), 'lucide:files'),
-                $this->quickLink('Templates', route('templates.index'), 'lucide:file-down'),
+            $payload["pipeline"] = $this->systemPipeline();
+            $payload["recentActivities"] = $this->superadminRecent();
+            $payload["monthlyTrends"] = $this->monthlyCounts(
+                PurchaseRequest::class,
+            );
+            $payload["secondaryTrends"] = $this->monthlyCounts(
+                PurchaseOrder::class,
+                "lucide:file-signature",
+                "Purchase Orders",
+            );
+            $payload["quickLinks"] = [
+                $this->quickLink(
+                    "Purchase Requests",
+                    route("purchase-requests.index"),
+                    "lucide:file-plus-2",
+                ),
+                $this->quickLink(
+                    "Request for Quotation",
+                    route("rfqs.index"),
+                    "lucide:file-text",
+                ),
+                $this->quickLink(
+                    "Purchase Orders",
+                    route("purchase-orders.index"),
+                    "lucide:file-signature",
+                ),
+                $this->quickLink(
+                    "PO Transmittals",
+                    route("po-transmittals.index"),
+                    "lucide:files",
+                ),
+                $this->quickLink(
+                    "Templates",
+                    route("templates.index"),
+                    "lucide:file-down",
+                ),
             ];
         } elseif ($roleName === RoleType::RESOLUTION_ADMIN->value) {
-            $payload['metrics'] = [
-                $this->metric('BAC Resolutions', BACResolution::count(), 'lucide:files', 'Total drafted and finalized'),
-                $this->metric('Finalized', BACResolution::whereNotNull('finalized_at')->count(), 'lucide:check-circle', 'Ready for NOA generation'),
-                $this->metric('Pending Finalize', BACResolution::whereNull('finalized_at')->count(), 'lucide:clock', 'Requires final review'),
-                $this->metric('NOAs Generated', NOA::count(), 'lucide:file-badge', 'Issued notices of award'),
+            $payload["metrics"] = [
+                $this->metric(
+                    "BAC Resolutions",
+                    BACResolution::count(),
+                    "lucide:files",
+                    "Total drafted and finalized",
+                ),
+                $this->metric(
+                    "Finalized",
+                    BACResolution::whereNotNull("finalized_at")->count(),
+                    "lucide:check-circle",
+                    "Ready for NOA generation",
+                ),
+                $this->metric(
+                    "Pending Finalize",
+                    BACResolution::whereNull("finalized_at")->count(),
+                    "lucide:clock",
+                    "Requires final review",
+                ),
+                $this->metric(
+                    "NOAs Generated",
+                    NOA::count(),
+                    "lucide:file-badge",
+                    "Issued notices of award",
+                ),
             ];
 
-            $payload['pipeline'] = [
-                $this->stage('AOQ Ready', AOQ::whereDoesntHave('bacResolution')->count()),
-                $this->stage('BAC Drafted', BACResolution::whereNull('finalized_at')->count()),
-                $this->stage('BAC Finalized', BACResolution::whereNotNull('finalized_at')->count()),
-                $this->stage('NOA Issued', NOA::count()),
+            $payload["pipeline"] = [
+                $this->stage(
+                    "AOQ Ready",
+                    AOQ::whereDoesntHave("bacResolution")->count(),
+                ),
+                $this->stage(
+                    "BAC Drafted",
+                    BACResolution::whereNull("finalized_at")->count(),
+                ),
+                $this->stage(
+                    "BAC Finalized",
+                    BACResolution::whereNotNull("finalized_at")->count(),
+                ),
+                $this->stage("NOA Issued", NOA::count()),
             ];
 
-            $payload['recentActivities'] = BACResolution::with('aoq.rfq')
-                ->latest('resolution_date')
+            $payload["recentActivities"] = BACResolution::with("aoq.rfq")
+                ->latest("resolution_date")
                 ->limit(6)
                 ->get()
-                ->map(fn (BACResolution $bacResolution): array => [
-                    'title' => $bacResolution->resolution_no ?: ('BAC #'.$bacResolution->id),
-                    'subtitle' => $bacResolution->project_name ?: 'No project name',
-                    'meta' => $bacResolution->isFinalized() ? 'Finalized' : 'Draft',
-                    'date' => optional($bacResolution->resolution_date)->format('M d, Y') ?: '—',
-                    'link' => route('bac-resolutions.show', $bacResolution),
-                ])->values();
+                ->map(
+                    fn(BACResolution $bacResolution): array => [
+                        "title" =>
+                            $bacResolution->resolution_no ?:
+                            "BAC #" . $bacResolution->id,
+                        "subtitle" =>
+                            $bacResolution->project_name ?: "No project name",
+                        "meta" => $bacResolution->isFinalized()
+                            ? "Finalized"
+                            : "Draft",
+                        "date" =>
+                            optional($bacResolution->resolution_date)->format(
+                                "M d, Y",
+                            ) ?:
+                            "—",
+                        "link" => route("bac-resolutions.show", $bacResolution),
+                    ],
+                )
+                ->values();
 
-            $payload['monthlyTrends'] = $this->monthlyCounts(BACResolution::class);
-            $payload['quickLinks'] = [
-                $this->quickLink('BAC Resolutions', route('bac-resolutions.index'), 'lucide:files'),
-                $this->quickLink('Notices of Award', route('noas.index'), 'lucide:file-badge'),
-                $this->quickLink('AOQ List', route('aoqs.index'), 'lucide:file-spreadsheet'),
-                $this->quickLink('Templates', route('templates.index'), 'lucide:file-down'),
+            $payload["monthlyTrends"] = $this->monthlyCounts(
+                BACResolution::class,
+            );
+            $payload["secondaryTrends"] = $this->monthlyCounts(
+                NOA::class,
+                "lucide:file-badge",
+                "NOAs",
+            );
+            $payload["quickLinks"] = [
+                $this->quickLink(
+                    "BAC Resolutions",
+                    route("bac-resolutions.index"),
+                    "lucide:files",
+                ),
+                $this->quickLink(
+                    "Notices of Award",
+                    route("noas.index"),
+                    "lucide:file-badge",
+                ),
+                $this->quickLink(
+                    "AOQ List",
+                    route("aoqs.index"),
+                    "lucide:file-spreadsheet",
+                ),
+                $this->quickLink(
+                    "Templates",
+                    route("templates.index"),
+                    "lucide:file-down",
+                ),
             ];
         } elseif ($roleName === RoleType::CHECKING_ADMIN->value) {
-            $payload['metrics'] = [
-                $this->metric('APPs', APP::count(), 'lucide:layout-grid', 'All annual procurement plans'),
-                $this->metric('PPMPs', PPMP::count(), 'lucide:clipboard-list', 'All project procurement plans'),
-                $this->metric('Emanatings', Emanating::count(), 'lucide:clipboard-minus', 'All emanating requests'),
-                $this->metric('Purchase Requests', PurchaseRequest::count(), 'lucide:file-plus-2', 'PRs generated from submissions'),
+            $payload["metrics"] = [
+                $this->metric(
+                    "APPs",
+                    APP::count(),
+                    "lucide:layout-grid",
+                    "All annual procurement plans",
+                ),
+                $this->metric(
+                    "PPMPs",
+                    PPMP::count(),
+                    "lucide:clipboard-list",
+                    "All project procurement plans",
+                ),
+                $this->metric(
+                    "Emanatings",
+                    Emanating::count(),
+                    "lucide:clipboard-minus",
+                    "All emanating requests",
+                ),
+                $this->metric(
+                    "For Checking",
+                    Emanating::where("status", "pending")->count(),
+                    "lucide:clock",
+                    "Emanatings awaiting review",
+                ),
             ];
 
-            $payload['pipeline'] = [
-                $this->stage('PR Draft', PurchaseRequest::where('status', 'draft')->count()),
-                $this->stage('PR Approved', PurchaseRequest::where('status', 'approved')->count()),
-                $this->stage('PR Returned', PurchaseRequest::where('status', 'returned')->count()),
+            $payload["pipeline"] = [
+                $this->stage(
+                    "Pending",
+                    Emanating::where("status", "pending")->count(),
+                ),
+                $this->stage(
+                    "Checked",
+                    Emanating::whereIn("status", [
+                        "all_matched",
+                        "partial_match",
+                    ])->count(),
+                ),
+                $this->stage(
+                    "Approved",
+                    Emanating::where("status", "approved")->count(),
+                ),
             ];
 
-            $payload['recentActivities'] = PurchaseRequest::with('office')
-                ->latest('pr_date')
-                ->limit(6)
-                ->get()
-                ->map(fn (PurchaseRequest $purchaseRequest): array => [
-                    'title' => $purchaseRequest->pr_no ?: ('PR #'.$purchaseRequest->id),
-                    'subtitle' => $purchaseRequest->office?->name ?: 'No office',
-                    'meta' => ucfirst(str_replace('_', ' ', (string) $purchaseRequest->status)),
-                    'date' => optional($purchaseRequest->pr_date)->format('M d, Y') ?: '—',
-                    'link' => route('purchase-requests.show', $purchaseRequest),
-                ])->values();
+            $payload["monthlyTrends"] = $this->monthlyCounts(
+                Emanating::class,
+                "lucide:clipboard-minus",
+                "Emanatings",
+            );
+            $payload["secondaryTrends"] = $this->monthlyCounts(
+                APP::class,
+                "lucide:layout-grid",
+                "APPs",
+            );
 
-            $payload['monthlyTrends'] = $this->monthlyCounts(PurchaseRequest::class);
-            $payload['quickLinks'] = [
-                $this->quickLink('APPs', route('apps.index'), 'lucide:layout-grid'),
-                $this->quickLink('PPMPs', route('ppmps.index'), 'lucide:clipboard-list'),
-                $this->quickLink('Emanatings', route('emanatings.index'), 'lucide:clipboard-minus'),
-                $this->quickLink('Templates', route('templates.index'), 'lucide:file-down'),
-            ];
-        } elseif ($roleName === RoleType::CANVASSING_ADMIN->value) {
-            $payload['metrics'] = [
-                $this->metric('Canvasses', Canvas::count(), 'lucide:shopping-cart', 'All canvassing records'),
-                $this->metric('Pending Canvasses', Canvas::where('status', 'pending')->count(), 'lucide:clock', 'Still being canvassed'),
-                $this->metric('Completed Canvasses', Canvas::where('status', 'completed')->count(), 'lucide:check-circle', 'Ready for PR flow'),
-                $this->metric('Master List Items', MasterListItem::count(), 'lucide:list-checks', 'Catalogued items'),
-            ];
-
-            $payload['pipeline'] = [
-                $this->stage('Pending', Canvas::where('status', 'pending')->count()),
-                $this->stage('Completed', Canvas::where('status', 'completed')->count()),
-            ];
-
-            $payload['recentActivities'] = Canvas::with('emanating.project')
+            $payload["recentActivities"] = Emanating::with("ppmp.office")
                 ->latest()
                 ->limit(6)
                 ->get()
-                ->map(fn (Canvas $canvas): array => [
-                    'title' => 'Canvas #'.$canvas->id,
-                    'subtitle' => $canvas->emanating?->project?->name ?: 'No project',
-                    'meta' => ucfirst((string) $canvas->status),
-                    'date' => optional($canvas->created_at)->format('M d, Y') ?: '—',
-                    'link' => route('canvasses.show', $canvas),
-                ])->values();
+                ->map(
+                    fn(Emanating $emanating): array => [
+                        "title" =>
+                            $emanating->emanating_no ?:
+                            "Emanating #" . $emanating->id,
+                        "subtitle" =>
+                            $emanating->ppmp?->office?->name ?: "No office",
+                        "meta" => ucfirst(
+                            str_replace("_", " ", (string) $emanating->status),
+                        ),
+                        "date" =>
+                            optional($emanating->created_at)->format(
+                                "M d, Y",
+                            ) ?:
+                            "—",
+                        "link" => route("emanatings.show", $emanating),
+                    ],
+                )
+                ->values();
 
-            $payload['monthlyTrends'] = $this->monthlyCounts(Canvas::class);
-            $payload['quickLinks'] = [
-                $this->quickLink('Canvassing', route('canvasses.index'), 'lucide:shopping-cart'),
-                $this->quickLink('Suppliers', route('suppliers.index'), 'lucide:truck'),
-                $this->quickLink('Master List', route('master-list-items.index'), 'lucide:list-checks'),
-                $this->quickLink('Templates', route('templates.index'), 'lucide:file-down'),
+            $payload["quickLinks"] = [
+                $this->quickLink(
+                    "APPs",
+                    route("apps.index"),
+                    "lucide:layout-grid",
+                ),
+                $this->quickLink(
+                    "PPMPs",
+                    route("ppmps.index"),
+                    "lucide:clipboard-list",
+                ),
+                $this->quickLink(
+                    "Emanatings",
+                    route("emanatings.index"),
+                    "lucide:clipboard-minus",
+                ),
+                $this->quickLink(
+                    "Templates",
+                    route("templates.index"),
+                    "lucide:file-down",
+                ),
+            ];
+        } elseif ($roleName === RoleType::CANVASSING_ADMIN->value) {
+            $payload["metrics"] = [
+                $this->metric(
+                    "Canvasses",
+                    Canvas::count(),
+                    "lucide:shopping-cart",
+                    "All canvassing records",
+                ),
+                $this->metric(
+                    "Pending Canvasses",
+                    Canvas::where("status", "pending")->count(),
+                    "lucide:clock",
+                    "Still being canvassed",
+                ),
+                $this->metric(
+                    "Completed Canvasses",
+                    Canvas::where("status", "completed")->count(),
+                    "lucide:check-circle",
+                    "Ready for PR flow",
+                ),
+                $this->metric(
+                    "Master List Items",
+                    MasterListItem::count(),
+                    "lucide:list-checks",
+                    "Catalogued items",
+                ),
+            ];
+
+            $payload["pipeline"] = [
+                $this->stage(
+                    "Pending",
+                    Canvas::where("status", "pending")->count(),
+                ),
+                $this->stage(
+                    "Completed",
+                    Canvas::where("status", "completed")->count(),
+                ),
+            ];
+
+            $payload["recentActivities"] = Canvas::with("emanating.project")
+                ->latest()
+                ->limit(6)
+                ->get()
+                ->map(
+                    fn(Canvas $canvas): array => [
+                        "title" => "Canvas #" . $canvas->id,
+                        "subtitle" =>
+                            $canvas->emanating?->project?->name ?: "No project",
+                        "meta" => ucfirst((string) $canvas->status),
+                        "date" =>
+                            optional($canvas->created_at)->format("M d, Y") ?:
+                            "—",
+                        "link" => route("canvasses.show", $canvas),
+                    ],
+                )
+                ->values();
+
+            $payload["monthlyTrends"] = $this->monthlyCounts(Canvas::class);
+            $payload["quickLinks"] = [
+                $this->quickLink(
+                    "Canvassing",
+                    route("canvasses.index"),
+                    "lucide:shopping-cart",
+                ),
+                $this->quickLink(
+                    "Suppliers",
+                    route("suppliers.index"),
+                    "lucide:truck",
+                ),
+                $this->quickLink(
+                    "Master List",
+                    route("master-list-items.index"),
+                    "lucide:list-checks",
+                ),
+                $this->quickLink(
+                    "Templates",
+                    route("templates.index"),
+                    "lucide:file-down",
+                ),
             ];
         } elseif ($roleName === RoleType::PR_ADMIN->value) {
-            $payload['metrics'] = [
-                $this->metric('Purchase Requests', PurchaseRequest::count(), 'lucide:file-plus-2', 'All submitted PRs'),
-                $this->metric('Draft', PurchaseRequest::where('status', 'draft')->count(), 'lucide:edit-3', 'Still editable'),
-                $this->metric('Approved', PurchaseRequest::where('status', 'approved')->count(), 'lucide:check-circle', 'Ready for RFQ'),
-                $this->metric('Returned', PurchaseRequest::where('status', 'returned')->count(), 'lucide:undo-2', 'Needs office revision'),
+            $payload["metrics"] = [
+                $this->metric(
+                    "Purchase Requests",
+                    PurchaseRequest::count(),
+                    "lucide:file-plus-2",
+                    "All submitted PRs",
+                ),
+                $this->metric(
+                    "Draft",
+                    PurchaseRequest::where("status", "draft")->count(),
+                    "lucide:edit-3",
+                    "Still editable",
+                ),
+                $this->metric(
+                    "Approved",
+                    PurchaseRequest::where("status", "approved")->count(),
+                    "lucide:check-circle",
+                    "Ready for RFQ",
+                ),
+                $this->metric(
+                    "Returned",
+                    PurchaseRequest::where("status", "returned")->count(),
+                    "lucide:undo-2",
+                    "Needs office revision",
+                ),
             ];
 
-            $payload['pipeline'] = [
-                $this->stage('Draft', PurchaseRequest::where('status', 'draft')->count()),
-                $this->stage('Approved', PurchaseRequest::where('status', 'approved')->count()),
-                $this->stage('Returned', PurchaseRequest::where('status', 'returned')->count()),
+            $payload["pipeline"] = [
+                $this->stage(
+                    "Draft",
+                    PurchaseRequest::where("status", "draft")->count(),
+                ),
+                $this->stage(
+                    "Approved",
+                    PurchaseRequest::where("status", "approved")->count(),
+                ),
+                $this->stage(
+                    "Returned",
+                    PurchaseRequest::where("status", "returned")->count(),
+                ),
             ];
 
-            $payload['recentActivities'] = PurchaseRequest::with('office')
-                ->latest('pr_date')
+            $payload["recentActivities"] = PurchaseRequest::with("office")
+                ->latest("pr_date")
                 ->limit(6)
                 ->get()
-                ->map(fn (PurchaseRequest $purchaseRequest): array => [
-                    'title' => $purchaseRequest->pr_no ?: ('PR #'.$purchaseRequest->id),
-                    'subtitle' => $purchaseRequest->office?->name ?: 'No office',
-                    'meta' => ucfirst(str_replace('_', ' ', (string) $purchaseRequest->status)),
-                    'date' => optional($purchaseRequest->pr_date)->format('M d, Y') ?: '—',
-                    'link' => route('purchase-requests.show', $purchaseRequest),
-                ])->values();
+                ->map(
+                    fn(PurchaseRequest $purchaseRequest): array => [
+                        "title" =>
+                            $purchaseRequest->pr_no ?:
+                            "PR #" . $purchaseRequest->id,
+                        "subtitle" =>
+                            $purchaseRequest->office?->name ?: "No office",
+                        "meta" => ucfirst(
+                            str_replace(
+                                "_",
+                                " ",
+                                (string) $purchaseRequest->status,
+                            ),
+                        ),
+                        "date" =>
+                            optional($purchaseRequest->pr_date)->format(
+                                "M d, Y",
+                            ) ?:
+                            "—",
+                        "link" => route(
+                            "purchase-requests.show",
+                            $purchaseRequest,
+                        ),
+                    ],
+                )
+                ->values();
 
-            $payload['monthlyTrends'] = $this->monthlyCounts(PurchaseRequest::class);
-            $payload['quickLinks'] = [
-                $this->quickLink('Purchase Requests', route('purchase-requests.index'), 'lucide:file-plus-2'),
-                $this->quickLink('Create PR', route('purchase-requests.create'), 'lucide:plus-circle'),
-                $this->quickLink('Templates', route('templates.index'), 'lucide:file-down'),
+            $payload["monthlyTrends"] = $this->monthlyCounts(
+                PurchaseRequest::class,
+            );
+            $payload["quickLinks"] = [
+                $this->quickLink(
+                    "Purchase Requests",
+                    route("purchase-requests.index"),
+                    "lucide:file-plus-2",
+                ),
+                $this->quickLink(
+                    "Create PR",
+                    route("purchase-requests.create"),
+                    "lucide:plus-circle",
+                ),
+                $this->quickLink(
+                    "Templates",
+                    route("templates.index"),
+                    "lucide:file-down",
+                ),
             ];
-        } elseif ($roleName === RoleType::RFQ_ADMIN->value || $roleName === RoleType::ABSTRACT_ADMIN->value) {
-            $payload['metrics'] = [
-                $this->metric('RFQs', RFQ::count(), 'lucide:file-text', 'Quotation requests created'),
-                $this->metric('Due This Week', RFQ::whereBetween('submission_deadline', [now()->toDateString(), now()->addWeek()->toDateString()])->count(), 'lucide:calendar-days', 'Submission deadlines approaching'),
-                $this->metric('AOQs', AOQ::count(), 'lucide:file-spreadsheet', 'Abstract of quotation records'),
-                $this->metric('Late Supplier Submissions', RFQSupplier::where('is_late', true)->count(), 'lucide:alert-triangle', 'Marked late supplier quotes'),
+        } elseif (
+            $roleName === RoleType::RFQ_ADMIN->value ||
+            $roleName === RoleType::ABSTRACT_ADMIN->value
+        ) {
+            $payload["metrics"] = [
+                $this->metric(
+                    "RFQs",
+                    RFQ::count(),
+                    "lucide:file-text",
+                    "Quotation requests created",
+                ),
+                $this->metric(
+                    "Due This Week",
+                    RFQ::whereBetween("submission_deadline", [
+                        now()->toDateString(),
+                        now()->addWeek()->toDateString(),
+                    ])->count(),
+                    "lucide:calendar-days",
+                    "Submission deadlines approaching",
+                ),
+                $this->metric(
+                    "AOQs",
+                    AOQ::count(),
+                    "lucide:file-spreadsheet",
+                    "Abstract of quotation records",
+                ),
+                $this->metric(
+                    "Late Supplier Submissions",
+                    RFQSupplier::where("is_late", true)->count(),
+                    "lucide:alert-triangle",
+                    "Marked late supplier quotes",
+                ),
             ];
 
-            $payload['pipeline'] = [
-                $this->stage('RFQ Created', RFQ::count()),
-                $this->stage('AOQ Generated', AOQ::count()),
-                $this->stage('BAC Pending', AOQ::whereDoesntHave('bacResolution')->count()),
+            $payload["pipeline"] = [
+                $this->stage("RFQ Created", RFQ::count()),
+                $this->stage("AOQ Generated", AOQ::count()),
+                $this->stage(
+                    "BAC Pending",
+                    AOQ::whereDoesntHave("bacResolution")->count(),
+                ),
             ];
 
-            $payload['recentActivities'] = RFQ::with('purchaseRequest.office')
-                ->latest('rfq_date')
+            $payload["recentActivities"] = RFQ::with("purchaseRequest.office")
+                ->latest("rfq_date")
                 ->limit(6)
                 ->get()
-                ->map(fn (RFQ $rfq): array => [
-                    'title' => $rfq->svp_no ?: ('RFQ #'.$rfq->id),
-                    'subtitle' => $rfq->project_name ?: 'No project name',
-                    'meta' => $rfq->purchaseRequest?->office?->name ?: 'No office',
-                    'date' => optional($rfq->rfq_date)->format('M d, Y') ?: '—',
-                    'link' => route('rfqs.show', $rfq),
-                ])->values();
+                ->map(
+                    fn(RFQ $rfq): array => [
+                        "title" => $rfq->svp_no ?: "RFQ #" . $rfq->id,
+                        "subtitle" => $rfq->project_name ?: "No project name",
+                        "meta" =>
+                            $rfq->purchaseRequest?->office?->name ?:
+                            "No office",
+                        "date" =>
+                            optional($rfq->rfq_date)->format("M d, Y") ?: "—",
+                        "link" => route("rfqs.show", $rfq),
+                    ],
+                )
+                ->values();
 
-            $payload['monthlyTrends'] = $this->monthlyCounts(RFQ::class);
-            $payload['quickLinks'] = [
-                $this->quickLink('RFQs', route('rfqs.index'), 'lucide:file-text'),
-                $this->quickLink('AOQs', route('aoqs.index'), 'lucide:file-spreadsheet'),
-                $this->quickLink('Templates', route('templates.index'), 'lucide:file-down'),
+            $payload["monthlyTrends"] = $this->monthlyCounts(RFQ::class);
+            $payload["secondaryTrends"] = $this->monthlyCounts(
+                AOQ::class,
+                "lucide:file-spreadsheet",
+                "AOQs",
+            );
+            $payload["quickLinks"] = [
+                $this->quickLink(
+                    "RFQs",
+                    route("rfqs.index"),
+                    "lucide:file-text",
+                ),
+                $this->quickLink(
+                    "AOQs",
+                    route("aoqs.index"),
+                    "lucide:file-spreadsheet",
+                ),
+                $this->quickLink(
+                    "Templates",
+                    route("templates.index"),
+                    "lucide:file-down",
+                ),
             ];
-        } elseif (in_array($roleName, [RoleType::NOA_ADMIN->value, RoleType::PO_ADMIN->value, RoleType::INSPECTION_ADMIN->value], true)) {
-            $payload['metrics'] = [
-                $this->metric('Notices of Award', NOA::count(), 'lucide:file-badge', 'Issued NOA records'),
-                $this->metric('Purchase Orders', PurchaseOrder::count(), 'lucide:file-signature', 'Generated POs'),
-                $this->metric('PO Transmittals', POTransmittal::count(), 'lucide:files', 'COA and OPG transmittals'),
-                $this->metric('PO Without Transmittal', PurchaseOrder::whereDoesntHave('poTransmittals')->count(), 'lucide:alert-circle', 'Needs transmittal generation'),
+        } elseif (
+            in_array(
+                $roleName,
+                [
+                    RoleType::NOA_ADMIN->value,
+                    RoleType::PO_ADMIN->value,
+                    RoleType::INSPECTION_ADMIN->value,
+                ],
+                true,
+            )
+        ) {
+            $payload["metrics"] = [
+                $this->metric(
+                    "Notices of Award",
+                    NOA::count(),
+                    "lucide:file-badge",
+                    "Issued NOA records",
+                ),
+                $this->metric(
+                    "Purchase Orders",
+                    PurchaseOrder::count(),
+                    "lucide:file-signature",
+                    "Generated POs",
+                ),
+                $this->metric(
+                    "PO Transmittals",
+                    POTransmittal::count(),
+                    "lucide:files",
+                    "COA and OPG transmittals",
+                ),
+                $this->metric(
+                    "PO Without Transmittal",
+                    PurchaseOrder::whereDoesntHave("poTransmittals")->count(),
+                    "lucide:alert-circle",
+                    "Needs transmittal generation",
+                ),
             ];
 
-            $payload['pipeline'] = [
-                $this->stage('NOA Issued', NOA::count()),
-                $this->stage('PO Generated', PurchaseOrder::count()),
-                $this->stage('PO Transmitted', POTransmittal::count()),
+            $payload["pipeline"] = [
+                $this->stage("NOA Issued", NOA::count()),
+                $this->stage("PO Generated", PurchaseOrder::count()),
+                $this->stage("PO Transmitted", POTransmittal::count()),
             ];
 
-            $payload['recentActivities'] = POTransmittal::with('purchaseOrder')
-                ->latest('transmittal_date')
+            $payload["recentActivities"] = POTransmittal::with("purchaseOrder")
+                ->latest("transmittal_date")
                 ->limit(6)
                 ->get()
-                ->map(fn (POTransmittal $poTransmittal): array => [
-                    'title' => strtoupper((string) $poTransmittal->type).' - '.($poTransmittal->transmittal_no ?: ('#'.$poTransmittal->id)),
-                    'subtitle' => $poTransmittal->purchaseOrder?->po_no ?: 'No PO',
-                    'meta' => $poTransmittal->signatory_name ?: 'No signatory',
-                    'date' => optional($poTransmittal->transmittal_date)->format('M d, Y') ?: '—',
-                    'link' => route('po-transmittals.show', $poTransmittal),
-                ])->values();
+                ->map(
+                    fn(POTransmittal $poTransmittal): array => [
+                        "title" =>
+                            strtoupper((string) $poTransmittal->type) .
+                            " - " .
+                            ($poTransmittal->transmittal_no ?:
+                                "#" . $poTransmittal->id),
+                        "subtitle" =>
+                            $poTransmittal->purchaseOrder?->po_no ?: "No PO",
+                        "meta" =>
+                            $poTransmittal->signatory_name ?: "No signatory",
+                        "date" =>
+                            optional($poTransmittal->transmittal_date)->format(
+                                "M d, Y",
+                            ) ?:
+                            "—",
+                        "link" => route("po-transmittals.show", $poTransmittal),
+                    ],
+                )
+                ->values();
 
-            $payload['monthlyTrends'] = $this->monthlyCounts(PurchaseOrder::class);
-            $payload['quickLinks'] = [
-                $this->quickLink('Notice of Award', route('noas.index'), 'lucide:file-badge'),
-                $this->quickLink('Purchase Order', route('purchase-orders.index'), 'lucide:file-signature'),
-                $this->quickLink('PO Transmittal', route('po-transmittals.index'), 'lucide:files'),
-                $this->quickLink('Templates', route('templates.index'), 'lucide:file-down'),
+            $payload["monthlyTrends"] = $this->monthlyCounts(
+                PurchaseOrder::class,
+            );
+            $payload["secondaryTrends"] = $this->monthlyCounts(
+                NOA::class,
+                "lucide:file-badge",
+                "NOAs",
+            );
+            $payload["quickLinks"] = [
+                $this->quickLink(
+                    "Notice of Award",
+                    route("noas.index"),
+                    "lucide:file-badge",
+                ),
+                $this->quickLink(
+                    "Purchase Order",
+                    route("purchase-orders.index"),
+                    "lucide:file-signature",
+                ),
+                $this->quickLink(
+                    "PO Transmittal",
+                    route("po-transmittals.index"),
+                    "lucide:files",
+                ),
+                $this->quickLink(
+                    "Templates",
+                    route("templates.index"),
+                    "lucide:file-down",
+                ),
             ];
         } else {
             $officeId = $user?->office_id;
 
-            $emanatingQuery = Emanating::whereHas('project.fund', fn ($fund) => $fund->where('office_id', $officeId));
-            $prQuery = PurchaseRequest::where('office_id', $officeId);
+            $emanatingQuery = Emanating::whereHas(
+                "project.fund",
+                fn($fund) => $fund->where("office_id", $officeId),
+            );
+            $prQuery = PurchaseRequest::where("office_id", $officeId);
 
-            $payload['metrics'] = [
-                $this->metric('APPs', APP::where('office_id', $officeId)->count(), 'lucide:layout-grid', 'Annual procurement plans'),
-                $this->metric('PPMPs', PPMP::where('office_id', $officeId)->count(), 'lucide:clipboard-list', 'Project procurement plans'),
-                $this->metric('Emanatings', (clone $emanatingQuery)->count(), 'lucide:clipboard-minus', 'Submitted emanating requests'),
-                $this->metric('Purchase Requests', (clone $prQuery)->count(), 'lucide:file-plus-2', 'Office PR records'),
+            $payload["metrics"] = [
+                $this->metric(
+                    "APPs",
+                    APP::where("office_id", $officeId)->count(),
+                    "lucide:layout-grid",
+                    "Annual procurement plans",
+                ),
+                $this->metric(
+                    "PPMPs",
+                    PPMP::where("office_id", $officeId)->count(),
+                    "lucide:clipboard-list",
+                    "Project procurement plans",
+                ),
+                $this->metric(
+                    "Emanatings",
+                    (clone $emanatingQuery)->count(),
+                    "lucide:clipboard-minus",
+                    "Submitted emanating requests",
+                ),
+                $this->metric(
+                    "Purchase Requests",
+                    (clone $prQuery)->count(),
+                    "lucide:file-plus-2",
+                    "Office PR records",
+                ),
             ];
 
-            $payload['pipeline'] = [
-                $this->stage('PR Draft', (clone $prQuery)->where('status', 'draft')->count()),
-                $this->stage('PR Approved', (clone $prQuery)->where('status', 'approved')->count()),
-                $this->stage('PR Returned', (clone $prQuery)->where('status', 'returned')->count()),
+            $payload["pipeline"] = [
+                $this->stage(
+                    "PR Draft",
+                    (clone $prQuery)->where("status", "draft")->count(),
+                ),
+                $this->stage(
+                    "PR Approved",
+                    (clone $prQuery)->where("status", "approved")->count(),
+                ),
+                $this->stage(
+                    "PR Returned",
+                    (clone $prQuery)->where("status", "returned")->count(),
+                ),
             ];
 
-            $payload['recentActivities'] = PurchaseRequest::with('office')
-                ->where('office_id', $officeId)
-                ->latest('pr_date')
+            $payload["recentActivities"] = PurchaseRequest::with("office")
+                ->where("office_id", $officeId)
+                ->latest("pr_date")
                 ->limit(6)
                 ->get()
-                ->map(fn (PurchaseRequest $purchaseRequest): array => [
-                    'title' => $purchaseRequest->pr_no ?: ('PR #'.$purchaseRequest->id),
-                    'subtitle' => $purchaseRequest->purpose ?: 'No purpose provided',
-                    'meta' => ucfirst(str_replace('_', ' ', (string) $purchaseRequest->status)),
-                    'date' => optional($purchaseRequest->pr_date)->format('M d, Y') ?: '—',
-                    'link' => route('purchase-requests.show', $purchaseRequest),
-                ])->values();
+                ->map(
+                    fn(PurchaseRequest $purchaseRequest): array => [
+                        "title" =>
+                            $purchaseRequest->pr_no ?:
+                            "PR #" . $purchaseRequest->id,
+                        "subtitle" =>
+                            $purchaseRequest->purpose ?: "No purpose provided",
+                        "meta" => ucfirst(
+                            str_replace(
+                                "_",
+                                " ",
+                                (string) $purchaseRequest->status,
+                            ),
+                        ),
+                        "date" =>
+                            optional($purchaseRequest->pr_date)->format(
+                                "M d, Y",
+                            ) ?:
+                            "—",
+                        "link" => route(
+                            "purchase-requests.show",
+                            $purchaseRequest,
+                        ),
+                    ],
+                )
+                ->values();
 
-            $payload['monthlyTrends'] = $this->monthlyCounts(PurchaseRequest::class);
-            $payload['quickLinks'] = [
-                $this->quickLink('APPs', route('apps.index'), 'lucide:layout-grid'),
-                $this->quickLink('PPMPs', route('ppmps.index'), 'lucide:clipboard-list'),
-                $this->quickLink('Emanatings', route('emanatings.index'), 'lucide:clipboard-minus'),
-                $this->quickLink('Purchase Requests', route('purchase-requests.index'), 'lucide:file-plus-2'),
-                $this->quickLink('Templates', route('templates.index'), 'lucide:file-down'),
+            $payload["monthlyTrends"] = $this->monthlyCounts(
+                PurchaseRequest::class,
+            );
+            $payload["quickLinks"] = [
+                $this->quickLink(
+                    "APPs",
+                    route("apps.index"),
+                    "lucide:layout-grid",
+                ),
+                $this->quickLink(
+                    "PPMPs",
+                    route("ppmps.index"),
+                    "lucide:clipboard-list",
+                ),
+                $this->quickLink(
+                    "Emanatings",
+                    route("emanatings.index"),
+                    "lucide:clipboard-minus",
+                ),
+                $this->quickLink(
+                    "Purchase Requests",
+                    route("purchase-requests.index"),
+                    "lucide:file-plus-2",
+                ),
+                $this->quickLink(
+                    "Templates",
+                    route("templates.index"),
+                    "lucide:file-down",
+                ),
             ];
         }
 
-        return Inertia::render('Dashboard', $payload);
+        return Inertia::render("Dashboard", $payload);
     }
 
-    private function metric(string $title, int|float $value, string $icon, string $description): array
-    {
+    private function metric(
+        string $title,
+        int|float $value,
+        string $icon,
+        string $description,
+    ): array {
         return [
-            'title' => $title,
-            'value' => $value,
-            'icon' => $icon,
-            'description' => $description,
+            "title" => $title,
+            "value" => $value,
+            "icon" => $icon,
+            "description" => $description,
         ];
     }
 
     private function stage(string $label, int $value): array
     {
         return [
-            'label' => $label,
-            'value' => $value,
+            "label" => $label,
+            "value" => $value,
         ];
     }
 
     private function quickLink(string $label, string $href, string $icon): array
     {
         return [
-            'label' => $label,
-            'href' => $href,
-            'icon' => $icon,
+            "label" => $label,
+            "href" => $href,
+            "icon" => $icon,
         ];
     }
 
-    private function monthlyCounts(string $model): array
-    {
-        return collect(range(5, 0))->map(function (int $monthsAgo) use ($model): array {
-            $date = now()->subMonths($monthsAgo);
+    private function monthlyCounts(
+        string $model,
+        string $icon = "",
+        string $label = "",
+    ): array {
+        return [
+            "icon" => $icon ?: "lucide:bar-chart-3",
+            "label" => $label ?: class_basename($model),
+            "data" => collect(range(5, 0))
+                ->map(function (int $monthsAgo) use ($model): array {
+                    $date = now()->subMonths($monthsAgo);
 
-            return [
-                'label' => $date->format('M'),
-                'count' => $model::whereYear('created_at', $date->year)
-                    ->whereMonth('created_at', $date->month)
-                    ->count(),
-            ];
-        })->values()->all();
+                    return [
+                        "label" => $date->format("M"),
+                        "count" => $model
+                            ::whereYear("created_at", $date->year)
+                            ->whereMonth("created_at", $date->month)
+                            ->count(),
+                    ];
+                })
+                ->values()
+                ->all(),
+        ];
     }
 
     private function systemPipeline(): array
     {
         return [
-            $this->stage('PR', PurchaseRequest::count()),
-            $this->stage('RFQ', RFQ::count()),
-            $this->stage('AOQ', AOQ::count()),
-            $this->stage('BAC', BACResolution::count()),
-            $this->stage('NOA', NOA::count()),
-            $this->stage('PO', PurchaseOrder::count()),
-            $this->stage('PO Transmittal', POTransmittal::count()),
+            $this->stage("PR", PurchaseRequest::count()),
+            $this->stage("RFQ", RFQ::count()),
+            $this->stage("AOQ", AOQ::count()),
+            $this->stage("BAC", BACResolution::count()),
+            $this->stage("NOA", NOA::count()),
+            $this->stage("PO", PurchaseOrder::count()),
+            $this->stage("PO Transmittal", POTransmittal::count()),
         ];
     }
 
     private function superadminRecent()
     {
-        return PurchaseOrder::with('noa.bacResolution')
-            ->latest('po_date')
+        return PurchaseOrder::with("noa.bacResolution")
+            ->latest("po_date")
             ->limit(6)
             ->get()
-            ->map(fn (PurchaseOrder $purchaseOrder): array => [
-                'title' => $purchaseOrder->po_no,
-                'subtitle' => $purchaseOrder->noa?->bacResolution?->project_name ?: 'No project name',
-                'meta' => 'PO Amount: ₱'.number_format((float) $purchaseOrder->total_amount, 2),
-                'date' => optional($purchaseOrder->po_date)->format('M d, Y') ?: '—',
-                'link' => route('purchase-orders.show', $purchaseOrder),
-            ])->values();
+            ->map(
+                fn(PurchaseOrder $purchaseOrder): array => [
+                    "title" => $purchaseOrder->po_no,
+                    "subtitle" =>
+                        $purchaseOrder->noa?->bacResolution?->project_name ?:
+                        "No project name",
+                    "meta" =>
+                        "PO Amount: ₱" .
+                        number_format((float) $purchaseOrder->total_amount, 2),
+                    "date" =>
+                        optional($purchaseOrder->po_date)->format("M d, Y") ?:
+                        "—",
+                    "link" => route("purchase-orders.show", $purchaseOrder),
+                ],
+            )
+            ->values();
     }
 }
