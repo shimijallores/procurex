@@ -7,6 +7,7 @@ import { Icon } from "@iconify/vue";
 const props = defineProps({
     modelValue: { type: String, default: "" },
     disabled: { type: Boolean, default: false },
+    context: { type: String, default: "aoq" },
 });
 
 const emit = defineEmits(["update:modelValue", "select"]);
@@ -25,7 +26,9 @@ const currentPrefix = computed(() => {
 const fetchSuggestions = async () => {
     loading.value = true;
     try {
-        const { data } = await axios.get(route("rfqs.recent-svps"));
+        const { data } = await axios.get(route("rfqs.recent-svps"), {
+            params: { context: props.context },
+        });
         suggestions.value = data.svps || [];
     } catch {
         suggestions.value = [];

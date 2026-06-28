@@ -7,6 +7,7 @@ import { Icon } from "@iconify/vue";
 const props = defineProps({
     modelValue: { type: String, default: "" },
     disabled: { type: Boolean, default: false },
+    context: { type: String, default: "" },
 });
 
 const emit = defineEmits(["update:modelValue", "select"]);
@@ -32,7 +33,9 @@ watch(
 const fetchSuggestions = async () => {
     loading.value = true;
     try {
-        const { data } = await axios.get(route("noas.recent-noas"));
+        const { data } = await axios.get(route("noas.recent-noas"), {
+            params: { context: props.context || undefined },
+        });
         suggestions.value = data.noas || [];
     } catch {
         suggestions.value = [];

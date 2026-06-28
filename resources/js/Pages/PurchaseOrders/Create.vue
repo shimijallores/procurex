@@ -140,6 +140,7 @@ const formatCurrency = (value) =>
                         <Label for="noa_search">NOA Number</Label>
                         <NoaSmartInput
                             :model-value="noaSearchNo"
+                            context="po"
                             :disabled="searchingNoa"
                             @update:model-value="noaSearchNo = String($event)"
                             @select="findBatchByNoa"

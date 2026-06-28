@@ -287,10 +287,14 @@ class NOAController extends Controller
             return response()->json(['error' => 'NOA number is required.'], 422);
         }
 
-        $noa = NOA::where('noa_no', $noaNo)->first();
+        $noa = NOA::with('aoq')->where('noa_no', $noaNo)->first();
 
         if (! $noa) {
             return response()->json(['error' => 'No NOA found with that number.'], 404);
+        }
+
+        if ($noa->purchaseOrder()->exists()) {
+            return response()->json(['error' => 'This NOA already has a Purchase Order.'], 422);
         }
 
         $aoq = $noa->aoq;
@@ -338,10 +342,13 @@ class NOAController extends Controller
         ]);
     }
 
-    public function recentNoas(): JsonResponse
+    public function recentNoas(Request $request): JsonResponse
     {
         $noas = NOA::query()
             ->whereNotNull('noa_no')
+            ->when($request->input('context') === 'po', function ($q): void {
+                $q->whereDoesntHave('purchaseOrder');
+            })
             ->latest()
             ->take(5)
             ->pluck('noa_no');

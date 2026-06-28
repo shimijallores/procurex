@@ -187,7 +187,9 @@ class RFQController extends Controller
 
         $prs = PurchaseRequest::with([
             'office:id,name',
-            'items:id,purchase_request_id,item_name,unit,quantity',
+            'items:id,purchase_request_id,emanating_item_id,item_name,unit,quantity',
+            'items.emanatingItem:id,name,unit',
+            'items.emanatingItem.ppmpItem:id,name,unit',
         ])
             ->where('status', 'approved')
             ->whereDoesntHave('rfq')
@@ -204,10 +206,17 @@ class RFQController extends Controller
         return response()->json(['prs' => $prs]);
     }
 
-    public function recentSvps(): JsonResponse
+    public function recentSvps(Request $request): JsonResponse
     {
         $svps = RFQ::query()
             ->whereNotNull('svp_no')
+            ->when($request->input('context') === 'noa', function ($q): void {
+                $q->whereHas('aoq', function ($aoq): void {
+                    $aoq->whereDoesntHave('noa');
+                });
+            }, function ($q): void {
+                $q->whereDoesntHave('aoq');
+            })
             ->latest('rfq_date')
             ->take(5)
             ->get(['id', 'svp_no']);
