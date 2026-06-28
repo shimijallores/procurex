@@ -236,7 +236,7 @@ class PrExcelImportService
         $department = trim($record['department'] ?? '');
         $office = $this->findOffice($department);
 
-        if (!$office instanceof \App\Models\Office && $department !== '') {
+        if (! $office instanceof \App\Models\Office && $department !== '') {
             $this->warnings[] = sprintf('Sheet "%s", row %d: Office not found for "%s". PR %s will have no office assigned.', $sheetName, $start, $department, $prNo);
         }
 
@@ -362,6 +362,7 @@ class PrExcelImportService
         $normalizedClean = preg_replace($boilerplate, '', $normalized);
         $normalizedClean = preg_replace('/[&]/', ' ', $normalizedClean);
         $normalizedClean = trim(preg_replace('/\s+/', ' ', $normalizedClean));
+
         $bestMatch = null;
         $bestScore = 0;
 
@@ -457,6 +458,7 @@ class PrExcelImportService
         foreach ($formats as $format) {
             try {
                 $parsed = Carbon::createFromFormat($format, $normalized);
+
                 return $parsed->toDateString();
             } catch (\Throwable) {
                 continue;
