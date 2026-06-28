@@ -1,4 +1,6 @@
 <script setup>
+import { ref } from "vue";
+import { usePage } from "@inertiajs/vue3";
 import {
     SidebarProvider,
     SidebarInset,
@@ -11,8 +13,14 @@ import AppSidebar from "@/components/AppSidebar.vue";
 import DarkModeButton from "@/components/DarkModeButton.vue";
 import FlashMessage from "@/components/FlashMessage.vue";
 import GlobalSearchBar from "@/components/GlobalSearchBar.vue";
+import ComplianceNotice from "@/components/ComplianceNotice.vue";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@iconify/vue";
+
+const page = usePage();
+const showComplianceNotice = ref(
+    !page.props.auth?.user?.compliance_notice_seen,
+);
 
 defineProps({
     title: {
@@ -89,5 +97,6 @@ defineProps({
             </main>
         </SidebarInset>
         <FlashMessage />
+        <ComplianceNotice v-model:open="showComplianceNotice" />
     </SidebarProvider>
 </template>

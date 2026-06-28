@@ -66,6 +66,9 @@ Route::middleware(['auth'])->group(function (): void {
     Route::get('/settings', [ProfileController::class, 'settings'])->name(
         'settings.index',
     );
+    Route::post('/compliance/acknowledge', [ProfileController::class, 'acknowledgeCompliance'])->name(
+        'compliance.acknowledge',
+    );
     // Define all resources once, authorization will be handled in controllers/policies
     Route::resource('users', UserController::class)->middleware(
         'role:'.RoleType::SUPERADMIN->value,

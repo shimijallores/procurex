@@ -26,6 +26,7 @@ class User extends Authenticatable
         'email',
         'password',
         'office_id',
+        'compliance_notice_seen',
     ];
 
     /**
@@ -48,6 +49,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'compliance_notice_seen' => 'boolean',
         ];
     }
 

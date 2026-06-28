@@ -71,6 +71,14 @@ const formatDate = (date) => {
             </div>
         </div>
 
+        <!-- Admin notice -->
+        <div class="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/30">
+            <Icon icon="lucide:info" class="mt-0.5 size-5 shrink-0 text-blue-600 dark:text-blue-400" />
+            <p class="text-sm text-blue-800 dark:text-blue-300">
+                Account details (name, email, password, and role assignments) can only be changed by an administrator. Please contact the system administrator for any account-related changes.
+            </p>
+        </div>
+
         <div class="space-y-6">
             <!-- Theme Preferences -->
             <Card>
