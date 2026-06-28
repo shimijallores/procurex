@@ -348,7 +348,7 @@ class BACResolutionController extends Controller
             // Sync AOQs and link NOAs if not already done (e.g., saved as draft)
             $aoqs = $bacResolution->aoqs;
             if ($aoqs->isEmpty() && $bacResolution->aoq) {
-                $aoqs = collect([$bacResolution->aoq]);
+                $aoqs = $bacResolution->aoq->batch?->aoqs ?? collect([$bacResolution->aoq]);
             }
 
             if ($aoqs->isNotEmpty()) {
@@ -386,7 +386,21 @@ class BACResolutionController extends Controller
 
     public function destroy(BACResolution $bacResolution): RedirectResponse
     {
-        $bacResolution->delete();
+        DB::beginTransaction();
+
+        try {
+            // Unlink NOAs without deleting them
+            NOA::where('bac_resolution_id', $bacResolution->id)
+                ->update(['bac_resolution_id' => null]);
+
+            $bacResolution->delete();
+
+            DB::commit();
+        } catch (\Throwable $throwable) {
+            DB::rollBack();
+
+            return redirect()->back()->with('error', 'Failed to delete BAC Resolution.');
+        }
 
         return redirect()->route('bac-resolutions.index')
             ->with('success', 'BAC Resolution deleted successfully.');
