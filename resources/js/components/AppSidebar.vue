@@ -672,16 +672,17 @@ const userInitials = computed(() => {
                                 </div>
                             </DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem>
-                                <Icon icon="lucide:user" class="mr-2 size-4" />
-                                Profile
+                            <DropdownMenuItem as-child>
+                                <Link :href="route('profile.index')">
+                                    <Icon icon="lucide:user" class="mr-2 size-4" />
+                                    Profile
+                                </Link>
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
-                                <Icon
-                                    icon="lucide:settings"
-                                    class="mr-2 size-4"
-                                />
-                                Settings
+                            <DropdownMenuItem as-child>
+                                <Link :href="route('settings.index')">
+                                    <Icon icon="lucide:settings" class="mr-2 size-4" />
+                                    Settings
+                                </Link>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem as-child>

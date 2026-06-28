@@ -21,6 +21,7 @@ use App\Http\Controllers\NOAController;
 use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\POTransmittalController;
 use App\Http\Controllers\PPMPController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectCodeController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\PurchaseRequestController;
@@ -56,6 +57,14 @@ Route::middleware(['auth'])->group(function (): void {
     // Dashboard - accessible to all authenticated users
     Route::get('/dashboard', [DashboardController::class, 'index'])->name(
         'dashboard.index',
+    );
+
+    // Profile & Settings - accessible to all authenticated users
+    Route::get('/profile', [ProfileController::class, 'index'])->name(
+        'profile.index',
+    );
+    Route::get('/settings', [ProfileController::class, 'settings'])->name(
+        'settings.index',
     );
     // Define all resources once, authorization will be handled in controllers/policies
     Route::resource('users', UserController::class)->middleware(
