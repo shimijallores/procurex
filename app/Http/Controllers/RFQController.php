@@ -75,21 +75,9 @@ class RFQController extends Controller
 
     public function create(): Response
     {
-        $eligiblePurchaseRequests = PurchaseRequest::with([
-            'office',
-            'fund',
-            'emanating.ppmpCategory',
-            'items.emanatingItem.ppmpItem',
-        ])
-            ->where('status', 'approved')
-            ->whereDoesntHave('rfq')
-            ->latest()
-            ->get();
-
         $defaultRfqDate = $this->suggestNextRfqDate();
 
         return Inertia::render('RFQs/Create', [
-            'eligiblePurchaseRequests' => $eligiblePurchaseRequests,
             'defaultRfqDate' => $defaultRfqDate->toDateString(),
             'defaultSubmissionDeadline' => $this->suggestSubmissionDeadline($defaultRfqDate)->toDateString(),
         ]);
@@ -191,6 +179,29 @@ class RFQController extends Controller
         $rfq->delete();
 
         return redirect()->route('rfqs.index')->with('success', 'RFQ deleted successfully.');
+    }
+
+    public function suggestPrs(Request $request): JsonResponse
+    {
+        $query = $request->input('q');
+
+        $prs = PurchaseRequest::with([
+            'office:id,name',
+            'items:id,purchase_request_id,item_name,unit,quantity',
+        ])
+            ->where('status', 'approved')
+            ->whereDoesntHave('rfq')
+            ->when($query, function ($builder, string $search): void {
+                $builder->where(function ($sub) use ($search): void {
+                    $sub->where('pr_no', 'like', sprintf('%%%s%%', $search))
+                        ->orWhereHas('office', fn ($o) => $o->where('name', 'like', sprintf('%%%s%%', $search)));
+                });
+            })
+            ->latest()
+            ->take(10)
+            ->get(['id', 'pr_no', 'office_id', 'purpose', 'total_amount']);
+
+        return response()->json(['prs' => $prs]);
     }
 
     public function recentSvps(): JsonResponse

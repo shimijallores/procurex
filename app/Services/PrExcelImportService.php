@@ -215,11 +215,29 @@ class PrExcelImportService
 
     private function savePr(array $record, string $sheetName, int $start): void
     {
+        $prNo = $record['pr_no'] ?? null;
+
+        // Skip PRs with invalid PR number format (must match MMYY-NNNN or MMYYNNNN)
+        if ($prNo === null || ! preg_match('/^\d{4}-?\d{4}$/', $prNo)) {
+            $this->warnings[] = sprintf('Sheet "%s", row %d: Skipping PR "%s" — invalid PR number format.', $sheetName, $start, $prNo ?? '(empty)');
+
+            return;
+        }
+
+        // Skip PRs with no items
+        $items = $record['items'] ?? [];
+
+        if (count($items) === 0) {
+            $this->warnings[] = sprintf('Sheet "%s", row %d: Skipping PR "%s" — no line items found.', $sheetName, $start, $prNo);
+
+            return;
+        }
+
         $department = trim($record['department'] ?? '');
         $office = $this->findOffice($department);
 
         if (!$office instanceof \App\Models\Office && $department !== '') {
-            $this->warnings[] = sprintf('Sheet "%s", row %d: Office not found for "%s". PR %s will have no office assigned.', $sheetName, $start, $department, $record['pr_no']);
+            $this->warnings[] = sprintf('Sheet "%s", row %d: Office not found for "%s". PR %s will have no office assigned.', $sheetName, $start, $department, $prNo);
         }
 
         $prDate = $record['pr_date'];
@@ -247,7 +265,7 @@ class PrExcelImportService
                 'requested_by_designation' => $record['requester_designation'] !== '' ? $record['requester_designation'] : null,
                 'purpose' => $record['remarks'] !== '' ? $record['remarks'] : null,
                 'total_amount' => $record['total_amount'],
-                'status' => 'draft',
+                'status' => 'approved',
                 'remarks' => null,
             ]);
 
@@ -294,9 +312,110 @@ class PrExcelImportService
             return null;
         }
 
-        return Office::query()
+        // 1. Exact match
+        $office = Office::query()
             ->whereRaw('TRIM(name) = ?', [$trimmed])
             ->first();
+
+        if ($office !== null) {
+            return $office;
+        }
+
+        // 2. Case-insensitive exact match
+        $office = Office::query()
+            ->whereRaw('LOWER(TRIM(name)) = ?', [mb_strtolower($trimmed)])
+            ->first();
+
+        if ($office !== null) {
+            return $office;
+        }
+
+        // 3. Fuzzy match name using similar_text
+        $normalized = mb_strtolower(preg_replace('/\s+/', ' ', $trimmed));
+        $offices = Office::all(['id', 'name', 'acronym']);
+        $bestMatch = null;
+        $bestScore = 0;
+
+        foreach ($offices as $office) {
+            $officeNormalized = mb_strtolower(preg_replace('/\s+/', ' ', $office->name));
+            similar_text($normalized, $officeNormalized, $score);
+
+            if ($score > $bestScore) {
+                $bestScore = $score;
+                $bestMatch = $office;
+            }
+        }
+
+        if ($bestMatch !== null && $bestScore >= 65) {
+            return $bestMatch;
+        }
+
+        // 3b. Normalized name match — strip boilerplate words and re-compare
+        $boilerplate = ['/\boffice\b/', '/\bof\b/', '/\bthe\b/', '/\band\b/', '/\bfor\b/', '/\ba\b/', '/\ban\b/', '/\bbureau\b/', '/\bdepartment\b/'];
+        $normalizedClean = preg_replace($boilerplate, '', $normalized);
+        $normalizedClean = preg_replace('/[&]/', ' ', $normalizedClean);
+        $normalizedClean = trim(preg_replace('/\s+/', ' ', $normalizedClean));
+        $bestMatch = null;
+        $bestScore = 0;
+
+        foreach ($offices as $office) {
+            $officeClean = mb_strtolower(preg_replace('/\s+/', ' ', $office->name));
+            $officeClean = preg_replace($boilerplate, '', $officeClean);
+            $officeClean = preg_replace('/[&]/', ' ', $officeClean);
+            $officeClean = trim(preg_replace('/\s+/', ' ', $officeClean));
+
+            similar_text($normalizedClean, $officeClean, $score);
+
+            if ($score > $bestScore) {
+                $bestScore = $score;
+                $bestMatch = $office;
+            }
+        }
+
+        if ($bestMatch !== null && $bestScore >= 65) {
+            return $bestMatch;
+        }
+
+        // 4. Fuzzy match acronym
+        $normalizedStripped = preg_replace('/[^a-z0-9]/', '', $normalized);
+        $bestMatch = null;
+        $bestScore = 0;
+
+        foreach ($offices as $office) {
+            if ($office->acronym === null || $office->acronym === '') {
+                continue;
+            }
+
+            $acronymNormalized = mb_strtolower(trim($office->acronym));
+            $acronymStripped = preg_replace('/[^a-z0-9]/', '', $acronymNormalized);
+
+            // 4a. Exact normalized match
+            if ($normalizedStripped === $acronymStripped) {
+                return $office;
+            }
+
+            // 4b. Substring match (input contains acronym or acronym contains input)
+            if (
+                str_contains($normalizedStripped, $acronymStripped)
+                || str_contains($acronymStripped, $normalizedStripped)
+            ) {
+                return $office;
+            }
+
+            // 4c. Fuzzy match
+            similar_text($normalizedStripped, $acronymStripped, $score);
+
+            if ($score > $bestScore) {
+                $bestScore = $score;
+                $bestMatch = $office;
+            }
+        }
+
+        if ($bestMatch !== null && $bestScore >= 60) {
+            return $bestMatch;
+        }
+
+        return null;
     }
 
     private function parsePrNo(string $raw): ?string

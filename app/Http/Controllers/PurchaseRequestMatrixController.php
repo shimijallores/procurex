@@ -284,8 +284,11 @@ class PurchaseRequestMatrixController extends Controller
                 });
             })
             ->when($selectedFiscalYear !== '', function (Builder $builder) use ($selectedFiscalYear): void {
-                $builder->whereHas('emanating', function (Builder $builder) use ($selectedFiscalYear): void {
-                    $builder->where('fiscal_year', $selectedFiscalYear);
+                $builder->where(function (Builder $builder) use ($selectedFiscalYear): void {
+                    $builder->where('fiscal_year', $selectedFiscalYear)
+                        ->orWhereHas('emanating', function (Builder $builder) use ($selectedFiscalYear): void {
+                            $builder->where('fiscal_year', $selectedFiscalYear);
+                        });
                 });
             })
             ->when($request->search, function (Builder $builder, string $search): void {

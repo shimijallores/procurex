@@ -314,6 +314,9 @@ Route::middleware(['auth'])->group(function (): void {
             RoleType::ABSTRACT_ADMIN->value,
         ]),
     ];
+    Route::get('rfqs/suggest-prs', [RFQController::class, 'suggestPrs'])
+        ->middleware($rfqRoles)
+        ->name('rfqs.suggest-prs');
     Route::get('rfqs/recent-svps', [RFQController::class, 'recentSvps'])
         ->middleware($rfqAndAoqRoles)
         ->name('rfqs.recent-svps');

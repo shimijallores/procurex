@@ -2,9 +2,19 @@
 import { ref, watch } from "vue";
 import { usePage } from "@inertiajs/vue3";
 import { Icon } from "@iconify/vue";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 const page = usePage();
 const messages = ref([]);
+const showImportModal = ref(false);
+const importWarnings = ref([]);
 let nextId = 0;
 const shownFlashAt = new Map();
 const DUPLICATE_WINDOW_MS = 30000;
@@ -24,7 +34,6 @@ const shouldDisplayFlash = (type, text) => {
     return true;
 };
 
-// Watch for flash messages
 watch(
     () => page.props.flash,
     (flash) => {
@@ -35,10 +44,8 @@ watch(
             addMessage("error", flash.error);
         }
         if (flash?.import_warnings?.length) {
-            const warningText = flash.import_warnings.slice(0, 5).join("; ");
-            if (shouldDisplayFlash("warning", warningText)) {
-                addMessage("warning", warningText);
-            }
+            importWarnings.value = flash.import_warnings;
+            showImportModal.value = true;
         }
     },
     { deep: true },
@@ -48,7 +55,6 @@ const addMessage = (type, text) => {
     const id = nextId++;
     messages.value.push({ id, type, text });
 
-    // Auto-remove after 5 seconds
     setTimeout(() => {
         removeMessage(id);
     }, 5000);
@@ -145,4 +151,39 @@ const getMessageConfig = (type) => {
             </div>
         </TransitionGroup>
     </div>
+
+    <Dialog v-model:open="showImportModal">
+        <DialogContent class="sm:max-w-lg">
+            <DialogHeader>
+                <DialogTitle class="flex items-center gap-2">
+                    <Icon
+                        icon="lucide:triangle-alert"
+                        class="h-5 w-5 text-yellow-600"
+                    />
+                    Import Warnings
+                </DialogTitle>
+                <DialogDescription>
+                    {{ importWarnings.length }} issue(s) were encountered
+                    during import. Some PRs may have been skipped or had
+                    missing data.
+                </DialogDescription>
+            </DialogHeader>
+            <div class="max-h-80 overflow-y-auto space-y-2">
+                <div
+                    v-for="(warning, index) in importWarnings"
+                    :key="index"
+                    class="flex items-start gap-2 rounded-md border border-border bg-muted/40 p-3 text-sm"
+                >
+                    <Icon
+                        icon="lucide:alert-circle"
+                        class="mt-0.5 h-4 w-4 shrink-0 text-yellow-600"
+                    />
+                    <span>{{ warning }}</span>
+                </div>
+            </div>
+            <div class="flex justify-end">
+                <Button @click="showImportModal = false">Got it</Button>
+            </div>
+        </DialogContent>
+    </Dialog>
 </template>

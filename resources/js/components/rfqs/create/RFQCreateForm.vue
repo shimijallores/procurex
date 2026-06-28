@@ -1,70 +1,50 @@
 <script setup>
-import { computed, ref, watch } from "vue";
+import { watch } from "vue";
 import { Icon } from "@iconify/vue";
 import { useWorkingDayInputGuard } from "@/composables/useWorkingDayInputGuard";
+import PrSmartInput from "@/components/PrSmartInput.vue";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
 const props = defineProps({
     form: Object,
-    eligiblePurchaseRequests: Array,
 });
 
 defineEmits(["submit"]);
-const selectedOfficeId = ref("");
+
 const { enforceWorkingDay, getDateNotice, getDateNoticeClass } =
     useWorkingDayInputGuard(props.form);
 
-const officeOptions = computed(() => {
-    const map = new Map();
+const onPrSelect = (pr) => {
+    if (!pr) {
+        props.form.pr_id = "";
+        props.form.pr_no = "";
+        props.form.project_name = "";
+        props.form.abc_amount = "";
+        props.form.items = [];
 
-    for (const pr of props.eligiblePurchaseRequests || []) {
-        const officeId = pr?.office?.id;
-        const officeName = pr?.office?.name || "Unknown Office";
-
-        if (!officeId || map.has(String(officeId))) {
-            continue;
-        }
-
-        map.set(String(officeId), {
-            id: String(officeId),
-            name: officeName,
-        });
+        return;
     }
 
-    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
-});
-
-const filteredPurchaseRequests = computed(() => {
-    if (!selectedOfficeId.value) {
-        return [];
+    if (typeof pr === "string") {
+        return;
     }
 
-    return (props.eligiblePurchaseRequests || []).filter(
-        (pr) => String(pr?.office?.id || "") === selectedOfficeId.value,
-    );
-});
+    props.form.pr_id = String(pr.id);
+    props.form.pr_no = pr.pr_no || "";
+    props.form.project_name = pr.purpose || "";
 
-const selectedPurchaseRequest = computed(() => {
-    if (props.form.pr_id) {
-        return props.eligiblePurchaseRequests?.find(
-            (pr) => String(pr.id) === String(props.form.pr_id),
-        );
-    }
+    const totalAmount = Number(pr.total_amount || 0);
+    props.form.abc_amount = String(totalAmount || 0);
 
-    if (props.form.pr_no) {
-        const normalized = String(props.form.pr_no).trim().toLowerCase();
-        return props.eligiblePurchaseRequests?.find(
-            (pr) =>
-                String(pr.pr_no || "")
-                    .trim()
-                    .toLowerCase() === normalized,
-        );
-    }
-
-    return null;
-});
+    props.form.items = (pr.items || []).map((item) => ({
+        pr_item_id: item.id,
+        item_name: item.item_name || "",
+        unit: item.unit || "",
+        quantity: Number(item.quantity || 0),
+    }));
+};
 
 const formatCurrency = (value) => {
     return new Intl.NumberFormat("en-PH", {
@@ -72,71 +52,6 @@ const formatCurrency = (value) => {
         currency: "PHP",
     }).format(value || 0);
 };
-
-watch(
-    selectedPurchaseRequest,
-    (pr) => {
-        if (!pr) {
-            return;
-        }
-
-        props.form.pr_id = String(pr.id);
-        props.form.pr_no = pr.pr_no || "";
-        props.form.project_name = pr.purpose || "";
-
-        const defaultAbc = Number(
-            pr.emanating?.ppmp_category?.total_estimated_budget ||
-                pr.total_amount ||
-                0,
-        );
-        props.form.abc_amount = String(defaultAbc || 0);
-
-        props.form.items = (pr.items || []).map((item) => ({
-            pr_item_id: item.id,
-            item_name:
-                item.item_name || item.emanating_item?.ppmp_item?.name || "",
-            unit: item.unit || item.emanating_item?.unit || "",
-            quantity: Number(item.quantity || 0),
-        }));
-    },
-    { immediate: true },
-);
-
-const onPrDropdownChange = (value) => {
-    props.form.pr_id = value;
-    const selected = filteredPurchaseRequests.value?.find(
-        (pr) => String(pr.id) === String(value),
-    );
-    props.form.pr_no = selected?.pr_no || "";
-};
-
-watch(selectedOfficeId, (officeId) => {
-    if (!officeId) {
-        props.form.pr_id = "";
-        props.form.pr_no = "";
-        props.form.project_name = "";
-        props.form.abc_amount = "";
-        props.form.items = [];
-
-        return;
-    }
-
-    if (!props.form.pr_id) {
-        return;
-    }
-
-    const stillValid = filteredPurchaseRequests.value.some(
-        (pr) => String(pr.id) === String(props.form.pr_id),
-    );
-
-    if (!stillValid) {
-        props.form.pr_id = "";
-        props.form.pr_no = "";
-        props.form.project_name = "";
-        props.form.abc_amount = "";
-        props.form.items = [];
-    }
-});
 
 watch(
     () => props.form.rfq_date,
@@ -165,6 +80,12 @@ watch(
         });
     },
 );
+
+const selectedPrSummary = (pr) => {
+    if (!pr) return null;
+
+    return pr;
+};
 </script>
 
 <template>
@@ -177,64 +98,20 @@ watch(
                 </CardTitle>
             </CardHeader>
             <CardContent class="space-y-4">
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <div class="space-y-2">
-                        <Label for="office_filter_id">Office</Label>
-                        <select
-                            id="office_filter_id"
-                            v-model="selectedOfficeId"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                        >
-                            <option value="">— Select office first —</option>
-                            <option
-                                v-for="office in officeOptions"
-                                :key="office.id"
-                                :value="office.id"
-                            >
-                                {{ office.name }}
-                            </option>
-                        </select>
-                    </div>
-
-                    <div class="space-y-2">
-                        <Label for="pr_id">Approved Purchase Request</Label>
-                        <select
-                            id="pr_id"
-                            :value="form.pr_id"
-                            @change="onPrDropdownChange($event.target.value)"
-                            :disabled="!selectedOfficeId"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                        >
-                            <option value="">
-                                {{
-                                    selectedOfficeId
-                                        ? "— Select Purchase Request —"
-                                        : "— Select office first —"
-                                }}
-                            </option>
-                            <option
-                                v-for="pr in filteredPurchaseRequests"
-                                :key="pr.id"
-                                :value="pr.id"
-                            >
-                                {{ pr.pr_no || "PR #" + pr.id }} —
-                                {{ pr.office?.name }}
-                            </option>
-                        </select>
-                    </div>
-
-                    <div class="space-y-2">
-                        <Label for="pr_no">Or Enter PR Number</Label>
-                        <input
-                            id="pr_no"
-                            v-model="form.pr_no"
-                            type="text"
-                            placeholder="e.g. 0226-0001"
-                            :disabled="!selectedOfficeId"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                        />
-                    </div>
+                <div class="space-y-2">
+                    <Label for="pr_smart_input">Purchase Request</Label>
+                    <PrSmartInput
+                        id="pr_smart_input"
+                        :model-value="form.pr_no"
+                        @select="onPrSelect"
+                        @update:model-value="form.pr_no = $event"
+                    />
+                    <p class="text-xs text-muted-foreground">
+                        Type a PR number or office name to search. Only approved
+                        PRs without an existing RFQ are shown.
+                    </p>
                 </div>
+
                 <p v-if="form.errors?.pr_id" class="text-xs text-destructive">
                     {{ form.errors.pr_id }}
                 </p>
@@ -243,25 +120,33 @@ watch(
                 </p>
 
                 <div
-                    v-if="selectedPurchaseRequest"
+                    v-if="form.pr_id"
                     class="rounded-md border border-border bg-muted/40 p-3 text-sm space-y-1"
                 >
                     <div>
-                        <span class="text-muted-foreground">Office:</span>
-                        <span class="font-medium">{{
-                            selectedPurchaseRequest.office?.name || "—"
+                        <span class="text-muted-foreground">PR No:</span>
+                        <span class="font-medium ml-1">{{
+                            form.pr_no || "—"
                         }}</span>
                     </div>
                     <div>
                         <span class="text-muted-foreground">Purpose:</span>
-                        <span class="font-medium">{{
-                            selectedPurchaseRequest.purpose || "N/A"
+                        <span class="font-medium ml-1">{{
+                            form.project_name || "N/A"
                         }}</span>
                     </div>
                     <div>
                         <span class="text-muted-foreground">PR Total:</span>
-                        <span class="font-medium">{{
-                            formatCurrency(selectedPurchaseRequest.total_amount)
+                        <span class="font-medium ml-1">{{
+                            formatCurrency(
+                                form.items?.reduce(
+                                    (sum, item) =>
+                                        sum +
+                                        Number(item.quantity || 0) *
+                                            Number(item.unit_cost || 0),
+                                    0,
+                                ) || form.abc_amount,
+                            )
                         }}</span>
                     </div>
                 </div>
@@ -299,7 +184,9 @@ watch(
                 </div>
 
                 <div class="space-y-2">
-                    <Label for="submission_deadline">Submission Deadline</Label>
+                    <Label for="submission_deadline"
+                        >Submission Deadline</Label
+                    >
                     <input
                         id="submission_deadline"
                         v-model="form.submission_deadline"

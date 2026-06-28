@@ -32,6 +32,7 @@ return new class extends Migration
             $table->index('office_id');
             $table->index('fund_id');
             $table->index('emanating_id');
+            $table->index('fiscal_year');
             $table->index('pr_date');
         });
     }

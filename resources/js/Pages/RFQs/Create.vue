@@ -22,7 +22,6 @@ defineOptions({
 });
 
 const props = defineProps({
-    eligiblePurchaseRequests: Array,
     defaultRfqDate: String,
     defaultSubmissionDeadline: String,
 });
@@ -49,7 +48,6 @@ const submit = () => {
 
         <RFQCreateForm
             :form="form"
-            :eligible-purchase-requests="eligiblePurchaseRequests"
             @submit="submit"
         />
     </div>
