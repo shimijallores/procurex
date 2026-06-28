@@ -91,8 +91,10 @@ class PrExcelImportService
         $prDate = $this->parseDate($prDateRaw);
 
         // Row +39 — Grand Total (or Sub Total for multi-page)
-        $this->cell($rows, $start + 39, 5);
-        $grandTotal = $this->cell($rows, $start + 39, 6);
+        $grandTotal = $this->cell($rows, $start + 39, 5);
+        if ($grandTotal === '' || (float) $grandTotal === 0.0) {
+            $grandTotal = $this->cell($rows, $start + 39, 6);
+        }
 
         // Row +40, +41 — Purpose / Remarks
         $remarksMain = $this->cell($rows, $start + 40, 0);
@@ -111,6 +113,7 @@ class PrExcelImportService
         // Line items — rows +9 to +38
         $items = $this->parseItems($rows, $start + 9, $start + 38);
 
+        $grandTotal = preg_replace('/[^0-9.\-]/', '', $grandTotal);
         $totalAmount = is_numeric($grandTotal) ? (float) $grandTotal : 0.0;
 
         // If multi-page continuation (page > 1)
@@ -278,8 +281,12 @@ class PrExcelImportService
                 $unitCost = (float) ($item['unit_cost'] ?? 0);
                 $totalCost = (float) ($item['total_cost'] ?? 0);
 
-                if ($totalCost === 0.0 && $quantity > 0 && $unitCost > 0) {
+                if ($unitCost > 0 && $quantity > 0 && $totalCost === 0.0) {
                     $totalCost = $quantity * $unitCost;
+                }
+
+                if ($totalCost > 0 && $quantity > 0 && $unitCost === 0.0) {
+                    $unitCost = $totalCost / $quantity;
                 }
 
                 PurchaseRequestItem::create([
@@ -512,6 +519,14 @@ class PrExcelImportService
 
         if (is_numeric($value)) {
             return (float) $value;
+        }
+
+        if (is_string($value)) {
+            $cleaned = preg_replace('/[^0-9.\-]/', '', $value);
+
+            if ($cleaned !== '' && is_numeric($cleaned)) {
+                return (float) $cleaned;
+            }
         }
 
         return null;
