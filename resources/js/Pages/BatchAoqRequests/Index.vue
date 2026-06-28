@@ -6,6 +6,7 @@ import { Icon } from "@iconify/vue";
 import { Link } from "@inertiajs/vue3";
 import Layout from "@/Layout/Layout.vue";
 import PageTitle from "@/components/PageTitle.vue";
+import ConfirmModal from "@/components/ConfirmModal.vue";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -44,21 +45,27 @@ const approving = ref(null);
 const rejecting = ref(null);
 const rejectReason = ref("");
 const showRejectModal = ref(false);
+const showApproveModal = ref(false);
+const approveTarget = ref(null);
 const rejectTarget = ref(null);
 
-const approve = async (request) => {
-    if (!confirm("Approve this request? The AOQ will be created and assigned to the batch.")) return;
-    approving.value = request.id;
-    try {
-        router.post(route("batch-aoq-requests.approve", request.id), {}, {
-            preserveScroll: true,
-            onSuccess: () => toast.success("Request approved — AOQ created."),
-            onError: () => toast.error("Failed to approve request."),
-            onFinish: () => { approving.value = null; },
-        });
-    } catch {
-        approving.value = null;
-    }
+const openApprove = (request) => {
+    approveTarget.value = request;
+    showApproveModal.value = true;
+};
+
+const confirmApprove = () => {
+    if (!approveTarget.value) return;
+    approving.value = approveTarget.value.id;
+    router.post(route("batch-aoq-requests.approve", approveTarget.value.id), {}, {
+        preserveScroll: true,
+        onSuccess: () => {
+            toast.success("Request approved — AOQ created.");
+            showApproveModal.value = false;
+        },
+        onError: () => toast.error("Failed to approve request."),
+        onFinish: () => { approving.value = null; },
+    });
 };
 
 const openReject = (request) => {
@@ -159,7 +166,7 @@ const statusBadge = (status) => {
                                                 size="sm"
                                                 variant="default"
                                                 :disabled="approving === request.id"
-                                                @click="approve(request)"
+                                                @click="openApprove(request)"
                                             >
                                                 <Icon
                                                     v-if="approving === request.id"
@@ -235,6 +242,15 @@ const statusBadge = (status) => {
                 </div>
             </CardContent>
         </Card>
+
+        <ConfirmModal
+            v-model:open="showApproveModal"
+            title="Approve Request"
+            description="Approve this request? The AOQ will be created and assigned to the batch."
+            confirm-text="Approve"
+            :loading="approving === approveTarget?.id"
+            @confirm="confirmApprove"
+        />
 
         <!-- Reject Modal -->
         <div

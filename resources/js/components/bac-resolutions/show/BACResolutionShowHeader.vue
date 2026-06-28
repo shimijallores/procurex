@@ -1,7 +1,9 @@
 <script setup>
+import { ref } from "vue";
 import { Link, router } from "@inertiajs/vue3";
 import { Icon } from "@iconify/vue";
 import { Button } from "@/components/ui/button";
+import ConfirmModal from "@/components/ConfirmModal.vue";
 
 const props = defineProps({
     resolution: Object,
@@ -9,18 +11,33 @@ const props = defineProps({
 
 defineEmits(["delete"]);
 
+const showFinalizeModal = ref(false);
+const showRegenerateModal = ref(false);
+const finalizing = ref(false);
+const regenerating = ref(false);
+
 const openPdf = () => {
     window.open(route("bac-resolutions.pdf", props.resolution.id), "_blank");
 };
 
-const finalize = () => {
-    if (!confirm("Finalize this BAC Resolution? This will lock the batch and prevent new AOQs from being added.")) return;
-    router.post(route("bac-resolutions.finalize", props.resolution.id));
+const confirmFinalize = () => {
+    finalizing.value = true;
+    router.post(route("bac-resolutions.finalize", props.resolution.id), {}, {
+        onFinish: () => {
+            finalizing.value = false;
+            showFinalizeModal.value = false;
+        },
+    });
 };
 
-const regenerate = () => {
-    if (!confirm("Regenerate BAC Resolution? This will re-sync all AOQs from the batch and update the PDF.")) return;
-    router.post(route("bac-resolutions.regenerate", props.resolution.id));
+const confirmRegenerate = () => {
+    regenerating.value = true;
+    router.post(route("bac-resolutions.regenerate", props.resolution.id), {}, {
+        onFinish: () => {
+            regenerating.value = false;
+            showRegenerateModal.value = false;
+        },
+    });
 };
 </script>
 
@@ -58,12 +75,12 @@ const regenerate = () => {
                         Edit
                     </Button>
                 </Link>
-                <Button @click="finalize">
+                <Button @click="showFinalizeModal = true">
                     <Icon icon="lucide:check-circle" class="mr-2 h-4 w-4" />
                     Finalize
                 </Button>
             </template>
-            <Button v-if="resolution.finalized_at" variant="outline" @click="regenerate">
+            <Button v-if="resolution.finalized_at" variant="outline" @click="showRegenerateModal = true">
                 <Icon icon="lucide:refresh-cw" class="mr-2 h-4 w-4" />
                 Regenerate
             </Button>
@@ -80,4 +97,22 @@ const regenerate = () => {
             </Button>
         </div>
     </div>
+
+    <ConfirmModal
+        v-model:open="showFinalizeModal"
+        title="Finalize BAC Resolution"
+        description="This will lock the batch and prevent new AOQs from being added. Continue?"
+        confirm-text="Finalize"
+        :loading="finalizing"
+        @confirm="confirmFinalize"
+    />
+
+    <ConfirmModal
+        v-model:open="showRegenerateModal"
+        title="Regenerate BAC Resolution"
+        description="This will re-sync all AOQs from the batch and update the PDF. Continue?"
+        confirm-text="Regenerate"
+        :loading="regenerating"
+        @confirm="confirmRegenerate"
+    />
 </template>

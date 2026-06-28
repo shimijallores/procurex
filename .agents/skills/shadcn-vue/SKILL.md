@@ -122,7 +122,7 @@ Load these references based on the task:
 2. **Load `references/components.md` when:**
    - User asks what components are available (names, categories, status)
    - User needs to add/use a component and wants the correct install/import paths
-   - You need to confirm a component exists before recommending a custom build
+   - You need to (confirm) a component exists before recommending a custom build
 
 3. **Load `references/component-examples.md` when:**
    - User asks "how do I implement [component]?"
