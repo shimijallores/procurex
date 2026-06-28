@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdatePurchaseRequestRequest extends FormRequest
 {
@@ -19,7 +20,7 @@ class UpdatePurchaseRequestRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'pr_no' => ['nullable', 'string', 'max:50'],
+            'pr_no' => ['nullable', 'string', 'max:50', Rule::unique('purchase_requests', 'pr_no')->ignore($this->route('purchase_request'))],
             'pr_date' => [
                 'nullable',
                 'date',

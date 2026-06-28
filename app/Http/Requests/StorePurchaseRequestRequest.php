@@ -23,7 +23,7 @@ class StorePurchaseRequestRequest extends FormRequest
             'emanating_id' => ['required', 'integer', 'exists:emanatings,id'],
             'office_id' => ['required', 'integer', 'exists:offices,id'],
             'fund_id' => ['required', 'integer', 'exists:funds,id'],
-            'pr_no' => ['nullable', 'string', 'max:50'],
+            'pr_no' => ['nullable', 'string', 'max:50', 'unique:purchase_requests,pr_no'],
             'pr_date' => [
                 'required',
                 Rule::date()->afterOrEqual(today()),

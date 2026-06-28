@@ -250,6 +250,13 @@ class PrExcelImportService
             }
         }
 
+        // Skip if PR number already exists
+        if (PurchaseRequest::where('pr_no', $prNo)->exists()) {
+            $this->warnings[] = sprintf('Sheet "%s", row %d: Skipping PR "%s" — PR number already exists.', $sheetName, $start, $prNo);
+
+            return;
+        }
+
         $this->databaseManager->beginTransaction();
         try {
             $pr = PurchaseRequest::create([
