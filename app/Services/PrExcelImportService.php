@@ -90,25 +90,33 @@ class PrExcelImportService
         $prNo = $this->parsePrNo($prNoRaw);
         $prDate = $this->parseDate($prDateRaw);
 
-        // Row +40, +41 — Purpose / Remarks
-        $remarksMain = $this->cell($rows, $start + 40, 0);
-        $remarksCont = $this->cell($rows, $start + 41, 2);
+        // Line items — rows +9 to +38
+        $parsedItems = $this->parseItems($rows, $start + 9, $start + 38);
+        $items = $parsedItems['items'];
+
+        // Purpose / Remarks — find "Purpose/Remarks" label dynamically, fallback to fixed +40
+        $purposeRow = $this->findLabelRow($rows, $start + 9, $start + 55, 0, '/purpose\s*\//i');
+        if ($purposeRow === null) {
+            $purposeRow = $start + 40;
+        }
+
+        $remarksMain = $this->cell($rows, $purposeRow, 0);
+        $remarksCont = $this->cell($rows, $purposeRow + 1, 2);
 
         $remarks = $this->parseRemarks($remarksMain, $remarksCont);
 
-        // Row +44 — Names
-        $requesterName = $this->cell($rows, $start + 44, 3);
-        $approverName = $this->cell($rows, $start + 44, 4);
+        // Names — 4 rows after Purpose/Remarks, fallback to fixed +44
+        $namesRow = $purposeRow !== $start + 40 ? $purposeRow + 4 : $start + 44;
+        $requesterName = $this->cell($rows, $namesRow, 3);
+        $approverName = $this->cell($rows, $namesRow, 4);
 
-        // Row +45 — Designations
-        $requesterDesignation = $this->cell($rows, $start + 45, 3);
-        $approverDesignation = $this->cell($rows, $start + 45, 4);
-
-        // Line items — rows +9 to +38
-        $items = $this->parseItems($rows, $start + 9, $start + 38);
+        // Designations — 1 row after names, fallback to fixed +45
+        $designationsRow = $purposeRow !== $start + 40 ? $purposeRow + 5 : $start + 45;
+        $requesterDesignation = $this->cell($rows, $designationsRow, 3);
+        $approverDesignation = $this->cell($rows, $designationsRow, 4);
 
         // Grand Total — find dynamically instead of hardcoded offset
-        $grandTotal = $this->findGrandTotal($rows, $start + 9, $start + 45);
+        $grandTotal = $this->findGrandTotal($rows, $start + 9, $designationsRow + 5);
 
         $grandTotal = preg_replace('/[^0-9.\-]/', '', $grandTotal);
 
@@ -169,6 +177,7 @@ class PrExcelImportService
     {
         $items = [];
         $itemCount = count($rows);
+        $lastUsedRow = $from - 1;
 
         for ($offset = $from; $offset <= $to && $offset < $itemCount; ++$offset) {
             $itemNoVal = $rows[$offset][0] ?? null;
@@ -206,9 +215,10 @@ class PrExcelImportService
             }
 
             $items[] = $item;
+            $lastUsedRow = $offset;
         }
 
-        return $items;
+        return ['items' => $items, 'lastRow' => $lastUsedRow];
     }
 
     private function savePr(array $record, string $sheetName, int $start): void
@@ -562,6 +572,21 @@ class PrExcelImportService
         }
 
         return trim((string) $value);
+    }
+
+    private function findLabelRow(array $rows, int $from, int $to, int $col, string $pattern): ?int
+    {
+        $itemCount = count($rows);
+
+        for ($offset = $from; $offset <= $to && $offset < $itemCount; ++$offset) {
+            $value = $this->cell($rows, $offset, $col);
+
+            if (preg_match($pattern, $value)) {
+                return $offset;
+            }
+        }
+
+        return null;
     }
 
     private function parseNumeric(array $rows, int $row, int $col): ?float
