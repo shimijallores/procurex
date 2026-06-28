@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\RoleType;
+use App\Http\Requests\ImportPRRequest;
 use App\Http\Requests\StorePurchaseRequestRequest;
 use App\Http\Requests\UpdatePurchaseRequestRequest;
 use App\Models\Calendar;
@@ -14,11 +15,13 @@ use App\Models\PurchaseRequest;
 use App\Models\PurchaseRequestItem;
 use App\Models\User;
 use App\Services\PpmpBudgetService;
+use App\Services\PrExcelImportService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\LaravelPdf\Facades\Pdf;
@@ -73,8 +76,11 @@ class PurchaseRequestController extends Controller
                 $q->where('status', $status);
             })
             ->when($request->fiscal_year, function ($q, string $fiscalYear): void {
-                $q->whereHas('emanating', function ($e) use ($fiscalYear): void {
-                    $e->where('fiscal_year', $fiscalYear);
+                $q->where(function ($sub) use ($fiscalYear): void {
+                    $sub->where('fiscal_year', $fiscalYear)
+                        ->orWhereHas('emanating', function ($e) use ($fiscalYear): void {
+                            $e->where('fiscal_year', $fiscalYear);
+                        });
                 });
             });
 
@@ -97,11 +103,19 @@ class PurchaseRequestController extends Controller
             ->mapWithKeys(fn ($year): array => [$year => $year])
             ->reverse();
 
+        $prAdmins = User::query()
+            ->whereHas('roles', function ($q): void {
+                $q->where('name', RoleType::PR_ADMIN->value);
+            })
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
         return Inertia::render('PurchaseRequests/Index', [
             'purchaseRequests' => $lengthAwarePaginator,
             'stats' => $stats,
             'offices' => $offices,
             'fiscalYears' => $fiscalYears,
+            'prAdmins' => $prAdmins,
             'filters' => [
                 'search' => $request->search,
                 'office_id' => $request->office_id,
@@ -109,6 +123,31 @@ class PurchaseRequestController extends Controller
                 'fiscal_year' => $request->fiscal_year,
             ],
         ]);
+    }
+
+    /**
+     * Import uploaded PR Excel file and create PRs.
+     */
+    public function import(ImportPRRequest $importPRRequest, PrExcelImportService $prExcelImportService): RedirectResponse
+    {
+        $validated = $importPRRequest->validated();
+
+        $file = $importPRRequest->file('file');
+        try {
+            $result = $prExcelImportService->import($file, (int) $validated['admin_id']);
+        } catch (\Throwable $throwable) {
+            Log::error('PR import failed: '.$throwable->getMessage());
+
+            return redirect()->route('purchase-requests.index')
+                ->with('error', 'Failed to import file: '.$throwable->getMessage());
+        }
+
+        $count = count($result['created'] ?? []);
+        $warnings = $result['warnings'] ?? [];
+
+        return redirect()->route('purchase-requests.index')
+            ->with('success', sprintf('Imported %d purchase requests.', $count))
+            ->with('import_warnings', $warnings);
     }
 
     public function create(): Response

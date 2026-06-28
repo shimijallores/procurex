@@ -23,6 +23,7 @@ const props = defineProps({
     stats: Object,
     offices: Array,
     fiscalYears: Object,
+    prAdmins: Array,
     filters: Object,
 });
 
@@ -59,7 +60,7 @@ const openDeleteModal = (pr) => {
 
 <template>
     <div class="space-y-6">
-        <PRIndexHeader />
+        <PRIndexHeader :pr-admins="prAdmins" />
 
         <PRIndexStats :stats="stats" />
 

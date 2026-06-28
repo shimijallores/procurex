@@ -12,11 +12,12 @@ return new class extends Migration
     {
         Schema::create('purchase_requests', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('emanating_id')->constrained('emanatings')->onDelete('cascade');
-            $table->foreignId('office_id')->constrained('offices')->onDelete('cascade');
-            $table->foreignId('fund_id')->constrained('funds')->onDelete('cascade');
+            $table->foreignId('emanating_id')->nullable()->constrained('emanatings')->onDelete('cascade');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
+            $table->foreignId('fund_id')->nullable()->constrained('funds')->onDelete('cascade');
             $table->string('pr_no')->nullable()->index();
             $table->date('pr_date')->nullable();
+            $table->integer('fiscal_year')->nullable()->after('pr_date');
             $table->string('sai_no')->nullable();
             $table->date('sai_date')->nullable();
             $table->string('requested_by_name')->nullable();

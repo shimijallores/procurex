@@ -208,6 +208,11 @@ Route::middleware(['auth'])->group(function (): void {
         'purchase-requests',
         PurchaseRequestController::class,
     )->middleware($prRoles);
+
+    // Import PR Excel files (bulk import) - creates PRs from uploaded files
+    Route::post('purchase-requests/import', [PurchaseRequestController::class, 'import'])
+        ->name('purchase-requests.import')
+        ->middleware($prRoles);
     Route::get('purchase-request-matrix', [
         PurchaseRequestMatrixController::class,
         'index',

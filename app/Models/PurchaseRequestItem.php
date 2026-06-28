@@ -15,6 +15,8 @@ class PurchaseRequestItem extends Model
     protected $fillable = [
         'purchase_request_id',
         'emanating_item_id',
+        'item_name',
+        'unit',
         'quantity',
         'unit_cost',
         'line_total',
@@ -83,18 +85,26 @@ class PurchaseRequestItem extends Model
     }
 
     /**
-     * Get the item name from the related PPMP item.
+     * Get the item name from the related PPMP item or direct column.
      */
     public function getItemNameAttribute(): ?string
     {
+        if ($this->attributes['item_name'] ?? null) {
+            return $this->attributes['item_name'];
+        }
+
         return $this->emanatingItem?->name ?: $this->emanatingItem?->ppmpItem?->name;
     }
 
     /**
-     * Get the unit from the emanating item.
+     * Get the unit from the emanating item or direct column.
      */
     public function getUnitAttribute(): ?string
     {
+        if ($this->attributes['unit'] ?? null) {
+            return $this->attributes['unit'];
+        }
+
         return $this->emanatingItem?->unit;
     }
 }

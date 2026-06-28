@@ -22,6 +22,7 @@ class PurchaseRequest extends Model
         'fund_id',
         'pr_no',
         'pr_date',
+        'fiscal_year',
         'sai_no',
         'sai_date',
         'requested_by_name',

@@ -34,6 +34,12 @@ watch(
         if (shouldDisplayFlash("error", flash?.error)) {
             addMessage("error", flash.error);
         }
+        if (flash?.import_warnings?.length) {
+            const warningText = flash.import_warnings.slice(0, 5).join("; ");
+            if (shouldDisplayFlash("warning", warningText)) {
+                addMessage("warning", warningText);
+            }
+        }
     },
     { deep: true },
 );

@@ -48,6 +48,7 @@ class HandleInertiaRequests extends Middleware
                 'success' => $request->session()->get('success', false),
                 'error' => $request->session()->get('error', false),
                 'print_batch_id' => $request->session()->get('print_batch_id', false),
+                'import_warnings' => $request->session()->get('import_warnings', []),
             ],
         ];
     }
