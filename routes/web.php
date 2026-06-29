@@ -296,6 +296,18 @@ Route::middleware(['auth'])->group(function (): void {
     ])
         ->middleware($prRoles)
         ->name('purchase-requests.suggest-pr-no');
+    Route::get('purchase-requests/{purchase_request}/imported-edit', [
+        PurchaseRequestController::class,
+        'editImported',
+    ])
+        ->name('purchase-requests.edit-imported')
+        ->middleware($prRoles);
+    Route::put('purchase-requests/{purchase_request}/imported-update', [
+        PurchaseRequestController::class,
+        'updateImported',
+    ])
+        ->name('purchase-requests.update-imported')
+        ->middleware($prRoles);
     Route::post('purchase-requests/{purchase_request}/approve', [
         PurchaseRequestController::class,
         'approve',

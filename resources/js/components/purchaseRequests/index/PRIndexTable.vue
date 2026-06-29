@@ -306,10 +306,9 @@ const statusOptions = [
                                     <Link
                                         v-if="pr.status === 'draft'"
                                         :href="
-                                            route(
-                                                'purchase-requests.edit',
-                                                pr.id,
-                                            )
+                                            pr.is_imported
+                                                ? route('purchase-requests.edit-imported', pr.id)
+                                                : route('purchase-requests.edit', pr.id)
                                         "
                                     >
                                         <Button variant="ghost" size="sm">

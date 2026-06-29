@@ -1,0 +1,59 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
+class UpdateImportedPurchaseRequestRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function rules(): array
+    {
+        return [
+            'pr_no' => ['nullable', 'string', 'max:50', Rule::unique('purchase_requests', 'pr_no')->ignore($this->route('purchase_request'))],
+            'pr_date' => [
+                'nullable',
+                'date',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (! is_string($value)) {
+                        return;
+                    }
+
+                    $dayOfWeek = (int) date('N', strtotime($value));
+                    if ($dayOfWeek >= 6) {
+                        $fail('The PR date must not be a weekend.');
+                    }
+                },
+            ],
+            'sai_no' => ['nullable', 'string', 'max:50'],
+            'sai_date' => ['nullable', 'date'],
+            'requested_by_name' => ['nullable', 'string', 'max:255'],
+            'requested_by_designation' => ['nullable', 'string', 'max:255'],
+            'purpose' => ['nullable', 'string'],
+            'total_amount' => ['nullable', 'numeric', 'min:0'],
+            'status' => ['nullable', 'string', 'in:draft,returned,approved,cancelled'],
+            'remarks' => ['nullable', 'string'],
+            'office_id' => ['nullable', 'integer', 'exists:offices,id'],
+            'fund_id' => ['nullable', 'integer', 'exists:funds,id'],
+            'items' => ['nullable', 'array'],
+            'items.*.id' => ['nullable', 'integer', 'exists:purchase_request_items,id'],
+            'items.*.item_name' => ['required_with:items', 'string', 'max:255'],
+            'items.*.unit' => ['nullable', 'string', 'max:50'],
+            'items.*.quantity' => ['required_with:items', 'integer', 'min:1'],
+            'items.*.unit_cost' => ['required_with:items', 'numeric', 'min:0'],
+            'items.*.vat_applicable' => ['boolean'],
+            'items.*.vat_rate' => ['nullable', 'numeric', 'min:0', 'max:1'],
+            'items.*.remarks' => ['nullable', 'string'],
+        ];
+    }
+}

@@ -94,7 +94,11 @@ const getStatusBadge = (status) => {
                 <!-- Edit (draft only) -->
                 <Link
                     v-if="purchaseRequest.status === 'draft'"
-                    :href="route('purchase-requests.edit', purchaseRequest.id)"
+                    :href="
+                        purchaseRequest.is_imported
+                            ? route('purchase-requests.edit-imported', purchaseRequest.id)
+                            : route('purchase-requests.edit', purchaseRequest.id)
+                    "
                 >
                     <Button variant="outline">
                         <Icon icon="lucide:pencil" class="mr-2 h-4 w-4" />

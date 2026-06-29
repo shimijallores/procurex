@@ -22,6 +22,8 @@ class PrExcelImportService
 
     private array $pendingMultiPage = [];
 
+    private int $draftImportCount = 0;
+
     public function __construct(private readonly DatabaseManager $databaseManager) {}
 
     public function import(UploadedFile $uploadedFile, int $adminId): array
@@ -29,6 +31,7 @@ class PrExcelImportService
         $this->warnings = [];
         $this->created = [];
         $this->pendingMultiPage = [];
+        $this->draftImportCount = 0;
 
         $spreadsheet = IOFactory::load($uploadedFile->getRealPath());
 
@@ -47,6 +50,13 @@ class PrExcelImportService
         }
 
         $spreadsheet->disconnectWorksheets();
+
+        if ($this->draftImportCount > 0) {
+            array_unshift($this->warnings, sprintf(
+                '%d PR(s) were imported as draft due to incomplete PR number format.',
+                $this->draftImportCount,
+            ));
+        }
 
         return [
             'created' => $this->created,
@@ -225,8 +235,11 @@ class PrExcelImportService
     {
         $prNo = $record['pr_no'] ?? null;
 
-        // Skip PRs with invalid PR number format (must match MMYY-NNNN or MMYYNNNN)
-        if ($prNo === null || ! preg_match('/^\d{4}-?\d{4}$/', $prNo)) {
+        $isProperFormat = $prNo !== null && preg_match('/^\d{4}-?\d{4}$/', $prNo);
+        $isDraftImport = ! $isProperFormat && $prNo !== null && strlen($prNo) >= 4 && ! preg_match('/^0+$/', $prNo);
+
+        // Skip PRs with empty or meaningless PR numbers
+        if ($prNo === null || (! $isProperFormat && ! $isDraftImport)) {
             $this->warnings[] = sprintf('Sheet "%s", row %d: Skipping PR "%s" — invalid PR number format.', $sheetName, $start, $prNo ?? '(empty)');
 
             return;
@@ -265,6 +278,10 @@ class PrExcelImportService
             return;
         }
 
+        if ($isDraftImport) {
+            ++$this->draftImportCount;
+        }
+
         $this->databaseManager->beginTransaction();
         try {
             $pr = PurchaseRequest::create([
@@ -280,9 +297,12 @@ class PrExcelImportService
                 'requested_by_designation' => $record['requester_designation'] !== '' ? $record['requester_designation'] : null,
                 'purpose' => $record['remarks'] !== '' ? $record['remarks'] : null,
                 'total_amount' => $record['total_amount'],
-                'status' => 'approved',
+                'status' => $isProperFormat ? 'approved' : 'draft',
                 'remarks' => null,
+                'is_imported' => true,
             ]);
+
+            $totalFromItems = 0;
 
             foreach ($record['items'] as $item) {
                 $quantity = (int) ($item['quantity'] ?? 0);
@@ -313,7 +333,11 @@ class PrExcelImportService
                     'matrix_pr_admin_user_id' => null,
                     'matrix_budgeting_admin_user_id' => null,
                 ]);
+
+                $totalFromItems += round($totalCost, 2);
             }
+
+            $pr->update(['total_amount' => round($totalFromItems, 2)]);
 
             $this->databaseManager->commit();
             $this->created[] = $pr->id;

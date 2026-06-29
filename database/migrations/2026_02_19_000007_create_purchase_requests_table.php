@@ -26,6 +26,7 @@ return new class extends Migration
             $table->decimal('total_amount', 15, 2)->default(0);
             $table->enum('status', ['draft', 'returned', 'approved', 'cancelled'])->default('draft')->index();
             $table->text('remarks')->nullable();
+            $table->boolean('is_imported')->default(false)->after('remarks');
             $table->timestamps();
 
             // Indexes

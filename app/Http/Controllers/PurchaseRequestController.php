@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Enums\RoleType;
 use App\Http\Requests\ImportPRRequest;
 use App\Http\Requests\StorePurchaseRequestRequest;
+use App\Http\Requests\UpdateImportedPurchaseRequestRequest;
 use App\Http\Requests\UpdatePurchaseRequestRequest;
 use App\Models\Calendar;
 use App\Models\Emanating;
@@ -85,7 +86,8 @@ class PurchaseRequestController extends Controller
             });
 
         $lengthAwarePaginator = (clone $query)
-            ->latest()
+            ->orderBy('pr_date', 'desc')
+            ->orderBy('pr_no', 'desc')
             ->paginate(10)
             ->withQueryString();
 
@@ -324,6 +326,80 @@ class PurchaseRequestController extends Controller
             'purchaseRequest' => $purchaseRequest,
             'commonPurposes' => self::COMMON_PURPOSES,
         ]);
+    }
+
+    public function editImported(PurchaseRequest $purchaseRequest): Response
+    {
+        $purchaseRequest->load([
+            'items',
+            'office',
+            'fund',
+        ]);
+
+        $offices = Office::orderBy('name')->get(['id', 'name']);
+
+        return Inertia::render('PurchaseRequests/ImportedEdit', [
+            'purchaseRequest' => $purchaseRequest,
+            'offices' => $offices,
+        ]);
+    }
+
+    public function updateImported(UpdateImportedPurchaseRequestRequest $updateImportedPurchaseRequestRequest, PurchaseRequest $purchaseRequest): RedirectResponse
+    {
+        $validated = $updateImportedPurchaseRequestRequest->validated();
+
+        DB::beginTransaction();
+        try {
+            if (! empty($validated['items'])) {
+                $total = 0;
+                foreach ($validated['items'] as $item) {
+                    $lineTotal = (float) $item['unit_cost'] * (int) $item['quantity'];
+                    if (! empty($item['vat_applicable'])) {
+                        $vatRate = (float) ($item['vat_rate'] ?? 0.12);
+                        $lineTotal *= 1 + $vatRate;
+                    }
+
+                    $total += $lineTotal;
+                }
+
+                $validated['total_amount'] = round($total, 2);
+
+                $purchaseRequest->items()->delete();
+                foreach ($validated['items'] as $item) {
+                    $lineTotal = (float) $item['unit_cost'] * (int) $item['quantity'];
+                    $vatRate = empty($item['vat_applicable']) ? 0 : (float) ($item['vat_rate'] ?? 0.12);
+                    if (! empty($item['vat_applicable'])) {
+                        $lineTotal *= 1 + $vatRate;
+                    }
+
+                    PurchaseRequestItem::create([
+                        'purchase_request_id' => $purchaseRequest->id,
+                        'emanating_item_id' => null,
+                        'item_name' => $item['item_name'],
+                        'unit' => $item['unit'] ?? null,
+                        'quantity' => $item['quantity'],
+                        'unit_cost' => $item['unit_cost'],
+                        'line_total' => round($lineTotal, 2),
+                        'vat_applicable' => ! empty($item['vat_applicable']),
+                        'vat_rate' => empty($item['vat_applicable']) ? 0 : $vatRate,
+                        'remarks' => $item['remarks'] ?? null,
+                        'matrix_new_amount' => round($lineTotal, 2),
+                    ]);
+                }
+            }
+
+            $purchaseRequest->update(collect($validated)->except(['items'])->toArray());
+
+            DB::commit();
+        } catch (\Throwable $throwable) {
+            DB::rollBack();
+
+            return redirect()->back()
+                ->with('error', 'Failed to update imported Purchase Request.');
+        }
+
+        return redirect()->route('purchase-requests.show', $purchaseRequest)
+            ->with('success', 'Purchase Request updated successfully.');
     }
 
     public function update(UpdatePurchaseRequestRequest $updatePurchaseRequestRequest, PurchaseRequest $purchaseRequest): RedirectResponse

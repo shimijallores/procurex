@@ -144,7 +144,7 @@ class OfficeSeeder extends Seeder
             ],
             [
                 'code' => '6541',
-                'acronym' => 'PACD',
+                'acronym' => 'PACPEYSDO',
                 'name' => 'Provincial Administrator for Community Development',
             ],
             [

@@ -31,12 +31,14 @@ class PurchaseRequest extends Model
         'total_amount',
         'status',
         'remarks',
+        'is_imported',
     ];
 
     protected $casts = [
         'pr_date' => 'date',
         'sai_date' => 'date',
         'total_amount' => 'decimal:2',
+        'is_imported' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
