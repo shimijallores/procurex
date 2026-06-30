@@ -261,16 +261,39 @@
     $allItems = $rfq->items ?? collect();
     $totalItems = $allItems->count();
     $pageGroups = [];
-    $remaining = $allItems;
+    $currentIndex = 0;
+    $charsPerLine = 50;
 
-    while ($remaining->count() > 0) {
+    while ($currentIndex < $totalItems) {
     $capacity = count($pageGroups) === 0 ? 20 : 34;
-    $pageGroups[] = $remaining->take($capacity);
-    $remaining = $remaining->slice($capacity);
+    $group = collect();
+    $used = 0;
+
+    for ($i = $currentIndex; $i < $totalItems; $i++) {
+    $desc = $allItems[$i]->item_name ?? '';
+    $lines = max(1, (int) ceil(mb_strlen($desc) / $charsPerLine));
+
+    if ($used + $lines > $capacity && $group->count() > 0) {
+    break;
+    }
+
+    $group->push($allItems[$i]);
+    $used += $lines;
+    $currentIndex++;
+    }
+
+    if ($group->count() === 0) {
+    $group->push($allItems[$currentIndex]);
+    $used += max(1, (int) ceil(mb_strlen($allItems[$currentIndex]->item_name ?? '') / $charsPerLine));
+    $currentIndex++;
+    }
+
+    $pageGroups[] = $group;
     }
 
     if (empty($pageGroups)) {
     $pageGroups = [collect()];
+    $used = 0;
     }
 
     $totalPages = count($pageGroups);
@@ -282,7 +305,11 @@
     $pageNumber = $pageIndex + 1;
     $isLast = $pageNumber === $totalPages;
     $pageCapacity = $totalPages === 1 ? 20 : 34;
-    $fillerRows = $isLast ? max(0, $pageCapacity - $rows->count() - 1) : 0;
+    $rowsUsed = 0;
+    foreach ($rows as $row) {
+    $rowsUsed += max(1, (int) ceil(mb_strlen($row->item_name ?? '') / $charsPerLine));
+    }
+    $fillerRows = $isLast ? max(0, $pageCapacity - $rowsUsed - 1) : 0;
     @endphp
 
     <div class="page">
