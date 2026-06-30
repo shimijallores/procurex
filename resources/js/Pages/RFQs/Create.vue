@@ -24,11 +24,13 @@ defineOptions({
 const props = defineProps({
     defaultRfqDate: String,
     defaultSubmissionDeadline: String,
+    defaultSvpNo: String,
 });
 
 const form = useForm({
     pr_id: "",
     pr_no: "",
+    svp_no: props.defaultSvpNo || "",
     rfq_date: props.defaultRfqDate || "",
     submission_deadline: props.defaultSubmissionDeadline || "",
     project_name: "",

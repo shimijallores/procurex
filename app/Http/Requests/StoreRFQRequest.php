@@ -21,6 +21,7 @@ class StoreRFQRequest extends FormRequest
         return [
             'pr_id' => ['nullable', 'integer', 'exists:purchase_requests,id', 'required_without:pr_no'],
             'pr_no' => ['nullable', 'string', 'max:50', 'required_without:pr_id'],
+            'svp_no' => ['nullable', 'string', 'max:20', 'regex:/^\d{4}-\d{4}$/', 'unique:rfqs,svp_no'],
             'rfq_date' => [
                 'required',
                 'date',

@@ -94,6 +94,12 @@ class PrExcelImportService
 
         // Row +4 — PR Header
         $department = $this->cell($rows, $start + 4, 2);
+
+        // Fallback: if not found in column C, try column A and strip "Department" prefix
+        if ($department === '') {
+            $department = preg_replace('/^Department\s+/i', '', $this->cell($rows, $start + 4, 0));
+        }
+
         $prNoRaw = $this->cell($rows, $start + 4, 4);
         $prDateRaw = $this->cell($rows, $start + 4, 6);
 

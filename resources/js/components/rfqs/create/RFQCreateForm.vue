@@ -165,6 +165,26 @@ const selectedPrSummary = (pr) => {
             </CardHeader>
             <CardContent class="grid gap-4 sm:grid-cols-2">
                 <div class="space-y-2">
+                    <Label for="svp_no">SVP Number</Label>
+                    <input
+                        id="svp_no"
+                        v-model="form.svp_no"
+                        type="text"
+                        placeholder="YYYY-XXXX"
+                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    />
+                    <p class="text-xs text-muted-foreground">
+                        Auto-generated based on the last SVP. You may edit it.
+                    </p>
+                    <p
+                        v-if="form.errors?.svp_no"
+                        class="text-xs text-destructive"
+                    >
+                        {{ form.errors.svp_no }}
+                    </p>
+                </div>
+
+                <div class="space-y-2">
                     <Label for="rfq_date">RFQ Date</Label>
                     <input
                         id="rfq_date"

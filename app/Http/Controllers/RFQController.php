@@ -80,6 +80,7 @@ class RFQController extends Controller
         return Inertia::render('RFQs/Create', [
             'defaultRfqDate' => $defaultRfqDate->toDateString(),
             'defaultSubmissionDeadline' => $this->suggestSubmissionDeadline($defaultRfqDate)->toDateString(),
+            'defaultSvpNo' => $this->generateSvpNo($defaultRfqDate),
         ]);
     }
 
@@ -129,9 +130,13 @@ class RFQController extends Controller
                 }
             }
 
+            $svpNo = empty($validated['svp_no'])
+                ? $this->generateSvpNo($rfqDate)
+                : (string) $validated['svp_no'];
+
             $rfq = RFQ::create([
                 'pr_id' => $purchaseRequest->id,
-                'svp_no' => $this->generateSvpNo($rfqDate),
+                'svp_no' => $svpNo,
                 'rfq_date' => $rfqDate->toDateString(),
                 'submission_deadline' => $submissionDeadline->toDateString(),
                 'project_name' => (string) $validated['project_name'],
@@ -157,7 +162,7 @@ class RFQController extends Controller
         }
 
         return redirect()->route('rfqs.show', $rfq)
-            ->with('success', 'RFQ created successfully. SVP number was generated automatically.');
+            ->with('success', 'RFQ created successfully.');
     }
 
     public function show(RFQ $rfq): Response
