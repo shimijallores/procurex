@@ -1,6 +1,6 @@
 # Procurex
 
-Procurex is a browser-based procurement management system for the General Services Office of the Province of Batangas
+Procurex is a browser-based procurement management system for the General Services Office of the Province of Batangas.
 
 ## Seeded Accounts
 
