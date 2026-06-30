@@ -9,6 +9,21 @@
         @page {
             size: Legal;
             margin: 0.7in 0.75in 0.7in 0.75in;
+            @bottom-center {
+                content: "Page " counter(page) " of " counter(pages);
+                font-size: 10pt;
+                color: #555;
+                font-family: Arial, Helvetica, sans-serif;
+            }
+        }
+
+        @page :first {
+            @bottom-center {
+                content: "Page " counter(page) " of " counter(pages);
+                font-size: 10pt;
+                color: #555;
+                font-family: Arial, Helvetica, sans-serif;
+            }
         }
 
         * {
@@ -163,7 +178,6 @@
 
         .abstract-wrap {
             margin-top: 10px;
-            page-break-inside: avoid;
         }
 
         .resolved {
