@@ -10,11 +10,17 @@ use App\Models\PurchaseRequestItem;
 use Carbon\Carbon;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Http\UploadedFile;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Reader\IReadFilter;
+use XMLReader;
+use ZipArchive;
 
 class PrExcelImportService
 {
     private const SKIP_SHEETS = ['offices', 'Sheet1', 'email', 'Sheet5'];
+
+    private const MAX_EMPTY_ROWS = 50;
 
     private array $warnings = [];
 
@@ -33,23 +39,14 @@ class PrExcelImportService
         $this->pendingMultiPage = [];
         $this->draftImportCount = 0;
 
-        $spreadsheet = IOFactory::load($uploadedFile->getRealPath());
+        $path = $uploadedFile->getRealPath();
+        $ext = strtolower($uploadedFile->getClientOriginalExtension());
 
-        $sheetCount = $spreadsheet->getSheetCount();
-
-        for ($sheetIndex = 0; $sheetIndex < $sheetCount; ++$sheetIndex) {
-            $sheet = $spreadsheet->getSheet($sheetIndex);
-            $sheetName = $sheet->getTitle();
-
-            if (in_array($sheetName, self::SKIP_SHEETS, true)) {
-                continue;
-            }
-
-            $rows = $sheet->toArray();
-            $this->processSheet($rows, $sheetName, $adminId);
+        if ($ext === 'xlsx') {
+            $this->importXlsxDirect($path, $adminId);
+        } else {
+            $this->importXlsWithPhpSpreadsheet($path, $adminId);
         }
-
-        $spreadsheet->disconnectWorksheets();
 
         if ($this->draftImportCount > 0) {
             array_unshift($this->warnings, sprintf(
@@ -64,18 +61,294 @@ class PrExcelImportService
         ];
     }
 
-    private function processSheet(array $rows, string $sheetName, int $adminId): void
+    private function importXlsWithPhpSpreadsheet(string $path, int $adminId): void
+    {
+        $reader = IOFactory::createReaderForFile($path);
+        $reader->setReadDataOnly(true);
+        $reader->setReadFilter(new class implements IReadFilter
+        {
+            public function readCell($column, $row, $worksheetName = ''): bool
+            {
+                return Coordinate::columnIndexFromString($column) <= 7;
+            }
+        });
+
+        $spreadsheet = $reader->load($path);
+
+        for ($i = 0; $i < $spreadsheet->getSheetCount(); $i++) {
+            $sheet = $spreadsheet->getSheet($i);
+            $name = $sheet->getTitle();
+
+            if (in_array($name, self::SKIP_SHEETS, true)) {
+                continue;
+            }
+
+            $rows = [];
+            foreach ($sheet->getRowIterator() as $row) {
+                $cellIter = $row->getCellIterator();
+                $cellIter->setIterateOnlyExistingCells(true);
+                $rowData = array_fill(0, 7, '');
+                foreach ($cellIter as $cell) {
+                    $colIdx = Coordinate::columnIndexFromString($cell->getColumn()) - 1;
+                    if ($colIdx < 7) {
+                        $rowData[$colIdx] = $cell->getFormattedValue();
+                    }
+                }
+                $rows[] = $rowData;
+            }
+
+            $this->processSheetRows($rows, $name, $adminId);
+        }
+
+        $spreadsheet->disconnectWorksheets();
+    }
+
+    private function importXlsxDirect(string $path, int $adminId): void
+    {
+        $zip = new ZipArchive;
+        if ($zip->open($path) !== true) {
+            throw new \RuntimeException('Cannot open XLSX archive');
+        }
+
+        try {
+            $sharedStrings = $this->readXlsxSharedStrings($zip);
+            $sheetMap = $this->readXlsxSheetMap($zip);
+
+            foreach ($sheetMap as $sheetName => $sheetFile) {
+                if (in_array($sheetName, self::SKIP_SHEETS, true)) {
+                    continue;
+                }
+
+                $rows = $this->readXlsxSheetRows($zip, $sheetFile, $sharedStrings);
+                $this->processSheetRows($rows, $sheetName, $adminId);
+            }
+        } finally {
+            $zip->close();
+        }
+    }
+
+    private function readXlsxSharedStrings(ZipArchive $zip): array
+    {
+        $content = $zip->getFromName('xl/sharedStrings.xml');
+        if ($content === false) {
+            return [];
+        }
+
+        $strings = [];
+        $reader = new XMLReader;
+        $reader->xml($content);
+        $text = '';
+        $inSi = false;
+        $inT = false;
+
+        while ($reader->read()) {
+            switch ($reader->nodeType) {
+                case XMLReader::ELEMENT:
+                    if ($reader->name === 'si') {
+                        $text = '';
+                        $inSi = true;
+                    } elseif ($inSi && $reader->name === 't') {
+                        $inT = true;
+                    }
+                    break;
+                case XMLReader::TEXT:
+                case XMLReader::CDATA:
+                    if ($inT) {
+                        $text .= $reader->value;
+                    }
+                    break;
+                case XMLReader::END_ELEMENT:
+                    if ($reader->name === 't') {
+                        $inT = false;
+                    } elseif ($reader->name === 'si') {
+                        $strings[] = $text;
+                        $inSi = false;
+                    }
+                    break;
+            }
+        }
+
+        $reader->close();
+
+        return $strings;
+    }
+
+    private function readXlsxSheetMap(ZipArchive $zip): array
+    {
+        $rels = [];
+        $content = $zip->getFromName('xl/_rels/workbook.xml.rels');
+        if ($content !== false) {
+            $reader = new XMLReader;
+            $reader->xml($content);
+            while ($reader->read()) {
+                if ($reader->nodeType === XMLReader::ELEMENT && $reader->name === 'Relationship') {
+                    $id = $reader->getAttribute('Id');
+                    $target = $reader->getAttribute('Target');
+                    if ($id !== null && $target !== null) {
+                        $rels[$id] = $target;
+                    }
+                }
+            }
+            $reader->close();
+        }
+
+        $sheets = [];
+        $content = $zip->getFromName('xl/workbook.xml');
+        if ($content === false) {
+            return $sheets;
+        }
+
+        $reader = new XMLReader;
+        $reader->xml($content);
+        while ($reader->read()) {
+            if ($reader->nodeType === XMLReader::ELEMENT && $reader->name === 'sheet') {
+                $name = $reader->getAttribute('name');
+                $rId = $reader->getAttribute('r:id');
+                if ($name !== null && $rId !== null && isset($rels[$rId])) {
+                    $rel = $rels[$rId];
+                    if (str_starts_with($rel, './')) {
+                        $rel = substr($rel, 2);
+                    }
+                    $sheets[$name] = 'xl/'.$rel;
+                }
+            }
+        }
+        $reader->close();
+
+        return $sheets;
+    }
+
+    private function readXlsxSheetRows(ZipArchive $zip, string $sheetFile, array $sharedStrings): array
+    {
+        $content = $zip->getFromName($sheetFile);
+        if ($content === false) {
+            return [];
+        }
+
+        $sparse = [];
+        $reader = new XMLReader;
+        $reader->xml($content);
+
+        $inRow = false;
+        $inCell = false;
+        $inIs = false;
+        $inT = false;
+        $inV = false;
+        $currentRowIndex = 0;
+        $currentCellRef = '';
+        $currentCellType = '';
+        $currentText = '';
+
+        $setCellValue = function (array &$rowData, string $ref, string $type, string $value, array $sharedStrings): void {
+            $col = preg_replace('/[0-9]/', '', $ref);
+            $colIdx = Coordinate::columnIndexFromString($col) - 1;
+            if ($colIdx >= 7) {
+                return;
+            }
+
+            if ($type === 's') {
+                $rowData[$colIdx] = $sharedStrings[(int) $value] ?? '';
+            } elseif ($type === 'b') {
+                $rowData[$colIdx] = $value === '1' ? 'TRUE' : 'FALSE';
+            } elseif (is_numeric($value)) {
+                $rowData[$colIdx] = $value;
+            } else {
+                $rowData[$colIdx] = $value;
+            }
+        };
+
+        while ($reader->read()) {
+            switch ($reader->nodeType) {
+                case XMLReader::ELEMENT:
+                    if ($reader->name === 'row') {
+                        $currentRowIndex = (int) ($reader->getAttribute('r') ?? 0);
+                        $inRow = true;
+                    } elseif ($inRow && $reader->name === 'c') {
+                        $currentCellRef = $reader->getAttribute('r') ?? '';
+                        $currentCellType = $reader->getAttribute('t') ?? '';
+                        $currentText = '';
+                        $inCell = true;
+                    } elseif ($inCell && $reader->name === 'is') {
+                        $inIs = true;
+                    } elseif ($inCell && ($reader->name === 'v' || $reader->name === 't')) {
+                        $inV = true;
+                    }
+                    break;
+
+                case XMLReader::TEXT:
+                case XMLReader::CDATA:
+                    if ($inV) {
+                        $currentText .= $reader->value;
+                    }
+                    break;
+
+                case XMLReader::END_ELEMENT:
+                    if ($reader->name === 'v' || $reader->name === 't') {
+                        $inV = false;
+                    } elseif ($reader->name === 'is') {
+                        $inIs = false;
+                    } elseif ($reader->name === 'c') {
+                        if (! isset($sparse[$currentRowIndex])) {
+                            $sparse[$currentRowIndex] = array_fill(0, 7, '');
+                        }
+                        $setCellValue($sparse[$currentRowIndex], $currentCellRef, $currentCellType, $currentText, $sharedStrings);
+                        $inCell = false;
+                    } elseif ($reader->name === 'row') {
+                        $inRow = false;
+                    }
+                    break;
+            }
+        }
+
+        $reader->close();
+
+        if ($sparse === []) {
+            return [];
+        }
+
+        $minRow = min(array_keys($sparse));
+        $maxRow = max(array_keys($sparse));
+        $dense = [];
+
+        for ($r = $minRow; $r <= $maxRow; $r++) {
+            $dense[] = $sparse[$r] ?? array_fill(0, 7, '');
+        }
+
+        return $dense;
+    }
+
+    private function processSheetRows(array $rows, string $sheetName, int $adminId): void
     {
         $numRows = count($rows);
+        $consecutiveEmpty = 0;
 
-        for ($i = 0; $i < $numRows; ++$i) {
-            $colA = $this->cell($rows, $i, 0);
+        for ($i = 0; $i < $numRows; $i++) {
+            $colA = $rows[$i][0] ?? '';
 
             if ($colA === 'PURCHASE REQUEST') {
+                $consecutiveEmpty = 0;
+
                 try {
                     $this->parseBlock($rows, $i, $sheetName, $adminId);
                 } catch (\Throwable $e) {
                     $this->warnings[] = sprintf('Sheet "%s", row %d: %s', $sheetName, $i, $e->getMessage());
+                }
+            } else {
+                $rowEmpty = true;
+                for ($c = 0; $c < 7; $c++) {
+                    if (($rows[$i][$c] ?? '') !== '') {
+                        $rowEmpty = false;
+                        break;
+                    }
+                }
+
+                if ($rowEmpty) {
+                    $consecutiveEmpty++;
+                    if ($consecutiveEmpty >= self::MAX_EMPTY_ROWS) {
+                        break;
+                    }
+                } else {
+                    $consecutiveEmpty = 0;
                 }
             }
         }
@@ -195,7 +468,7 @@ class PrExcelImportService
         $itemCount = count($rows);
         $lastUsedRow = $from - 1;
 
-        for ($offset = $from; $offset <= $to && $offset < $itemCount; ++$offset) {
+        for ($offset = $from; $offset <= $to && $offset < $itemCount; $offset++) {
             $itemNoVal = $rows[$offset][0] ?? null;
 
             if (! is_numeric($itemNoVal) || (float) $itemNoVal <= 0) {
@@ -227,7 +500,7 @@ class PrExcelImportService
 
                 $item['description'] = trim($item['description'].' '.$nextDesc);
                 $offset = $nextOffset;
-                ++$nextOffset;
+                $nextOffset++;
             }
 
             $items[] = $item;
@@ -285,7 +558,7 @@ class PrExcelImportService
         }
 
         if ($isDraftImport) {
-            ++$this->draftImportCount;
+            $this->draftImportCount++;
         }
 
         $this->databaseManager->beginTransaction();
@@ -473,6 +746,10 @@ class PrExcelImportService
         $cleaned = trim($raw);
         $cleaned = preg_replace('/^PR\s*No\.?\s*/i', '', $cleaned);
 
+        // Normalize spacing around dash
+        $cleaned = preg_replace('/\s*-\s*/', '-', $cleaned);
+        $cleaned = preg_replace('/\s+/', '', $cleaned);
+
         if ($cleaned === '') {
             return null;
         }
@@ -491,6 +768,20 @@ class PrExcelImportService
 
         if ($cleaned === '') {
             return null;
+        }
+
+        // Excel serial date number
+        if (is_numeric($cleaned)) {
+            $num = (float) $cleaned;
+            if ($num >= 40000 && $num < 65000) {
+                try {
+                    return Carbon::createFromFormat('Y-m-d', '1899-12-30')
+                        ->addDays((int) $num)
+                        ->toDateString();
+                } catch (\Throwable) {
+                    return null;
+                }
+            }
         }
 
         $normalized = str_replace('/', '-', $cleaned);
@@ -532,7 +823,7 @@ class PrExcelImportService
     {
         $itemCount = count($rows);
 
-        for ($offset = $from; $offset <= $to && $offset < $itemCount; ++$offset) {
+        for ($offset = $from; $offset <= $to && $offset < $itemCount; $offset++) {
             $colA = $this->cell($rows, $offset, 0);
 
             if (preg_match('/grand\s*total/i', $colA)) {
@@ -545,8 +836,8 @@ class PrExcelImportService
         }
 
         // Fallback: scan any cell in the range for a grand-total-like value
-        for ($offset = $from; $offset <= $to && $offset < $itemCount; ++$offset) {
-            for ($col = 0; $col <= 6; ++$col) {
+        for ($offset = $from; $offset <= $to && $offset < $itemCount; $offset++) {
+            for ($col = 0; $col <= 6; $col++) {
                 $cell = $this->cell($rows, $offset, $col);
 
                 if (preg_match('/grand\s*total/i', $cell) || preg_match('/^total\s+amount/i', $cell)) {
@@ -608,7 +899,7 @@ class PrExcelImportService
     {
         $itemCount = count($rows);
 
-        for ($offset = $from; $offset <= $to && $offset < $itemCount; ++$offset) {
+        for ($offset = $from; $offset <= $to && $offset < $itemCount; $offset++) {
             $value = $this->cell($rows, $offset, $col);
 
             if (preg_match($pattern, $value)) {

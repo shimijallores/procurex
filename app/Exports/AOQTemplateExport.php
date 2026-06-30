@@ -50,7 +50,7 @@ class AOQTemplateExport implements FromArray, ShouldAutoSize, WithEvents, WithHe
                 (float) ($item->purchaseRequestItem?->unit_cost ?? 0),
             ];
 
-            for ($i = 0; $i < $this->supplierCount; ++$i) {
+            for ($i = 0; $i < $this->supplierCount; $i++) {
                 $row[] = null;
             }
 
@@ -67,7 +67,7 @@ class AOQTemplateExport implements FromArray, ShouldAutoSize, WithEvents, WithHe
     {
         $headings = ['Item Name', 'Qty', 'Unit', 'Expected Price'];
 
-        for ($i = 0; $i < $this->supplierCount; ++$i) {
+        for ($i = 0; $i < $this->supplierCount; $i++) {
             $headings[] = ($this->supplierNames[$i] ?? 'Supplier '.($i + 1)).' Unit Price';
         }
 
@@ -118,7 +118,7 @@ class AOQTemplateExport implements FromArray, ShouldAutoSize, WithEvents, WithHe
                     ->setHorizontal(Alignment::HORIZONTAL_RIGHT);
 
                 $priceColumns = [];
-                for ($i = 0; $i < $this->supplierCount; ++$i) {
+                for ($i = 0; $i < $this->supplierCount; $i++) {
                     $col = chr(69 + $i); // E, F, G, ...
                     $priceColumns[] = $col;
                 }

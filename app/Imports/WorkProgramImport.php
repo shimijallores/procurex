@@ -86,7 +86,7 @@ class WorkProgramImport
                     continue;
                 }
 
-                ++$tableIndex;
+                $tableIndex++;
 
                 $rows = [];
 
@@ -243,7 +243,7 @@ class WorkProgramImport
                 $row,
             );
 
-            for ($offset = 0; $offset <= max(0, count($upperRow) - 3); ++$offset) {
+            for ($offset = 0; $offset <= max(0, count($upperRow) - 3); $offset++) {
                 $col1 = (string) ($upperRow[$offset] ?? '');
                 $col2 = (string) ($upperRow[$offset + 1] ?? '');
                 $col3 = (string) ($upperRow[$offset + 2] ?? '');
@@ -283,7 +283,7 @@ class WorkProgramImport
         $items = [];
         $counter = count($rows);
 
-        for ($i = $startIndex; $i < $counter; ++$i) {
+        for ($i = $startIndex; $i < $counter; $i++) {
             $row = $rows[$i];
             $itemName = trim((string) ($row[$nameColumnIndex] ?? ''));
             $quantityUnitRaw = trim((string) ($row[$quantityUnitColumnIndex] ?? ''));

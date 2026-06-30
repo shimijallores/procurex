@@ -132,24 +132,23 @@ class PurchaseRequestController extends Controller
      */
     public function import(ImportPRRequest $importPRRequest, PrExcelImportService $prExcelImportService): RedirectResponse
     {
-        $validated = $importPRRequest->validated();
-
-        $file = $importPRRequest->file('file');
         try {
+            $validated = $importPRRequest->validated();
+            $file = $importPRRequest->file('file');
             $result = $prExcelImportService->import($file, (int) $validated['admin_id']);
+
+            $count = count($result['created'] ?? []);
+            $warnings = $result['warnings'] ?? [];
+
+            return redirect()->route('purchase-requests.index')
+                ->with('success', sprintf('Imported %d purchase requests.', $count))
+                ->with('import_warnings', $warnings);
         } catch (\Throwable $throwable) {
             Log::error('PR import failed: '.$throwable->getMessage());
 
             return redirect()->route('purchase-requests.index')
                 ->with('error', 'Failed to import file: '.$throwable->getMessage());
         }
-
-        $count = count($result['created'] ?? []);
-        $warnings = $result['warnings'] ?? [];
-
-        return redirect()->route('purchase-requests.index')
-            ->with('success', sprintf('Imported %d purchase requests.', $count))
-            ->with('import_warnings', $warnings);
     }
 
     public function create(): Response
