@@ -157,7 +157,7 @@ class BatchController extends Controller
         $batchNo = sprintf('%s%04d', $prefix, $next);
 
         while (Batch::where('batch_no', $batchNo)->exists()) {
-            $next++;
+            ++$next;
             $batchNo = sprintf('%s%04d', $prefix, $next);
         }
 

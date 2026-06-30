@@ -9,11 +9,11 @@ use App\Models\AOQ;
 use App\Models\BACResolution;
 use App\Models\Batch;
 use App\Models\Calendar;
-use App\Services\SvpMatrixSyncService;
 use App\Models\NOA;
 use App\Models\Office;
 use App\Models\RFQ;
 use App\Models\Supplier;
+use App\Services\SvpMatrixSyncService;
 use Barryvdh\DomPDF\Facade\Pdf as DomPdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -412,7 +412,7 @@ class NOAController extends Controller
                 }
 
                 if ($hasAtLeastOnePrice) {
-                    $calculatedSupplierCount++;
+                    ++$calculatedSupplierCount;
                 }
             }
 
@@ -521,7 +521,7 @@ class NOAController extends Controller
             }
 
             if ($hasAtLeastOnePrice) {
-                $calculatedSupplierCount++;
+                ++$calculatedSupplierCount;
             }
         }
 

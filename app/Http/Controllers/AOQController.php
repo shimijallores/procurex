@@ -11,11 +11,11 @@ use App\Imports\AOQMatrixImport;
 use App\Models\AOQ;
 use App\Models\Batch;
 use App\Models\Calendar;
-use App\Services\SvpMatrixSyncService;
 use App\Models\RFQ;
 use App\Models\RFQSupplier;
 use App\Models\RFQSupplierItem;
 use App\Models\Supplier;
+use App\Services\SvpMatrixSyncService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -73,11 +73,11 @@ class AOQController extends Controller
         foreach ($all as $aoq) {
             $calculation = $this->calculateSupplierTotals($aoq->rfq);
             if ($calculation['calculation_mode'] === 'single_calculated') {
-                $singleCalculated++;
+                ++$singleCalculated;
             }
 
             if ($calculation['calculation_mode'] === 'lowest_calculated') {
-                $lowestCalculated++;
+                ++$lowestCalculated;
             }
         }
 
@@ -240,7 +240,7 @@ class AOQController extends Controller
         $batchNo = sprintf('%s%04d', $prefix, $next);
 
         while (Batch::where('batch_no', $batchNo)->exists()) {
-            $next++;
+            ++$next;
             $batchNo = sprintf('%s%04d', $prefix, $next);
         }
 
@@ -288,7 +288,7 @@ class AOQController extends Controller
         $batchNo = sprintf('%s%04d', $prefix, $next);
 
         while (Batch::where('batch_no', $batchNo)->exists()) {
-            $next++;
+            ++$next;
             $batchNo = sprintf('%s%04d', $prefix, $next);
         }
 
@@ -646,15 +646,13 @@ class AOQController extends Controller
             return redirect()->back()->with('error', 'Failed to update AOQ. Please try again.');
         }
 
-                SvpMatrixSyncService::syncAbstractValue($aoq);
+        SvpMatrixSyncService::syncAbstractValue($aoq);
 
         return redirect()->route('aoqs.show', $aoq)
             ->with('success', 'AOQ updated successfully.');
     }
 
     public function printPdf(AOQ $aoq): \Spatie\LaravelPdf\PdfBuilder
-
-
     {
         $aoq->load([
             'rfq.purchaseRequest.office',

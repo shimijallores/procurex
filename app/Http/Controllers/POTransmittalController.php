@@ -124,8 +124,6 @@ class POTransmittalController extends Controller
     public function store(StorePOTransmittalRequest $storePOTransmittalRequest): RedirectResponse
     {
         $validated = $storePOTransmittalRequest->validated();
-
-        $errors = [];
         $created = [];
 
         DB::beginTransaction();
@@ -174,7 +172,7 @@ class POTransmittalController extends Controller
             return redirect()->back()->with('error', 'Failed to create PO Transmittals. Please try again.');
         }
 
-        if (empty($created)) {
+        if ($created === []) {
             return redirect()->back()->with('info', 'All selected POs already have transmittals.');
         }
 

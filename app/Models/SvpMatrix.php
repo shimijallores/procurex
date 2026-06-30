@@ -13,6 +13,7 @@ class SvpMatrix extends Model
 
     protected $fillable = [
         'purchase_order_id',
+        'rfq_id',
         'office_text',
         'po_no_text',
         'mode_of_procurement_text',
@@ -41,5 +42,10 @@ class SvpMatrix extends Model
     public function purchaseOrder(): BelongsTo
     {
         return $this->belongsTo(PurchaseOrder::class, 'purchase_order_id');
+    }
+
+    public function rfq(): BelongsTo
+    {
+        return $this->belongsTo(RFQ::class, 'rfq_id');
     }
 }

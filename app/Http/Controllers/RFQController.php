@@ -196,9 +196,9 @@ class RFQController extends Controller
         ]);
     }
 
-    public function update(UpdateRFQRequest $request, RFQ $rfq): RedirectResponse
+    public function update(UpdateRFQRequest $updateRFQRequest, RFQ $rfq): RedirectResponse
     {
-        $validated = $request->validated();
+        $validated = $updateRFQRequest->validated();
 
         DB::beginTransaction();
         try {
@@ -323,7 +323,7 @@ class RFQController extends Controller
 
         do {
             $svpNo = sprintf('%s%04d', $prefix, $next);
-            $next++;
+            ++$next;
         } while (RFQ::where('svp_no', $svpNo)->exists());
 
         return $svpNo;

@@ -12,7 +12,8 @@ return new class extends Migration
     {
         Schema::create('svp_matrices', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('purchase_order_id')->constrained('purchase_orders')->cascadeOnDelete();
+            $table->foreignId('purchase_order_id')->nullable()->constrained('purchase_orders')->cascadeOnDelete();
+            $table->foreignId('rfq_id')->nullable()->constrained('rfqs')->cascadeOnDelete();
             $table->string('office_text')->nullable();
             $table->string('po_no_text')->nullable();
             $table->string('mode_of_procurement_text')->nullable();
@@ -32,6 +33,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique('purchase_order_id');
+            $table->unique('rfq_id');
             $table->index('office_text');
             $table->index('po_no_text');
             $table->index('pr_no_text');

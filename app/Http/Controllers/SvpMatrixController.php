@@ -81,6 +81,7 @@ class SvpMatrixController extends Controller
             'purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest.emanating.ppmpCategory',
             'purchaseOrder.noa.bacResolution.aoq.winnerSupplier',
             'purchaseOrder.poTransmittals',
+            'rfq.purchaseRequest.office',
         ]);
 
         return Inertia::render('SVPMatrix/Show', [
@@ -97,6 +98,7 @@ class SvpMatrixController extends Controller
             'purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest.emanating.ppmpCategory',
             'purchaseOrder.noa.bacResolution.aoq.winnerSupplier',
             'purchaseOrder.poTransmittals',
+            'rfq.purchaseRequest.office',
         ]);
 
         return Inertia::render('SVPMatrix/Edit', [
@@ -147,16 +149,26 @@ class SvpMatrixController extends Controller
                 'purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest.emanating.ppmpCategory',
                 'purchaseOrder.noa.bacResolution.aoq.winnerSupplier',
                 'purchaseOrder.poTransmittals',
+                'rfq.purchaseRequest.office',
+                'rfq.purchaseRequest.emanating.account',
+                'rfq.purchaseRequest.emanating.ppmpCategory',
             ])
-            ->whereHas('purchaseOrder')
             ->when($request->filled('office_id'), function (Builder $builder) use ($request): void {
-                $builder->whereHas('purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest', function (Builder $builder) use ($request): void {
-                    $builder->where('office_id', (int) $request->input('office_id'));
+                $builder->where(function (Builder $builder) use ($request): void {
+                    $builder->whereHas('purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest', function (Builder $builder) use ($request): void {
+                        $builder->where('office_id', (int) $request->input('office_id'));
+                    })->orWhereHas('rfq.purchaseRequest', function (Builder $builder) use ($request): void {
+                        $builder->where('office_id', (int) $request->input('office_id'));
+                    });
                 });
             })
             ->when($selectedFiscalYear !== '', function (Builder $builder) use ($selectedFiscalYear): void {
-                $builder->whereHas('purchaseOrder', function (Builder $builder) use ($selectedFiscalYear): void {
-                    $builder->whereYear('po_date', (int) $selectedFiscalYear);
+                $builder->where(function (Builder $builder) use ($selectedFiscalYear): void {
+                    $builder->whereHas('purchaseOrder', function (Builder $builder) use ($selectedFiscalYear): void {
+                        $builder->whereYear('po_date', (int) $selectedFiscalYear);
+                    })->orWhereHas('rfq', function (Builder $builder) use ($selectedFiscalYear): void {
+                        $builder->whereYear('rfq_date', (int) $selectedFiscalYear);
+                    });
                 });
             })
             ->when($request->search, function (Builder $builder, string $search): void {
@@ -174,6 +186,12 @@ class SvpMatrixController extends Controller
                                 ->orWhereHas('noa.bacResolution.aoq.winnerSupplier', function (Builder $builder) use ($search): void {
                                     $builder->where('name', 'like', sprintf('%%%s%%', $search));
                                 });
+                        })
+                        ->orWhereHas('rfq', function (Builder $builder) use ($search): void {
+                            $builder->where('svp_no', 'like', sprintf('%%%s%%', $search))
+                                ->orWhereHas('purchaseRequest', function (Builder $builder) use ($search): void {
+                                    $builder->where('pr_no', 'like', sprintf('%%%s%%', $search));
+                                });
                         });
                 });
             });
@@ -184,7 +202,7 @@ class SvpMatrixController extends Controller
         $purchaseOrder = $svpMatrix->purchaseOrder;
         $noa = $purchaseOrder?->noa;
         $aoq = $noa?->aoq ?? $noa?->bacResolution?->aoq;
-        $rfq = $aoq?->rfq;
+        $rfq = $aoq?->rfq ?? $svpMatrix->rfq;
         $resolution = $noa?->bacResolution;
         $purchaseRequest = $rfq?->purchaseRequest;
 
