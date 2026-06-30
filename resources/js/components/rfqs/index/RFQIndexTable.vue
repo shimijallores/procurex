@@ -116,11 +116,6 @@ const formatCurrency = (value) => {
                             <th
                                 class="h-12 px-4 text-center align-middle font-medium text-muted-foreground"
                             >
-                                RFQ Date
-                            </th>
-                            <th
-                                class="h-12 px-4 text-center align-middle font-medium text-muted-foreground"
-                            >
                                 Submission Deadline
                             </th>
                             <th
@@ -143,7 +138,7 @@ const formatCurrency = (value) => {
                     <tbody class="[&_tr:last-child]:border-0">
                         <tr v-if="!rfqs?.data?.length">
                             <td
-                                colspan="7"
+                                colspan="6"
                                 class="p-8 text-center text-muted-foreground"
                             >
                                 <Icon
@@ -182,9 +177,6 @@ const formatCurrency = (value) => {
                                         "#" + rfq.pr_id
                                     }}
                                 </div>
-                            </td>
-                            <td class="p-4 align-middle text-center">
-                                {{ formatDate(rfq.rfq_date) }}
                             </td>
                             <td class="p-4 align-middle text-center">
                                 {{ formatDate(rfq.submission_deadline) }}

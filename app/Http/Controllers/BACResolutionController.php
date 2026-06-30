@@ -619,7 +619,7 @@ class BACResolutionController extends Controller
             }
 
             if ($hasAtLeastOnePrice) {
-                $count++;
+                ++$count;
             }
         }
 

@@ -149,7 +149,7 @@ class ProjectBriefImport
                 $row,
             );
 
-            for ($offset = 0; $offset <= max(0, count($upperRow) - 4); $offset++) {
+            for ($offset = 0; $offset <= max(0, count($upperRow) - 4); ++$offset) {
                 $colA = (string) ($upperRow[$offset] ?? '');
                 $colB = (string) ($upperRow[$offset + 1] ?? '');
                 $colC = (string) ($upperRow[$offset + 2] ?? '');
@@ -179,7 +179,7 @@ class ProjectBriefImport
         $items = [];
         $counter = count($rows);
 
-        for ($i = $headerIndex + 1; $i < $counter; $i++) {
+        for ($i = $headerIndex + 1; $i < $counter; ++$i) {
             $row = $rows[$i];
             $itemName = trim((string) ($row[$descriptionColumnIndex] ?? ''));
             $quantityUnitRaw = trim((string) ($row[$quantityColumnIndex] ?? ''));

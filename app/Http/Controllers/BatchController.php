@@ -157,7 +157,7 @@ class BatchController extends Controller
         $batchNo = sprintf('%s%04d', $prefix, $next);
 
         while (Batch::where('batch_no', $batchNo)->exists()) {
-            $next++;
+            ++$next;
             $batchNo = sprintf('%s%04d', $prefix, $next);
         }
 
@@ -184,7 +184,6 @@ class BatchController extends Controller
             'bac_date' => ['nullable', 'date'],
             'noa_date' => ['nullable', 'date'],
             'po_date' => ['nullable', 'date'],
-            'po_transmittal_date' => ['nullable', 'date'],
         ]);
 
         $batch->update($validated);

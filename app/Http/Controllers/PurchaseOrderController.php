@@ -187,7 +187,7 @@ class PurchaseOrderController extends Controller
                         'purpose_date_label' => $purposeDateLabel,
                     ];
 
-                    $nextSequence++;
+                    ++$nextSequence;
                 }
             }
         }
@@ -529,7 +529,7 @@ class PurchaseOrderController extends Controller
 
         do {
             $poNo = $prefix.str_pad((string) $next, 4, '0', STR_PAD_LEFT);
-            $next++;
+            ++$next;
         } while (PurchaseOrder::where('po_no', $poNo)->exists());
 
         return $poNo;

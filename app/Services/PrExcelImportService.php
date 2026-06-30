@@ -75,7 +75,7 @@ class PrExcelImportService
 
         $spreadsheet = $reader->load($path);
 
-        for ($i = 0; $i < $spreadsheet->getSheetCount(); $i++) {
+        for ($i = 0; $i < $spreadsheet->getSheetCount(); ++$i) {
             $sheet = $spreadsheet->getSheet($i);
             $name = $sheet->getTitle();
 
@@ -94,6 +94,7 @@ class PrExcelImportService
                         $rowData[$colIdx] = $cell->getFormattedValue();
                     }
                 }
+
                 $rows[] = $rowData;
             }
 
@@ -105,78 +106,82 @@ class PrExcelImportService
 
     private function importXlsxDirect(string $path, int $adminId): void
     {
-        $zip = new ZipArchive;
-        if ($zip->open($path) !== true) {
+        $zipArchive = new ZipArchive;
+        if ($zipArchive->open($path) !== true) {
             throw new \RuntimeException('Cannot open XLSX archive');
         }
 
         try {
-            $sharedStrings = $this->readXlsxSharedStrings($zip);
-            $sheetMap = $this->readXlsxSheetMap($zip);
+            $sharedStrings = $this->readXlsxSharedStrings($zipArchive);
+            $sheetMap = $this->readXlsxSheetMap($zipArchive);
 
             foreach ($sheetMap as $sheetName => $sheetFile) {
                 if (in_array($sheetName, self::SKIP_SHEETS, true)) {
                     continue;
                 }
 
-                $rows = $this->readXlsxSheetRows($zip, $sheetFile, $sharedStrings);
+                $rows = $this->readXlsxSheetRows($zipArchive, $sheetFile, $sharedStrings);
                 $this->processSheetRows($rows, $sheetName, $adminId);
             }
         } finally {
-            $zip->close();
+            $zipArchive->close();
         }
     }
 
-    private function readXlsxSharedStrings(ZipArchive $zip): array
+    private function readXlsxSharedStrings(ZipArchive $zipArchive): array
     {
-        $content = $zip->getFromName('xl/sharedStrings.xml');
+        $content = $zipArchive->getFromName('xl/sharedStrings.xml');
         if ($content === false) {
             return [];
         }
 
         $strings = [];
-        $reader = new XMLReader;
-        $reader->xml($content);
+        $xmlReader = new XMLReader;
+        $xmlReader->xml($content);
+
         $text = '';
         $inSi = false;
         $inT = false;
 
-        while ($reader->read()) {
-            switch ($reader->nodeType) {
+        while ($xmlReader->read()) {
+            switch ($xmlReader->nodeType) {
                 case XMLReader::ELEMENT:
-                    if ($reader->name === 'si') {
+                    if ($xmlReader->name === 'si') {
                         $text = '';
                         $inSi = true;
-                    } elseif ($inSi && $reader->name === 't') {
+                    } elseif ($inSi && $xmlReader->name === 't') {
                         $inT = true;
                     }
+
                     break;
                 case XMLReader::TEXT:
                 case XMLReader::CDATA:
                     if ($inT) {
-                        $text .= $reader->value;
+                        $text .= $xmlReader->value;
                     }
+
                     break;
                 case XMLReader::END_ELEMENT:
-                    if ($reader->name === 't') {
+                    if ($xmlReader->name === 't') {
                         $inT = false;
-                    } elseif ($reader->name === 'si') {
+                    } elseif ($xmlReader->name === 'si') {
                         $strings[] = $text;
                         $inSi = false;
                     }
+
                     break;
             }
         }
 
-        $reader->close();
+        $xmlReader->close();
 
         return $strings;
     }
 
-    private function readXlsxSheetMap(ZipArchive $zip): array
+    private function readXlsxSheetMap(ZipArchive $zipArchive): array
     {
         $rels = [];
-        $content = $zip->getFromName('xl/_rels/workbook.xml.rels');
+        $content = $zipArchive->getFromName('xl/_rels/workbook.xml.rels');
         if ($content !== false) {
             $reader = new XMLReader;
             $reader->xml($content);
@@ -189,11 +194,12 @@ class PrExcelImportService
                     }
                 }
             }
+
             $reader->close();
         }
 
         $sheets = [];
-        $content = $zip->getFromName('xl/workbook.xml');
+        $content = $zipArchive->getFromName('xl/workbook.xml');
         if ($content === false) {
             return $sheets;
         }
@@ -209,30 +215,31 @@ class PrExcelImportService
                     if (str_starts_with($rel, './')) {
                         $rel = substr($rel, 2);
                     }
+
                     $sheets[$name] = 'xl/'.$rel;
                 }
             }
         }
+
         $reader->close();
 
         return $sheets;
     }
 
-    private function readXlsxSheetRows(ZipArchive $zip, string $sheetFile, array $sharedStrings): array
+    private function readXlsxSheetRows(ZipArchive $zipArchive, string $sheetFile, array $sharedStrings): array
     {
-        $content = $zip->getFromName($sheetFile);
+        $content = $zipArchive->getFromName($sheetFile);
         if ($content === false) {
             return [];
         }
 
         $sparse = [];
-        $reader = new XMLReader;
-        $reader->xml($content);
+        $xmlReader = new XMLReader;
+        $xmlReader->xml($content);
 
         $inRow = false;
         $inCell = false;
         $inIs = false;
-        $inT = false;
         $inV = false;
         $currentRowIndex = 0;
         $currentCellRef = '';
@@ -240,7 +247,7 @@ class PrExcelImportService
         $currentText = '';
 
         $setCellValue = function (array &$rowData, string $ref, string $type, string $value, array $sharedStrings): void {
-            $col = preg_replace('/[0-9]/', '', $ref);
+            $col = preg_replace('/\d/', '', $ref);
             $colIdx = Coordinate::columnIndexFromString($col) - 1;
             if ($colIdx >= 7) {
                 return;
@@ -257,50 +264,54 @@ class PrExcelImportService
             }
         };
 
-        while ($reader->read()) {
-            switch ($reader->nodeType) {
+        while ($xmlReader->read()) {
+            switch ($xmlReader->nodeType) {
                 case XMLReader::ELEMENT:
-                    if ($reader->name === 'row') {
-                        $currentRowIndex = (int) ($reader->getAttribute('r') ?? 0);
+                    if ($xmlReader->name === 'row') {
+                        $currentRowIndex = (int) ($xmlReader->getAttribute('r') ?? 0);
                         $inRow = true;
-                    } elseif ($inRow && $reader->name === 'c') {
-                        $currentCellRef = $reader->getAttribute('r') ?? '';
-                        $currentCellType = $reader->getAttribute('t') ?? '';
+                    } elseif ($inRow && $xmlReader->name === 'c') {
+                        $currentCellRef = $xmlReader->getAttribute('r') ?? '';
+                        $currentCellType = $xmlReader->getAttribute('t') ?? '';
                         $currentText = '';
                         $inCell = true;
-                    } elseif ($inCell && $reader->name === 'is') {
+                    } elseif ($inCell && $xmlReader->name === 'is') {
                         $inIs = true;
-                    } elseif ($inCell && ($reader->name === 'v' || $reader->name === 't')) {
+                    } elseif ($inCell && ($xmlReader->name === 'v' || $xmlReader->name === 't')) {
                         $inV = true;
                     }
+
                     break;
 
                 case XMLReader::TEXT:
                 case XMLReader::CDATA:
                     if ($inV) {
-                        $currentText .= $reader->value;
+                        $currentText .= $xmlReader->value;
                     }
+
                     break;
 
                 case XMLReader::END_ELEMENT:
-                    if ($reader->name === 'v' || $reader->name === 't') {
+                    if ($xmlReader->name === 'v' || $xmlReader->name === 't') {
                         $inV = false;
-                    } elseif ($reader->name === 'is') {
+                    } elseif ($xmlReader->name === 'is') {
                         $inIs = false;
-                    } elseif ($reader->name === 'c') {
+                    } elseif ($xmlReader->name === 'c') {
                         if (! isset($sparse[$currentRowIndex])) {
                             $sparse[$currentRowIndex] = array_fill(0, 7, '');
                         }
+
                         $setCellValue($sparse[$currentRowIndex], $currentCellRef, $currentCellType, $currentText, $sharedStrings);
                         $inCell = false;
-                    } elseif ($reader->name === 'row') {
+                    } elseif ($xmlReader->name === 'row') {
                         $inRow = false;
                     }
+
                     break;
             }
         }
 
-        $reader->close();
+        $xmlReader->close();
 
         if ($sparse === []) {
             return [];
@@ -310,7 +321,7 @@ class PrExcelImportService
         $maxRow = max(array_keys($sparse));
         $dense = [];
 
-        for ($r = $minRow; $r <= $maxRow; $r++) {
+        for ($r = $minRow; $r <= $maxRow; ++$r) {
             $dense[] = $sparse[$r] ?? array_fill(0, 7, '');
         }
 
@@ -322,7 +333,7 @@ class PrExcelImportService
         $numRows = count($rows);
         $consecutiveEmpty = 0;
 
-        for ($i = 0; $i < $numRows; $i++) {
+        for ($i = 0; $i < $numRows; ++$i) {
             $colA = $rows[$i][0] ?? '';
 
             if ($colA === 'PURCHASE REQUEST') {
@@ -335,7 +346,7 @@ class PrExcelImportService
                 }
             } else {
                 $rowEmpty = true;
-                for ($c = 0; $c < 7; $c++) {
+                for ($c = 0; $c < 7; ++$c) {
                     if (($rows[$i][$c] ?? '') !== '') {
                         $rowEmpty = false;
                         break;
@@ -343,7 +354,7 @@ class PrExcelImportService
                 }
 
                 if ($rowEmpty) {
-                    $consecutiveEmpty++;
+                    ++$consecutiveEmpty;
                     if ($consecutiveEmpty >= self::MAX_EMPTY_ROWS) {
                         break;
                     }
@@ -468,7 +479,7 @@ class PrExcelImportService
         $itemCount = count($rows);
         $lastUsedRow = $from - 1;
 
-        for ($offset = $from; $offset <= $to && $offset < $itemCount; $offset++) {
+        for ($offset = $from; $offset <= $to && $offset < $itemCount; ++$offset) {
             $itemNoVal = $rows[$offset][0] ?? null;
 
             if (! is_numeric($itemNoVal) || (float) $itemNoVal <= 0) {
@@ -500,7 +511,7 @@ class PrExcelImportService
 
                 $item['description'] = trim($item['description'].' '.$nextDesc);
                 $offset = $nextOffset;
-                $nextOffset++;
+                ++$nextOffset;
             }
 
             $items[] = $item;
@@ -558,7 +569,7 @@ class PrExcelImportService
         }
 
         if ($isDraftImport) {
-            $this->draftImportCount++;
+            ++$this->draftImportCount;
         }
 
         $this->databaseManager->beginTransaction();
@@ -823,7 +834,7 @@ class PrExcelImportService
     {
         $itemCount = count($rows);
 
-        for ($offset = $from; $offset <= $to && $offset < $itemCount; $offset++) {
+        for ($offset = $from; $offset <= $to && $offset < $itemCount; ++$offset) {
             $colA = $this->cell($rows, $offset, 0);
 
             if (preg_match('/grand\s*total/i', $colA)) {
@@ -836,8 +847,8 @@ class PrExcelImportService
         }
 
         // Fallback: scan any cell in the range for a grand-total-like value
-        for ($offset = $from; $offset <= $to && $offset < $itemCount; $offset++) {
-            for ($col = 0; $col <= 6; $col++) {
+        for ($offset = $from; $offset <= $to && $offset < $itemCount; ++$offset) {
+            for ($col = 0; $col <= 6; ++$col) {
                 $cell = $this->cell($rows, $offset, $col);
 
                 if (preg_match('/grand\s*total/i', $cell) || preg_match('/^total\s+amount/i', $cell)) {
@@ -899,7 +910,7 @@ class PrExcelImportService
     {
         $itemCount = count($rows);
 
-        for ($offset = $from; $offset <= $to && $offset < $itemCount; $offset++) {
+        for ($offset = $from; $offset <= $to && $offset < $itemCount; ++$offset) {
             $value = $this->cell($rows, $offset, $col);
 
             if (preg_match($pattern, $value)) {

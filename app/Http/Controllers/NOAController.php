@@ -405,7 +405,7 @@ class NOAController extends Controller
                 }
 
                 if ($hasAtLeastOnePrice) {
-                    $calculatedSupplierCount++;
+                    ++$calculatedSupplierCount;
                 }
             }
 
@@ -513,7 +513,7 @@ class NOAController extends Controller
             }
 
             if ($hasAtLeastOnePrice) {
-                $calculatedSupplierCount++;
+                ++$calculatedSupplierCount;
             }
         }
 

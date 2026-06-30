@@ -185,25 +185,6 @@ const selectedPrSummary = (pr) => {
                 </div>
 
                 <div class="space-y-2">
-                    <Label for="rfq_date">RFQ Date</Label>
-                    <input
-                        id="rfq_date"
-                        v-model="form.rfq_date"
-                        type="date"
-                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    />
-                    <p :class="getDateNoticeClass('rfq_date')">
-                        {{ getDateNotice("rfq_date") }}
-                    </p>
-                    <p
-                        v-if="form.errors?.rfq_date"
-                        class="text-xs text-destructive"
-                    >
-                        {{ form.errors.rfq_date }}
-                    </p>
-                </div>
-
-                <div class="space-y-2">
                     <Label for="submission_deadline"
                         >Submission Deadline</Label
                     >

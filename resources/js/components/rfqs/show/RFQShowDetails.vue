@@ -33,10 +33,6 @@ const formatCurrency = (value) => {
         </CardHeader>
         <CardContent class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 text-sm">
             <div>
-                <p class="text-muted-foreground">RFQ Date</p>
-                <p class="font-medium">{{ formatDate(rfq.rfq_date) }}</p>
-            </div>
-            <div>
                 <p class="text-muted-foreground">Submission Deadline</p>
                 <p class="font-medium">
                     {{ formatDate(rfq.submission_deadline) }}

@@ -31,14 +31,12 @@ const dates = ref({
     bac_date: toDateInput(props.batch.bac_date),
     noa_date: toDateInput(props.batch.noa_date),
     po_date: toDateInput(props.batch.po_date),
-    po_transmittal_date: toDateInput(props.batch.po_transmittal_date),
 });
 
 const dateFields = [
     { key: "bac_date", label: "BAC Resolution Date", description: "Default date for BAC Resolution" },
     { key: "noa_date", label: "NOA Date", description: "Default date for Notice of Award" },
     { key: "po_date", label: "PO Date", description: "Default date for Purchase Order" },
-    { key: "po_transmittal_date", label: "PO Transmittal Date", description: "Default date for PO Transmittal" },
 ];
 
 const saveDates = async () => {

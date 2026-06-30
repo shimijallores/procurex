@@ -122,7 +122,8 @@
         }
 
         .line-value {
-            flex: 1;
+            width: 220px;
+            flex: none;
             border-bottom: 1px solid #000;
             min-height: 16px;
             padding: 0 2px;
@@ -200,7 +201,8 @@
         }
 
         .footer-value {
-            flex: 1;
+            width: 220px;
+            flex: none;
             border-bottom: 1px solid #000;
             min-height: 18px;
             padding: 2px;
