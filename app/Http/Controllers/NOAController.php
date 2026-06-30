@@ -9,6 +9,7 @@ use App\Models\AOQ;
 use App\Models\BACResolution;
 use App\Models\Batch;
 use App\Models\Calendar;
+use App\Services\SvpMatrixSyncService;
 use App\Models\NOA;
 use App\Models\Office;
 use App\Models\RFQ;
@@ -196,6 +197,10 @@ class NOAController extends Controller
 
         $count = count($created);
 
+        foreach ($created as $noa) {
+            SvpMatrixSyncService::syncNoaValue($noa);
+        }
+
         return redirect()->route('noas.index')
             ->with('success', $count.' Notice(s) of Award created successfully.')
             ->with('print_batch_id', $batch->id);
@@ -366,6 +371,8 @@ class NOAController extends Controller
             'recipient_title' => (string) ($validated['recipient_title'] ?? ''),
         ]);
 
+        SvpMatrixSyncService::syncNoaValue($noa);
+
         return redirect()->route('noas.show', $noa)
             ->with('success', 'Notice of Award updated successfully.');
     }
@@ -470,6 +477,7 @@ class NOAController extends Controller
 
     public function destroy(NOA $noa): RedirectResponse
     {
+        SvpMatrixSyncService::syncNoaValue($noa);
         $noa->delete();
 
         return redirect()->route('noas.index')

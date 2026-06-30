@@ -10,6 +10,7 @@ use App\Models\AOQ;
 use App\Models\BACResolution;
 use App\Models\Batch;
 use App\Models\Calendar;
+use App\Services\SvpMatrixSyncService;
 use App\Models\NOA;
 use App\Models\Office;
 use App\Models\RFQ;
@@ -187,6 +188,8 @@ class BACResolutionController extends Controller
             if ($saveDraft) {
                 DB::commit();
 
+                SvpMatrixSyncService::syncResolutionValue($resolution);
+
                 return redirect()->route('bac-resolutions.show', $resolution)
                     ->with('success', 'BAC Resolution draft saved successfully.');
             }
@@ -213,6 +216,8 @@ class BACResolutionController extends Controller
 
             return redirect()->back()->with('error', 'Failed to create BAC Resolution. Please try again.');
         }
+
+        SvpMatrixSyncService::syncResolutionValue($resolution);
 
         return redirect()->route('bac-resolutions.show', $resolution)
             ->with('success', 'BAC Resolution created successfully.');
@@ -275,6 +280,8 @@ class BACResolutionController extends Controller
 
         $bacResolution->update($validated);
 
+        SvpMatrixSyncService::syncResolutionValue($bacResolution);
+
         return redirect()->route('bac-resolutions.show', $bacResolution)
             ->with('success', 'BAC Resolution updated successfully.');
     }
@@ -327,6 +334,8 @@ class BACResolutionController extends Controller
             return redirect()->back()->with('error', 'Failed to finalize BAC Resolution.');
         }
 
+        SvpMatrixSyncService::syncResolutionValue($bacResolution);
+
         return redirect()->route('bac-resolutions.show', $bacResolution)
             ->with('success', 'BAC Resolution finalized successfully.');
     }
@@ -365,12 +374,16 @@ class BACResolutionController extends Controller
             return redirect()->back()->with('error', 'Failed to regenerate BAC Resolution.');
         }
 
+        SvpMatrixSyncService::syncResolutionValue($bacResolution);
+
         return redirect()->route('bac-resolutions.show', $bacResolution)
             ->with('success', 'BAC Resolution regenerated successfully.');
     }
 
     public function destroy(BACResolution $bacResolution): RedirectResponse
     {
+        SvpMatrixSyncService::syncResolutionValue($bacResolution);
+
         DB::beginTransaction();
 
         try {

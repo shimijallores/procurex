@@ -10,6 +10,7 @@ use App\Models\Batch;
 use App\Models\Office;
 use App\Models\POTransmittal;
 use App\Models\PurchaseOrder;
+use App\Services\SvpMatrixSyncService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -177,11 +178,15 @@ class POTransmittalController extends Controller
             return redirect()->back()->with('info', 'All selected POs already have transmittals.');
         }
 
-        $firstPo = PurchaseOrder::with('noa.aoq.batch', 'noa.bacResolution.aoq.batch')->find($created[0]);
-        $batch = $firstPo?->noa?->aoq?->batch ?? $firstPo?->noa?->bacResolution?->aoq?->batch;
+        $pos = PurchaseOrder::with('noa.aoq.batch', 'noa.bacResolution.aoq.batch')->whereIn('id', $created)->get();
+        $batch = $pos->first()?->noa?->aoq?->batch ?? $pos->first()?->noa?->bacResolution?->aoq?->batch;
 
         if (! $batch) {
             return redirect()->back()->with('error', 'Could not find batch for created transmittals.');
+        }
+
+        foreach ($pos as $po) {
+            SvpMatrixSyncService::syncTransmittalValue($po);
         }
 
         return redirect()->route('po-transmittals.index')
@@ -290,15 +295,24 @@ class POTransmittalController extends Controller
             }
         });
 
+        SvpMatrixSyncService::syncTransmittalValue($coaTransmittal->purchaseOrder);
+
         return redirect()->route('po-transmittals.show', $coaTransmittal)
             ->with('success', 'PO Transmittal updated successfully.');
     }
 
     public function destroy(POTransmittal $poTransmittal): RedirectResponse
     {
+        $purchaseOrderId = $poTransmittal->purchase_order_id;
+
         POTransmittal::query()
-            ->where('purchase_order_id', $poTransmittal->purchase_order_id)
+            ->where('purchase_order_id', $purchaseOrderId)
             ->delete();
+
+        $purchaseOrder = PurchaseOrder::find($purchaseOrderId);
+        if ($purchaseOrder) {
+            SvpMatrixSyncService::syncTransmittalValue($purchaseOrder);
+        }
 
         return redirect()->route('po-transmittals.index')
             ->with('success', 'PO Transmittal deleted successfully.');

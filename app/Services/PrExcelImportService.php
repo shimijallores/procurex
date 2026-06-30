@@ -20,7 +20,7 @@ class PrExcelImportService
 {
     private const SKIP_SHEETS = ['offices', 'Sheet1', 'email', 'Sheet5'];
 
-    private const MAX_EMPTY_ROWS = 50;
+    private const MAX_EMPTY_ROWS = 100;
 
     private array $warnings = [];
 
@@ -336,7 +336,7 @@ class PrExcelImportService
         for ($i = 0; $i < $numRows; $i++) {
             $colA = $rows[$i][0] ?? '';
 
-            if ($colA === 'PURCHASE REQUEST') {
+            if ($colA === 'PURCHASE REQUEST' || str_starts_with($colA, 'PROVINCIAL GOVERNMENT OF')) {
                 $consecutiveEmpty = 0;
 
                 try {
@@ -760,6 +760,10 @@ class PrExcelImportService
         // Normalize spacing around dash
         $cleaned = preg_replace('/\s*-\s*/', '-', $cleaned);
         $cleaned = preg_replace('/\s+/', '', $cleaned);
+
+        // Remove any remaining non-digit, non-dash characters
+        // (handles Unicode whitespace, non-breaking spaces, etc.)
+        $cleaned = preg_replace('/[^\d-]/', '', $cleaned);
 
         if ($cleaned === '') {
             return null;

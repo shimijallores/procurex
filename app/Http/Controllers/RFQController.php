@@ -10,6 +10,7 @@ use App\Models\Calendar;
 use App\Models\PurchaseRequest;
 use App\Models\RFQ;
 use App\Models\RFQItem;
+use App\Services\SvpMatrixSyncService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -162,6 +163,8 @@ class RFQController extends Controller
             return redirect()->back()->with('error', 'Failed to create RFQ. Please try again.');
         }
 
+        SvpMatrixSyncService::syncRfqValue($rfq);
+
         return redirect()->route('rfqs.show', $rfq)
             ->with('success', 'RFQ created successfully.');
     }
@@ -232,12 +235,15 @@ class RFQController extends Controller
             return redirect()->back()->with('error', 'Failed to update RFQ. Please try again.');
         }
 
+        SvpMatrixSyncService::syncRfqValue($rfq);
+
         return redirect()->route('rfqs.show', $rfq)
             ->with('success', 'RFQ updated successfully.');
     }
 
     public function destroy(RFQ $rfq): RedirectResponse
     {
+        SvpMatrixSyncService::syncRfqValue($rfq);
         $rfq->delete();
 
         return redirect()->route('rfqs.index')->with('success', 'RFQ deleted successfully.');

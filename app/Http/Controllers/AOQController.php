@@ -11,6 +11,7 @@ use App\Imports\AOQMatrixImport;
 use App\Models\AOQ;
 use App\Models\Batch;
 use App\Models\Calendar;
+use App\Services\SvpMatrixSyncService;
 use App\Models\RFQ;
 use App\Models\RFQSupplier;
 use App\Models\RFQSupplierItem;
@@ -438,6 +439,8 @@ class AOQController extends Controller
             return redirect()->back()->with('error', 'Failed to create AOQ. Please try again.');
         }
 
+        SvpMatrixSyncService::syncAbstractValue($aoq);
+
         return redirect()->route('aoqs.show', $aoq)
             ->with('success', 'AOQ created successfully.');
     }
@@ -464,6 +467,8 @@ class AOQController extends Controller
 
     public function destroy(AOQ $aoq): RedirectResponse
     {
+        SvpMatrixSyncService::syncAbstractValue($aoq);
+
         DB::transaction(function () use ($aoq): void {
             $aoq->loadMissing('rfq.suppliers.supplierItems');
 
@@ -641,11 +646,15 @@ class AOQController extends Controller
             return redirect()->back()->with('error', 'Failed to update AOQ. Please try again.');
         }
 
+                SvpMatrixSyncService::syncAbstractValue($aoq);
+
         return redirect()->route('aoqs.show', $aoq)
             ->with('success', 'AOQ updated successfully.');
     }
 
     public function printPdf(AOQ $aoq): \Spatie\LaravelPdf\PdfBuilder
+
+
     {
         $aoq->load([
             'rfq.purchaseRequest.office',

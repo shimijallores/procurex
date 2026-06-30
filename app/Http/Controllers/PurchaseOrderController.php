@@ -12,7 +12,7 @@ use App\Models\Calendar;
 use App\Models\NOA;
 use App\Models\Office;
 use App\Models\PurchaseOrder;
-use App\Models\SvpMatrix;
+use App\Services\SvpMatrixSyncService;
 use Barryvdh\DomPDF\Facade\Pdf as DomPdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -303,10 +303,7 @@ class PurchaseOrderController extends Controller
                     $po->items()->create($computedItem);
                 }
 
-                SvpMatrix::query()->firstOrCreate(
-                    ['purchase_order_id' => $po->id],
-                    ['admin_value' => auth()->user()?->name],
-                );
+                SvpMatrixSyncService::createOrSyncFromPo($po);
 
                 $created[] = $po;
             }
