@@ -191,21 +191,39 @@
         .footer-line {
             margin-top: 10px;
             display: flex;
-            align-items: baseline;
             gap: 8px;
         }
 
         .footer-label {
             font-weight: bold;
             min-width: 160px;
+            padding-top: 1px;
         }
 
-        .footer-value {
-            width: 220px;
-            flex: none;
+        .footer-cols {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .footer-row {
             border-bottom: 1px solid #000;
-            min-height: 18px;
+            min-height: 28px;
             padding: 2px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .page-number {
+            font-size: 9pt;
+            color: #555;
+            white-space: nowrap;
         }
     </style>
 </head>
@@ -235,15 +253,42 @@
 
     $sealLogo = $imagePath(['batangas-seal.png']);
     $bagongLogo = $imagePath(['bagong-pilipinas.png']);
-    $rows = $rfq->items ?? collect();
-    $minRows = 15;
-    $emptyRows = max(0, $minRows - $rows->count());
+    $allItems = $rfq->items ?? collect();
+    $totalItems = $allItems->count();
+    $pageGroups = [];
+    $remaining = $allItems;
+
+    while ($remaining->count() > 0) {
+    $capacity = count($pageGroups) === 0 ? 20 : 34;
+    $pageGroups[] = $remaining->take($capacity);
+    $remaining = $remaining->slice($capacity);
+    }
+
+    if (empty($pageGroups)) {
+    $pageGroups = [collect()];
+    }
+
+    $totalPages = count($pageGroups);
+    @endphp
+
+    @php $itemCounter = 0; @endphp
+    @foreach ($pageGroups as $pageIndex => $rows)
+    @php
+    $pageNumber = $pageIndex + 1;
+    $isLast = $pageNumber === $totalPages;
+    $fillerRows = $isLast ? max(0, 5 - $rows->count()) : 0;
     @endphp
 
     <div class="page">
-        <div class="top-right-meta">
-            <div><strong>PR No.:</strong> {{ $rfq->purchaseRequest?->pr_no }}</div>
-            <div><strong>SVP No.:</strong> {{ $rfq->svp_no }}</div>
+        @if ($pageNumber === 1)
+        <div class="page-header">
+            @if ($totalPages > 1)
+            <div class="page-number">Page {{ $pageNumber }} of {{ $totalPages }}</div>
+            @endif
+            <div class="top-right-meta">
+                <div><strong>PR No.:</strong> {{ $rfq->purchaseRequest?->pr_no }}</div>
+                <div><strong>SVP No.:</strong> {{ $rfq->svp_no }}</div>
+            </div>
         </div>
 
         <table class="header-layout">
@@ -303,6 +348,15 @@
             <strong>APPROVED BUDGET FOR THE CONTRACT (ABC):</strong>
             Php <strong>{{ number_format((float) $rfq->abc_amount, 2) }}</strong>
         </div>
+        @else
+        <div class="page-header">
+            <div class="page-number">Page {{ $pageNumber }} of {{ $totalPages }}</div>
+            <div class="top-right-meta">
+                <div><strong>PR No.:</strong> {{ $rfq->purchaseRequest?->pr_no }}</div>
+                <div><strong>SVP No.:</strong> {{ $rfq->svp_no }}</div>
+            </div>
+        </div>
+        @endif
 
         <table class="table">
             <thead>
@@ -316,9 +370,10 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($rows as $index => $rfqItem)
+                @foreach ($rows as $rfqItem)
+                @php $itemCounter++; @endphp
                 <tr>
-                    <td class="col-item-no">{{ $index + 1 }}</td>
+                    <td class="col-item-no">{{ $itemCounter }}</td>
                     <td class="col-desc">{{ $rfqItem->item_name }}</td>
                     <td class="col-qty">{{ (int) $rfqItem->quantity }}</td>
                     <td class="col-unit">{{ $rfqItem->unit }}</td>
@@ -327,29 +382,51 @@
                 </tr>
                 @endforeach
 
-                @for ($i = 0; $i < $emptyRows; $i++)
-                    <tr>
+                @if ($isLast)
+                @for ($i = 0; $i < $fillerRows; $i++)
+                <tr>
                     <td class="col-item-no" style="height: 20px;">&nbsp;</td>
                     <td class="col-desc"></td>
                     <td class="col-qty"></td>
                     <td class="col-unit"></td>
                     <td class="col-unit-price"></td>
                     <td class="col-total"></td>
-                    </tr>
-                    @endfor
+                </tr>
+                @endfor
+                @endif
 
-                    <tr class="total-row">
-                        <td colspan="5" class="text-right">TOTAL AMOUNT:</td>
-                        <td class="col-total"></td>
-                    </tr>
+                @if ($totalPages > 1)
+                <tr class="total-row">
+                    <td colspan="5" class="text-right">SUBTOTAL:</td>
+                    <td class="col-total"></td>
+                </tr>
+                @endif
+
+                @if ($isLast)
+                <tr class="total-row">
+                    <td colspan="5" class="text-right" style="font-size:11pt;">GRAND TOTAL:</td>
+                    <td class="col-total"></td>
+                </tr>
+                @endif
             </tbody>
         </table>
 
+        @if ($isLast)
         <div class="footer-line mt-5">
             <div class="footer-label">Total Amount in Words:</div>
-            <div class="footer-value"></div>
+            <div class="footer-cols">
+                <div class="footer-row"></div>
+                <div class="footer-row"></div>
+            </div>
         </div>
+        @endif
+
     </div>
+
+    @if (!$isLast)
+    <div style="page-break-after: always;"></div>
+    @endif
+    @endforeach
 </body>
 
 </html>
