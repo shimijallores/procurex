@@ -105,6 +105,19 @@
             font-weight: 700;
         }
 
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .page-number {
+            font-size: 9pt;
+            color: #555;
+            white-space: nowrap;
+        }
+
         .footer {
             margin-top: 32px;
             font-weight: 700;
@@ -157,6 +170,9 @@
     @endphp
 
     <div class="page page-break">
+        <div class="page-header">
+            <div class="page-number">Page 1 of 2</div>
+        </div>
         <table class="header">
             <tr>
                 <td class="logo-cell">
@@ -234,6 +250,9 @@
     </div>
 
     <div class="page">
+        <div class="page-header">
+            <div class="page-number">Page 2 of 2</div>
+        </div>
         <table class="header">
             <tr>
                 <td class="logo-cell">

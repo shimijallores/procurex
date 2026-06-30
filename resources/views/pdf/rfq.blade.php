@@ -156,12 +156,12 @@
         }
 
         .col-item-no {
-            width: 10%;
+            width: 8%;
             text-align: center;
         }
 
         .col-desc {
-            width: 48%;
+            width: 38%;
         }
 
         .col-qty {
@@ -170,8 +170,13 @@
         }
 
         .col-unit {
-            width: 10%;
+            width: 8%;
             text-align: center;
+        }
+
+        .col-pr-price {
+            width: 10%;
+            text-align: right;
         }
 
         .col-unit-price {
@@ -180,7 +185,7 @@
         }
 
         .col-total {
-            width: 12%;
+            width: 16%;
             text-align: right;
         }
 
@@ -276,7 +281,8 @@
     @php
     $pageNumber = $pageIndex + 1;
     $isLast = $pageNumber === $totalPages;
-    $fillerRows = $isLast ? max(0, 5 - $rows->count()) : 0;
+    $pageCapacity = $totalPages === 1 ? 20 : 34;
+    $fillerRows = $isLast ? max(0, $pageCapacity - $rows->count() - 1) : 0;
     @endphp
 
     <div class="page">
@@ -345,8 +351,9 @@
         </div>
 
         <div class="mt-3">
-            <strong>APPROVED BUDGET FOR THE CONTRACT (ABC):</strong>
-            Php <strong>{{ number_format((float) $rfq->abc_amount, 2) }}</strong>
+            <strong>APPROVED BUDGET FOR THE</strong><br>
+            <strong>CONTRACT (ABC):</strong>
+            <strong><span style="text-decoration: underline;">Php {{ number_format((float) $rfq->abc_amount, 2) }}</span></strong>
         </div>
         @else
         <div class="page-header">
@@ -365,6 +372,7 @@
                     <th class="col-desc">ITEM & DESCRIPTION</th>
                     <th class="col-qty">QTY</th>
                     <th class="col-unit">UNIT</th>
+                    <th class="col-pr-price">PR PRICE</th>
                     <th class="col-unit-price">UNIT PRICE</th>
                     <th class="col-total">TOTAL AMOUNT</th>
                 </tr>
@@ -372,7 +380,7 @@
             <tbody>
                 @if ($pageNumber > 1)
                 <tr class="total-row">
-                    <td colspan="5" class="text-right">BALANCE FORWARDED</td>
+                    <td colspan="6" class="text-right">BALANCE FORWARDED</td>
                     <td class="col-total"></td>
                 </tr>
                 @endif
@@ -384,6 +392,7 @@
                     <td class="col-desc">{{ $rfqItem->item_name }}</td>
                     <td class="col-qty">{{ (int) $rfqItem->quantity }}</td>
                     <td class="col-unit">{{ $rfqItem->unit }}</td>
+                    <td class="col-pr-price">{{ number_format((float) ($rfqItem->purchaseRequestItem?->unit_cost ?? 0), 2) }}</td>
                     <td class="col-unit-price"></td>
                     <td class="col-total"></td>
                 </tr>
@@ -396,6 +405,7 @@
                     <td class="col-desc"></td>
                     <td class="col-qty"></td>
                     <td class="col-unit"></td>
+                    <td class="col-pr-price"></td>
                     <td class="col-unit-price"></td>
                     <td class="col-total"></td>
                 </tr>
@@ -404,14 +414,14 @@
 
                 @if ($totalPages > 1 && !$isLast)
                 <tr class="total-row">
-                    <td colspan="5" class="text-right">SUBTOTAL:</td>
+                    <td colspan="6" class="text-right">SUBTOTAL:</td>
                     <td class="col-total"></td>
                 </tr>
                 @endif
 
                 @if ($isLast)
                 <tr class="total-row">
-                    <td colspan="5" class="text-right" style="font-size:11pt;">GRAND TOTAL:</td>
+                    <td colspan="6" class="text-right" style="font-size:11pt;">GRAND TOTAL:</td>
                     <td class="col-total"></td>
                 </tr>
                 @endif

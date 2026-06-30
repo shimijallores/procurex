@@ -124,6 +124,19 @@
             font-weight: bold;
         }
 
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .page-number {
+            font-size: 9pt;
+            color: #555;
+            white-space: nowrap;
+        }
+
         .winner-line {
             margin-top: 10px;
             line-height: 1.4;
@@ -162,9 +175,41 @@
 
     $sealLogo = $imagePath(['batangas-seal.png']);
     $bagongLogo = $imagePath(['bagong-pilipinas.png']);
+
+    $allItems = $rfq->items ?? collect();
+    $totalItems = $allItems->count();
+    $pageGroups = [];
+    $capFirst = 25;
+    $capRest = 35;
+    $remaining = $allItems;
+
+    while ($remaining->count() > 0) {
+    $capacity = count($pageGroups) === 0 ? $capFirst : $capRest;
+    $pageGroups[] = $remaining->take($capacity);
+    $remaining = $remaining->slice($capacity);
+    }
+
+    if (empty($pageGroups)) {
+    $pageGroups = [collect()];
+    }
+
+    $totalPages = count($pageGroups);
+    @endphp
+
+    @foreach ($pageGroups as $pageIndex => $rows)
+    @php
+    $pageNumber = $pageIndex + 1;
+    $isLast = $pageNumber === $totalPages;
+    $pageCapacity = $totalPages === 1 ? $capFirst : $capRest;
+    $fillerRows = $isLast ? max(0, $pageCapacity - $rows->count() - 1) : 0;
     @endphp
 
     <div class="page">
+        <div class="page-header">
+            @if ($totalPages > 1)
+            <div class="page-number">Page {{ $pageNumber }} of {{ $totalPages }}</div>
+            @endif
+        </div>
         <table class="header-layout">
             <tr>
                 <td class="header-logo-cell">
@@ -215,7 +260,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach(($rfq->items ?? collect()) as $rfqItem)
+                @foreach($rows as $rfqItem)
                 @php
                 $prItem = $rfqItem->purchaseRequestItem;
                 $quantity = (float) ($rfqItem->quantity ?? 0);
@@ -240,6 +285,32 @@
                 </tr>
                 @endforeach
 
+                @if ($isLast)
+                @for ($i = 0; $i < $fillerRows; $i++)
+                <tr>
+                    <td>&nbsp;</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    @foreach($supplierTotals as $supplier)
+                    <td></td>
+                    <td></td>
+                    @endforeach
+                </tr>
+                @endfor
+                @endif
+
+                @if (!$isLast)
+                <tr>
+                    <td colspan="3" class="text-right"><strong>SUBTOTAL:</strong></td>
+                    <td class="text-right"><strong>{{ number_format((float) ($rfq->abc_amount ?? 0), 2) }}</strong></td>
+                    @foreach($supplierTotals as $supplier)
+                    <td></td>
+                    <td></td>
+                    @endforeach
+                </tr>
+                @endif
+
                 <tr>
                     <td colspan="3" class="text-right"><strong>GRAND TOTAL - P</strong></td>
                     <td class="text-right"><strong>{{ number_format((float) ($rfq->abc_amount ?? 0), 2) }}</strong></td>
@@ -251,6 +322,7 @@
             </tbody>
         </table>
 
+        @if ($isLast)
         <div class="winner-line">
             After our careful scrutiny and deliberation of the submitted quotation of the supplier as reflected in this Abstract of Quotation,
             we strongly recommend the quotation to be given to
@@ -288,7 +360,13 @@
                 </td>
             </tr>
         </table>
+        @endif
     </div>
+
+    @if (!$isLast)
+    <div style="page-break-after: always;"></div>
+    @endif
+    @endforeach
 </body>
 
 </html>

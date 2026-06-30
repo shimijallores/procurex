@@ -92,6 +92,19 @@
             height: 22px;
         }
 
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 4px;
+        }
+
+        .page-number {
+            font-size: 9pt;
+            color: #555;
+            white-space: nowrap;
+        }
+
         .items th {
             text-align: center;
             font-weight: 700;
@@ -196,10 +209,11 @@
     $supplierAddress = (string) ($winnerSupplier?->address ?? '');
     $projectName = (string) ($rfq?->project_name ?? $resolution?->project_name ?? '');
 
-    $rows = collect($purchaseOrder->items ?? [])->values();
-    $minRows = 15;
-    $displayRows = $rows->take($minRows);
-    $blankRows = max(0, $minRows - $displayRows->count());
+    $allItems = collect($purchaseOrder->items ?? [])->values();
+    $minRows = 25;
+    $displayItems = $allItems->take(25);
+    $blankRows = max(0, 25 - $displayItems->count());
+    $totalPages = 1;
 
     $deliveryDays = (int) ($purchaseOrder->delivery_term_days ?? 0);
     $deliveryText = $deliveryDays > 0
@@ -211,6 +225,11 @@
     @endphp
 
     <div class="page">
+        <div class="page-header">
+            @if ($totalPages > 1)
+            <div class="page-number">Page 1 of {{ $totalPages }}</div>
+            @endif
+        </div>
         <table class="form">
             <tr>
                 <td colspan="8" class="center no-border" style="padding-top:6px; padding-bottom:2px;">
@@ -298,7 +317,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($displayRows as $index => $item)
+                            @foreach($displayItems as $index => $item)
                             <tr class="item-row">
                                 <td class="center">{{ $index + 1 }}</td>
                                 <td class="center">{{ $item->rfqItem?->purchaseRequestItem?->unit ?? '' }}</td>

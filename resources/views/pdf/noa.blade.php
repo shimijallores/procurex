@@ -137,6 +137,19 @@
             font-weight: 700;
         }
 
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .page-number {
+            font-size: 9pt;
+            color: #555;
+            white-space: nowrap;
+        }
+
         .closing {
             margin-top: 14px;
             text-align: justify;
@@ -208,9 +221,16 @@
     $amountFmt = number_format($amount, 2);
 
     $amountWords = \App\Helpers\NumberToWords::convert($amount, 'centavos');
+
+    $totalPages = 1;
     @endphp
 
     <div class="page">
+        <div class="page-header">
+            @if ($totalPages > 1)
+            <div class="page-number">Page 1 of {{ $totalPages }}</div>
+            @endif
+        </div>
         <div class="header">
             <div class="header-cell header-left">
                 @if ($sealLogo)
