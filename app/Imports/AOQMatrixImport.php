@@ -49,7 +49,7 @@ class AOQMatrixImport implements ToCollection, WithStartRow
             }
 
             // Columns: 0=Item Name, 1=Qty, 2=Unit, 3=Expected Price, 4+=Supplier Prices
-            for ($s = 0; $s < $supplierCount; ++$s) {
+            for ($s = 0; $s < $supplierCount; $s++) {
                 $colIndex = 4 + $s;
                 $rawPrice = $rowData[$colIndex] ?? null;
 

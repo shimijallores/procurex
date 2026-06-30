@@ -345,7 +345,7 @@ Route::middleware(['auth'])->group(function (): void {
         ->middleware($rfqAndAoqRoles)
         ->name('rfqs.recent-svps');
     Route::resource('rfqs', RFQController::class)
-        ->only(['index', 'create', 'store', 'show', 'destroy'])
+        ->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy'])
         ->middleware($rfqRoles);
     Route::get('rfqs/suggest-date', [RFQController::class, 'suggestRfqDate'])
         ->middleware($rfqRoles)

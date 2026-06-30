@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreRFQRequest;
+use App\Http\Requests\UpdateRFQRequest;
 use App\Models\Calendar;
 use App\Models\PurchaseRequest;
 use App\Models\RFQ;
@@ -179,6 +180,62 @@ class RFQController extends Controller
         ]);
     }
 
+    public function edit(RFQ $rfq): Response
+    {
+        $rfq->load([
+            'purchaseRequest.office',
+            'purchaseRequest.fund',
+            'items',
+        ]);
+
+        return Inertia::render('RFQs/Edit', [
+            'rfq' => $rfq,
+        ]);
+    }
+
+    public function update(UpdateRFQRequest $request, RFQ $rfq): RedirectResponse
+    {
+        $validated = $request->validated();
+
+        DB::beginTransaction();
+        try {
+            $rfq->update([
+                'svp_no' => $validated['svp_no'] ?? $rfq->svp_no,
+                'rfq_date' => $validated['rfq_date'],
+                'submission_deadline' => $validated['submission_deadline'] ?? null,
+                'project_name' => $validated['project_name'],
+                'abc_amount' => (float) $validated['abc_amount'],
+                'remarks' => $validated['remarks'] ?? null,
+            ]);
+
+            $submittedItemIds = [];
+            foreach ($validated['items'] as $itemPayload) {
+                if (! empty($itemPayload['id'])) {
+                    $rfqItem = RFQItem::find((int) $itemPayload['id']);
+                    if ($rfqItem && $rfqItem->rfq_id === $rfq->id) {
+                        $rfqItem->update([
+                            'item_name' => $itemPayload['item_name'],
+                            'unit' => $itemPayload['unit'] ?? null,
+                            'quantity' => (int) $itemPayload['quantity'],
+                        ]);
+                        $submittedItemIds[] = $rfqItem->id;
+                    }
+                }
+            }
+
+            $rfq->items()->whereNotIn('id', $submittedItemIds)->delete();
+
+            DB::commit();
+        } catch (\Throwable $throwable) {
+            DB::rollBack();
+
+            return redirect()->back()->with('error', 'Failed to update RFQ. Please try again.');
+        }
+
+        return redirect()->route('rfqs.show', $rfq)
+            ->with('success', 'RFQ updated successfully.');
+    }
+
     public function destroy(RFQ $rfq): RedirectResponse
     {
         $rfq->delete();
@@ -260,7 +317,7 @@ class RFQController extends Controller
 
         do {
             $svpNo = sprintf('%s%04d', $prefix, $next);
-            ++$next;
+            $next++;
         } while (RFQ::where('svp_no', $svpNo)->exists());
 
         return $svpNo;

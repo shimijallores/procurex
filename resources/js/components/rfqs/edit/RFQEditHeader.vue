@@ -6,19 +6,13 @@ import { Icon } from "@iconify/vue";
 const props = defineProps({
     rfq: Object,
 });
-
-defineEmits(["delete"]);
-
-const openPdf = () => {
-    window.open(route("rfqs.pdf", props.rfq.id), "_blank");
-};
 </script>
 
 <template>
     <div class="space-y-4">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <Link :href="route('rfqs.index')">
+                <Link :href="route('rfqs.show', rfq.id)">
                     <Button variant="ghost" size="sm">
                         <Icon icon="lucide:arrow-left" class="mr-2 h-4 w-4" />
                         Back
@@ -26,7 +20,7 @@ const openPdf = () => {
                 </Link>
                 <div class="min-w-0 break-words">
                     <h1 class="text-2xl font-bold tracking-tight md:text-3xl">
-                        Request for Quotation
+                        Edit RFQ
                         <span class="text-primary">{{ rfq.svp_no }}</span>
                     </h1>
                     <p class="text-muted-foreground mt-1">
@@ -34,25 +28,6 @@ const openPdf = () => {
                         {{ rfq.project_name }}
                     </p>
                 </div>
-            </div>
-
-            <div class="flex shrink-0 items-center justify-end gap-2">
-                <Link :href="route('rfqs.edit', rfq.id)">
-                    <Button variant="outline">
-                        <Icon icon="lucide:pencil" class="mr-2 h-4 w-4" />
-                        Edit
-                    </Button>
-                </Link>
-
-                <Button variant="outline" @click="openPdf">
-                    <Icon icon="lucide:printer" class="mr-2 h-4 w-4" />
-                    Print RFQ
-                </Button>
-
-                <Button variant="destructive" @click="$emit('delete')">
-                    <Icon icon="lucide:trash-2" class="mr-2 h-4 w-4" />
-                    Delete
-                </Button>
             </div>
         </div>
     </div>

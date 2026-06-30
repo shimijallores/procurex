@@ -191,6 +191,14 @@ const formatCurrency = (value) => {
                                 <div
                                     class="flex items-center justify-end gap-2"
                                 >
+                                    <Link :href="route('rfqs.edit', rfq.id)">
+                                        <Button variant="ghost" size="sm">
+                                            <Icon
+                                                icon="lucide:pencil"
+                                                class="h-4 w-4"
+                                            />
+                                        </Button>
+                                    </Link>
                                     <a
                                         :href="route('rfqs.pdf', rfq.id)"
                                         target="_blank"
