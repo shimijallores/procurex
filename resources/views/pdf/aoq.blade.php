@@ -179,20 +179,59 @@
     $allItems = $rfq->items ?? collect();
     $totalItems = $allItems->count();
     $pageGroups = [];
-    $capFirst = 25;
-    $capRest = 35;
-    $remaining = $allItems;
+    $charsPerLine = 50;
+    $capSingle = 12;
+    $capFirst = 18;
+    $capMid = 27;
+    $capRest = 20;
+    $capLast = 2;
+    $currentIndex = 0;
 
-    while ($remaining->count() > 0) {
-    $capacity = count($pageGroups) === 0 ? $capFirst : $capRest;
-    $pageGroups[] = $remaining->take($capacity);
-    $remaining = $remaining->slice($capacity);
+    while ($currentIndex < $totalItems) {
+    $remainingUnits = 0;
+    for ($j = $currentIndex; $j < $totalItems; $j++) {
+    $remainingUnits += max(1, (int) ceil(mb_strlen($allItems[$j]->item_name ?? '') / $charsPerLine));
+    }
+
+    $hasPrevPages = count($pageGroups) > 0;
+    $capacity = match (true) {
+    ! $hasPrevPages && $remainingUnits <= $capFirst && $remainingUnits <= $capSingle => $capSingle,
+    ! $hasPrevPages => $capFirst,
+    $remainingUnits <= $capLast => $capLast,
+    default => $capMid,
+    };
+
+    $group = collect();
+    $used = 0;
+
+    for ($i = $currentIndex; $i < $totalItems; $i++) {
+    $desc = $allItems[$i]->item_name ?? '';
+    $lines = max(1, (int) ceil(mb_strlen($desc) / $charsPerLine));
+
+    if ($used + $lines > $capacity && $group->count() > 0) {
+    break;
+    }
+
+    $group->push($allItems[$i]);
+    $used += $lines;
+    $currentIndex++;
+    }
+
+    if ($group->count() === 0) {
+    $group->push($allItems[$currentIndex]);
+    $used += max(1, (int) ceil(mb_strlen($allItems[$currentIndex]->item_name ?? '') / $charsPerLine));
+    $currentIndex++;
+    }
+
+    $pageGroups[] = $group;
     }
 
     if (empty($pageGroups)) {
     $pageGroups = [collect()];
     }
 
+    $supplierTotals = collect($calculation['supplier_totals'] ?? [])->take(3)->values();
+    $rfqSuppliers = $rfq->suppliers ?? collect();
     $totalPages = count($pageGroups);
     @endphp
 
@@ -200,8 +239,34 @@
     @php
     $pageNumber = $pageIndex + 1;
     $isLast = $pageNumber === $totalPages;
-    $pageCapacity = $totalPages === 1 ? $capFirst : $capRest;
-    $fillerRows = $isLast ? max(0, $pageCapacity - $rows->count() - 1) : 0;
+    $pageCapacity = $totalPages === 1 ? $capSingle : ($isLast ? $capLast : ($pageNumber === 1 ? $capFirst : $capMid));
+    $rowsUsed = 0;
+    foreach ($rows as $row) {
+    $rowsUsed += max(1, (int) ceil(mb_strlen($row->item_name ?? '') / $charsPerLine));
+    }
+    $fillerRows = $isLast ? max(0, $pageCapacity - $rowsUsed - 1) : 0;
+
+    $pageSubtotalAbc = 0;
+    $pageSubtotalSuppliers = [];
+    foreach ($rows as $item) {
+    $prItem = $item->purchaseRequestItem;
+    $qty = (float) ($item->quantity ?? 0);
+    $pageSubtotalAbc += $qty * (float) ($prItem?->unit_cost ?? 0);
+
+    foreach ($supplierTotals as $supplier) {
+    $entry = $rfqSuppliers->firstWhere('supplier_id', $supplier['supplier_id']);
+    $supplierItem = $entry?->supplierItems?->firstWhere('rfq_item_id', $item->id);
+    $unitPrice = $supplierItem?->unit_price;
+
+    if (! isset($pageSubtotalSuppliers[$supplier['supplier_id']])) {
+    $pageSubtotalSuppliers[$supplier['supplier_id']] = ['total_amount' => 0];
+    }
+
+    if ($unitPrice !== null) {
+    $pageSubtotalSuppliers[$supplier['supplier_id']]['total_amount'] += (float) $unitPrice * $qty;
+    }
+    }
+    }
     @endphp
 
     <div class="page">
@@ -210,6 +275,8 @@
             <div class="page-number">Page {{ $pageNumber }} of {{ $totalPages }}</div>
             @endif
         </div>
+
+        @if ($pageNumber === 1)
         <table class="header-layout">
             <tr>
                 <td class="header-logo-cell">
@@ -235,11 +302,7 @@
 
         <div class="mt-3"><strong>Project Name:</strong> {{ $rfq->project_name }}</div>
         <div class="mt-1"><strong>Date:</strong> {{ \Carbon\Carbon::parse($aoq->aoq_date)->format('m/d/y') }}</div>
-
-        @php
-        $supplierTotals = collect($calculation['supplier_totals'] ?? [])->take(3)->values();
-        $rfqSuppliers = $rfq->suppliers ?? collect();
-        @endphp
+        @endif
 
         <table>
             <thead>
@@ -267,10 +330,10 @@
                 $abcLineTotal = $quantity * (float) ($prItem?->unit_cost ?? 0);
                 @endphp
                 <tr>
-                    <td>{{ (int) $quantity }}</td>
-                    <td>{{ $rfqItem->unit ?? '' }}</td>
+                    <td class="text-center">{{ (int) $quantity }}</td>
+                    <td class="text-center">{{ $rfqItem->unit ?? '' }}</td>
                     <td>{{ $rfqItem->item_name ?? '' }}</td>
-                    <td class="text-right">{{ number_format((float) $abcLineTotal, 2) }}</td>
+                    <td class="text-center">{{ number_format((float) $abcLineTotal, 2) }}</td>
 
                     @foreach($supplierTotals as $supplier)
                     @php
@@ -279,8 +342,8 @@
                     $unitPrice = $supplierItem?->unit_price;
                     $lineTotal = $unitPrice !== null ? ((float) $unitPrice * $quantity) : null;
                     @endphp
-                    <td class="text-right">{{ $unitPrice !== null ? number_format((float) $unitPrice, 2) : '' }}</td>
-                    <td class="text-right">{{ $lineTotal !== null ? number_format((float) $lineTotal, 2) : '' }}</td>
+                    <td class="text-center">{{ $unitPrice !== null ? number_format((float) $unitPrice, 2) : '' }}</td>
+                    <td class="text-center">{{ $lineTotal !== null ? number_format((float) $lineTotal, 2) : '' }}</td>
                     @endforeach
                 </tr>
                 @endforeach
@@ -298,18 +361,6 @@
                     @endforeach
                 </tr>
                 @endfor
-                @endif
-
-                @if (!$isLast)
-                <tr>
-                    <td colspan="3" class="text-right"><strong>SUBTOTAL:</strong></td>
-                    <td class="text-right"><strong>{{ number_format((float) ($rfq->abc_amount ?? 0), 2) }}</strong></td>
-                    @foreach($supplierTotals as $supplier)
-                    <td></td>
-                    <td></td>
-                    @endforeach
-                </tr>
-                @endif
 
                 <tr>
                     <td colspan="3" class="text-right"><strong>GRAND TOTAL - P</strong></td>
@@ -319,6 +370,16 @@
                     <td class="text-right"><strong>{{ number_format((float) $supplier['total_amount'], 2) }}</strong></td>
                     @endforeach
                 </tr>
+                @else
+                <tr>
+                    <td colspan="3" class="text-right"><strong>SUBTOTAL:</strong></td>
+                    <td class="text-right"><strong>{{ number_format((float) $pageSubtotalAbc, 2) }}</strong></td>
+                    @foreach($supplierTotals as $supplier)
+                    <td></td>
+                    <td class="text-right"><strong>{{ number_format((float) ($pageSubtotalSuppliers[$supplier['supplier_id']]['total_amount'] ?? 0), 2) }}</strong></td>
+                    @endforeach
+                </tr>
+                @endif
             </tbody>
         </table>
 
