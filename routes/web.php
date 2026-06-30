@@ -447,6 +447,12 @@ Route::middleware(['auth'])->group(function (): void {
     Route::resource('bac-resolutions', BACResolutionController::class)
         ->only(['index', 'create', 'store', 'edit', 'update', 'show', 'destroy'])
         ->middleware($bacResolutionRoles);
+    Route::get('bac-resolutions/batch/{batch}/aoqs', [
+        BACResolutionController::class,
+        'fetchBatchAoqs',
+    ])
+        ->middleware($bacResolutionRoles)
+        ->name('bac-resolutions.batch-aoqs');
     Route::get('bac-resolutions/{bac_resolution}/pdf', [
         BACResolutionController::class,
         'printPdf',
@@ -551,6 +557,12 @@ Route::middleware(['auth'])->group(function (): void {
     ])
         ->middleware($inspectionRoles)
         ->name('po-transmittals.batch-purchase-orders');
+    Route::get('po-transmittals/batch/{batch}/print', [
+        POTransmittalController::class,
+        'printBatchPdf',
+    ])
+        ->middleware($inspectionRoles)
+        ->name('po-transmittals.print-batch');
 
     // Acceptance & Inspection module
     $acceptanceInspectionRoles =

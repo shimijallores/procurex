@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PO Transmittal - COA and OPG</title>
+    <title>PO Transmittals - Batch {{ $batch->batch_no }}</title>
     <style>
         * {
             box-sizing: border-box;
@@ -148,10 +148,15 @@
 
     $sealLogo = $imagePath(['batangas-seal.png']);
     $bagongLogo = $imagePath(['bagong-pilipinas.png']);
+    @endphp
 
-    $supplier = strtoupper((string) ($winnerSupplier?->name ?? '—'));
-    $projectName = (string) ($rfq?->project_name ?? $resolution?->project_name ?? '—');
-
+    @foreach ($poGroups as $poGroup)
+    @php
+    $purchaseOrder = $poGroup['purchaseOrder'];
+    $coaTransmittal = $poGroup['coaTransmittal'];
+    $opgTransmittal = $poGroup['opgTransmittal'];
+    $supplier = strtoupper((string) ($poGroup['winnerSupplier']?->name ?: '—'));
+    $projectName = (string) ($poGroup['projectName'] ?: '—');
     $coaHeaderLines = collect(preg_split('/\r\n|\r|\n/', trim((string) ($coaTransmittal?->header_text ?? ''))))->filter();
     $opgHeaderLines = collect(preg_split('/\r\n|\r|\n/', trim((string) ($opgTransmittal?->header_text ?? ''))))->filter();
     @endphp
@@ -233,7 +238,7 @@
         </div>
     </div>
 
-    <div class="page">
+    <div class="page @if(!$loop->last) page-break @endif">
         <table class="header">
             <tr>
                 <td class="logo-cell">
@@ -300,6 +305,7 @@
             {{ strtoupper((string) (($opgTransmittal?->signatory_title) ?: 'PGDH – GSO')) }}
         </div>
     </div>
+    @endforeach
 </body>
 
 </html>

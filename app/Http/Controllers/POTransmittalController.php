@@ -86,25 +86,7 @@ class POTransmittalController extends Controller
 
     public function create(): Response
     {
-        $batches = Batch::with([
-            'aoqs.rfq',
-        ])
-            ->whereHas('aoqs', function ($q): void {
-                $q->whereHas('noa.purchaseOrder', function ($po): void {
-                    $po->whereDoesntHave('poTransmittals');
-                });
-            })
-            ->withCount(['aoqs' => function ($q): void {
-                $q->whereHas('noa.purchaseOrder', function ($po): void {
-                    $po->whereDoesntHave('poTransmittals');
-                });
-            }])
-            ->latest()
-            ->get();
-
-        return Inertia::render('POTransmittals/Create', [
-            'batches' => $batches,
-        ]);
+        return Inertia::render('POTransmittals/Create');
     }
 
     public function batchPurchaseOrders(Batch $batch): JsonResponse
@@ -142,39 +124,47 @@ class POTransmittalController extends Controller
     {
         $validated = $storePOTransmittalRequest->validated();
 
-        $purchaseOrderId = (int) $validated['purchase_order_id'];
-
-        $existingTypes = POTransmittal::query()
-            ->where('purchase_order_id', $purchaseOrderId)
-            ->pluck('type')
-            ->all();
-
-        if (in_array('coa', $existingTypes, true) || in_array('opg', $existingTypes, true)) {
-            return redirect()->back()->withErrors([
-                'purchase_order_id' => 'COA and OPG transmittals already exist for this Purchase Order.',
-            ])->withInput();
-        }
+        $errors = [];
+        $created = [];
 
         DB::beginTransaction();
-
         try {
-            $coaTransmittal = POTransmittal::create([
-                'purchase_order_id' => $purchaseOrderId,
-                'type' => 'coa',
-                'transmittal_no' => $validated['coa']['transmittal_no'] ?? null,
-                'header_text' => $validated['coa']['header_text'] ?? null,
-                'signatory_name' => $validated['coa']['signatory_name'] ?? null,
-                'signatory_title' => $validated['coa']['signatory_title'] ?? null,
-            ]);
+            foreach ($validated['purchase_orders'] as $poData) {
+                $purchaseOrderId = (int) $poData['id'];
 
-            $opgTransmittal = POTransmittal::create([
-                'purchase_order_id' => $purchaseOrderId,
-                'type' => 'opg',
-                'transmittal_no' => $validated['opg']['transmittal_no'] ?? null,
-                'header_text' => $validated['opg']['header_text'] ?? null,
-                'signatory_name' => $validated['opg']['signatory_name'] ?? null,
-                'signatory_title' => $validated['opg']['signatory_title'] ?? null,
-            ]);
+                $existingTypes = POTransmittal::query()
+                    ->where('purchase_order_id', $purchaseOrderId)
+                    ->pluck('type')
+                    ->all();
+
+                if (in_array('coa', $existingTypes, true) && in_array('opg', $existingTypes, true)) {
+                    continue;
+                }
+
+                if (! in_array('coa', $existingTypes, true)) {
+                    POTransmittal::create([
+                        'purchase_order_id' => $purchaseOrderId,
+                        'type' => 'coa',
+                        'transmittal_no' => $poData['coa']['transmittal_no'] ?? null,
+                        'header_text' => $poData['coa']['header_text'] ?? null,
+                        'signatory_name' => $poData['coa']['signatory_name'] ?? null,
+                        'signatory_title' => $poData['coa']['signatory_title'] ?? null,
+                    ]);
+                }
+
+                if (! in_array('opg', $existingTypes, true)) {
+                    POTransmittal::create([
+                        'purchase_order_id' => $purchaseOrderId,
+                        'type' => 'opg',
+                        'transmittal_no' => $poData['opg']['transmittal_no'] ?? null,
+                        'header_text' => $poData['opg']['header_text'] ?? null,
+                        'signatory_name' => $poData['opg']['signatory_name'] ?? null,
+                        'signatory_title' => $poData['opg']['signatory_title'] ?? null,
+                    ]);
+                }
+
+                $created[] = $purchaseOrderId;
+            }
 
             DB::commit();
         } catch (\Throwable $throwable) {
@@ -183,8 +173,63 @@ class POTransmittalController extends Controller
             return redirect()->back()->with('error', 'Failed to create PO Transmittals. Please try again.');
         }
 
-        return redirect()->route('po-transmittals.show', $coaTransmittal)
-            ->with('success', 'COA and OPG PO Transmittals created successfully.');
+        if (empty($created)) {
+            return redirect()->back()->with('info', 'All selected POs already have transmittals.');
+        }
+
+        $firstPo = PurchaseOrder::with('noa.aoq.batch', 'noa.bacResolution.aoq.batch')->find($created[0]);
+        $batch = $firstPo?->noa?->aoq?->batch ?? $firstPo?->noa?->bacResolution?->aoq?->batch;
+
+        if (! $batch) {
+            return redirect()->back()->with('error', 'Could not find batch for created transmittals.');
+        }
+
+        return redirect()->route('po-transmittals.index')
+            ->with('print_batch_id', $batch->id)
+            ->with('success', 'PO Transmittals created successfully. Printing batch PDF...');
+    }
+
+    public function printBatchPdf(Batch $batch): \Spatie\LaravelPdf\PdfBuilder
+    {
+        $purchaseOrders = PurchaseOrder::with([
+            'noa.aoq.rfq.purchaseRequest.office',
+            'noa.aoq.winnerSupplier',
+            'noa.bacResolution.aoq.rfq.purchaseRequest.office',
+            'noa.bacResolution.aoq.winnerSupplier',
+            'poTransmittals',
+        ])
+            ->where(fn ($q) => $q
+                ->whereHas('noa.aoq', fn ($aoq) => $aoq->where('batch_id', $batch->id))
+                ->orWhereHas('noa.bacResolution.aoq', fn ($aoq) => $aoq->where('batch_id', $batch->id))
+            )
+            ->whereHas('poTransmittals')
+            ->latest('po_date')
+            ->get();
+
+        $poGroups = $purchaseOrders->map(function (PurchaseOrder $purchaseOrder): array {
+            $relatedTransmittals = $purchaseOrder->poTransmittals;
+            $coa = $relatedTransmittals->firstWhere('type', 'coa');
+            $opg = $relatedTransmittals->firstWhere('type', 'opg');
+            $noa = $purchaseOrder->noa;
+            $aoq = $noa?->aoq ?? $noa?->bacResolution?->aoq;
+            $rfq = $aoq?->rfq;
+
+            return [
+                'purchaseOrder' => $purchaseOrder,
+                'coaTransmittal' => $coa,
+                'opgTransmittal' => $opg,
+                'winnerSupplier' => $aoq?->winnerSupplier,
+                'projectName' => $rfq?->project_name ?? $noa?->bacResolution?->project_name ?? '—',
+            ];
+        })->values();
+
+        return Pdf::view('pdf.po-transmittals-batch', [
+            'poGroups' => $poGroups,
+            'batch' => $batch,
+        ])
+            ->format('a4')
+            ->name('PO-Transmittals-Batch-'.$batch->batch_no.'.pdf')
+            ->inline();
     }
 
     public function show(POTransmittal $poTransmittal): Response

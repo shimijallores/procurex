@@ -13,6 +13,7 @@ use App\Models\Calendar;
 use App\Models\NOA;
 use App\Models\Office;
 use App\Models\RFQ;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -95,37 +96,9 @@ class BACResolutionController extends Controller
 
     public function create(): Response
     {
-        $eligibleBatches = Batch::with([
-            'aoqs.rfq.purchaseRequest.office',
-            'aoqs.rfq.suppliers.supplierItems.rfqItem',
-            'aoqs.winnerSupplier',
-        ])
-            ->has('aoqs')
-            ->whereDoesntHave('aoqs.bacResolution')
-            ->whereDoesntHave('aoqs.bacResolutions')
-            ->withCount('aoqs')
-            ->orderByDesc('id')
-            ->get()
-            ->map(function (Batch $batch): Batch {
-                $batch->aoqs->each(function (AOQ $aoq): void {
-                    $calculatedSupplierCount = $this->countCalculatedSuppliers($aoq);
-                    $calculationLabel = $calculatedSupplierCount <= 1
-                        ? 'Single Calculated'
-                        : 'Lowest Calculated';
-
-                    $aoq->setAttribute('calculated_supplier_count', $calculatedSupplierCount);
-                    $aoq->setAttribute('calculation_label', $calculationLabel);
-                    $aoq->setAttribute('winner_amount', $this->calculateWinnerAmount($aoq));
-                });
-
-                return $batch;
-            })
-            ->values();
-
         $suggestedDate = $this->suggestNextWorkingDay()->toDateString();
 
         return Inertia::render('BACResolutions/Create', [
-            'eligibleBatches' => $eligibleBatches,
             'defaultResolutionDate' => $suggestedDate,
             'defaultMeetingDate' => $suggestedDate,
         ]);
@@ -271,36 +244,10 @@ class BACResolutionController extends Controller
                 ->with('error', 'Finalized BAC Resolution cannot be edited.');
         }
 
-        $eligibleBatches = Batch::with([
-            'aoqs.rfq.purchaseRequest.office',
-            'aoqs.rfq.suppliers.supplierItems.rfqItem',
-            'aoqs.winnerSupplier',
-        ])
-            ->has('aoqs')
-            ->withCount('aoqs')
-            ->orderByDesc('id')
-            ->get()
-            ->map(function (Batch $batch): Batch {
-                $batch->aoqs->each(function (AOQ $aoq): void {
-                    $calculatedSupplierCount = $this->countCalculatedSuppliers($aoq);
-                    $calculationLabel = $calculatedSupplierCount <= 1
-                        ? 'Single Calculated'
-                        : 'Lowest Calculated';
-
-                    $aoq->setAttribute('calculated_supplier_count', $calculatedSupplierCount);
-                    $aoq->setAttribute('calculation_label', $calculationLabel);
-                    $aoq->setAttribute('winner_amount', $this->calculateWinnerAmount($aoq));
-                });
-
-                return $batch;
-            })
-            ->values();
-
         $suggestedDate = $this->suggestNextWorkingDay()->toDateString();
 
         return Inertia::render('BACResolutions/Edit', [
             'resolution' => $bacResolution,
-            'eligibleBatches' => $eligibleBatches,
             'defaultResolutionDate' => $suggestedDate,
             'defaultMeetingDate' => $suggestedDate,
         ]);
@@ -442,6 +389,33 @@ class BACResolutionController extends Controller
 
         return redirect()->route('bac-resolutions.index')
             ->with('success', 'BAC Resolution deleted successfully.');
+    }
+
+    public function fetchBatchAoqs(Batch $batch): JsonResponse
+    {
+        $batch->load([
+            'aoqs.rfq.purchaseRequest.office',
+            'aoqs.rfq.suppliers.supplierItems.rfqItem',
+            'aoqs.winnerSupplier',
+        ]);
+
+        $aoqs = $batch->aoqs->map(function (AOQ $aoq): AOQ {
+            $calculatedSupplierCount = $this->countCalculatedSuppliers($aoq);
+            $calculationLabel = $calculatedSupplierCount <= 1
+                ? 'Single Calculated'
+                : 'Lowest Calculated';
+
+            $aoq->setAttribute('calculated_supplier_count', $calculatedSupplierCount);
+            $aoq->setAttribute('calculation_label', $calculationLabel);
+            $aoq->setAttribute('winner_amount', $this->calculateWinnerAmount($aoq));
+
+            return $aoq;
+        })->values();
+
+        return response()->json([
+            'batch' => $batch,
+            'aoqs' => $aoqs,
+        ]);
     }
 
     public function printPdf(BACResolution $bacResolution): \Spatie\LaravelPdf\PdfBuilder

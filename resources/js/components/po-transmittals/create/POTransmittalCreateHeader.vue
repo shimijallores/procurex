@@ -4,8 +4,8 @@
             Create PO Transmittal
         </h1>
         <p class="text-sm text-muted-foreground mt-1">
-            Prepare paired COA and OPG transmittal documents sourced from a
-            Purchase Order.
+            Search by SVP to find a batch, then select POs and configure their
+            paired COA and OPG transmittal documents.
         </p>
     </div>
 </template>

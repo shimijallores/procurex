@@ -22,7 +22,6 @@ defineOptions({
 });
 
 const props = defineProps({
-    eligibleBatches: Array,
     defaultResolutionDate: String,
     defaultMeetingDate: String,
 });
@@ -60,7 +59,6 @@ const saveDraft = () => {
 
         <BACResolutionCreateForm
             :form="form"
-            :eligible-batches="eligibleBatches"
             @submit="submit"
             @save-draft="saveDraft"
         />

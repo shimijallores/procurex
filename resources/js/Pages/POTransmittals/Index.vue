@@ -1,6 +1,6 @@
 <script setup>
-import { ref, watch } from "vue";
-import { router } from "@inertiajs/vue3";
+import { onMounted, ref, watch } from "vue";
+import { router, usePage } from "@inertiajs/vue3";
 import { Icon } from "@iconify/vue";
 import { useDebounceFn } from "@vueuse/core";
 import Layout from "@/Layout/Layout.vue";
@@ -47,6 +47,15 @@ const openDeleteModal = (poTransmittal) => {
     poTransmittalToDelete.value = poTransmittal;
     showDeleteModal.value = true;
 };
+
+onMounted(() => {
+    const page = usePage();
+    const batchId = page.props.flash?.print_batch_id;
+    if (batchId) {
+        const url = route("po-transmittals.print-batch", batchId);
+        window.open(url, "_blank");
+    }
+});
 </script>
 
 <template>

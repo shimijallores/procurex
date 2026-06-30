@@ -7,6 +7,7 @@ import { Icon } from "@iconify/vue";
 const props = defineProps({
     modelValue: { type: String, default: "" },
     disabled: { type: Boolean, default: false },
+    context: { type: String, default: "" },
 });
 
 const emit = defineEmits(["update:modelValue", "select"]);
@@ -27,7 +28,9 @@ watch(
 const fetchSuggestions = async () => {
     loading.value = true;
     try {
-        const { data } = await axios.get(route("batches.recent-batches"));
+        const { data } = await axios.get(route("batches.recent-batches"), {
+            params: { context: props.context },
+        });
         suggestions.value = data.batches || [];
     } catch {
         suggestions.value = [];

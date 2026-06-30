@@ -19,15 +19,16 @@ class StorePOTransmittalRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'purchase_order_id' => ['required', 'integer', 'exists:purchase_orders,id'],
-            'coa.transmittal_no' => ['nullable', 'string', 'max:100'],
-            'coa.header_text' => ['nullable', 'string'],
-            'coa.signatory_name' => ['nullable', 'string', 'max:150'],
-            'coa.signatory_title' => ['nullable', 'string', 'max:150'],
-            'opg.transmittal_no' => ['nullable', 'string', 'max:100'],
-            'opg.header_text' => ['nullable', 'string'],
-            'opg.signatory_name' => ['nullable', 'string', 'max:150'],
-            'opg.signatory_title' => ['nullable', 'string', 'max:150'],
+            'purchase_orders' => ['required', 'array', 'min:1'],
+            'purchase_orders.*.id' => ['required', 'integer', 'exists:purchase_orders,id'],
+            'purchase_orders.*.coa.transmittal_no' => ['nullable', 'string', 'max:100'],
+            'purchase_orders.*.coa.header_text' => ['nullable', 'string'],
+            'purchase_orders.*.coa.signatory_name' => ['nullable', 'string', 'max:150'],
+            'purchase_orders.*.coa.signatory_title' => ['nullable', 'string', 'max:150'],
+            'purchase_orders.*.opg.transmittal_no' => ['nullable', 'string', 'max:100'],
+            'purchase_orders.*.opg.header_text' => ['nullable', 'string'],
+            'purchase_orders.*.opg.signatory_name' => ['nullable', 'string', 'max:150'],
+            'purchase_orders.*.opg.signatory_title' => ['nullable', 'string', 'max:150'],
         ];
     }
 }

@@ -1,8 +1,8 @@
 <script setup>
-import { computed, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { Icon } from "@iconify/vue";
 import axios from "axios";
-import { NativeSelect } from "@/components/ui/native-select";
+import BatchSmartInput from "@/components/BatchSmartInput.vue";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -10,43 +10,110 @@ import { useWorkingDayInputGuard } from "@/composables/useWorkingDayInputGuard";
 
 const props = defineProps({
     form: Object,
-    eligibleBatches: Array,
 });
 
 defineEmits(["submit", "save-draft"]);
 
-const manualBatchNo = ref("");
-const creatingManualBatch = ref(false);
+const selectedBatchId = ref(String(props.form.batch_id || ""));
+const aoqs = ref([]);
+const selectedBatchInfo = ref(null);
+const loadingAoqs = ref(false);
+const fetchError = ref("");
 
-const useManualBatch = async () => {
-    const no = (manualBatchNo.value || "").trim();
-    if (!no || creatingManualBatch.value) return;
-    creatingManualBatch.value = true;
-
-    try {
-        const { data } = await axios.post(route("aoqs.store-batch"), { batch_no: no });
-        props.form.batch_id = String(data.id);
-        manualBatchNo.value = "";
-    } catch (err) {
-        if (err?.response?.status === 409) {
-            const existing = err?.response?.data;
-            if (existing?.id) props.form.batch_id = String(existing.id);
-        }
-    } finally {
-        creatingManualBatch.value = false;
+const fetchBatchAoqs = async (batchId) => {
+    if (!batchId) {
+        aoqs.value = [];
+        selectedBatchInfo.value = null;
+        fetchError.value = "";
+        return;
     }
+
+    loadingAoqs.value = true;
+    fetchError.value = "";
+    try {
+        const res = await axios.get(
+            route("bac-resolutions.batch-aoqs", batchId),
+        );
+        if (!res.data.aoqs?.length) {
+            fetchError.value = "This batch has no AOQs available for a BAC Resolution.";
+            aoqs.value = [];
+            selectedBatchInfo.value = null;
+            return;
+        }
+        aoqs.value = res.data.aoqs || [];
+        selectedBatchInfo.value = res.data.batch || null;
+        populateForm(res.data.aoqs || [], res.data.batch || null);
+    } catch (err) {
+        fetchError.value = err?.response?.data?.error || "Batch not found.";
+        aoqs.value = [];
+        selectedBatchInfo.value = null;
+        selectedBatchId.value = "";
+        props.form.batch_id = "";
+    } finally {
+        loadingAoqs.value = false;
+    }
+};
+
+const populateForm = (aoqList, batch) => {
+    if (!aoqList.length) return;
+
+    const totalWinnerAmount = aoqList.reduce(
+        (sum, aoq) => sum + Number(aoq.winner_amount || 0),
+        0,
+    );
+
+    const supplierNames = [
+        ...new Set(
+            aoqList
+                .map((aoq) => aoq.winner_supplier?.name)
+                .filter((name) => Boolean(name)),
+        ),
+    ];
+
+    props.form.project_name =
+        aoqList.length === 1
+            ? aoqList[0]?.rfq?.project_name || ""
+            : `Batch of ${aoqList.length} projects`;
+    props.form.winner_supplier_name =
+        supplierNames.length === 1
+            ? supplierNames[0]
+            : `Multiple suppliers (${supplierNames.length})`;
+    props.form.winner_amount = String(totalWinnerAmount.toFixed(2));
+    props.form.calculation_label = "Lowest/Single Calculated";
+
+    if (batch?.bac_date) {
+        const d = new Date(batch.bac_date);
+        if (!isNaN(d.getTime())) {
+            const mm = String(d.getMonth() + 1).padStart(2, "0");
+            const dd = String(d.getDate()).padStart(2, "0");
+            const val = `${d.getFullYear()}-${mm}-${dd}`;
+            props.form.resolution_date = val;
+            props.form.meeting_date = val;
+        }
+    }
+
+    props.form.justification =
+        "for being the suppliers with the Lowest/Single Calculated and Responsive Quotations which are advantageous to the Provincial Government of Batangas.";
+    props.form.signatory_chairperson =
+        props.form.signatory_chairperson || "BAC Chairperson";
+    props.form.signatory_member_one =
+        props.form.signatory_member_one || "BAC Member";
+    props.form.signatory_member_two =
+        props.form.signatory_member_two || "BAC Member";
+    props.form.signatory_member_three =
+        props.form.signatory_member_three || "BAC Member";
+};
+
+const onBatchSelect = (batch) => {
+    selectedBatchId.value = String(batch.id);
+    props.form.batch_id = String(batch.id);
+    fetchBatchAoqs(batch.id);
 };
 
 const { enforceWorkingDay, getDateNotice, getDateNoticeClass } =
     useWorkingDayInputGuard(props.form);
 
-const selectedBatch = computed(() =>
-    (props.eligibleBatches || []).find(
-        (b) => String(b.id) === String(props.form.batch_id),
-    ),
-);
-
-const selectedAoqs = computed(() => selectedBatch.value?.aoqs || []);
+const selectedAoqs = computed(() => aoqs.value || []);
 
 const formatCurrency = (value) =>
     new Intl.NumberFormat("en-PH", {
@@ -54,63 +121,11 @@ const formatCurrency = (value) =>
         currency: "PHP",
     }).format(value || 0);
 
-watch(
-    () => props.form.batch_id,
-    (batchId) => {
-        const batch = (props.eligibleBatches || []).find(
-            (b) => String(b.id) === String(batchId),
-        );
-        const aoqs = batch?.aoqs || [];
-
-        if (!aoqs.length) return;
-
-        const totalWinnerAmount = aoqs.reduce(
-            (sum, aoq) => sum + Number(aoq.winner_amount || 0),
-            0,
-        );
-
-        const supplierNames = [
-            ...new Set(
-                aoqs
-                    .map((aoq) => aoq.winner_supplier?.name)
-                    .filter((name) => Boolean(name)),
-            ),
-        ];
-
-        props.form.project_name =
-            aoqs.length === 1
-                ? aoqs[0]?.rfq?.project_name || ""
-                : `Batch of ${aoqs.length} projects`;
-        props.form.winner_supplier_name =
-            supplierNames.length === 1
-                ? supplierNames[0]
-                : `Multiple suppliers (${supplierNames.length})`;
-        props.form.winner_amount = String(totalWinnerAmount.toFixed(2));
-        props.form.calculation_label = "Lowest/Single Calculated";
-
-        if (batch?.bac_date) {
-            const d = new Date(batch.bac_date);
-            if (!isNaN(d.getTime())) {
-                const mm = String(d.getMonth() + 1).padStart(2, "0");
-                const dd = String(d.getDate()).padStart(2, "0");
-                const val = `${d.getFullYear()}-${mm}-${dd}`;
-                props.form.resolution_date = val;
-                props.form.meeting_date = val;
-            }
-        }
-
-        props.form.justification =
-            "for being the suppliers with the Lowest/Single Calculated and Responsive Quotations which are advantageous to the Provincial Government of Batangas.";
-        props.form.signatory_chairperson =
-            props.form.signatory_chairperson || "BAC Chairperson";
-        props.form.signatory_member_one =
-            props.form.signatory_member_one || "BAC Member";
-        props.form.signatory_member_two =
-            props.form.signatory_member_two || "BAC Member";
-        props.form.signatory_member_three =
-            props.form.signatory_member_three || "BAC Member";
-    },
-);
+onMounted(() => {
+    if (props.form.batch_id) {
+        fetchBatchAoqs(props.form.batch_id);
+    }
+});
 
 watch(
     () => props.form.resolution_date,
@@ -150,63 +165,24 @@ watch(
         <Card>
             <CardHeader>
                 <CardTitle class="flex items-center gap-2 text-base">
-                    <Icon icon="lucide:layers" class="h-4 w-4 text-primary" />
+                    <Icon icon="lucide:search" class="h-4 w-4 text-primary" />
                     Select Batch
                 </CardTitle>
             </CardHeader>
             <CardContent class="space-y-3">
                 <div class="space-y-2">
-                    <Label for="batch_id">Batch</Label>
-                    <NativeSelect
-                        id="batch_id"
-                        :model-value="form.batch_id"
-                        @update:model-value="form.batch_id = $event"
-                        class="w-full"
-                    >
-                        <option value="">— Select Batch —</option>
-                        <option
-                            v-for="batch in eligibleBatches"
-                            :key="batch.id"
-                            :value="String(batch.id)"
-                        >
-                            {{ batch.batch_no }}
-                            ({{ batch.aoqs_count || 0 }} AOQ{{ batch.aoqs_count !== 1 ? "s" : "" }})
-                        </option>
-                    </NativeSelect>
+                    <Label for="batch_search">Batch Number</Label>
+                    <BatchSmartInput
+                        context="bac-resolution"
+                        :model-value="selectedBatchId ? selectedBatchInfo?.batch_no || '' : ''"
+                        @select="onBatchSelect"
+                    />
                     <p
                         v-if="form.errors?.batch_id"
                         class="text-xs text-destructive"
                     >
                         {{ form.errors.batch_id }}
                     </p>
-                </div>
-
-                <div class="flex items-end gap-2">
-                    <div class="space-y-1.5 flex-1">
-                        <Label for="manual_batch_no">Or type a Batch No.</Label>
-                        <input
-                            id="manual_batch_no"
-                            v-model="manualBatchNo"
-                            type="text"
-                            placeholder="e.g. 260088"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
-                            @keyup.enter="useManualBatch"
-                        />
-                    </div>
-                    <Button
-                        type="button"
-                        variant="default"
-                        size="sm"
-                        :disabled="!manualBatchNo.trim() || creatingManualBatch"
-                        @click="useManualBatch"
-                    >
-                        <Icon
-                            v-if="creatingManualBatch"
-                            icon="lucide:loader-2"
-                            class="mr-1 h-3.5 w-3.5 animate-spin"
-                        />
-                        Use
-                    </Button>
                 </div>
 
                 <div class="grid gap-3 md:grid-cols-2">
@@ -253,11 +229,27 @@ watch(
             </CardContent>
         </Card>
 
-        <Card v-if="selectedBatch">
+        <div
+            v-if="fetchError"
+            class="rounded-md border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive"
+        >
+            <div class="flex items-center gap-2">
+                <Icon icon="lucide:alert-triangle" class="h-4 w-4 shrink-0" />
+                <span>{{ fetchError }}</span>
+            </div>
+        </div>
+
+        <Card v-if="selectedBatchId && !fetchError && (selectedAoqs.length || loadingAoqs)">
             <CardHeader>
                 <CardTitle class="text-base flex items-center gap-2">
                     <Icon icon="lucide:list" class="h-4 w-4 text-primary" />
-                    Batch AOQs — {{ selectedBatch.batch_no }}
+                    Batch AOQs — {{ selectedBatchInfo?.batch_no || "..." }}
+                    <span v-if="loadingAoqs" class="ml-2">
+                        <Icon
+                            icon="lucide:loader-2"
+                            class="h-4 w-4 animate-spin text-muted-foreground"
+                        />
+                    </span>
                 </CardTitle>
             </CardHeader>
             <CardContent class="space-y-3 text-sm">
@@ -306,7 +298,7 @@ watch(
             </CardContent>
         </Card>
 
-        <Card v-if="selectedBatch">
+        <Card v-if="selectedBatchId && !fetchError">
             <CardHeader>
                 <CardTitle class="text-base flex items-center gap-2">
                     <Icon

@@ -166,10 +166,25 @@ class BatchController extends Controller
         return response()->json($batch);
     }
 
-    public function recentBatches(): JsonResponse
+    public function recentBatches(Request $request): JsonResponse
     {
-        $batches = Batch::query()
-            ->latest()
+        $query = Batch::query();
+
+        if ($request->input('context') === 'po-transmittal') {
+            $query->whereHas('aoqs', function ($q): void {
+                $q->whereHas('noa.purchaseOrder', function ($po): void {
+                    $po->whereDoesntHave('poTransmittals');
+                });
+            });
+        }
+
+        if ($request->input('context') === 'bac-resolution') {
+            $query->has('aoqs')
+                ->whereDoesntHave('aoqs.bacResolution')
+                ->whereDoesntHave('aoqs.bacResolutions');
+        }
+
+        $batches = $query->latest()
             ->take(5)
             ->get(['id', 'batch_no']);
 

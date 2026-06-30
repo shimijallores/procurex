@@ -22,7 +22,6 @@ defineOptions({
 
 const props = defineProps({
     resolution: Object,
-    eligibleBatches: Array,
     defaultResolutionDate: String,
     defaultMeetingDate: String,
 });
@@ -51,7 +50,6 @@ const submit = () => {
     <div class="space-y-6">
         <BACResolutionCreateForm
             :form="form"
-            :eligible-batches="eligibleBatches"
             @submit="submit"
         />
     </div>
