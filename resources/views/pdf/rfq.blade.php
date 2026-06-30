@@ -370,6 +370,13 @@
                 </tr>
             </thead>
             <tbody>
+                @if ($pageNumber > 1)
+                <tr class="total-row">
+                    <td colspan="5" class="text-right">BALANCE FORWARDED</td>
+                    <td class="col-total"></td>
+                </tr>
+                @endif
+
                 @foreach ($rows as $rfqItem)
                 @php $itemCounter++; @endphp
                 <tr>
@@ -395,7 +402,7 @@
                 @endfor
                 @endif
 
-                @if ($totalPages > 1)
+                @if ($totalPages > 1 && !$isLast)
                 <tr class="total-row">
                     <td colspan="5" class="text-right">SUBTOTAL:</td>
                     <td class="col-total"></td>
