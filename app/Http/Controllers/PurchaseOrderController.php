@@ -286,9 +286,19 @@ class PurchaseOrderController extends Controller
                 $totalAmount = (float) $computedItems->sum('amount_snapshot');
                 $officeName = $rfq->purchaseRequest?->office?->name ?? '';
 
+                $poNo = (string) ($noaEntry['po_no'] ?? '');
+                if ($poNo === '') {
+                    $poNo = $this->generatePoNumber($noaEntry['po_date']);
+                }
+                if (PurchaseOrder::where('po_no', $poNo)->where('noa_id', '!=', $noa->id)->exists()) {
+                    $errors[] = sprintf('PO number "%s" is already in use.', $poNo);
+
+                    continue;
+                }
+
                 $po = PurchaseOrder::create([
                     'noa_id' => $noa->id,
-                    'po_no' => $this->generatePoNumber($noaEntry['po_date']),
+                    'po_no' => $poNo,
                     'po_date' => $noaEntry['po_date'],
                     'mode_of_procurement' => $noaEntry['mode_of_procurement'],
                     'place_of_delivery' => $noaEntry['place_of_delivery'] ?: $officeName,

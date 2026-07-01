@@ -20,6 +20,7 @@ defineOptions({
 const props = defineProps({
     suppliers: Array,
     defaultNoaDate: String,
+    defaultNoaNo: String,
 });
 </script>
 
@@ -30,6 +31,7 @@ const props = defineProps({
         <NOACreateForm
             :suppliers="suppliers"
             :default-noa-date="defaultNoaDate"
+            :default-noa-no="defaultNoaNo"
         />
     </div>
 </template>

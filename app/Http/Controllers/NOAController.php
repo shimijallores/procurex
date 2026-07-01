@@ -111,7 +111,30 @@ class NOAController extends Controller
         return Inertia::render('NOAs/Create', [
             'suppliers' => $suppliers,
             'defaultNoaDate' => $suggestedDate,
+            'defaultNoaNo' => $this->generateNoaNo(Carbon::parse($suggestedDate)),
         ]);
+    }
+
+    private function generateNoaNo(Carbon $date): string
+    {
+        $prefix = $date->format('Y').'-';
+
+        $latest = NOA::query()
+            ->where('noa_no', 'like', $prefix.'%')
+            ->orderByDesc('noa_no')
+            ->value('noa_no');
+
+        $next = 1;
+        if ($latest && preg_match('/^\d{4}-(\d{4})$/', $latest, $matches) === 1) {
+            $next = (int) $matches[1] + 1;
+        }
+
+        do {
+            $noaNo = sprintf('%s%04d', $prefix, $next);
+            ++$next;
+        } while (NOA::where('noa_no', $noaNo)->exists());
+
+        return $noaNo;
     }
 
     public function store(Request $request): RedirectResponse
@@ -120,6 +143,7 @@ class NOAController extends Controller
             'batch_id' => ['required', 'integer', 'exists:batches,id'],
             'noas' => ['required', 'array', 'min:1'],
             'noas.*.aoq_id' => ['required', 'integer', 'exists:aoqs,id'],
+            'noas.*.noa_no' => ['nullable', 'string', 'max:255'],
             'noas.*.noa_date' => ['required', 'date'],
             'noas.*.recipient_name' => ['nullable', 'string', 'max:255'],
             'noas.*.recipient_title' => ['nullable', 'string', 'max:255'],
@@ -161,9 +185,17 @@ class NOAController extends Controller
                     continue;
                 }
 
-                $noaNo = (string) ($aoq->rfq->svp_no ?? '');
+                $noaNo = (string) ($noaData['noa_no'] ?? '');
+                if ($noaNo === '') {
+                    $noaNo = (string) ($aoq->rfq->svp_no ?? '');
+                }
                 if ($noaNo === '') {
                     $errors[sprintf('noas.%s.aoq_id', $index)] = sprintf('Unable to generate NOA number from AOQ #%d.', $aoqId);
+
+                    continue;
+                }
+                if (NOA::where('noa_no', $noaNo)->where('aoq_id', '!=', $aoqId)->exists()) {
+                    $errors[sprintf('noas.%s.noa_no', $index)] = sprintf('NOA number "%s" is already in use.', $noaNo);
 
                     continue;
                 }

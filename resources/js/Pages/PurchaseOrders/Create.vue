@@ -40,6 +40,7 @@ function buildInitialNoas(batchNoas, defaults) {
     return batchNoas.map((noa) => ({
         noa_id: noa.id,
         selected: true,
+        po_no: noa.suggested_po_no || "",
         po_date: defaults?.po_date || "",
         mode_of_procurement: defaults?.mode_of_procurement || "Small Value",
         delivery_term_days: noa.suggested_delivery_days ?? ((noa.winner_amount || 0) >= 200000 ? 30 : 15),

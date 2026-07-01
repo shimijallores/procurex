@@ -15,6 +15,7 @@ const svpError = ref("");
 const props = defineProps({
     suppliers: Array,
     defaultNoaDate: String,
+    defaultNoaNo: String,
 });
 
 const selectedBatchId = ref("");
@@ -76,8 +77,21 @@ const fetchAoqs = async (batchId) => {
         selectedBacResolution.value = res.data.bac_resolution || null;
         const aoqList = res.data.aoqs || [];
         selectedAoqIds.value = aoqList.map((aoq) => String(aoq.id));
-        noaRows.value = aoqList.map((aoq) => ({
+        const generateNoaNumbers = (count) => {
+            const defaultNoa = props.defaultNoaNo || "";
+            const match = defaultNoa.match(/^(\d{4})-(\d{4})$/);
+            const year = match?.[1] ?? String(new Date().getFullYear());
+            const baseSeq = match ? parseInt(match[2], 10) : 0;
+            return Array.from({ length: count }, (_, i) => {
+                const seq = String(baseSeq + i + (match ? 0 : 1)).padStart(4, "0");
+                return `${year}-${seq}`;
+            });
+        };
+
+        const noaNumbers = generateNoaNumbers(aoqList.length);
+        noaRows.value = aoqList.map((aoq, idx) => ({
             aoq_id: String(aoq.id),
+            noa_no: noaNumbers[idx],
             noa_date: formatDate(
                 res.data.batch?.noa_date || props.defaultNoaDate || "",
             ),
@@ -156,6 +170,7 @@ const submitAll = async () => {
             .filter((row) => selectedAoqIds.value.includes(row.aoq_id))
             .map((row) => ({
                 aoq_id: row.aoq_id,
+                noa_no: row.noa_no,
                 noa_date: row.noa_date,
                 recipient_name: row.recipient_name,
                 recipient_title: row.recipient_title,
@@ -314,14 +329,31 @@ watch(selectedBatchId, (id) => {
                                 class="h-5 w-5 rounded border-gray-300 text-primary"
                             />
                         </div>
-                        <div>
+                        <div class="space-y-1.5">
+                            <Label :for="'noa_no_' + i">NOA Number</Label>
+                            <input
+                                :id="'noa_no_' + i"
+                                v-model="row.noa_no"
+                                type="text"
+                                placeholder="YYYY-NNNN"
+                                class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
+                            />
                             <p class="text-xs text-muted-foreground">
-                                NOA Number
+                                Auto-generated. You may edit it.
                             </p>
                             <p
-                                class="font-mono text-sm text-muted-foreground italic"
+                                v-if="
+                                    usePage().props.errors?.[
+                                        'noas.' + i + '.noa_no'
+                                    ]
+                                "
+                                class="text-xs text-destructive"
                             >
-                                Will be auto-generated after submission
+                                {{
+                                    usePage().props.errors[
+                                        "noas." + i + ".noa_no"
+                                    ]
+                                }}
                             </p>
                         </div>
                         <div class="space-y-1.5">

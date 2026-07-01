@@ -195,12 +195,19 @@ const computeAmount = (items) =>
                                 </div>
                             </div>
                             <div class="space-y-2">
-                                <div class="space-y-1">
-                                    <Label>PO No.</Label>
-                                    <p class="text-sm font-medium">
-                                        {{ noa.suggested_po_no }}
-                                    </p>
-                                </div>
+                            <div class="space-y-1">
+                                <Label :for="`po_no_${noa.id}`">PO No.</Label>
+                                <input
+                                    :id="`po_no_${noa.id}`"
+                                    v-model="getNoaForm(noa.id).po_no"
+                                    type="text"
+                                    placeholder="MMYY-NNNN"
+                                    class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
+                                />
+                                <p class="text-xs text-muted-foreground">
+                                    Auto-generated. You may edit it.
+                                </p>
+                            </div>
                                 <div class="space-y-1">
                                     <Label>PR No.</Label>
                                     <p class="text-sm text-muted-foreground">
