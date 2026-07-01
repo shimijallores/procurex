@@ -90,6 +90,75 @@ const props = defineProps({
                         </p>
                     </div>
 
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <Label for="earmark_date_from">
+                                Earmark Date From
+                            </Label>
+                            <input
+                                id="earmark_date_from"
+                                name="earmark_date_from"
+                                type="date"
+                                :defaultValue="batch.earmark_date_from?.slice(0, 10)"
+                                :class="[
+                                    'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
+                                    'ring-offset-background focus-visible:outline-none focus-visible:ring-2',
+                                    'focus-visible:ring-ring focus-visible:ring-offset-2',
+                                    errors.earmark_date_from ? 'border-destructive' : '',
+                                ]"
+                            />
+                            <p
+                                v-if="errors.earmark_date_from"
+                                class="text-sm text-destructive"
+                            >
+                                {{ errors.earmark_date_from }}
+                            </p>
+                        </div>
+                        <div class="space-y-2">
+                            <Label for="earmark_date_to">
+                                Earmark Date To
+                            </Label>
+                            <input
+                                id="earmark_date_to"
+                                name="earmark_date_to"
+                                type="date"
+                                :defaultValue="batch.earmark_date_to?.slice(0, 10)"
+                                :class="[
+                                    'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
+                                    'ring-offset-background focus-visible:outline-none focus-visible:ring-2',
+                                    'focus-visible:ring-ring focus-visible:ring-offset-2',
+                                    errors.earmark_date_to ? 'border-destructive' : '',
+                                ]"
+                            />
+                            <p
+                                v-if="errors.earmark_date_to"
+                                class="text-sm text-destructive"
+                            >
+                                {{ errors.earmark_date_to }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <input
+                            id="is_locked"
+                            name="is_locked"
+                            type="checkbox"
+                            value="1"
+                            :checked="batch.is_locked"
+                            class="h-4 w-4 rounded border-input text-primary focus:ring-primary"
+                        />
+                        <Label for="is_locked" class="cursor-pointer">
+                            Lock this batch
+                        </Label>
+                    </div>
+                    <p
+                        v-if="errors.is_locked"
+                        class="text-sm text-destructive"
+                    >
+                        {{ errors.is_locked }}
+                    </p>
+
                     <div class="flex items-center gap-4">
                         <Button type="submit" :disabled="processing">
                             <Icon

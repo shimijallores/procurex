@@ -23,7 +23,8 @@ class UpdateBatchRequest extends FormRequest
             'noa_date' => ['nullable', 'date'],
             'po_date' => ['nullable', 'date'],
             'earmark_date_from' => ['nullable', 'date'],
-            'earmark_date_to' => ['nullable', 'date'],
+            'earmark_date_to' => ['nullable', 'date', 'after_or_equal:earmark_date_from'],
+            'is_locked' => ['nullable', 'boolean'],
         ];
     }
 

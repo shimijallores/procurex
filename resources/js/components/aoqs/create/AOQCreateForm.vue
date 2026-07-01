@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import SvpSmartInput from "@/components/SvpSmartInput.vue";
 import SupplierSmartInput from "@/components/SupplierSmartInput.vue";
+import BatchSmartInput from "@/components/BatchSmartInput.vue";
 
 const props = defineProps({
     form: Object,
@@ -32,6 +33,40 @@ const earmarkTo = ref("");
 const findingBatch = ref(false);
 const assignedBatch = ref(props.activeEarmarkBatch || null);
 const isNewBatch = ref(false);
+
+const manualBatchMode = ref(false);
+const manualBatch = ref(null);
+
+const toggleManualMode = () => {
+    manualBatchMode.value = !manualBatchMode.value;
+    if (manualBatchMode.value) {
+        earmarkFrom.value = "";
+        earmarkTo.value = "";
+        assignedBatch.value = null;
+        isNewBatch.value = false;
+        props.form.batch_id = "";
+    } else {
+        manualBatch.value = null;
+        assignedBatch.value = props.activeEarmarkBatch || null;
+        if (assignedBatch.value) {
+            props.form.batch_id = String(assignedBatch.value.id);
+        }
+    }
+};
+
+const onManualBatchSelect = (batch) => {
+    manualBatch.value = batch;
+    assignedBatch.value = batch;
+    isNewBatch.value = false;
+    props.form.batch_id = String(batch.id);
+};
+
+const clearManualBatch = () => {
+    manualBatch.value = null;
+    assignedBatch.value = null;
+    isNewBatch.value = false;
+    props.form.batch_id = "";
+};
 
 // Request access to locked batch
 const showRequestModal = ref(false);
@@ -104,14 +139,6 @@ onMounted(async () => {
     } catch {
         // silently fail — batch assignment can still happen via date input
     }
-});
-
-const batchNotice = computed(() => {
-    if (!assignedBatch.value) return "";
-    const label = isNewBatch.value
-        ? "A new batch has been created"
-        : "This AOQ will be assigned to";
-    return `${label}: ${assignedBatch.value.batch_no}`;
 });
 
 const findOrCreateBatch = async () => {
@@ -213,7 +240,7 @@ const loadRfq = async (svpNo) => {
         const rfqDataResponse = rfqResponse.data;
         const activeBatchResponse = earmarkResponse.data;
 
-        if (activeBatchResponse.batch) {
+        if (!manualBatchMode.value && activeBatchResponse.batch) {
             assignedBatch.value = activeBatchResponse.batch;
             props.form.batch_id = String(activeBatchResponse.batch.id);
         }
@@ -227,23 +254,29 @@ const loadRfq = async (svpNo) => {
         ];
     } catch (err) {
         rfqData.value = null;
-        assignedBatch.value = null;
+        if (!manualBatchMode.value) {
+            assignedBatch.value = null;
+        }
         isNewBatch.value = false;
         props.form.rfq_id = "";
-        props.form.batch_id = "";
+        if (!manualBatchMode.value) {
+            props.form.batch_id = "";
+        }
         props.form.quotations = [];
         rfqError.value =
             err?.response?.data?.error || "Failed to load RFQ data.";
 
         // Re-check active batch on error so the next SVP attempt finds it
-        try {
-            const { data } = await axios.get(route("aoqs.active-earmark"));
-            if (data.batch) {
-                assignedBatch.value = data.batch;
-                props.form.batch_id = String(data.batch.id);
+        if (!manualBatchMode.value) {
+            try {
+                const { data } = await axios.get(route("aoqs.active-earmark"));
+                if (data.batch) {
+                    assignedBatch.value = data.batch;
+                    props.form.batch_id = String(data.batch.id);
+                }
+            } catch {
+                // still nothing — user will need the date input card
             }
-        } catch {
-            // still nothing — user will need the date input card
         }
     } finally {
         loadingRfq.value = false;
@@ -654,88 +687,115 @@ const onSvpInput = (val) => {
             </CardContent>
         </Card>
 
-        <div
-            v-if="rfqData && assignedBatch"
-            class="rounded-md border bg-primary/5 border-primary/20 p-3 text-sm flex items-center gap-2"
-        >
-            <Icon icon="lucide:layers" class="h-4 w-4 text-primary shrink-0" />
-            <span class="font-medium">
-                This AOQ automatically belongs to Batch
-                <span class="font-mono">{{ assignedBatch.batch_no }}</span>
-                (earmark: {{ formatDateShort(assignedBatch.earmark_date_from) }} —
-                {{ formatDateShort(assignedBatch.earmark_date_to) }}).
-            </span>
-        </div>
-
-        <Card v-if="rfqData && !assignedBatch">
+        <Card v-if="rfqData">
             <CardHeader>
-                <CardTitle class="flex items-center gap-2 text-base">
-                    <Icon
-                        icon="lucide:calendar-range"
-                        class="h-4 w-4 text-primary"
-                    />
-                    Earmark Date
-                    <span class="text-destructive">*</span>
-                </CardTitle>
-            </CardHeader>
-            <CardContent class="space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-2">
-                        <Label for="earmark_from">
-                            From
-                            <span class="text-destructive">*</span>
-                        </Label>
-                        <input
-                            id="earmark_from"
-                            v-model="earmarkFrom"
-                            type="date"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                        />
-                    </div>
-                    <div class="space-y-2">
-                        <Label for="earmark_to">
-                            To
-                            <span class="text-destructive">*</span>
-                        </Label>
-                        <input
-                            id="earmark_to"
-                            v-model="earmarkTo"
-                            type="date"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                        />
-                    </div>
-                </div>
-
-                <div
-                    v-if="findingBatch"
-                    class="flex items-center gap-2 rounded-md border border-border bg-muted/40 p-3 text-sm"
-                >
-                    <Icon
-                        icon="lucide:loader-2"
-                        class="h-4 w-4 animate-spin text-muted-foreground"
-                    />
-                    Finding or creating batch...
-                </div>
-
-                <div
-                    v-else-if="assignedBatch"
-                    class="rounded-md border bg-primary/5 border-primary/20 p-3 text-sm space-y-1"
-                >
-                    <div class="flex items-center gap-2">
+                <div class="flex items-center justify-between">
+                    <CardTitle class="flex items-center gap-2 text-base">
                         <Icon
                             icon="lucide:layers"
                             class="h-4 w-4 text-primary"
                         />
-                        <span class="font-medium">{{ batchNotice }}</span>
+                        Batch Assignment
+                        <span class="text-destructive">*</span>
+                    </CardTitle>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        @click="toggleManualMode"
+                    >
+                        <Icon
+                            icon="lucide:refresh-cw"
+                            class="mr-1 h-3.5 w-3.5"
+                        />
+                        {{ manualBatchMode ? 'Use Earmark Dates' : 'Select Manually' }}
+                    </Button>
+                </div>
+            </CardHeader>
+            <CardContent class="space-y-4">
+                <!-- MANUAL MODE -->
+                <template v-if="manualBatchMode">
+                    <div class="space-y-2">
+                        <Label>Search and select a batch</Label>
+                        <BatchSmartInput
+                            :model-value="manualBatch?.batch_no || ''"
+                            @select="onManualBatchSelect"
+                        />
                     </div>
                     <div
-                        v-if="isNewBatch"
-                        class="flex items-center gap-2 text-xs text-muted-foreground mt-1"
+                        v-if="assignedBatch"
+                        class="rounded-md border bg-primary/5 border-primary/20 p-3 text-sm flex items-center gap-2"
                     >
-                        <Icon icon="lucide:info" class="h-3.5 w-3.5" />
-                        After creating this AOQ, set the batch dates (BAC, NOA, PO) in the Batches page.
+                        <Icon icon="lucide:layers" class="h-4 w-4 text-primary shrink-0" />
+                        <span class="font-medium">
+                            Manually assigned to Batch
+                            <span class="font-mono">{{ assignedBatch.batch_no }}</span>
+                        </span>
+                        <button
+                            type="button"
+                            class="ml-auto rounded-md p-1 text-muted-foreground hover:text-destructive"
+                            @click="clearManualBatch"
+                        >
+                            <Icon icon="lucide:x" class="h-4 w-4" />
+                        </button>
                     </div>
-                </div>
+                </template>
+
+                <!-- AUTO (EARMARK) MODE -->
+                <template v-else>
+                    <div
+                        v-if="assignedBatch"
+                        class="rounded-md border bg-primary/5 border-primary/20 p-3 text-sm flex items-center gap-2"
+                    >
+                        <Icon icon="lucide:layers" class="h-4 w-4 text-primary shrink-0" />
+                        <span class="font-medium">
+                            This AOQ automatically belongs to Batch
+                            <span class="font-mono">{{ assignedBatch.batch_no }}</span>
+                            (earmark: {{ formatDateShort(assignedBatch.earmark_date_from) }} —
+                            {{ formatDateShort(assignedBatch.earmark_date_to) }}).
+                        </span>
+                    </div>
+
+                    <template v-if="!assignedBatch">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <Label for="earmark_from">
+                                    From
+                                    <span class="text-destructive">*</span>
+                                </Label>
+                                <input
+                                    id="earmark_from"
+                                    v-model="earmarkFrom"
+                                    type="date"
+                                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                />
+                            </div>
+                            <div class="space-y-2">
+                                <Label for="earmark_to">
+                                    To
+                                    <span class="text-destructive">*</span>
+                                </Label>
+                                <input
+                                    id="earmark_to"
+                                    v-model="earmarkTo"
+                                    type="date"
+                                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                />
+                            </div>
+                        </div>
+
+                        <div
+                            v-if="findingBatch"
+                            class="flex items-center gap-2 rounded-md border border-border bg-muted/40 p-3 text-sm"
+                        >
+                            <Icon
+                                icon="lucide:loader-2"
+                                class="h-4 w-4 animate-spin text-muted-foreground"
+                            />
+                            Finding or creating batch...
+                        </div>
+                    </template>
+                </template>
 
                 <p
                     v-if="form.errors?.batch_id"

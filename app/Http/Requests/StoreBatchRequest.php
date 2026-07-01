@@ -17,6 +17,9 @@ class StoreBatchRequest extends FormRequest
     {
         return [
             'batch_no' => ['required', 'string', 'max:255', 'unique:batches,batch_no'],
+            'earmark_date_from' => ['nullable', 'date'],
+            'earmark_date_to' => ['nullable', 'date', 'after_or_equal:earmark_date_from'],
+            'is_locked' => ['nullable', 'boolean'],
         ];
     }
 
@@ -25,6 +28,7 @@ class StoreBatchRequest extends FormRequest
         return [
             'batch_no.required' => 'The batch number is required.',
             'batch_no.unique' => 'This batch number already exists.',
+            'earmark_date_to.after_or_equal' => 'The end date must be on or after the start date.',
         ];
     }
 }
