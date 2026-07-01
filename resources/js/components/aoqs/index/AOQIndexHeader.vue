@@ -1,15 +1,18 @@
 <script setup>
-import { computed } from "vue";
+import { ref, computed } from "vue";
 import { usePage } from "@inertiajs/vue3";
 import { Link } from "@inertiajs/vue3";
 import { Icon } from "@iconify/vue";
 import { Button } from "@/components/ui/button";
 import PageTitle from "@/components/PageTitle.vue";
+import DownloadPdfModal from "@/components/DownloadPdfModal.vue";
 
 const user = computed(() => usePage().props.auth?.user);
 const isSuperAdmin = computed(() =>
     (user.value?.roles ?? []).some((r) => r.name === "SuperAdmin"),
 );
+
+const showDownloadModal = ref(false);
 </script>
 
 <template>
@@ -21,6 +24,13 @@ const isSuperAdmin = computed(() =>
             </p>
         </div>
         <div class="flex items-center gap-2">
+            <Button
+                variant="outline"
+                @click="showDownloadModal = true"
+            >
+                <Icon icon="lucide:download" class="mr-2 h-4 w-4" />
+                Download PDFs
+            </Button>
             <Link :href="route('batch-aoq-requests.my-requests')">
                 <Button variant="outline">
                     <Icon icon="lucide:file-clock" class="mr-2 h-4 w-4" />
@@ -40,5 +50,12 @@ const isSuperAdmin = computed(() =>
                 </Button>
             </Link>
         </div>
+
+        <DownloadPdfModal
+            v-model:open="showDownloadModal"
+            title="Download AOQ PDFs"
+            description="Download AOQ documents as individual PDFs in a ZIP file."
+            :route-name="route('aoqs.download-pdfs')"
+        />
     </div>
 </template>

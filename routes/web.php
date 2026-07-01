@@ -353,6 +353,9 @@ Route::middleware(['auth'])->group(function (): void {
     Route::get('rfqs/{rfq}/pdf', [RFQController::class, 'printPdf'])
         ->middleware($rfqRoles)
         ->name('rfqs.pdf');
+    Route::post('rfqs/download-pdfs', [RFQController::class, 'downloadPdfs'])
+        ->middleware($rfqRoles)
+        ->name('rfqs.download-pdfs');
 
     // AOQ module
     $aoqRoles =
@@ -373,6 +376,9 @@ Route::middleware(['auth'])->group(function (): void {
     Route::get('aoqs/{aoq}/pdf', [AOQController::class, 'printPdf'])
         ->middleware($aoqRoles)
         ->name('aoqs.pdf');
+    Route::post('aoqs/download-pdfs', [AOQController::class, 'downloadPdfs'])
+        ->middleware($aoqRoles)
+        ->name('aoqs.download-pdfs');
     Route::get('aoqs/{aoq}/template', [AOQController::class, 'downloadTemplate'])
         ->middleware($aoqRoles)
         ->name('aoqs.template');

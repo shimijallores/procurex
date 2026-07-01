@@ -307,6 +307,76 @@ class RFQController extends Controller
             ->inline();
     }
 
+    public function downloadPdfs(Request $request): \Symfony\Component\HttpFoundation\BinaryFileResponse|\Illuminate\Http\RedirectResponse
+    {
+        $validated = $request->validate([
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+        ]);
+
+        $query = RFQ::with([
+            'purchaseRequest.office',
+            'items.purchaseRequestItem.emanatingItem.ppmpItem',
+        ]);
+
+        if ($validated['date_from']) {
+            $query->whereDate('rfq_date', '>=', $validated['date_from']);
+        }
+
+        if ($validated['date_to']) {
+            $query->whereDate('rfq_date', '<=', $validated['date_to']);
+        }
+
+        $rfqs = $query->latest('rfq_date')->get();
+
+        if ($rfqs->isEmpty()) {
+            return redirect()->back()->with('error', 'No RFQs found for the selected filters.');
+        }
+
+        $zip = new \ZipArchive();
+        $zipFileName = 'RFQs-'.now()->format('Y-m-d-His').'.zip';
+        $tempDir = storage_path('app/temp');
+
+        if (! is_dir($tempDir)) {
+            mkdir($tempDir, 0755, true);
+        }
+
+        $zipPath = $tempDir.\DIRECTORY_SEPARATOR.$zipFileName;
+
+        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            return redirect()->back()->with('error', 'Failed to create ZIP archive.');
+        }
+
+        foreach ($rfqs as $rfq) {
+            try {
+                $pdfPath = $tempDir.\DIRECTORY_SEPARATOR."rfq-{$rfq->id}.pdf";
+
+                Pdf::view('pdf.rfq', [
+                    'rfq' => $rfq,
+                ])
+                    ->format('a4')
+                    ->name("RFQ-{$rfq->svp_no}.pdf")
+                    ->save($pdfPath);
+
+                $zip->addFile($pdfPath, "RFQ-{$rfq->svp_no}.pdf");
+            } catch (\Throwable) {
+                continue;
+            }
+        }
+
+        $zip->close();
+
+        foreach ($rfqs as $rfq) {
+            $pdfPath = $tempDir.\DIRECTORY_SEPARATOR."rfq-{$rfq->id}.pdf";
+
+            if (file_exists($pdfPath)) {
+                unlink($pdfPath);
+            }
+        }
+
+        return response()->download($zipPath, $zipFileName)->deleteFileAfterSend(true);
+    }
+
     private function generateSvpNo(Carbon $rfqDate): string
     {
         $prefix = $rfqDate->format('Y').'-';

@@ -439,13 +439,6 @@
                 @endfor
                 @endif
 
-                @if ($totalPages > 1 && !$isLast)
-                <tr class="total-row">
-                    <td colspan="6" class="text-right">SUBTOTAL:</td>
-                    <td class="col-total"></td>
-                </tr>
-                @endif
-
                 @if ($isLast)
                 <tr class="total-row">
                     <td colspan="6" class="text-right" style="font-size:11pt;">GRAND TOTAL:</td>

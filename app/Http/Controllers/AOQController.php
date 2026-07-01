@@ -675,6 +675,83 @@ class AOQController extends Controller
             ->inline();
     }
 
+    public function downloadPdfs(Request $request): \Symfony\Component\HttpFoundation\BinaryFileResponse|\Illuminate\Http\RedirectResponse
+    {
+        $validated = $request->validate([
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+        ]);
+
+        $query = AOQ::with([
+            'rfq.purchaseRequest.office',
+            'rfq.items.purchaseRequestItem.emanatingItem.ppmpItem',
+            'rfq.suppliers.supplier',
+            'rfq.suppliers.supplierItems.rfqItem.purchaseRequestItem',
+            'winnerSupplier',
+        ]);
+
+        if ($validated['date_from']) {
+            $query->whereDate('aoq_date', '>=', $validated['date_from']);
+        }
+
+        if ($validated['date_to']) {
+            $query->whereDate('aoq_date', '<=', $validated['date_to']);
+        }
+
+        $aoqs = $query->latest('aoq_date')->get();
+
+        if ($aoqs->isEmpty()) {
+            return redirect()->back()->with('error', 'No AOQs found for the selected filters.');
+        }
+
+        $zip = new \ZipArchive();
+        $zipFileName = 'AOQs-'.now()->format('Y-m-d-His').'.zip';
+        $tempDir = storage_path('app/temp');
+
+        if (! is_dir($tempDir)) {
+            mkdir($tempDir, 0755, true);
+        }
+
+        $zipPath = $tempDir.\DIRECTORY_SEPARATOR.$zipFileName;
+
+        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            return redirect()->back()->with('error', 'Failed to create ZIP archive.');
+        }
+
+        foreach ($aoqs as $aoq) {
+            try {
+                $pdfPath = $tempDir.\DIRECTORY_SEPARATOR."aoq-{$aoq->id}.pdf";
+                $calculation = $this->calculateSupplierTotals($aoq->rfq);
+
+                Pdf::view('pdf.aoq', [
+                    'aoq' => $aoq,
+                    'rfq' => $aoq->rfq,
+                    'calculation' => $calculation,
+                ])
+                    ->format('a4')
+                    ->landscape()
+                    ->name('AOQ-'.($aoq->rfq?->svp_no ?? $aoq->id).'.pdf')
+                    ->save($pdfPath);
+
+                $zip->addFile($pdfPath, "AOQ-".($aoq->rfq?->svp_no ?? $aoq->id).".pdf");
+            } catch (\Throwable) {
+                continue;
+            }
+        }
+
+        $zip->close();
+
+        foreach ($aoqs as $aoq) {
+            $pdfPath = $tempDir.\DIRECTORY_SEPARATOR."aoq-{$aoq->id}.pdf";
+
+            if (file_exists($pdfPath)) {
+                unlink($pdfPath);
+            }
+        }
+
+        return response()->download($zipPath, $zipFileName)->deleteFileAfterSend(true);
+    }
+
     /**
      * @return array<string, mixed>
      */
