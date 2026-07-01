@@ -304,7 +304,7 @@
     @php
     $pageNumber = $pageIndex + 1;
     $isLast = $pageNumber === $totalPages;
-    $pageCapacity = $totalPages === 1 ? 19 : 34;
+    $pageCapacity = $totalPages === 1 ? 18 : 34;
     $rowsUsed = 0;
     foreach ($rows as $row) {
     $rowsUsed += max(1, (int) ceil(mb_strlen($row->item_name ?? '') / $charsPerLine));
