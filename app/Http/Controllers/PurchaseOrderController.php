@@ -13,6 +13,7 @@ use App\Models\NOA;
 use App\Models\Office;
 use App\Models\PurchaseOrder;
 use App\Services\SvpMatrixSyncService;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Barryvdh\DomPDF\Facade\Pdf as DomPdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -513,6 +514,87 @@ class PurchaseOrderController extends Controller
             ->format('a4')
             ->name('PO-'.$purchaseOrder->po_no.'.pdf')
             ->inline();
+    }
+
+    public function downloadPdfs(Request $request): BinaryFileResponse|RedirectResponse
+    {
+        $validated = $request->validate([
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+        ]);
+
+        $query = PurchaseOrder::with([
+            'noa.aoq.rfq.purchaseRequest.office',
+            'noa.aoq.winnerSupplier',
+            'noa.bacResolution.aoq.rfq.purchaseRequest.office',
+            'noa.bacResolution.aoq.winnerSupplier',
+            'items.rfqItem.purchaseRequestItem.emanatingItem.ppmpItem',
+        ]);
+
+        if ($validated['date_from']) {
+            $query->whereDate('po_date', '>=', $validated['date_from']);
+        }
+
+        if ($validated['date_to']) {
+            $query->whereDate('po_date', '<=', $validated['date_to']);
+        }
+
+        $purchaseOrders = $query->latest('po_date')->get();
+
+        if ($purchaseOrders->isEmpty()) {
+            return redirect()->back()->with('error', 'No Purchase Orders found for the selected filters.');
+        }
+
+        $zip = new \ZipArchive();
+        $zipFileName = 'Purchase-Orders-'.now()->format('Y-m-d-His').'.zip';
+        $tempDir = storage_path('app/temp');
+
+        if (! is_dir($tempDir)) {
+            mkdir($tempDir, 0755, true);
+        }
+
+        $zipPath = $tempDir.\DIRECTORY_SEPARATOR.$zipFileName;
+
+        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            return redirect()->back()->with('error', 'Failed to create ZIP archive.');
+        }
+
+        foreach ($purchaseOrders as $purchaseOrder) {
+            try {
+                $pdfPath = $tempDir.\DIRECTORY_SEPARATOR.'po-'.$purchaseOrder->id.'.pdf';
+
+                $noa = $purchaseOrder->noa;
+                $aoq = $noa?->aoq ?? $noa?->bacResolution?->aoq;
+
+                Pdf::view('pdf.purchase-order', [
+                    'purchaseOrder' => $purchaseOrder,
+                    'noa' => $noa,
+                    'resolution' => $noa?->bacResolution,
+                    'aoq' => $aoq,
+                    'rfq' => $aoq?->rfq,
+                    'winnerSupplier' => $aoq?->winnerSupplier,
+                ])
+                    ->format('a4')
+                    ->name('PO-'.$purchaseOrder->po_no.'.pdf')
+                    ->save($pdfPath);
+
+                $zip->addFile($pdfPath, 'PO-'.$purchaseOrder->po_no.'.pdf');
+            } catch (\Throwable) {
+                continue;
+            }
+        }
+
+        $zip->close();
+
+        foreach ($purchaseOrders as $purchaseOrder) {
+            $pdfPath = $tempDir.\DIRECTORY_SEPARATOR.'po-'.$purchaseOrder->id.'.pdf';
+
+            if (file_exists($pdfPath)) {
+                unlink($pdfPath);
+            }
+        }
+
+        return response()->download($zipPath, $zipFileName)->deleteFileAfterSend(true);
     }
 
     private function generatePoNumber(string $poDate): string

@@ -465,6 +465,12 @@ Route::middleware(['auth'])->group(function (): void {
     ])
         ->middleware($bacResolutionRoles)
         ->name('bac-resolutions.pdf');
+    Route::post('bac-resolutions/download-pdfs', [
+        BACResolutionController::class,
+        'downloadPdfs',
+    ])
+        ->middleware($bacResolutionRoles)
+        ->name('bac-resolutions.download-pdfs');
     Route::post('bac-resolutions/{bac_resolution}/finalize', [
         BACResolutionController::class,
         'finalize',
@@ -508,6 +514,9 @@ Route::middleware(['auth'])->group(function (): void {
     Route::get('noas/{noa}/pdf', [NOAController::class, 'printPdf'])
         ->middleware($noaRoles)
         ->name('noas.pdf');
+    Route::post('noas/download-pdfs', [NOAController::class, 'downloadPdfs'])
+        ->middleware($noaRoles)
+        ->name('noas.download-pdfs');
     Route::get('batches/{batch}/print-noas', [NOAController::class, 'printBatch'])
         ->middleware($noaRoles)
         ->name('noas.print-batch');
@@ -540,6 +549,12 @@ Route::middleware(['auth'])->group(function (): void {
     ])
         ->middleware($poRoles)
         ->name('purchase-orders.pdf');
+    Route::post('purchase-orders/download-pdfs', [
+        PurchaseOrderController::class,
+        'downloadPdfs',
+    ])
+        ->middleware($poRoles)
+        ->name('purchase-orders.download-pdfs');
     Route::get('batches/{batch}/print-pos', [PurchaseOrderController::class, 'printBatch'])
         ->middleware($poRoles)
         ->name('purchase-orders.print-batch');
@@ -557,6 +572,12 @@ Route::middleware(['auth'])->group(function (): void {
     ])
         ->middleware($inspectionRoles)
         ->name('po-transmittals.pdf');
+    Route::post('po-transmittals/download-pdfs', [
+        POTransmittalController::class,
+        'downloadPdfs',
+    ])
+        ->middleware($inspectionRoles)
+        ->name('po-transmittals.download-pdfs');
     Route::get('po-transmittals/batch/{batch}/purchase-orders', [
         POTransmittalController::class,
         'batchPurchaseOrders',

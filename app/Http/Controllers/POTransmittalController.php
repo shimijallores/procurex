@@ -13,6 +13,7 @@ use App\Models\PurchaseOrder;
 use App\Services\SvpMatrixSyncService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -349,5 +350,95 @@ class POTransmittalController extends Controller
             ->format('a4')
             ->name('PO-Transmittal-'.($purchaseOrder?->po_no ?: $poTransmittal->id).'.pdf')
             ->inline();
+    }
+
+    public function downloadPdfs(Request $request): BinaryFileResponse|RedirectResponse
+    {
+        $validated = $request->validate([
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+        ]);
+
+        $query = POTransmittal::with([
+            'purchaseOrder.noa.aoq.rfq.purchaseRequest.office',
+            'purchaseOrder.noa.aoq.winnerSupplier',
+            'purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest.office',
+            'purchaseOrder.noa.bacResolution.aoq.winnerSupplier',
+        ]);
+
+        if ($validated['date_from']) {
+            $query->whereDate('created_at', '>=', $validated['date_from']);
+        }
+
+        if ($validated['date_to']) {
+            $query->whereDate('created_at', '<=', $validated['date_to']);
+        }
+
+        $transmittals = $query->latest('created_at')->get();
+
+        if ($transmittals->isEmpty()) {
+            return redirect()->back()->with('error', 'No PO Transmittals found for the selected filters.');
+        }
+
+        $zip = new \ZipArchive();
+        $zipFileName = 'PO-Transmittals-'.now()->format('Y-m-d-His').'.zip';
+        $tempDir = storage_path('app/temp');
+
+        if (! is_dir($tempDir)) {
+            mkdir($tempDir, 0755, true);
+        }
+
+        $zipPath = $tempDir.\DIRECTORY_SEPARATOR.$zipFileName;
+
+        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            return redirect()->back()->with('error', 'Failed to create ZIP archive.');
+        }
+
+        foreach ($transmittals as $poTransmittal) {
+            try {
+                $pdfPath = $tempDir.\DIRECTORY_SEPARATOR.'po-transmittal-'.$poTransmittal->id.'.pdf';
+
+                $relatedTransmittals = POTransmittal::query()
+                    ->where('purchase_order_id', $poTransmittal->purchase_order_id)
+                    ->get();
+
+                $coaTransmittal = $relatedTransmittals->firstWhere('type', 'coa') ?? $poTransmittal;
+                $opgTransmittal = $relatedTransmittals->firstWhere('type', 'opg');
+
+                $purchaseOrder = $poTransmittal->purchaseOrder;
+                $noa = $purchaseOrder?->noa;
+                $aoq = $noa?->aoq ?? $noa?->bacResolution?->aoq;
+
+                Pdf::view('pdf.po-transmittal-combined', [
+                    'coaTransmittal' => $coaTransmittal,
+                    'opgTransmittal' => $opgTransmittal,
+                    'purchaseOrder' => $purchaseOrder,
+                    'noa' => $noa,
+                    'resolution' => $noa?->bacResolution,
+                    'aoq' => $aoq,
+                    'rfq' => $aoq?->rfq,
+                    'winnerSupplier' => $aoq?->winnerSupplier,
+                ])
+                    ->format('a4')
+                    ->name('PO-Transmittal-'.($purchaseOrder?->po_no ?: $poTransmittal->id).'.pdf')
+                    ->save($pdfPath);
+
+                $zip->addFile($pdfPath, 'PO-Transmittal-'.($purchaseOrder?->po_no ?: $poTransmittal->id).'.pdf');
+            } catch (\Throwable) {
+                continue;
+            }
+        }
+
+        $zip->close();
+
+        foreach ($transmittals as $poTransmittal) {
+            $pdfPath = $tempDir.\DIRECTORY_SEPARATOR.'po-transmittal-'.$poTransmittal->id.'.pdf';
+
+            if (file_exists($pdfPath)) {
+                unlink($pdfPath);
+            }
+        }
+
+        return response()->download($zipPath, $zipFileName)->deleteFileAfterSend(true);
     }
 }

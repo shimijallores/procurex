@@ -18,6 +18,7 @@ use Barryvdh\DomPDF\Facade\Pdf as DomPdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -594,6 +595,141 @@ class NOAController extends Controller
             ->format('a4')
             ->name('NOA-'.$noa->noa_no.'.pdf')
             ->inline();
+    }
+
+    public function downloadPdfs(Request $request): BinaryFileResponse|RedirectResponse
+    {
+        $validated = $request->validate([
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+        ]);
+
+        $query = NOA::with([
+            'aoq.rfq.purchaseRequest.office',
+            'aoq.rfq.suppliers.supplierItems.rfqItem',
+            'aoq.winnerSupplier',
+            'bacResolution.aoq.rfq.purchaseRequest.office',
+            'bacResolution.aoq.winnerSupplier',
+        ]);
+
+        if ($validated['date_from']) {
+            $query->whereDate('noa_date', '>=', $validated['date_from']);
+        }
+
+        if ($validated['date_to']) {
+            $query->whereDate('noa_date', '<=', $validated['date_to']);
+        }
+
+        $noas = $query->latest('noa_date')->get();
+
+        if ($noas->isEmpty()) {
+            return redirect()->back()->with('error', 'No NOAs found for the selected filters.');
+        }
+
+        $zip = new \ZipArchive();
+        $zipFileName = 'NOAs-'.now()->format('Y-m-d-His').'.zip';
+        $tempDir = storage_path('app/temp');
+
+        if (! is_dir($tempDir)) {
+            mkdir($tempDir, 0755, true);
+        }
+
+        $zipPath = $tempDir.\DIRECTORY_SEPARATOR.$zipFileName;
+
+        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            return redirect()->back()->with('error', 'Failed to create ZIP archive.');
+        }
+
+        foreach ($noas as $noa) {
+            try {
+                $pdfPath = $tempDir.\DIRECTORY_SEPARATOR."noa-{$noa->id}.pdf";
+
+                $resolution = $noa->bacResolution;
+                $aoq = $noa->aoq ?? $resolution?->aoq;
+                $rfq = $aoq?->rfq;
+                $supplierName = (string) ($aoq?->winnerSupplier?->name ?? $resolution?->winner_supplier_name ?? '');
+                $addressedSupplier = null;
+
+                if ($supplierName !== '') {
+                    $addressedSupplier = Supplier::query()
+                        ->where('name', $supplierName)
+                        ->first();
+                }
+
+                $calculatedSupplierCount = 0;
+                foreach ($rfq?->suppliers ?? collect() as $entry) {
+                    if (! $entry->submitted_at) {
+                        continue;
+                    }
+
+                    $hasAtLeastOnePrice = false;
+                    foreach ($entry->supplierItems as $supplierItem) {
+                        if ($supplierItem->unit_price !== null) {
+                            $hasAtLeastOnePrice = true;
+                            break;
+                        }
+                    }
+
+                    if ($hasAtLeastOnePrice) {
+                        ++$calculatedSupplierCount;
+                    }
+                }
+
+                $calculationLabel = $calculatedSupplierCount <= 1
+                    ? 'Single Calculated and Responsive Quotation'
+                    : 'Lowest Calculated and Responsive Quotation';
+
+                $calculationLabel = strtoupper($calculationLabel);
+
+                $recipientTitle = trim((string) ($noa->recipient_title ?? ''));
+
+                if ($recipientTitle === '' && $addressedSupplier) {
+                    $recipientName = trim((string) ($noa->recipient_name ?? ''));
+
+                    if ($recipientName !== '' && strcasecmp($recipientName, (string) $addressedSupplier->proprietor) === 0) {
+                        $recipientTitle = 'Proprietor';
+                    } elseif ($recipientName !== '' && strcasecmp($recipientName, (string) $addressedSupplier->authorized_representative) === 0) {
+                        $recipientTitle = 'Authorized Representative';
+                    } elseif ($recipientName !== '' && strcasecmp($recipientName, (string) $addressedSupplier->owner) === 0) {
+                        $recipientTitle = 'Owner';
+                    }
+                }
+
+                if ($recipientTitle === '') {
+                    $recipientTitle = 'Proprietor / Authorized Representative / Owner';
+                }
+
+                Pdf::view('pdf.noa', [
+                    'noa' => $noa,
+                    'resolution' => $resolution,
+                    'aoq' => $aoq,
+                    'rfq' => $rfq,
+                    'winnerSupplier' => $aoq?->winnerSupplier,
+                    'addressedSupplier' => $addressedSupplier,
+                    'recipientTitle' => $recipientTitle,
+                    'calculationLabel' => $calculationLabel,
+                ])
+                    ->format('a4')
+                    ->name('NOA-'.$noa->noa_no.'.pdf')
+                    ->save($pdfPath);
+
+                $zip->addFile($pdfPath, 'NOA-'.$noa->noa_no.'.pdf');
+            } catch (\Throwable) {
+                continue;
+            }
+        }
+
+        $zip->close();
+
+        foreach ($noas as $noa) {
+            $pdfPath = $tempDir.\DIRECTORY_SEPARATOR."noa-{$noa->id}.pdf";
+
+            if (file_exists($pdfPath)) {
+                unlink($pdfPath);
+            }
+        }
+
+        return response()->download($zipPath, $zipFileName)->deleteFileAfterSend(true);
     }
 
     private function isWorkingDay(?string $date): bool
