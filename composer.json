@@ -1,13 +1,15 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "batangas/procurex",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "Procurement management system for the General Services Office of the Province of Batangas.",
     "keywords": [
+        "procurement",
+        "government",
         "laravel",
-        "framework"
+        "philippines"
     ],
-    "license": "MIT",
+    "license": "Apache-2.0",
     "require": {
         "php": "^8.2",
         "barryvdh/laravel-dompdf": "^3.1",

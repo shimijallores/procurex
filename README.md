@@ -1,61 +1,153 @@
 # Procurex
 
-Procurex is a browser-based procurement management system for the General Services Office of the Province of Batangas.
+Procurex is a browser-based procurement management system for the **General Services Office of the Province of Batangas, Philippines**. It digitizes the complete local government procurement workflow — from annual procurement planning through purchase request, bidding, award resolution, purchase order, and post-award inspection.
 
-## Seeded Accounts
+---
 
-Default password for all seeded users: `password`
+## Features
 
-- Super Admin — `superadmin@procurex.com`
-- BAC Reso Admin — `bacreso@procurex.com`
-- Budgeting Admin — `budgeting@procurex.com`
-- Canvassing Admin — `canvassing@procurex.com`
-- PR Admin — `pradmin@procurex.com`
-- Quotation Admin — `quotation@procurex.com`
-- Document Admin — `document@procurex.com`
-- Office Sample (Veterinary Admin) — `veterenaryadmin@procurex.com`
+### End-to-End Procurement Pipeline
 
-## Modules
+```
+APP / PPMP → Emanating → Canvassing → Purchase Request → RFQ → AOQ → BAC Resolution → NOA → Purchase Order → PO Transmittal
+```
 
-- **Dashboard** — role-based metrics, workflow pipeline chart, monthly activity line chart, recent records, and quick access links.
-- **Users / Roles / Offices / Project Codes** — account, access management, and reference data.
-- **Calendar** — holidays and non-working date checks.
-- **Funds** — funding source types (PS/MOOE/CO) mapped to offices and project codes.
-- **Projects** — project records with associated briefs, work programs, and project proposals.
-- **APPs** — Annual Procurement Plan submissions via XLSX import, with category and item management.
-- **PPMPs** — Project Procurement Management Plan records with addendum support via XLSX.
-- **Master List** — standardized item categories and catalog items for canvassing.
-- **Emanatings** — office-originated procurement request bundles, the starting point for the workflow.
-- **Canvassing** — canvass records with master list sidebar for supplier price selection.
-- **Suppliers** — supplier directory with profile details.
-- **Purchase Requests** — PR drafting, status tracking (draft/approved/returned), and PDF printing.
-- **RFQs** — Request for Quotation generation, supplier invitation, and submission tracking.
-- **AOQs** — Abstract of Quotation with bid analysis and winner determination.
-- **BAC Resolutions** — BAC award resolutions with finalization workflow.
-- **NOA** — Notice of Award generation, winner amount tracking, and PDF printing.
-- **Purchase Orders** — PO generation from NOA with item snapshots, delivery term logic (15/30 days based on ₱200k threshold).
-- **PO Transmittals** — COA/OPG transmittal documents from PO batches with printable formats.
-- **COA / Acceptance & Inspection** — inspection and receiving report records.
-- **SVP Matrix** — matrix view tracking SVP numbers across AOQ → RFQ → NOA → PO.
-- **Templates** — downloadable XLSX/DOCX templates for imports.
-- **Audit / Activity Logs** — system-wide change tracking.
+### Modules
 
-## Core Functions
+**Administration** — Users, Roles, Offices, Project Codes, Audit Logs
+**Planning** — Calendar, Funds, Projects, APPs, PPMPs
+**Sourcing** — Master List, Suppliers, Emanatings, Canvassing
+**Solicitation** — Purchase Requests, RFQs, AOQs, BAC Resolutions
+**Award & Post-Award** — NOA, Purchase Orders, PO Transmittals, COA / Acceptance & Inspection
+**Cross-Cutting** — Dashboard, Global Search, SVP Matrix, Templates
 
-- End-to-end procurement workflow: APP/PPMP → Emanating → PR → RFQ → AOQ → BAC → NOA → PO → PO Transmittal.
-- Role-based access control and module visibility.
-- XLSX-based bulk import for APPs, PPMPs, Emanatings, work programs, and project briefs.
-- Global search across 8 document types (PR, RFQ, NOA, PO, BAC Resolution, Supplier, A&I, PO Transmittal).
-- Batch PO transmittal generation with type-ahead PO selection.
-- PDF and DOCX document generation for procurement records.
-- Editable document templates with preserved snapshot data for issued records.
-- Reusable form components with existence-warning modals to prevent accidental data loss.
+### Key Capabilities
+
+- **Role-based access control** — 10 distinct role types with module-level visibility and permissions
+- **XLSX bulk imports** — APPs, PPMPs, Emanatings, work programs, project briefs
+- **Bulk PDF download** — Generate ZIP archives of all PDFs per module with optional date range filter (RFQ, AOQ, NOA, Purchase Order, BAC Resolution, PO Transmittal)
+- **Document generation** — PDF and DOCX output for all key procurement documents
+- **Global search** — Search across 8 document types simultaneously
+- **Batch processing** — Batch PO transmittals, batch PDF printing, batch NOA printing
+- **Editable snapshots** — Issued documents preserve snapshot data while allowing edits
+- **Supplier submission tracking** — Track quotation submissions per RFQ per supplier
+- **Winner determination** — Automated bid analysis and lowest calculated/responsive quotation ranking
+
+---
 
 ## Tech Stack
 
-- **Backend:** PHP 8.3, Laravel 12, Laravel Scout, Laravel Excel
-- **Frontend:** Vue 3 (Composition API), Inertia.js v2, Tailwind CSS v4, shadcn-vue, Iconify
-- **Database:** MySQL
-- **PDF:** DomPDF
-- **Testing:** Pest PHP 4
-- **Tooling:** Laravel Pint, Rector 2, Laravel Sail
+| Layer        | Technology                                                           |
+| ------------ | -------------------------------------------------------------------- |
+| **Backend**  | PHP ^8.3, Laravel 12                                                 |
+| **Frontend** | Vue 3 (Composition API, TypeScript), Inertia.js v2                   |
+| **CSS**      | Tailwind CSS v4, shadcn-vue (reka-ui), Lucide icons                  |
+| **Database** | MySQL (production) / SQLite (local dev)                              |
+| **PDF**      | Spatie Laravel PDF (Browsershot/Puppeteer) + DomPDF (batch printing) |
+| **Excel**    | Laravel Excel (Maatwebsite) 3.1                                      |
+| **Search**   | Laravel Scout                                                        |
+| **Build**    | Vite 7                                                               |
+| **Testing**  | Pest PHP 4                                                           |
+| **Tooling**  | Laravel Pint, Rector 2, Laravel Sail (Docker)                        |
+
+---
+
+## Getting Started
+
+- Refer to the user manual for a more comprehensive guide on installation, configuration, and usage.
+
+## Seeded Accounts
+
+Default password for all accounts: `password`
+
+| Role                       | Email                        |
+| -------------------------- | ---------------------------- |
+| Super Admin                | superadmin@procurex.com      |
+| BAC Reso Admin             | bacreso@procurex.com         |
+| Budgeting Admin            | budgeting@procurex.com       |
+| Canvassing Admin           | canvassing@procurex.com      |
+| PR Admin                   | pradmin@procurex.com         |
+| Quotation Admin            | quotation@procurex.com       |
+| Document Admin             | document@procurex.com        |
+| Office Sample (Veterinary) | veterenaryadmin@procurex.com |
+
+---
+
+## Architecture
+
+### Directory Structure
+
+```
+app/
+├── Console/Commands/     # Artisan commands (LockExpiredBatches, ExportSeedData)
+├── Enums/                # RoleType
+├── Exports/              # Excel export classes
+├── Http/
+│   ├── Controllers/      # 36 controllers
+│   ├── Middleware/        # Role-based access, Inertia setup
+│   └── Requests/         # 47 form request classes
+├── Imports/              # XLSX import classes
+├── Models/               # 45 Eloquent models
+└── Rules/                # Custom validation rules
+
+resources/
+├── js/
+│   ├── Components/       # Reusable Vue components
+│   ├── Pages/            # Inertia page components
+│   ├── Layout/           # App layout
+│   └── Composable/       # Vue composables
+└── views/                # Blade templates (PDF, DOCX)
+
+routes/
+├── web.php               # Main application routes
+├── templates.php         # Template download routes
+└── console.php           # Scheduled tasks
+
+database/
+├── migrations/           # 43 migrations
+├── seeders/              # 14 seeders with sample data
+└── factories/            # Model factories
+```
+
+### Models
+
+45 Eloquent models covering the full procurement lifecycle: `AcceptanceInspection`, `AOQ`, `APP`, `BACResolution`, `Batch`, `Calendar`, `Canvas`, `COAInspection`, `Emanating`, `Fund`, `MasterListItem`, `NOA`, `POTransmittal`, `PPMP`, `Project`, `PurchaseOrder`, `PurchaseRequest`, `RFQ`, `Supplier`, `SvpMatrix`, `User`, and supporting models.
+
+### Scheduled Tasks
+
+- **`batches:lock-expired`** — Automatically locks batches whose earmark date range has ended (runs every minute).
+
+---
+
+## Development
+
+### Code Style
+
+```bash
+composer run format        # Laravel Pint
+composer run refactor      # Rector
+```
+
+### Testing
+
+```bash
+php artisan test --compact
+```
+
+---
+
+## License
+
+Copyright 2025 Province of Batangas
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
