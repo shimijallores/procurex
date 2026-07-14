@@ -21,8 +21,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
-use PhpOffice\PhpWord\IOFactory;
-use PhpOffice\PhpWord\PhpWord;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class BACResolutionController extends Controller
@@ -488,23 +486,14 @@ class BACResolutionController extends Controller
             return redirect()->back()->with('error', 'Failed to create ZIP archive.');
         }
 
+        $tempPaths = [];
+
         foreach ($resolutions as $bacResolution) {
             try {
-                $docxPath = $tempDir.\DIRECTORY_SEPARATOR.sprintf('bac-resolution-%s.docx', $bacResolution->id);
+                $tempPath = app(\App\Actions\WordDocuments\BuildBacResolutionWordDocument::class)->handle($bacResolution);
+                $tempPaths[] = $tempPath;
 
-                $phpWord = new PhpWord;
-                \PhpOffice\PhpWord\Settings::setOutputEscapingEnabled(true);
-                $section = $phpWord->addSection();
-                $section->addText('BAC Resolution: '.$bacResolution->resolution_no, ['bold' => true, 'size' => 14]);
-                $section->addText('Date: '.optional($bacResolution->resolution_date)->format('F d, Y'));
-                $section->addText('Project: '.$bacResolution->project_name);
-                $section->addText('Winner: '.$bacResolution->winner_supplier_name);
-                $section->addText('Amount: Php '.number_format((float) ($bacResolution->winner_amount ?? 0), 2));
-
-                $writer = IOFactory::createWriter($phpWord, 'Word2007');
-                $writer->save($docxPath);
-
-                $zipArchive->addFile($docxPath, 'BAC-Resolution-'.$bacResolution->resolution_no.'.docx');
+                $zipArchive->addFile($tempPath, 'BAC-Resolution-'.$bacResolution->resolution_no.'.docx');
             } catch (\Throwable) {
                 continue;
             }
@@ -512,10 +501,9 @@ class BACResolutionController extends Controller
 
         $zipArchive->close();
 
-        foreach ($resolutions as $resolution) {
-            $docxPath = $tempDir.\DIRECTORY_SEPARATOR.'bac-resolution-'.$resolution->id.'.docx';
-            if (file_exists($docxPath)) {
-                unlink($docxPath);
+        foreach ($tempPaths as $tempPath) {
+            if (file_exists($tempPath)) {
+                unlink($tempPath);
             }
         }
 
