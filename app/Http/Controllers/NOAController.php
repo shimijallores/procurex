@@ -205,7 +205,7 @@ class NOAController extends Controller
         do {
             $noaNo = sprintf('%s%04d', $prefix, $next);
 
-            $next++;
+            ++$next;
         } while (NOA::where('noa_no', $noaNo)->exists());
 
         return $noaNo;

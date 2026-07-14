@@ -64,7 +64,7 @@ class PurchaseOrderExport implements FromArray, ShouldAutoSize, WithEvents, With
         $total = 0;
 
         foreach ($po->items as $item) {
-            $counter++;
+            ++$counter;
             $quantity = (int) ($item->quantity_snapshot ?? 0);
             $unitCost = (float) ($item->unit_cost_snapshot ?? 0);
             $amount = (float) ($item->amount_snapshot ?? 0);

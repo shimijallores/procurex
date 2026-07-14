@@ -488,12 +488,12 @@ class BACResolutionController extends Controller
 
         $tempPaths = [];
 
-        foreach ($resolutions as $bacResolution) {
+        foreach ($resolutions as $resolution) {
             try {
-                $tempPath = app(\App\Actions\WordDocuments\BuildBacResolutionWordDocument::class)->handle($bacResolution);
+                $tempPath = app(\App\Actions\WordDocuments\BuildBacResolutionWordDocument::class)->handle($resolution);
                 $tempPaths[] = $tempPath;
 
-                $zipArchive->addFile($tempPath, 'BAC-Resolution-'.$bacResolution->resolution_no.'.docx');
+                $zipArchive->addFile($tempPath, 'BAC-Resolution-'.$resolution->resolution_no.'.docx');
             } catch (\Throwable) {
                 continue;
             }
@@ -586,7 +586,7 @@ class BACResolutionController extends Controller
             }
 
             if ($hasAtLeastOnePrice) {
-                $count++;
+                ++$count;
             }
         }
 

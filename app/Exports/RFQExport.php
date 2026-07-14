@@ -43,7 +43,7 @@ class RFQExport implements FromArray, ShouldAutoSize, WithEvents, WithStyles
         $grandTotal = 0;
 
         foreach ($this->rfq->items as $item) {
-            $counter++;
+            ++$counter;
             $prPrice = (float) ($item->purchaseRequestItem?->unit_cost ?? 0);
 
             $rows[] = [

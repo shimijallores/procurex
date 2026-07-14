@@ -52,7 +52,7 @@ class BuildNoaWordDocument
             }
 
             if ($hasAtLeastOnePrice) {
-                $calculatedSupplierCount++;
+                ++$calculatedSupplierCount;
             }
         }
 
@@ -262,16 +262,16 @@ class BuildNoaWordDocument
         );
         $section->addTextBreak();
 
-        $bodyRun = $section->addTextRun([
+        $textRun = $section->addTextRun([
             'alignment' => Jc::BOTH,
             'lineHeight' => 1.0,
         ]);
-        $bodyRun->addText(
+        $textRun->addText(
             'We would like to inform you that your company was declared as the supplier with ',
         );
-        $bodyRun->addText($calculationLabel, ['bold' => true]);
+        $textRun->addText($calculationLabel, ['bold' => true]);
         if ($resolutionNo) {
-            $bodyRun->addText(
+            $textRun->addText(
                 sprintf(
                     ', through Resolution No. %s, Series %s',
                     $resolutionNo,
@@ -280,13 +280,14 @@ class BuildNoaWordDocument
                 ['bold' => true],
             );
         }
-        $bodyRun->addText(
+
+        $textRun->addText(
             ', after passing all the terms, conditions and/or specifications needed by the Procuring Entity as stipulated in the Request for Quotation, dated ',
         );
-        $bodyRun->addText(optional($rfq?->rfq_date)->format('F d, Y'), [
+        $textRun->addText(optional($rfq?->rfq_date)->format('F d, Y'), [
             'bold' => true,
         ]);
-        $bodyRun->addText(
+        $textRun->addText(
             '. Thus, you are hereby AWARDED of the project, as follows:',
         );
 

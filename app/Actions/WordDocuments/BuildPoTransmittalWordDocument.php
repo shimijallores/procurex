@@ -82,8 +82,8 @@ class BuildPoTransmittalWordDocument
 
         $coaHeaderLines = collect(preg_split('/\r\n|\r|\n/', trim((string) ($coaTransmittal?->header_text ?? ''))))->filter();
         if ($coaHeaderLines->isNotEmpty()) {
-            foreach ($coaHeaderLines as $line) {
-                $section->addText($line, ['bold' => true]);
+            foreach ($coaHeaderLines as $coaHeaderLine) {
+                $section->addText($coaHeaderLine, ['bold' => true]);
             }
         } else {
             $section->addText('MARIA VANESSA C. BRIONES - VEGAS');
@@ -132,8 +132,8 @@ class BuildPoTransmittalWordDocument
 
             $opgHeaderLines = collect(preg_split('/\r\n|\r|\n/', trim((string) ($opgTransmittal?->header_text ?? ''))))->filter();
             if ($opgHeaderLines->isNotEmpty()) {
-                foreach ($opgHeaderLines as $line) {
-                    $section->addText($line, ['bold' => true]);
+                foreach ($opgHeaderLines as $opgHeaderLine) {
+                    $section->addText($opgHeaderLine, ['bold' => true]);
                 }
             } else {
                 $section->addText('HON. VILMA SANTOS - RECTO', ['bold' => true]);
