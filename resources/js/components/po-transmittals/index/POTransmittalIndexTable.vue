@@ -245,7 +245,7 @@ const getTransmittalByType = (entry, type) => {
                                     <a
                                         :href="
                                             route(
-                                                'po-transmittals.pdf',
+                                                'po-transmittals.export',
                                                 entry.id,
                                             )
                                         "

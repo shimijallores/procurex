@@ -13,12 +13,14 @@ use App\Models\PurchaseOrder;
 use App\Services\SvpMatrixSyncService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
-use Spatie\LaravelPdf\Facades\Pdf;
+use PhpOffice\PhpWord\IOFactory;
+use PhpOffice\PhpWord\PhpWord;
+use PhpOffice\PhpWord\SimpleType\Jc;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class POTransmittalController extends Controller
 {
@@ -193,7 +195,7 @@ class POTransmittalController extends Controller
             ->with('success', 'PO Transmittals created successfully. Printing batch PDF...');
     }
 
-    public function printBatchPdf(Batch $batch): \Spatie\LaravelPdf\PdfBuilder
+    public function exportBatch(Batch $batch): BinaryFileResponse|RedirectResponse
     {
         $purchaseOrders = PurchaseOrder::with([
             'noa.aoq.rfq.purchaseRequest.office',
@@ -210,30 +212,75 @@ class POTransmittalController extends Controller
             ->latest('po_date')
             ->get();
 
-        $poGroups = $purchaseOrders->map(function (PurchaseOrder $purchaseOrder): array {
-            $relatedTransmittals = $purchaseOrder->poTransmittals;
-            $coa = $relatedTransmittals->firstWhere('type', 'coa');
-            $opg = $relatedTransmittals->firstWhere('type', 'opg');
-            $noa = $purchaseOrder->noa;
-            $aoq = $noa?->aoq ?? $noa?->bacResolution?->aoq;
-            $rfq = $aoq?->rfq;
+        if ($purchaseOrders->isEmpty()) {
+            return redirect()->back()->with('error', 'No PO Transmittals found in this batch.');
+        }
 
-            return [
-                'purchaseOrder' => $purchaseOrder,
-                'coaTransmittal' => $coa,
-                'opgTransmittal' => $opg,
-                'winnerSupplier' => $aoq?->winnerSupplier,
-                'projectName' => $rfq?->project_name ?? $noa?->bacResolution?->project_name ?? '—',
-            ];
-        })->values();
+        $zipArchive = new \ZipArchive;
+        $zipFileName = 'PO-Transmittals-Batch-'.$batch->batch_no.'-'.now()->format('Y-m-d-His').'.zip';
+        $tempDir = storage_path('app/temp');
 
-        return Pdf::view('pdf.po-transmittals-batch', [
-            'poGroups' => $poGroups,
-            'batch' => $batch,
-        ])
-            ->format('a4')
-            ->name('PO-Transmittals-Batch-'.$batch->batch_no.'.pdf')
-            ->inline();
+        if (! is_dir($tempDir)) {
+            mkdir($tempDir, 0755, true);
+        }
+
+        $zipPath = $tempDir.\DIRECTORY_SEPARATOR.$zipFileName;
+
+        if ($zipArchive->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            return redirect()->back()->with('error', 'Failed to create ZIP archive.');
+        }
+
+        foreach ($purchaseOrders as $po) {
+            try {
+                $docxPath = $tempDir.\DIRECTORY_SEPARATOR.'po-transmittal-'.$po->id.'.docx';
+
+                $relatedTransmittals = $po->poTransmittals;
+                $coaTransmittal = $relatedTransmittals->firstWhere('type', 'coa');
+                $opgTransmittal = $relatedTransmittals->firstWhere('type', 'opg');
+                $noa = $po->noa;
+                $aoq = $noa?->aoq ?? $noa?->bacResolution?->aoq;
+                $rfq = $aoq?->rfq;
+
+                $phpWord = new PhpWord;
+                \PhpOffice\PhpWord\Settings::setOutputEscapingEnabled(true);
+                $section = $phpWord->addSection();
+                $section->addText('PO Transmittal', ['bold' => true, 'size' => 14], ['alignment' => Jc::CENTER]);
+                $section->addTextBreak();
+                $section->addText('PO No.: '.$po->po_no);
+                $section->addText('Supplier: '.strtoupper((string) ($aoq?->winnerSupplier?->name ?? '—')));
+                $section->addText('Project: '.($rfq?->project_name ?? '—'));
+                $section->addText('Amount: Php '.number_format((float) ($po->total_amount ?? 0), 2));
+                $section->addTextBreak();
+
+                if ($coaTransmittal) {
+                    $section->addText('COA Transmittal No.: '.$coaTransmittal->transmittal_no, ['bold' => true]);
+                    $section->addText(sprintf('COA Signatory: %s - %s', $coaTransmittal->signatory_name, $coaTransmittal->signatory_title));
+                }
+
+                if ($opgTransmittal) {
+                    $section->addText('OPG Transmittal No.: '.$opgTransmittal->transmittal_no, ['bold' => true]);
+                    $section->addText(sprintf('OPG Signatory: %s - %s', $opgTransmittal->signatory_name, $opgTransmittal->signatory_title));
+                }
+
+                $writer = IOFactory::createWriter($phpWord, 'Word2007');
+                $writer->save($docxPath);
+
+                $zipArchive->addFile($docxPath, 'PO-Transmittal-'.($po->po_no ?: $po->id).'.docx');
+            } catch (\Throwable) {
+                continue;
+            }
+        }
+
+        $zipArchive->close();
+
+        foreach ($purchaseOrders as $purchaseOrder) {
+            $docxPath = $tempDir.\DIRECTORY_SEPARATOR.'po-transmittal-'.$purchaseOrder->id.'.docx';
+            if (file_exists($docxPath)) {
+                unlink($docxPath);
+            }
+        }
+
+        return response()->download($zipPath, $zipFileName)->deleteFileAfterSend(true);
     }
 
     public function show(POTransmittal $poTransmittal): Response
@@ -317,49 +364,22 @@ class POTransmittalController extends Controller
             ->with('success', 'PO Transmittal deleted successfully.');
     }
 
-    public function printPdf(POTransmittal $poTransmittal): \Spatie\LaravelPdf\PdfBuilder
+    public function export(POTransmittal $poTransmittal): BinaryFileResponse
     {
-        $poTransmittal->load([
-            'purchaseOrder.noa.aoq.rfq.purchaseRequest.office',
-            'purchaseOrder.noa.aoq.winnerSupplier',
-            'purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest.office',
-            'purchaseOrder.noa.bacResolution.aoq.winnerSupplier',
-        ]);
+        $tempFile = app(\App\Actions\WordDocuments\BuildPoTransmittalWordDocument::class)->handle($poTransmittal);
 
-        $relatedTransmittals = POTransmittal::query()
-            ->where('purchase_order_id', $poTransmittal->purchase_order_id)
-            ->get();
-
-        $coaTransmittal = $relatedTransmittals->firstWhere('type', 'coa') ?? $poTransmittal;
-        $opgTransmittal = $relatedTransmittals->firstWhere('type', 'opg');
-
-        $purchaseOrder = $poTransmittal->purchaseOrder;
-        $noa = $purchaseOrder?->noa;
-        $aoq = $noa?->aoq ?? $noa?->bacResolution?->aoq;
-
-        return Pdf::view('pdf.po-transmittal-combined', [
-            'coaTransmittal' => $coaTransmittal,
-            'opgTransmittal' => $opgTransmittal,
-            'purchaseOrder' => $purchaseOrder,
-            'noa' => $noa,
-            'resolution' => $noa?->bacResolution,
-            'aoq' => $aoq,
-            'rfq' => $aoq?->rfq,
-            'winnerSupplier' => $aoq?->winnerSupplier,
-        ])
-            ->format('a4')
-            ->name('PO-Transmittal-'.($purchaseOrder?->po_no ?: $poTransmittal->id).'.pdf')
-            ->inline();
+        return response()->download($tempFile, 'PO-Transmittal-'.($poTransmittal->purchaseOrder?->po_no ?? $poTransmittal->id).'.docx')
+            ->deleteFileAfterSend(true);
     }
 
-    public function downloadPdfs(Request $request): BinaryFileResponse|RedirectResponse
+    public function downloadFiles(Request $request): BinaryFileResponse|RedirectResponse
     {
         $validated = $request->validate([
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
         ]);
 
-        $query = POTransmittal::with([
+        $builder = POTransmittal::with([
             'purchaseOrder.noa.aoq.rfq.purchaseRequest.office',
             'purchaseOrder.noa.aoq.winnerSupplier',
             'purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest.office',
@@ -367,20 +387,20 @@ class POTransmittalController extends Controller
         ]);
 
         if ($validated['date_from']) {
-            $query->whereDate('created_at', '>=', $validated['date_from']);
+            $builder->whereDate('created_at', '>=', $validated['date_from']);
         }
 
         if ($validated['date_to']) {
-            $query->whereDate('created_at', '<=', $validated['date_to']);
+            $builder->whereDate('created_at', '<=', $validated['date_to']);
         }
 
-        $transmittals = $query->latest('created_at')->get();
+        $transmittals = $builder->latest('created_at')->get();
 
         if ($transmittals->isEmpty()) {
             return redirect()->back()->with('error', 'No PO Transmittals found for the selected filters.');
         }
 
-        $zip = new \ZipArchive();
+        $zipArchive = new \ZipArchive;
         $zipFileName = 'PO-Transmittals-'.now()->format('Y-m-d-His').'.zip';
         $tempDir = storage_path('app/temp');
 
@@ -390,13 +410,13 @@ class POTransmittalController extends Controller
 
         $zipPath = $tempDir.\DIRECTORY_SEPARATOR.$zipFileName;
 
-        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+        if ($zipArchive->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
             return redirect()->back()->with('error', 'Failed to create ZIP archive.');
         }
 
         foreach ($transmittals as $poTransmittal) {
             try {
-                $pdfPath = $tempDir.\DIRECTORY_SEPARATOR.'po-transmittal-'.$poTransmittal->id.'.pdf';
+                $docxPath = $tempDir.\DIRECTORY_SEPARATOR.'po-transmittal-'.$poTransmittal->id.'.docx';
 
                 $relatedTransmittals = POTransmittal::query()
                     ->where('purchase_order_id', $poTransmittal->purchase_order_id)
@@ -404,38 +424,36 @@ class POTransmittalController extends Controller
 
                 $coaTransmittal = $relatedTransmittals->firstWhere('type', 'coa') ?? $poTransmittal;
                 $opgTransmittal = $relatedTransmittals->firstWhere('type', 'opg');
-
                 $purchaseOrder = $poTransmittal->purchaseOrder;
                 $noa = $purchaseOrder?->noa;
                 $aoq = $noa?->aoq ?? $noa?->bacResolution?->aoq;
 
-                Pdf::view('pdf.po-transmittal-combined', [
-                    'coaTransmittal' => $coaTransmittal,
-                    'opgTransmittal' => $opgTransmittal,
-                    'purchaseOrder' => $purchaseOrder,
-                    'noa' => $noa,
-                    'resolution' => $noa?->bacResolution,
-                    'aoq' => $aoq,
-                    'rfq' => $aoq?->rfq,
-                    'winnerSupplier' => $aoq?->winnerSupplier,
-                ])
-                    ->format('a4')
-                    ->name('PO-Transmittal-'.($purchaseOrder?->po_no ?: $poTransmittal->id).'.pdf')
-                    ->save($pdfPath);
+                $phpWord = new PhpWord;
+                \PhpOffice\PhpWord\Settings::setOutputEscapingEnabled(true);
+                $section = $phpWord->addSection();
+                $section->addText('PO Transmittal', ['bold' => true, 'size' => 14]);
+                $section->addTextBreak();
+                $section->addText('PO No.: '.$purchaseOrder?->po_no);
+                $section->addText('Supplier: '.strtoupper((string) ($aoq?->winnerSupplier?->name ?? '—')));
+                $projectName = $poTransmittal->purchaseOrder?->noa?->aoq?->rfq?->project_name ?? $poTransmittal->purchaseOrder?->noa?->bacResolution?->project_name ?? '—';
+                $section->addText('Project: '.$projectName);
+                $section->addText('Amount: Php '.number_format((float) ($purchaseOrder?->total_amount ?? 0), 2));
 
-                $zip->addFile($pdfPath, 'PO-Transmittal-'.($purchaseOrder?->po_no ?: $poTransmittal->id).'.pdf');
+                $writer = IOFactory::createWriter($phpWord, 'Word2007');
+                $writer->save($docxPath);
+
+                $zipArchive->addFile($docxPath, 'PO-Transmittal-'.($purchaseOrder?->po_no ?: $poTransmittal->id).'.docx');
             } catch (\Throwable) {
                 continue;
             }
         }
 
-        $zip->close();
+        $zipArchive->close();
 
-        foreach ($transmittals as $poTransmittal) {
-            $pdfPath = $tempDir.\DIRECTORY_SEPARATOR.'po-transmittal-'.$poTransmittal->id.'.pdf';
-
-            if (file_exists($pdfPath)) {
-                unlink($pdfPath);
+        foreach ($transmittals as $transmittal) {
+            $docxPath = $tempDir.\DIRECTORY_SEPARATOR.'po-transmittal-'.$transmittal->id.'.docx';
+            if (file_exists($docxPath)) {
+                unlink($docxPath);
             }
         }
 

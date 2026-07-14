@@ -5,7 +5,7 @@ import { Link } from "@inertiajs/vue3";
 import { Icon } from "@iconify/vue";
 import { Button } from "@/components/ui/button";
 import PageTitle from "@/components/PageTitle.vue";
-import DownloadPdfModal from "@/components/DownloadPdfModal.vue";
+import DownloadModal from "@/components/DownloadModal.vue";
 
 const user = computed(() => usePage().props.auth?.user);
 const isSuperAdmin = computed(() =>
@@ -29,7 +29,7 @@ const showDownloadModal = ref(false);
                 @click="showDownloadModal = true"
             >
                 <Icon icon="lucide:download" class="mr-2 h-4 w-4" />
-                Download PDFs
+                Download
             </Button>
             <Link :href="route('batch-aoq-requests.my-requests')">
                 <Button variant="outline">
@@ -51,11 +51,11 @@ const showDownloadModal = ref(false);
             </Link>
         </div>
 
-        <DownloadPdfModal
+        <DownloadModal
             v-model:open="showDownloadModal"
-            title="Download AOQ PDFs"
+            title="Download AOQ"
             description="Download AOQ documents as individual PDFs in a ZIP file."
-            :route-name="route('aoqs.download-pdfs')"
+            :route-name="route('aoqs.download-files')"
         />
     </div>
 </template>

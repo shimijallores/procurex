@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Exports\RFQExport;
 use App\Http\Requests\StoreRFQRequest;
 use App\Http\Requests\UpdateRFQRequest;
 use App\Models\Calendar;
@@ -18,7 +19,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
-use Spatie\LaravelPdf\Facades\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class RFQController extends Controller
 {
@@ -292,48 +294,46 @@ class RFQController extends Controller
         return response()->json(['svps' => $svps]);
     }
 
-    public function printPdf(RFQ $rfq): \Spatie\LaravelPdf\PdfBuilder
+    public function export(RFQ $rfq): BinaryFileResponse
     {
         $rfq->load([
             'purchaseRequest.office',
             'items.purchaseRequestItem.emanatingItem.ppmpItem',
         ]);
 
-        return Pdf::view('pdf.rfq', [
-            'rfq' => $rfq,
-        ])
-            ->format('a4')
-            ->name('RFQ-'.$rfq->svp_no.'.pdf')
-            ->inline();
+        return Excel::download(
+            new RFQExport($rfq),
+            'RFQ-'.$rfq->svp_no.'.xlsx'
+        );
     }
 
-    public function downloadPdfs(Request $request): \Symfony\Component\HttpFoundation\BinaryFileResponse|\Illuminate\Http\RedirectResponse
+    public function downloadFiles(Request $request): BinaryFileResponse|RedirectResponse
     {
         $validated = $request->validate([
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
         ]);
 
-        $query = RFQ::with([
+        $builder = RFQ::with([
             'purchaseRequest.office',
             'items.purchaseRequestItem.emanatingItem.ppmpItem',
         ]);
 
         if ($validated['date_from']) {
-            $query->whereDate('rfq_date', '>=', $validated['date_from']);
+            $builder->whereDate('rfq_date', '>=', $validated['date_from']);
         }
 
         if ($validated['date_to']) {
-            $query->whereDate('rfq_date', '<=', $validated['date_to']);
+            $builder->whereDate('rfq_date', '<=', $validated['date_to']);
         }
 
-        $rfqs = $query->latest('rfq_date')->get();
+        $rfqs = $builder->latest('rfq_date')->get();
 
         if ($rfqs->isEmpty()) {
             return redirect()->back()->with('error', 'No RFQs found for the selected filters.');
         }
 
-        $zip = new \ZipArchive();
+        $zipArchive = new \ZipArchive;
         $zipFileName = 'RFQs-'.now()->format('Y-m-d-His').'.zip';
         $tempDir = storage_path('app/temp');
 
@@ -343,34 +343,39 @@ class RFQController extends Controller
 
         $zipPath = $tempDir.\DIRECTORY_SEPARATOR.$zipFileName;
 
-        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+        if ($zipArchive->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
             return redirect()->back()->with('error', 'Failed to create ZIP archive.');
         }
 
         foreach ($rfqs as $rfq) {
             try {
-                $pdfPath = $tempDir.\DIRECTORY_SEPARATOR."rfq-{$rfq->id}.pdf";
+                $xlsxPath = $tempDir.\DIRECTORY_SEPARATOR.sprintf('rfq-%s.xlsx', $rfq->id);
 
-                Pdf::view('pdf.rfq', [
-                    'rfq' => $rfq,
-                ])
-                    ->format('a4')
-                    ->name("RFQ-{$rfq->svp_no}.pdf")
-                    ->save($pdfPath);
+                Excel::store(
+                    new RFQExport($rfq),
+                    sprintf('temp/rfq-%s.xlsx', $rfq->id),
+                    null,
+                    \Maatwebsite\Excel\Excel::XLSX
+                );
 
-                $zip->addFile($pdfPath, "RFQ-{$rfq->svp_no}.pdf");
+                $storedPath = storage_path('app/temp/rfq-'.$rfq->id.'.xlsx');
+                if (file_exists($storedPath)) {
+                    rename($storedPath, $xlsxPath);
+                }
+
+                $zipArchive->addFile($xlsxPath, sprintf('RFQ-%s.xlsx', $rfq->svp_no));
             } catch (\Throwable) {
                 continue;
             }
         }
 
-        $zip->close();
+        $zipArchive->close();
 
         foreach ($rfqs as $rfq) {
-            $pdfPath = $tempDir.\DIRECTORY_SEPARATOR."rfq-{$rfq->id}.pdf";
+            $xlsxPath = $tempDir.\DIRECTORY_SEPARATOR.sprintf('rfq-%s.xlsx', $rfq->id);
 
-            if (file_exists($pdfPath)) {
-                unlink($pdfPath);
+            if (file_exists($xlsxPath)) {
+                unlink($xlsxPath);
             }
         }
 
@@ -393,7 +398,7 @@ class RFQController extends Controller
 
         do {
             $svpNo = sprintf('%s%04d', $prefix, $next);
-            ++$next;
+            $next++;
         } while (RFQ::where('svp_no', $svpNo)->exists());
 
         return $svpNo;

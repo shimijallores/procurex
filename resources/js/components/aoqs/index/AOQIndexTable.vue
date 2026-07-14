@@ -235,7 +235,7 @@ const formatDate = (date) => {
                                     class="flex items-center justify-end gap-2"
                                 >
                                     <a
-                                        :href="route('aoqs.pdf', aoq.id)"
+                                        :href="route('aoqs.export', aoq.id)"
                                         target="_blank"
                                     >
                                         <Button variant="ghost" size="sm">

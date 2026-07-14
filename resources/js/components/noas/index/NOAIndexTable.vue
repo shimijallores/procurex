@@ -104,7 +104,7 @@ const formatDate = (date) => {
 
                     <a
                         v-if="selectedBatch"
-                        :href="route('noas.print-batch', selectedBatch)"
+                        :href="route('noas.export-batch', selectedBatch)"
                         target="_blank"
                     >
                         <Button variant="outline" size="lg">
@@ -212,7 +212,7 @@ const formatDate = (date) => {
                                     class="flex items-center justify-end gap-2"
                                 >
                                     <a
-                                        :href="route('noas.pdf', noa.id)"
+                                        :href="route('noas.export', noa.id)"
                                         target="_blank"
                                     >
                                         <Button variant="ghost" size="sm"

@@ -10,8 +10,8 @@ const props = defineProps({
 
 defineEmits(["delete"]);
 
-const openPdf = () => {
-    window.open(route("po-transmittals.pdf", props.poTransmittal.id), "_blank");
+const openExport = () => {
+    window.open(route("po-transmittals.export", props.poTransmittal.id), "_blank");
 };
 </script>
 
@@ -40,9 +40,9 @@ const openPdf = () => {
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
-            <Button variant="outline" @click="openPdf">
+            <Button variant="outline" @click="openExport">
                 <Icon icon="lucide:printer" class="mr-2 h-4 w-4" />
-                Print COA + OPG
+                Download
             </Button>
             <Button
                 variant="ghost"

@@ -110,7 +110,7 @@ const formatCurrency = (value) =>
 
                     <a
                         v-if="selectedBatch"
-                        :href="route('purchase-orders.print-batch', selectedBatch)"
+                        :href="route('purchase-orders.export-batch', selectedBatch)"
                         target="_blank"
                     >
                         <Button variant="outline" size="lg">
@@ -234,7 +234,7 @@ const formatCurrency = (value) =>
                                     <a
                                         :href="
                                             route(
-                                                'purchase-orders.pdf',
+                                                'purchase-orders.export',
                                                 purchaseOrder.id,
                                             )
                                         "

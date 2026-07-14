@@ -75,7 +75,7 @@ class PrExcelImportService
 
         $spreadsheet = $reader->load($path);
 
-        for ($i = 0; $i < $spreadsheet->getSheetCount(); ++$i) {
+        for ($i = 0; $i < $spreadsheet->getSheetCount(); $i++) {
             $sheet = $spreadsheet->getSheet($i);
             $name = $sheet->getTitle();
 
@@ -321,7 +321,7 @@ class PrExcelImportService
         $maxRow = max(array_keys($sparse));
         $dense = [];
 
-        for ($r = $minRow; $r <= $maxRow; ++$r) {
+        for ($r = $minRow; $r <= $maxRow; $r++) {
             $dense[] = $sparse[$r] ?? array_fill(0, 7, '');
         }
 
@@ -333,7 +333,7 @@ class PrExcelImportService
         $numRows = count($rows);
         $consecutiveEmpty = 0;
 
-        for ($i = 0; $i < $numRows; ++$i) {
+        for ($i = 0; $i < $numRows; $i++) {
             $colA = $rows[$i][0] ?? '';
 
             if ($colA === 'PURCHASE REQUEST' || str_starts_with($colA, 'PROVINCIAL GOVERNMENT OF')) {
@@ -346,7 +346,7 @@ class PrExcelImportService
                 }
             } else {
                 $rowEmpty = true;
-                for ($c = 0; $c < 7; ++$c) {
+                for ($c = 0; $c < 7; $c++) {
                     if (($rows[$i][$c] ?? '') !== '') {
                         $rowEmpty = false;
                         break;
@@ -354,7 +354,7 @@ class PrExcelImportService
                 }
 
                 if ($rowEmpty) {
-                    ++$consecutiveEmpty;
+                    $consecutiveEmpty++;
                     if ($consecutiveEmpty >= self::MAX_EMPTY_ROWS) {
                         break;
                     }
@@ -479,7 +479,7 @@ class PrExcelImportService
         $itemCount = count($rows);
         $lastUsedRow = $from - 1;
 
-        for ($offset = $from; $offset <= $to && $offset < $itemCount; ++$offset) {
+        for ($offset = $from; $offset <= $to && $offset < $itemCount; $offset++) {
             $itemNoVal = $rows[$offset][0] ?? null;
 
             if (! is_numeric($itemNoVal) || (float) $itemNoVal <= 0) {
@@ -511,7 +511,7 @@ class PrExcelImportService
 
                 $item['description'] = trim($item['description'].' '.$nextDesc);
                 $offset = $nextOffset;
-                ++$nextOffset;
+                $nextOffset++;
             }
 
             $items[] = $item;
@@ -569,7 +569,7 @@ class PrExcelImportService
         }
 
         if ($isDraftImport) {
-            ++$this->draftImportCount;
+            $this->draftImportCount++;
         }
 
         $this->databaseManager->beginTransaction();
@@ -838,7 +838,7 @@ class PrExcelImportService
     {
         $itemCount = count($rows);
 
-        for ($offset = $from; $offset <= $to && $offset < $itemCount; ++$offset) {
+        for ($offset = $from; $offset <= $to && $offset < $itemCount; $offset++) {
             $colA = $this->cell($rows, $offset, 0);
 
             if (preg_match('/grand\s*total/i', $colA)) {
@@ -851,8 +851,8 @@ class PrExcelImportService
         }
 
         // Fallback: scan any cell in the range for a grand-total-like value
-        for ($offset = $from; $offset <= $to && $offset < $itemCount; ++$offset) {
-            for ($col = 0; $col <= 6; ++$col) {
+        for ($offset = $from; $offset <= $to && $offset < $itemCount; $offset++) {
+            for ($col = 0; $col <= 6; $col++) {
                 $cell = $this->cell($rows, $offset, $col);
 
                 if (preg_match('/grand\s*total/i', $cell) || preg_match('/^total\s+amount/i', $cell)) {
@@ -914,7 +914,7 @@ class PrExcelImportService
     {
         $itemCount = count($rows);
 
-        for ($offset = $from; $offset <= $to && $offset < $itemCount; ++$offset) {
+        for ($offset = $from; $offset <= $to && $offset < $itemCount; $offset++) {
             $value = $this->cell($rows, $offset, $col);
 
             if (preg_match($pattern, $value)) {

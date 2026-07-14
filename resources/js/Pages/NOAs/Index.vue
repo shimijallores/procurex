@@ -61,7 +61,7 @@ onMounted(() => {
     const page = usePage();
     const batchId = page.props.flash?.print_batch_id;
     if (batchId) {
-        const url = route("noas.print-batch", batchId);
+        const url = route("noas.export-batch", batchId);
         window.open(url, "_blank");
     }
 });

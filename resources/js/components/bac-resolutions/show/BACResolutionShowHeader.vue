@@ -16,8 +16,8 @@ const showRegenerateModal = ref(false);
 const finalizing = ref(false);
 const regenerating = ref(false);
 
-const openPdf = () => {
-    window.open(route("bac-resolutions.pdf", props.resolution.id), "_blank");
+const openExport = () => {
+    window.open(route("bac-resolutions.export", props.resolution.id), "_blank");
 };
 
 const confirmFinalize = () => {
@@ -84,9 +84,9 @@ const confirmRegenerate = () => {
                 <Icon icon="lucide:refresh-cw" class="mr-2 h-4 w-4" />
                 Regenerate
             </Button>
-            <Button variant="outline" @click="openPdf">
+            <Button variant="outline" @click="openExport">
                 <Icon icon="lucide:printer" class="mr-2 h-4 w-4" />
-                Print PDF
+                Download
             </Button>
             <Button
                 variant="ghost"

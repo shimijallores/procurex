@@ -9,8 +9,8 @@ const props = defineProps({
 
 defineEmits(["delete"]);
 
-const openPdf = () => {
-    window.open(route("aoqs.pdf", props.aoq.id), "_blank");
+const openExport = () => {
+    window.open(route("aoqs.export", props.aoq.id), "_blank");
 };
 </script>
 
@@ -36,9 +36,9 @@ const openPdf = () => {
             </div>
 
             <div class="flex shrink-0 items-center justify-end gap-2">
-                <Button variant="outline" @click="openPdf">
+                <Button variant="outline" @click="openExport">
                     <Icon icon="lucide:printer" class="mr-2 h-4 w-4" />
-                    Print AOQ
+                    Download
                 </Button>
                 <Button variant="destructive" @click="$emit('delete')">
                     <Icon icon="lucide:trash-2" class="mr-2 h-4 w-4" />

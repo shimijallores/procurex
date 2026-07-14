@@ -350,12 +350,12 @@ Route::middleware(['auth'])->group(function (): void {
     Route::get('rfqs/suggest-date', [RFQController::class, 'suggestRfqDate'])
         ->middleware($rfqRoles)
         ->name('rfqs.suggest-date');
-    Route::get('rfqs/{rfq}/pdf', [RFQController::class, 'printPdf'])
+    Route::get('rfqs/{rfq}/export', [RFQController::class, 'export'])
         ->middleware($rfqRoles)
-        ->name('rfqs.pdf');
-    Route::post('rfqs/download-pdfs', [RFQController::class, 'downloadPdfs'])
+        ->name('rfqs.export');
+    Route::post('rfqs/download-files', [RFQController::class, 'downloadFiles'])
         ->middleware($rfqRoles)
-        ->name('rfqs.download-pdfs');
+        ->name('rfqs.download-files');
 
     // AOQ module
     $aoqRoles =
@@ -373,12 +373,12 @@ Route::middleware(['auth'])->group(function (): void {
     Route::resource('aoqs', AOQController::class)
         ->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy'])
         ->middleware($aoqRoles);
-    Route::get('aoqs/{aoq}/pdf', [AOQController::class, 'printPdf'])
+    Route::get('aoqs/{aoq}/export', [AOQController::class, 'export'])
         ->middleware($aoqRoles)
-        ->name('aoqs.pdf');
-    Route::post('aoqs/download-pdfs', [AOQController::class, 'downloadPdfs'])
+        ->name('aoqs.export');
+    Route::post('aoqs/download-files', [AOQController::class, 'downloadFiles'])
         ->middleware($aoqRoles)
-        ->name('aoqs.download-pdfs');
+        ->name('aoqs.download-files');
     Route::get('aoqs/{aoq}/template', [AOQController::class, 'downloadTemplate'])
         ->middleware($aoqRoles)
         ->name('aoqs.template');
@@ -459,18 +459,18 @@ Route::middleware(['auth'])->group(function (): void {
     ])
         ->middleware($bacResolutionRoles)
         ->name('bac-resolutions.batch-aoqs');
-    Route::get('bac-resolutions/{bac_resolution}/pdf', [
+    Route::get('bac-resolutions/{bac_resolution}/export', [
         BACResolutionController::class,
-        'printPdf',
+        'export',
     ])
         ->middleware($bacResolutionRoles)
-        ->name('bac-resolutions.pdf');
-    Route::post('bac-resolutions/download-pdfs', [
+        ->name('bac-resolutions.export');
+    Route::post('bac-resolutions/download-files', [
         BACResolutionController::class,
-        'downloadPdfs',
+        'downloadFiles',
     ])
         ->middleware($bacResolutionRoles)
-        ->name('bac-resolutions.download-pdfs');
+        ->name('bac-resolutions.download-files');
     Route::post('bac-resolutions/{bac_resolution}/finalize', [
         BACResolutionController::class,
         'finalize',
@@ -511,15 +511,15 @@ Route::middleware(['auth'])->group(function (): void {
     Route::put('noas/{noa}', [NOAController::class, 'update'])
         ->middleware($noaRoles)
         ->name('noas.update');
-    Route::get('noas/{noa}/pdf', [NOAController::class, 'printPdf'])
+    Route::get('noas/{noa}/export', [NOAController::class, 'export'])
         ->middleware($noaRoles)
-        ->name('noas.pdf');
-    Route::post('noas/download-pdfs', [NOAController::class, 'downloadPdfs'])
+        ->name('noas.export');
+    Route::post('noas/download-files', [NOAController::class, 'downloadFiles'])
         ->middleware($noaRoles)
-        ->name('noas.download-pdfs');
-    Route::get('batches/{batch}/print-noas', [NOAController::class, 'printBatch'])
+        ->name('noas.download-files');
+    Route::get('batches/{batch}/export-noas', [NOAController::class, 'exportBatch'])
         ->middleware($noaRoles)
-        ->name('noas.print-batch');
+        ->name('noas.export-batch');
 
     // Purchase Order module
     $poRoles =
@@ -543,21 +543,21 @@ Route::middleware(['auth'])->group(function (): void {
     Route::put('purchase-orders/{purchase_order}', [PurchaseOrderController::class, 'update'])
         ->middleware($poRoles)
         ->name('purchase-orders.update');
-    Route::get('purchase-orders/{purchase_order}/pdf', [
+    Route::get('purchase-orders/{purchase_order}/export', [
         PurchaseOrderController::class,
-        'printPdf',
+        'export',
     ])
         ->middleware($poRoles)
-        ->name('purchase-orders.pdf');
-    Route::post('purchase-orders/download-pdfs', [
+        ->name('purchase-orders.export');
+    Route::post('purchase-orders/download-files', [
         PurchaseOrderController::class,
-        'downloadPdfs',
+        'downloadFiles',
     ])
         ->middleware($poRoles)
-        ->name('purchase-orders.download-pdfs');
-    Route::get('batches/{batch}/print-pos', [PurchaseOrderController::class, 'printBatch'])
+        ->name('purchase-orders.download-files');
+    Route::get('batches/{batch}/export-pos', [PurchaseOrderController::class, 'exportBatch'])
         ->middleware($poRoles)
-        ->name('purchase-orders.print-batch');
+        ->name('purchase-orders.export-batch');
 
     // PO Transmittal module
     $inspectionRoles =
@@ -566,30 +566,30 @@ Route::middleware(['auth'])->group(function (): void {
     Route::resource('po-transmittals', POTransmittalController::class)
         ->only(['index', 'create', 'store', 'show', 'update', 'destroy'])
         ->middleware($inspectionRoles);
-    Route::get('po-transmittals/{po_transmittal}/pdf', [
+    Route::get('po-transmittals/{po_transmittal}/export', [
         POTransmittalController::class,
-        'printPdf',
+        'export',
     ])
         ->middleware($inspectionRoles)
-        ->name('po-transmittals.pdf');
-    Route::post('po-transmittals/download-pdfs', [
+        ->name('po-transmittals.export');
+    Route::post('po-transmittals/download-files', [
         POTransmittalController::class,
-        'downloadPdfs',
+        'downloadFiles',
     ])
         ->middleware($inspectionRoles)
-        ->name('po-transmittals.download-pdfs');
+        ->name('po-transmittals.download-files');
     Route::get('po-transmittals/batch/{batch}/purchase-orders', [
         POTransmittalController::class,
         'batchPurchaseOrders',
     ])
         ->middleware($inspectionRoles)
         ->name('po-transmittals.batch-purchase-orders');
-    Route::get('po-transmittals/batch/{batch}/print', [
+    Route::get('po-transmittals/batch/{batch}/export', [
         POTransmittalController::class,
-        'printBatchPdf',
+        'exportBatch',
     ])
         ->middleware($inspectionRoles)
-        ->name('po-transmittals.print-batch');
+        ->name('po-transmittals.export-batch');
 
     // Acceptance & Inspection module
     $acceptanceInspectionRoles =

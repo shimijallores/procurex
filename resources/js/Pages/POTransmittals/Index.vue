@@ -52,7 +52,7 @@ onMounted(() => {
     const page = usePage();
     const batchId = page.props.flash?.print_batch_id;
     if (batchId) {
-        const url = route("po-transmittals.print-batch", batchId);
+        const url = route("po-transmittals.export-batch", batchId);
         window.open(url, "_blank");
     }
 });

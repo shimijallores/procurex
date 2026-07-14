@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Exports\PurchaseOrderExport;
 use App\Helpers\NumberToWords;
 use App\Http\Requests\StorePurchaseOrderRequest;
 use App\Http\Requests\UpdatePurchaseOrderRequest;
@@ -13,15 +14,14 @@ use App\Models\NOA;
 use App\Models\Office;
 use App\Models\PurchaseOrder;
 use App\Services\SvpMatrixSyncService;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Barryvdh\DomPDF\Facade\Pdf as DomPdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
-use Spatie\LaravelPdf\Facades\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class PurchaseOrderController extends Controller
 {
@@ -188,7 +188,7 @@ class PurchaseOrderController extends Controller
                         'purpose_date_label' => $purposeDateLabel,
                     ];
 
-                    ++$nextSequence;
+                    $nextSequence++;
                 }
             }
         }
@@ -291,6 +291,7 @@ class PurchaseOrderController extends Controller
                 if ($poNo === '') {
                     $poNo = $this->generatePoNumber($noaEntry['po_date']);
                 }
+
                 if (PurchaseOrder::where('po_no', $poNo)->where('noa_id', '!=', $noa->id)->exists()) {
                     $errors[] = sprintf('PO number "%s" is already in use.', $poNo);
 
@@ -442,7 +443,7 @@ class PurchaseOrderController extends Controller
             ->with('success', 'Purchase Order updated successfully.');
     }
 
-    public function printBatch(Batch $batch)
+    public function exportBatch(Batch $batch): BinaryFileResponse|RedirectResponse
     {
         $purchaseOrders = PurchaseOrder::with([
             'noa.aoq.rfq.purchaseRequest.office',
@@ -458,13 +459,55 @@ class PurchaseOrderController extends Controller
             return redirect()->back()->with('error', 'No Purchase Orders found in this batch.');
         }
 
-        $pdf = DomPdf::loadView('pdf.purchase-orders-batch', [
-            'purchaseOrders' => $purchaseOrders,
-            'batch' => $batch,
-        ]);
+        $zipArchive = new \ZipArchive;
+        $zipFileName = 'POs-Batch-'.$batch->batch_no.'-'.now()->format('Y-m-d-His').'.zip';
+        $tempDir = storage_path('app/temp');
 
-        return $pdf->setPaper('legal')
-            ->stream(sprintf('POs-Batch-%s.pdf', $batch->batch_no));
+        if (! is_dir($tempDir)) {
+            mkdir($tempDir, 0755, true);
+        }
+
+        $zipPath = $tempDir.\DIRECTORY_SEPARATOR.$zipFileName;
+
+        if ($zipArchive->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            return redirect()->back()->with('error', 'Failed to create ZIP archive.');
+        }
+
+        foreach ($purchaseOrders as $po) {
+            try {
+                $tempPath = $tempDir.\DIRECTORY_SEPARATOR.'po-'.$po->id.'.xlsx';
+
+                $noa = $po->noa;
+                $aoq = $noa?->aoq ?? $noa?->bacResolution?->aoq;
+
+                Excel::store(
+                    new PurchaseOrderExport($po, $aoq?->winnerSupplier),
+                    sprintf('temp/po-%s.xlsx', $po->id),
+                    null,
+                    \Maatwebsite\Excel\Excel::XLSX
+                );
+
+                $storedPath = storage_path('app/temp/po-'.$po->id.'.xlsx');
+                if (file_exists($storedPath)) {
+                    rename($storedPath, $tempPath);
+                }
+
+                $zipArchive->addFile($tempPath, 'PO-'.$po->po_no.'.xlsx');
+            } catch (\Throwable) {
+                continue;
+            }
+        }
+
+        $zipArchive->close();
+
+        foreach ($purchaseOrders as $purchaseOrder) {
+            $xlsxPath = $tempDir.\DIRECTORY_SEPARATOR.'po-'.$purchaseOrder->id.'.xlsx';
+            if (file_exists($xlsxPath)) {
+                unlink($xlsxPath);
+            }
+        }
+
+        return response()->download($zipPath, $zipFileName)->deleteFileAfterSend(true);
     }
 
     public function show(PurchaseOrder $purchaseOrder): Response
@@ -490,7 +533,7 @@ class PurchaseOrderController extends Controller
             ->with('success', 'Purchase Order deleted successfully.');
     }
 
-    public function printPdf(PurchaseOrder $purchaseOrder): \Spatie\LaravelPdf\PdfBuilder
+    public function export(PurchaseOrder $purchaseOrder): BinaryFileResponse
     {
         $purchaseOrder->load([
             'noa.aoq.rfq.purchaseRequest.office',
@@ -503,27 +546,20 @@ class PurchaseOrderController extends Controller
         $noa = $purchaseOrder->noa;
         $aoq = $noa?->aoq ?? $noa?->bacResolution?->aoq;
 
-        return Pdf::view('pdf.purchase-order', [
-            'purchaseOrder' => $purchaseOrder,
-            'noa' => $noa,
-            'resolution' => $noa?->bacResolution,
-            'aoq' => $aoq,
-            'rfq' => $aoq?->rfq,
-            'winnerSupplier' => $aoq?->winnerSupplier,
-        ])
-            ->format('a4')
-            ->name('PO-'.$purchaseOrder->po_no.'.pdf')
-            ->inline();
+        return Excel::download(
+            new PurchaseOrderExport($purchaseOrder, $aoq?->winnerSupplier),
+            'PO-'.$purchaseOrder->po_no.'.xlsx'
+        );
     }
 
-    public function downloadPdfs(Request $request): BinaryFileResponse|RedirectResponse
+    public function downloadFiles(Request $request): BinaryFileResponse|RedirectResponse
     {
         $validated = $request->validate([
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
         ]);
 
-        $query = PurchaseOrder::with([
+        $builder = PurchaseOrder::with([
             'noa.aoq.rfq.purchaseRequest.office',
             'noa.aoq.winnerSupplier',
             'noa.bacResolution.aoq.rfq.purchaseRequest.office',
@@ -532,20 +568,20 @@ class PurchaseOrderController extends Controller
         ]);
 
         if ($validated['date_from']) {
-            $query->whereDate('po_date', '>=', $validated['date_from']);
+            $builder->whereDate('po_date', '>=', $validated['date_from']);
         }
 
         if ($validated['date_to']) {
-            $query->whereDate('po_date', '<=', $validated['date_to']);
+            $builder->whereDate('po_date', '<=', $validated['date_to']);
         }
 
-        $purchaseOrders = $query->latest('po_date')->get();
+        $purchaseOrders = $builder->latest('po_date')->get();
 
         if ($purchaseOrders->isEmpty()) {
             return redirect()->back()->with('error', 'No Purchase Orders found for the selected filters.');
         }
 
-        $zip = new \ZipArchive();
+        $zipArchive = new \ZipArchive;
         $zipFileName = 'Purchase-Orders-'.now()->format('Y-m-d-His').'.zip';
         $tempDir = storage_path('app/temp');
 
@@ -555,42 +591,41 @@ class PurchaseOrderController extends Controller
 
         $zipPath = $tempDir.\DIRECTORY_SEPARATOR.$zipFileName;
 
-        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+        if ($zipArchive->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
             return redirect()->back()->with('error', 'Failed to create ZIP archive.');
         }
 
-        foreach ($purchaseOrders as $purchaseOrder) {
+        foreach ($purchaseOrders as $po) {
             try {
-                $pdfPath = $tempDir.\DIRECTORY_SEPARATOR.'po-'.$purchaseOrder->id.'.pdf';
+                $tempPath = $tempDir.\DIRECTORY_SEPARATOR.'po-'.$po->id.'.xlsx';
 
-                $noa = $purchaseOrder->noa;
+                $noa = $po->noa;
                 $aoq = $noa?->aoq ?? $noa?->bacResolution?->aoq;
 
-                Pdf::view('pdf.purchase-order', [
-                    'purchaseOrder' => $purchaseOrder,
-                    'noa' => $noa,
-                    'resolution' => $noa?->bacResolution,
-                    'aoq' => $aoq,
-                    'rfq' => $aoq?->rfq,
-                    'winnerSupplier' => $aoq?->winnerSupplier,
-                ])
-                    ->format('a4')
-                    ->name('PO-'.$purchaseOrder->po_no.'.pdf')
-                    ->save($pdfPath);
+                Excel::store(
+                    new PurchaseOrderExport($po, $aoq?->winnerSupplier),
+                    sprintf('temp/po-%s.xlsx', $po->id),
+                    null,
+                    \Maatwebsite\Excel\Excel::XLSX
+                );
 
-                $zip->addFile($pdfPath, 'PO-'.$purchaseOrder->po_no.'.pdf');
+                $storedPath = storage_path('app/temp/po-'.$po->id.'.xlsx');
+                if (file_exists($storedPath)) {
+                    rename($storedPath, $tempPath);
+                }
+
+                $zipArchive->addFile($tempPath, 'PO-'.$po->po_no.'.xlsx');
             } catch (\Throwable) {
                 continue;
             }
         }
 
-        $zip->close();
+        $zipArchive->close();
 
         foreach ($purchaseOrders as $purchaseOrder) {
-            $pdfPath = $tempDir.\DIRECTORY_SEPARATOR.'po-'.$purchaseOrder->id.'.pdf';
-
-            if (file_exists($pdfPath)) {
-                unlink($pdfPath);
+            $xlsxPath = $tempDir.\DIRECTORY_SEPARATOR.'po-'.$purchaseOrder->id.'.xlsx';
+            if (file_exists($xlsxPath)) {
+                unlink($xlsxPath);
             }
         }
 
@@ -618,7 +653,7 @@ class PurchaseOrderController extends Controller
 
         do {
             $poNo = $prefix.str_pad((string) $next, 4, '0', STR_PAD_LEFT);
-            ++$next;
+            $next++;
         } while (PurchaseOrder::where('po_no', $poNo)->exists());
 
         return $poNo;

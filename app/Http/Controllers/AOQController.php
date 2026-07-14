@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Exports\AOQExport;
 use App\Exports\AOQTemplateExport;
 use App\Http\Requests\StoreAOQRequest;
 use App\Http\Requests\UpdateAOQRequest;
@@ -24,7 +25,6 @@ use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Maatwebsite\Excel\Facades\Excel;
-use Spatie\LaravelPdf\Facades\Pdf;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class AOQController extends Controller
@@ -73,11 +73,11 @@ class AOQController extends Controller
         foreach ($all as $aoq) {
             $calculation = $this->calculateSupplierTotals($aoq->rfq);
             if ($calculation['calculation_mode'] === 'single_calculated') {
-                ++$singleCalculated;
+                $singleCalculated++;
             }
 
             if ($calculation['calculation_mode'] === 'lowest_calculated') {
-                ++$lowestCalculated;
+                $lowestCalculated++;
             }
         }
 
@@ -240,7 +240,7 @@ class AOQController extends Controller
         $batchNo = sprintf('%s%04d', $prefix, $next);
 
         while (Batch::where('batch_no', $batchNo)->exists()) {
-            ++$next;
+            $next++;
             $batchNo = sprintf('%s%04d', $prefix, $next);
         }
 
@@ -288,7 +288,7 @@ class AOQController extends Controller
         $batchNo = sprintf('%s%04d', $prefix, $next);
 
         while (Batch::where('batch_no', $batchNo)->exists()) {
-            ++$next;
+            $next++;
             $batchNo = sprintf('%s%04d', $prefix, $next);
         }
 
@@ -652,7 +652,7 @@ class AOQController extends Controller
             ->with('success', 'AOQ updated successfully.');
     }
 
-    public function printPdf(AOQ $aoq): \Spatie\LaravelPdf\PdfBuilder
+    public function export(AOQ $aoq): BinaryFileResponse
     {
         $aoq->load([
             'rfq.purchaseRequest.office',
@@ -664,25 +664,20 @@ class AOQController extends Controller
 
         $calculation = $this->calculateSupplierTotals($aoq->rfq);
 
-        return Pdf::view('pdf.aoq', [
-            'aoq' => $aoq,
-            'rfq' => $aoq->rfq,
-            'calculation' => $calculation,
-        ])
-            ->format('a4')
-            ->landscape()
-            ->name('AOQ-'.($aoq->rfq?->svp_no ?? $aoq->id).'.pdf')
-            ->inline();
+        return Excel::download(
+            new AOQExport($aoq, $calculation),
+            'AOQ-'.($aoq->rfq?->svp_no ?? $aoq->id).'.xlsx'
+        );
     }
 
-    public function downloadPdfs(Request $request): \Symfony\Component\HttpFoundation\BinaryFileResponse|\Illuminate\Http\RedirectResponse
+    public function downloadFiles(Request $request): BinaryFileResponse|RedirectResponse
     {
         $validated = $request->validate([
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
         ]);
 
-        $query = AOQ::with([
+        $builder = AOQ::with([
             'rfq.purchaseRequest.office',
             'rfq.items.purchaseRequestItem.emanatingItem.ppmpItem',
             'rfq.suppliers.supplier',
@@ -691,20 +686,20 @@ class AOQController extends Controller
         ]);
 
         if ($validated['date_from']) {
-            $query->whereDate('aoq_date', '>=', $validated['date_from']);
+            $builder->whereDate('aoq_date', '>=', $validated['date_from']);
         }
 
         if ($validated['date_to']) {
-            $query->whereDate('aoq_date', '<=', $validated['date_to']);
+            $builder->whereDate('aoq_date', '<=', $validated['date_to']);
         }
 
-        $aoqs = $query->latest('aoq_date')->get();
+        $aoqs = $builder->latest('aoq_date')->get();
 
         if ($aoqs->isEmpty()) {
             return redirect()->back()->with('error', 'No AOQs found for the selected filters.');
         }
 
-        $zip = new \ZipArchive();
+        $zipArchive = new \ZipArchive;
         $zipFileName = 'AOQs-'.now()->format('Y-m-d-His').'.zip';
         $tempDir = storage_path('app/temp');
 
@@ -714,38 +709,40 @@ class AOQController extends Controller
 
         $zipPath = $tempDir.\DIRECTORY_SEPARATOR.$zipFileName;
 
-        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+        if ($zipArchive->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
             return redirect()->back()->with('error', 'Failed to create ZIP archive.');
         }
 
         foreach ($aoqs as $aoq) {
             try {
-                $pdfPath = $tempDir.\DIRECTORY_SEPARATOR."aoq-{$aoq->id}.pdf";
                 $calculation = $this->calculateSupplierTotals($aoq->rfq);
 
-                Pdf::view('pdf.aoq', [
-                    'aoq' => $aoq,
-                    'rfq' => $aoq->rfq,
-                    'calculation' => $calculation,
-                ])
-                    ->format('a4')
-                    ->landscape()
-                    ->name('AOQ-'.($aoq->rfq?->svp_no ?? $aoq->id).'.pdf')
-                    ->save($pdfPath);
+                Excel::store(
+                    new AOQExport($aoq, $calculation),
+                    sprintf('temp/aoq-%s.xlsx', $aoq->id),
+                    null,
+                    \Maatwebsite\Excel\Excel::XLSX
+                );
 
-                $zip->addFile($pdfPath, "AOQ-".($aoq->rfq?->svp_no ?? $aoq->id).".pdf");
+                $storedPath = storage_path('app/temp/aoq-'.$aoq->id.'.xlsx');
+                $archivePath = $tempDir.\DIRECTORY_SEPARATOR.sprintf('aoq-%s.xlsx', $aoq->id);
+                if (file_exists($storedPath)) {
+                    rename($storedPath, $archivePath);
+                }
+
+                $zipArchive->addFile($archivePath, 'AOQ-'.($aoq->rfq?->svp_no ?? $aoq->id).'.xlsx');
             } catch (\Throwable) {
                 continue;
             }
         }
 
-        $zip->close();
+        $zipArchive->close();
 
         foreach ($aoqs as $aoq) {
-            $pdfPath = $tempDir.\DIRECTORY_SEPARATOR."aoq-{$aoq->id}.pdf";
+            $xlsxPath = $tempDir.\DIRECTORY_SEPARATOR.sprintf('aoq-%s.xlsx', $aoq->id);
 
-            if (file_exists($pdfPath)) {
-                unlink($pdfPath);
+            if (file_exists($xlsxPath)) {
+                unlink($xlsxPath);
             }
         }
 

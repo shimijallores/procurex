@@ -17,12 +17,13 @@ use App\Services\SvpMatrixSyncService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
-use Spatie\LaravelPdf\Facades\Pdf;
+use PhpOffice\PhpWord\IOFactory;
+use PhpOffice\PhpWord\PhpWord;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class BACResolutionController extends Controller
 {
@@ -432,113 +433,22 @@ class BACResolutionController extends Controller
         ]);
     }
 
-    public function printPdf(BACResolution $bacResolution): \Spatie\LaravelPdf\PdfBuilder
+    public function export(BACResolution $bacResolution): BinaryFileResponse
     {
-        $bacResolution->load([
-            'aoqs.rfq.purchaseRequest.office',
-            'aoqs.rfq.items.purchaseRequestItem',
-            'aoqs.rfq.suppliers.supplier',
-            'aoqs.rfq.suppliers.supplierItems.rfqItem',
-            'aoqs.winnerSupplier',
-            'aoq.rfq.purchaseRequest.office',
-            'aoq.rfq.items',
-            'aoq.rfq.suppliers.supplier',
-            'aoq.rfq.suppliers.supplierItems.rfqItem',
-        ]);
+        $tempFile = app(\App\Actions\WordDocuments\BuildBacResolutionWordDocument::class)->handle($bacResolution);
 
-        $batchAoqs = $bacResolution->aoqs;
-        if ($batchAoqs->isEmpty() && $bacResolution->aoq) {
-            $batchAoqs = collect([$bacResolution->aoq]);
-        }
-
-        $summaryRows = $batchAoqs->map(function (AOQ $aoq): array {
-            return [
-                'office_name' => (string) ($aoq->rfq?->purchaseRequest?->office?->name ?? 'OFFICE'),
-                'project_name' => (string) ($aoq->rfq?->project_name ?? 'PROJECT'),
-                'abc_amount' => (float) ($aoq->rfq?->abc_amount ?? 0),
-            ];
-        })->values();
-
-        $abstracts = $batchAoqs->map(function (AOQ $aoq): array {
-            $rfq = $aoq->rfq;
-            if (! $rfq) {
-                return [
-                    'svp_no' => 'N/A',
-                    'rfq_date' => null,
-                    'project_name' => 'PROJECT',
-                    'suppliers' => collect(),
-                    'items' => collect(),
-                    'abc_total' => 0.0,
-                ];
-            }
-
-            $supplierTotals = collect($this->calculateSupplierTotals($rfq)['supplier_totals'] ?? []);
-            $rankedSuppliers = $supplierTotals->values()->map(function (array $row, int $index): array {
-                $rank = $index + 1;
-                $rankLabel = $rank === 1 ? '1ST' : ($rank === 2 ? '2ND' : ($rank === 3 ? '3RD' : $rank.'TH'));
-
-                return [
-                    'supplier_id' => (int) $row['supplier_id'],
-                    'supplier_name' => strtoupper((string) ($row['supplier_name'] ?? 'N/A')),
-                    'total_amount' => (float) ($row['total_amount'] ?? 0),
-                    'rank_label' => $rankLabel,
-                ];
-            });
-
-            $items = collect($rfq?->items ?? [])->map(function ($item) use ($rfq, $rankedSuppliers): array {
-                $quantity = (float) ($item->quantity ?? 0);
-                $approvedBudget = $quantity * (float) ($item->purchaseRequestItem?->unit_cost ?? 0);
-
-                $supplierColumns = $rankedSuppliers->map(function (array $supplier) use ($rfq, $item, $quantity): array {
-                    $entry = collect($rfq?->suppliers ?? [])->firstWhere('supplier_id', $supplier['supplier_id']);
-                    $supplierItem = $entry?->supplierItems?->firstWhere('rfq_item_id', $item->id);
-                    $unitCost = $supplierItem?->unit_price;
-                    $lineTotal = $unitCost !== null ? ((float) $unitCost * $quantity) : null;
-
-                    return [
-                        'unit_cost' => $unitCost !== null ? (float) $unitCost : null,
-                        'total_amount' => $lineTotal,
-                    ];
-                })->values();
-
-                return [
-                    'quantity' => $quantity,
-                    'unit' => (string) ($item->unit ?? ''),
-                    'particulars' => (string) ($item->item_name ?? ''),
-                    'approved_budget' => $approvedBudget,
-                    'supplier_columns' => $supplierColumns,
-                ];
-            })->values();
-
-            return [
-                'svp_no' => (string) ($rfq?->svp_no ?? 'N/A'),
-                'rfq_date' => $rfq?->rfq_date,
-                'project_name' => (string) ($rfq?->project_name ?? 'PROJECT'),
-                'suppliers' => $rankedSuppliers,
-                'items' => $items,
-                'abc_total' => (float) ($rfq?->abc_amount ?? 0),
-            ];
-        })->values();
-
-        return Pdf::view('pdf.bac-resolution', [
-            'resolution' => $bacResolution,
-            'batchAoqs' => $batchAoqs,
-            'summaryRows' => $summaryRows,
-            'abstracts' => $abstracts,
-        ])
-            ->format('legal')
-            ->name('BAC-Resolution-'.$bacResolution->resolution_no.'.pdf')
-            ->inline();
+        return response()->download($tempFile, 'BAC-Resolution-'.$bacResolution->resolution_no.'.docx')
+            ->deleteFileAfterSend(true);
     }
 
-    public function downloadPdfs(Request $request): BinaryFileResponse|RedirectResponse
+    public function downloadFiles(Request $request): BinaryFileResponse|RedirectResponse
     {
         $validated = $request->validate([
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
         ]);
 
-        $query = BACResolution::with([
+        $builder = BACResolution::with([
             'aoqs.rfq.purchaseRequest.office',
             'aoqs.rfq.items.purchaseRequestItem',
             'aoqs.rfq.suppliers.supplier',
@@ -551,20 +461,20 @@ class BACResolutionController extends Controller
         ]);
 
         if ($validated['date_from']) {
-            $query->whereDate('resolution_date', '>=', $validated['date_from']);
+            $builder->whereDate('resolution_date', '>=', $validated['date_from']);
         }
 
         if ($validated['date_to']) {
-            $query->whereDate('resolution_date', '<=', $validated['date_to']);
+            $builder->whereDate('resolution_date', '<=', $validated['date_to']);
         }
 
-        $resolutions = $query->latest('resolution_date')->get();
+        $resolutions = $builder->latest('resolution_date')->get();
 
         if ($resolutions->isEmpty()) {
             return redirect()->back()->with('error', 'No BAC Resolutions found for the selected filters.');
         }
 
-        $zip = new \ZipArchive();
+        $zipArchive = new \ZipArchive;
         $zipFileName = 'BAC-Resolutions-'.now()->format('Y-m-d-His').'.zip';
         $tempDir = storage_path('app/temp');
 
@@ -574,111 +484,38 @@ class BACResolutionController extends Controller
 
         $zipPath = $tempDir.\DIRECTORY_SEPARATOR.$zipFileName;
 
-        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+        if ($zipArchive->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
             return redirect()->back()->with('error', 'Failed to create ZIP archive.');
         }
 
         foreach ($resolutions as $bacResolution) {
             try {
-                $pdfPath = $tempDir.\DIRECTORY_SEPARATOR."bac-resolution-{$bacResolution->id}.pdf";
+                $docxPath = $tempDir.\DIRECTORY_SEPARATOR.sprintf('bac-resolution-%s.docx', $bacResolution->id);
 
-                $batchAoqs = $bacResolution->aoqs;
-                if ($batchAoqs->isEmpty() && $bacResolution->aoq) {
-                    $batchAoqs = collect([$bacResolution->aoq]);
-                }
+                $phpWord = new PhpWord;
+                \PhpOffice\PhpWord\Settings::setOutputEscapingEnabled(true);
+                $section = $phpWord->addSection();
+                $section->addText('BAC Resolution: '.$bacResolution->resolution_no, ['bold' => true, 'size' => 14]);
+                $section->addText('Date: '.optional($bacResolution->resolution_date)->format('F d, Y'));
+                $section->addText('Project: '.$bacResolution->project_name);
+                $section->addText('Winner: '.$bacResolution->winner_supplier_name);
+                $section->addText('Amount: Php '.number_format((float) ($bacResolution->winner_amount ?? 0), 2));
 
-                $summaryRows = $batchAoqs->map(function (AOQ $aoq): array {
-                    return [
-                        'office_name' => (string) ($aoq->rfq?->purchaseRequest?->office?->name ?? 'OFFICE'),
-                        'project_name' => (string) ($aoq->rfq?->project_name ?? 'PROJECT'),
-                        'abc_amount' => (float) ($aoq->rfq?->abc_amount ?? 0),
-                    ];
-                })->values();
+                $writer = IOFactory::createWriter($phpWord, 'Word2007');
+                $writer->save($docxPath);
 
-                $abstracts = $batchAoqs->map(function (AOQ $aoq) use ($request): array {
-                    $rfq = $aoq->rfq;
-                    if (! $rfq) {
-                        return [
-                            'svp_no' => 'N/A',
-                            'rfq_date' => null,
-                            'project_name' => 'PROJECT',
-                            'suppliers' => collect(),
-                            'items' => collect(),
-                            'abc_total' => 0.0,
-                        ];
-                    }
-
-                    $supplierTotals = collect($this->calculateSupplierTotals($rfq)['supplier_totals'] ?? []);
-                    $rankedSuppliers = $supplierTotals->values()->map(function (array $row, int $index): array {
-                        $rank = $index + 1;
-                        $rankLabel = $rank === 1 ? '1ST' : ($rank === 2 ? '2ND' : ($rank === 3 ? '3RD' : $rank.'TH'));
-
-                        return [
-                            'supplier_id' => (int) $row['supplier_id'],
-                            'supplier_name' => strtoupper((string) ($row['supplier_name'] ?? 'N/A')),
-                            'total_amount' => (float) ($row['total_amount'] ?? 0),
-                            'rank_label' => $rankLabel,
-                        ];
-                    });
-
-                    $items = collect($rfq?->items ?? [])->map(function ($item) use ($rfq, $rankedSuppliers): array {
-                        $quantity = (float) ($item->quantity ?? 0);
-                        $approvedBudget = $quantity * (float) ($item->purchaseRequestItem?->unit_cost ?? 0);
-
-                        $supplierColumns = $rankedSuppliers->map(function (array $supplier) use ($rfq, $item, $quantity): array {
-                            $entry = collect($rfq?->suppliers ?? [])->firstWhere('supplier_id', $supplier['supplier_id']);
-                            $supplierItem = $entry?->supplierItems?->firstWhere('rfq_item_id', $item->id);
-                            $unitCost = $supplierItem?->unit_price;
-                            $lineTotal = $unitCost !== null ? ((float) $unitCost * $quantity) : null;
-
-                            return [
-                                'unit_cost' => $unitCost !== null ? (float) $unitCost : null,
-                                'total_amount' => $lineTotal,
-                            ];
-                        })->values();
-
-                        return [
-                            'quantity' => $quantity,
-                            'unit' => (string) ($item->unit ?? ''),
-                            'particulars' => (string) ($item->item_name ?? ''),
-                            'approved_budget' => $approvedBudget,
-                            'supplier_columns' => $supplierColumns,
-                        ];
-                    })->values();
-
-                    return [
-                        'svp_no' => (string) ($rfq?->svp_no ?? 'N/A'),
-                        'rfq_date' => $rfq?->rfq_date,
-                        'project_name' => (string) ($rfq?->project_name ?? 'PROJECT'),
-                        'suppliers' => $rankedSuppliers,
-                        'items' => $items,
-                        'abc_total' => (float) ($rfq?->abc_amount ?? 0),
-                    ];
-                })->values();
-
-                Pdf::view('pdf.bac-resolution', [
-                    'resolution' => $bacResolution,
-                    'batchAoqs' => $batchAoqs,
-                    'summaryRows' => $summaryRows,
-                    'abstracts' => $abstracts,
-                ])
-                    ->format('legal')
-                    ->name('BAC-Resolution-'.$bacResolution->resolution_no.'.pdf')
-                    ->save($pdfPath);
-
-                $zip->addFile($pdfPath, 'BAC-Resolution-'.$bacResolution->resolution_no.'.pdf');
+                $zipArchive->addFile($docxPath, 'BAC-Resolution-'.$bacResolution->resolution_no.'.docx');
             } catch (\Throwable) {
                 continue;
             }
         }
 
-        $zip->close();
+        $zipArchive->close();
 
-        foreach ($resolutions as $bacResolution) {
-            $pdfPath = $tempDir.\DIRECTORY_SEPARATOR.'bac-resolution-'.$bacResolution->id.'.pdf';
-
-            if (file_exists($pdfPath)) {
-                unlink($pdfPath);
+        foreach ($resolutions as $resolution) {
+            $docxPath = $tempDir.\DIRECTORY_SEPARATOR.'bac-resolution-'.$resolution->id.'.docx';
+            if (file_exists($docxPath)) {
+                unlink($docxPath);
             }
         }
 
@@ -761,7 +598,7 @@ class BACResolutionController extends Controller
             }
 
             if ($hasAtLeastOnePrice) {
-                ++$count;
+                $count++;
             }
         }
 

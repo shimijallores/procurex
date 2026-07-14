@@ -236,7 +236,7 @@ const formatDate = (date) => {
                                     <a
                                         :href="
                                             route(
-                                                'bac-resolutions.pdf',
+                                                'bac-resolutions.export',
                                                 resolution.id,
                                             )
                                         "

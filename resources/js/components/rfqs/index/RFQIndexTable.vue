@@ -200,7 +200,7 @@ const formatCurrency = (value) => {
                                         </Button>
                                     </Link>
                                     <a
-                                        :href="route('rfqs.pdf', rfq.id)"
+                                        :href="route('rfqs.export', rfq.id)"
                                         target="_blank"
                                     >
                                         <Button variant="ghost" size="sm">

@@ -9,8 +9,8 @@ const props = defineProps({
 
 defineEmits(["delete"]);
 
-const openPdf = () => {
-    window.open(route("noas.pdf", props.noa.id), "_blank");
+const openExport = () => {
+    window.open(route("noas.export", props.noa.id), "_blank");
 };
 </script>
 
@@ -36,9 +36,9 @@ const openPdf = () => {
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
-            <Button variant="outline" @click="openPdf">
+            <Button variant="outline" @click="openExport">
                 <Icon icon="lucide:printer" class="mr-2 h-4 w-4" />
-                Print PDF
+                Download
             </Button>
             <Link :href="route('noas.edit', noa.id)">
                 <Button variant="outline">

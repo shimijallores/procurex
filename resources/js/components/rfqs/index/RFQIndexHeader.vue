@@ -4,7 +4,7 @@ import { Link } from "@inertiajs/vue3";
 import { Icon } from "@iconify/vue";
 import { Button } from "@/components/ui/button";
 import PageTitle from "@/components/PageTitle.vue";
-import DownloadPdfModal from "@/components/DownloadPdfModal.vue";
+import DownloadModal from "@/components/DownloadModal.vue";
 
 const showDownloadModal = ref(false);
 </script>
@@ -23,7 +23,7 @@ const showDownloadModal = ref(false);
                 @click="showDownloadModal = true"
             >
                 <Icon icon="lucide:download" class="mr-2 h-4 w-4" />
-                Download PDFs
+                Download
             </Button>
             <Link :href="route('rfqs.create')">
                 <Button>
@@ -33,11 +33,11 @@ const showDownloadModal = ref(false);
             </Link>
         </div>
 
-        <DownloadPdfModal
+        <DownloadModal
             v-model:open="showDownloadModal"
-            title="Download RFQ PDFs"
+            title="Download RFQ"
             description="Download RFQ documents as individual PDFs in a ZIP file."
-            :route-name="route('rfqs.download-pdfs')"
+            :route-name="route('rfqs.download-files')"
         />
     </div>
 </template>
