@@ -135,10 +135,11 @@ class RFQExport implements FromArray, WithEvents, WithStyles
         $rows[] = ['', '', '', '', '', '', ''];
 
         $rows[] = [
-            'Total Amount in Words: _____________________________________________________________',
+            'Total Amount in Words: ____________________________________________________________________________',
         ];
-        $rows[] = ['', '', '', '', '', '', ''];
-
+        $rows[] = [
+            '_________________________________________________________________________________________________',
+        ];
         return $rows;
     }
 
@@ -306,27 +307,37 @@ class RFQExport implements FromArray, WithEvents, WithStyles
                             'Total Amount in Words',
                         )
                     ) {
-                        // Remove borders from the spacer row (one row above)
-                        if ($row > $headerRow) {
-                            $spacerRange = 'A'.($row - 1).':G'.($row - 1);
-                            $worksheet
-                                ->getStyle($spacerRange)
-                                ->getBorders()
-                                ->getAllBorders()
-                                ->setBorderStyle(Border::BORDER_NONE);
-                        }
+                        $taRow = $row;
 
-                        $noBorderRange = sprintf('A%d:G%d', $row, $row);
+                        // Merge full width so the underscores span across
+                        $worksheet->mergeCells(sprintf('A%d:G%d', $taRow, $taRow));
                         $worksheet
-                            ->getStyle($noBorderRange)
-                            ->getBorders()
-                            ->getAllBorders()
-                            ->setBorderStyle(Border::BORDER_NONE);
-                        $worksheet
-                            ->getStyle('A'.$row)
+                            ->getStyle('A'.$taRow)
                             ->getAlignment()
                             ->setHorizontal(Alignment::HORIZONTAL_LEFT)
                             ->setVertical(Alignment::VERTICAL_TOP);
+
+                        // Remove borders from the row above (spacer), this row, and the row below
+                        foreach ([$taRow - 1, $taRow, $taRow + 1] as $r) {
+                            if ($r >= $headerRow && $r <= $dataEndRow) {
+                                $worksheet
+                                    ->getStyle(sprintf('A%d:G%d', $r, $r))
+                                    ->getBorders()
+                                    ->getAllBorders()
+                                    ->setBorderStyle(Border::BORDER_NONE);
+                            }
+                        }
+
+                        // Style the underline continuation row (next row)
+                        $ulRow = $taRow + 1;
+                        if ($ulRow <= $dataEndRow) {
+                            $worksheet->mergeCells(sprintf('A%d:G%d', $ulRow, $ulRow));
+                            $worksheet
+                                ->getStyle('A'.$ulRow)
+                                ->getAlignment()
+                                ->setHorizontal(Alignment::HORIZONTAL_LEFT)
+                                ->setVertical(Alignment::VERTICAL_CENTER);
+                        }
                         break;
                     }
                 }
