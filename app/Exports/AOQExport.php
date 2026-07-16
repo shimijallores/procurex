@@ -131,8 +131,8 @@ class AOQExport implements FromArray, WithDrawings, WithEvents, WithStyles
         $grandTotalRow[3] = $abcGrandTotal;
         $col = 4;
         foreach ($supplierTotals as $supplierTotal) {
-            $grandTotalRow[$col] = '';
-            $grandTotalRow[$col + 1] = (float) ($supplierTotal['total_amount'] ?? 0);
+            $grandTotalRow[$col] = (float) ($supplierTotal['total_amount'] ?? 0);
+            $grandTotalRow[$col + 1] = '';
             $col += 2;
         }
         $rows[] = $grandTotalRow;
