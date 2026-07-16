@@ -22,8 +22,6 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class AOQExport implements FromArray, WithDrawings, WithEvents, WithStyles
 {
-    private const BLANK_TEMPLATE_ROWS = 6;
-
     private const BAC_MEMBERS = [
         'NOEL R. ROCAFORT',
         'PEDRITO MARTIN M. DIJAN, JR.',
@@ -121,11 +119,12 @@ class AOQExport implements FromArray, WithDrawings, WithEvents, WithStyles
             $rows[] = $this->pad($row, $totalCols);
         }
 
-        // Blank template rows
-        for ($i = 0; $i < self::BLANK_TEMPLATE_ROWS; $i++) {
+        // Blank template rows (pad to at least 13 total table rows)
+        $dataRowCount = $rfq?->items?->count() ?? 0;
+        $blankRows = max(0, 13 - $dataRowCount);
+        for ($i = 0; $i < $blankRows; $i++) {
             $rows[] = $this->emptyRow($totalCols);
         }
-
         // Grand Total row
         $grandTotalRow = $this->emptyRow($totalCols);
         $grandTotalRow[0] = 'GRAND TOTAL - P';
@@ -280,16 +279,26 @@ class AOQExport implements FromArray, WithDrawings, WithEvents, WithStyles
 
                 // ── Column widths (dynamic based on supplier count) ───
                 // Available width ~98 chars (landscape letter, 0.5" margins).
-                // Scale supplier columns wider when fewer suppliers.
+                // Column widths — scale supplier cols wider when fewer suppliers
                 $supplierColWidth = match (true) {
                     $supplierCount <= 1 => 26,
                     $supplierCount <= 2 => 17,
-                    default => 14,
+                    default => 11,
+                };
+                $particularsWidth = match (true) {
+                    $supplierCount <= 1 => 42,
+                    $supplierCount <= 2 => 38,
+                    default => 29,
+                };
+                $abcWidth = match (true) {
+                    $supplierCount <= 1 => 16,
+                    $supplierCount <= 2 => 14,
+                    default => 13,
                 };
                 $ws->getColumnDimension('A')->setWidth(6);
                 $ws->getColumnDimension('B')->setWidth(8);
-                $ws->getColumnDimension('C')->setWidth(42);
-                $ws->getColumnDimension('D')->setWidth(16);
+                $ws->getColumnDimension('C')->setWidth($particularsWidth);
+                $ws->getColumnDimension('D')->setWidth($abcWidth);
                 for ($c = 5; $c <= $totalCols; $c++) {
                     $ws->getColumnDimension(Coordinate::stringFromColumnIndex($c))->setWidth($supplierColWidth);
                 }
