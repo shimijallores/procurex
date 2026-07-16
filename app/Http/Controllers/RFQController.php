@@ -18,6 +18,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 use Maatwebsite\Excel\Facades\Excel;
@@ -359,7 +360,7 @@ class RFQController extends Controller
                     \Maatwebsite\Excel\Excel::XLSX
                 );
 
-                $storedPath = \Illuminate\Support\Facades\Storage::disk('local')->path('temp/rfq-'.$rfq->id.'.xlsx');
+                $storedPath = Storage::disk('local')->path('temp/rfq-'.$rfq->id.'.xlsx');
                 if (file_exists($storedPath)) {
                     rename($storedPath, $xlsxPath);
                 }

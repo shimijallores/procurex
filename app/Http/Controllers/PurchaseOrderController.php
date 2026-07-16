@@ -19,6 +19,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 use Maatwebsite\Excel\Facades\Excel;
@@ -487,7 +488,7 @@ class PurchaseOrderController extends Controller
                     \Maatwebsite\Excel\Excel::XLSX
                 );
 
-                $storedPath = \Illuminate\Support\Facades\Storage::disk('local')->path('temp/po-'.$po->id.'.xlsx');
+                $storedPath = Storage::disk('local')->path('temp/po-'.$po->id.'.xlsx');
                 if (file_exists($storedPath)) {
                     rename($storedPath, $tempPath);
                 }
@@ -609,7 +610,7 @@ class PurchaseOrderController extends Controller
                     \Maatwebsite\Excel\Excel::XLSX
                 );
 
-                $storedPath = \Illuminate\Support\Facades\Storage::disk('local')->path('temp/po-'.$po->id.'.xlsx');
+                $storedPath = Storage::disk('local')->path('temp/po-'.$po->id.'.xlsx');
                 if (file_exists($storedPath)) {
                     rename($storedPath, $tempPath);
                 }

@@ -609,6 +609,19 @@ class NOAController extends Controller
             ->with('success', 'Notice of Award updated successfully.');
     }
 
+    public function destroy(NOA $noa): RedirectResponse
+    {
+        if ($noa->purchaseOrder()->exists()) {
+            return redirect()->route('noas.index')
+                ->with('error', 'Cannot delete NOA with an existing Purchase Order. Remove the PO first.');
+        }
+
+        $noa->delete();
+
+        return redirect()->route('noas.index')
+            ->with('success', 'NOA deleted successfully.');
+    }
+
     public function export(NOA $noa): BinaryFileResponse
     {
         $tempFile = tempnam(sys_get_temp_dir(), 'docx');

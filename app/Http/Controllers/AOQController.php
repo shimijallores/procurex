@@ -23,6 +23,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 use Maatwebsite\Excel\Facades\Excel;
@@ -725,7 +726,7 @@ class AOQController extends Controller
                     \Maatwebsite\Excel\Excel::XLSX
                 );
 
-                $storedPath = \Illuminate\Support\Facades\Storage::disk('local')->path('temp/aoq-'.$aoq->id.'.xlsx');
+                $storedPath = Storage::disk('local')->path('temp/aoq-'.$aoq->id.'.xlsx');
                 $archivePath = $tempDir.\DIRECTORY_SEPARATOR.sprintf('aoq-%s.xlsx', $aoq->id);
                 if (file_exists($storedPath)) {
                     rename($storedPath, $archivePath);

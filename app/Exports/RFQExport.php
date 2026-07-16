@@ -140,6 +140,7 @@ class RFQExport implements FromArray, WithEvents, WithStyles
         $rows[] = [
             '_________________________________________________________________________________________________',
         ];
+
         return $rows;
     }
 
@@ -338,6 +339,7 @@ class RFQExport implements FromArray, WithEvents, WithStyles
                                 ->setHorizontal(Alignment::HORIZONTAL_LEFT)
                                 ->setVertical(Alignment::VERTICAL_CENTER);
                         }
+
                         break;
                     }
                 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\WordDocuments;
 
 use App\Models\POTransmittal;
+use PhpOffice\PhpWord\Element\Section;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\Settings;
@@ -60,7 +61,7 @@ class BuildPoTransmittalWordDocument
             'cellMarginLeft' => 30,
         ];
 
-        $buildHeader = function (\PhpOffice\PhpWord\Element\Section $section) use (
+        $buildHeader = function (Section $section) use (
             $sealPath,
             $bagongPath,
             $noBorder,
