@@ -161,9 +161,8 @@ class PurchaseOrderExport implements FromArray, WithEvents, WithStyles
             self::TOTAL_COLS,
         );
         $rows[] = $this->colspan('Approved per Sangguniang Resolution No.: ________________________________________', self::TOTAL_COLS);
-        $rows[] = ['Certified Correct', '', '', '', 'Date:', ''];
-        $rows[] = ['', '', '', '', '', ''];
-        $rows[] = ['Secretary to the Sanggunian', '', '', '', '', ''];
+        $rows[] = ['Certified Correct', '', '', 'Date', '', ''];
+        $rows[] = ['', 'Secretary to the Sanggunian', '', '', '', ''];
 
         return $rows;
     }
@@ -399,31 +398,27 @@ class PurchaseOrderExport implements FromArray, WithEvents, WithStyles
                     $ws->mergeCells(sprintf('D%d:%s%d', $confRow + 4, $lastCol, $confRow + 4)); // VILMA SANTOS - RECTO right
                     $ws->mergeCells(sprintf('D%d:%s%d', $confRow + 5, $lastCol, $confRow + 5)); // Governor right
 
-                    // Apply outer border on the full block
+                    // Apply outer border on the full block — top only on first row
                     $ws->getStyle(sprintf('A%d:%s%d', $confRow, $lastCol, $confRow))
-                        ->getBorders()->getOutline()->setBorderStyle(Border::BORDER_THIN);
+                        ->getBorders()->getTop()->setBorderStyle(Border::BORDER_THIN);
                     $ws->getStyle(sprintf('A%d:%s%d', $sigEnd, $lastCol, $sigEnd))
-                        ->getBorders()->getOutline()->setBorderStyle(Border::BORDER_THIN);
-                    $ws->getStyle(sprintf('A%d:A%d', $confRow, $sigEnd))
-                        ->getBorders()->getOutline()->setBorderStyle(Border::BORDER_THIN);
-                    $ws->getStyle(sprintf('%s%d:%s%d', $lastCol, $confRow, $lastCol, $sigEnd))
-                        ->getBorders()->getOutline()->setBorderStyle(Border::BORDER_THIN);
-
-                    // Vertical divider at column C
-                    $ws->getStyle(sprintf('C%d:C%d', $confRow, $sigEnd))
-                        ->getBorders()->getRight()->setBorderStyle(Border::BORDER_THIN);
-
-                    // Signature lines (bottom border on the signature row)
-                    $ws->getStyle('A'.($confRow + 4))->getBorders()->getBottom()->setBorderStyle(Border::BORDER_THIN);
-                    $ws->getStyle(sprintf('D%d:%s%d', $confRow + 4, $lastCol, $confRow + 4))
                         ->getBorders()->getBottom()->setBorderStyle(Border::BORDER_THIN);
 
+                    // Style — center Conforme and Very Truly Yours
+                    $ws->getStyle('A'.$confRow)->getFont()->setBold(true);
+                    $ws->getStyle('A'.$confRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    $ws->getStyle('D'.$confRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+                    // Top borders on signature name rows
+                    $ws->getStyle(sprintf('A%d:%s%d', $confRow + 2, $lastCol, $confRow + 2))
+                        ->getBorders()->getTop()->setBorderStyle(Border::BORDER_THIN);
+                    $ws->getStyle(sprintf('A%d:%s%d', $confRow + 4, $lastCol, $confRow + 4))
+                        ->getBorders()->getTop()->setBorderStyle(Border::BORDER_THIN);
                     // Style labels
-                    $ws->getStyle('A'.$confRow)->getFont()->setBold(true); // Conforme
-                    $ws->getStyle('A'.($confRow + 2))->getFont()->setSize(8); // caption size
+                    $ws->getStyle('A'.($confRow + 2))->getFont()->setSize(8);
                     $ws->getStyle('A'.($confRow + 2))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                     $ws->getStyle('A'.($confRow + 4))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    $ws->getStyle('D'.($confRow + 4))->getFont()->setBold(true); // VILMA
+                    $ws->getStyle('D'.($confRow + 4))->getFont()->setBold(true);
                     $ws->getStyle('D'.($confRow + 4))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                     $ws->getStyle('D'.($confRow + 5))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 }
@@ -465,15 +460,16 @@ class PurchaseOrderExport implements FromArray, WithEvents, WithStyles
                     $ws->mergeCells(sprintf('D%d:%s%d', $certRow, $lastCol, $certRow));
                     $ws->getStyle('A'.$certRow)->getFont()->setBold(true);
                     $ws->getStyle('D'.$certRow)->getFont()->setBold(true);
+                    $ws->getStyle('D'.$certRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
                     $ws->getStyle('A'.$certRow)->getBorders()->getBottom()->setBorderStyle(Border::BORDER_THIN);
                     $ws->getStyle(sprintf('D%d:%s%d', $certRow, $lastCol, $certRow))
                         ->getBorders()->getBottom()->setBorderStyle(Border::BORDER_THIN);
 
                     // Secretary to the Sanggunian
                     $secRow = $certRow + 1;
-                    $ws->mergeCells(sprintf('A%d:C%d', $secRow, $secRow));
-                    $ws->getStyle('A'.$secRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    $ws->getStyle('A'.$secRow)->getFont()->setSize(8);
+                    $ws->mergeCells(sprintf('B%d:C%d', $secRow, $secRow));
+                    $ws->getStyle('B'.$secRow)->getFont()->setSize(8);
+                    $ws->getStyle('B'.$secRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 }
 
                 // ── Outer border around entire document ─────────────────
