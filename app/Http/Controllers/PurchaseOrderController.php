@@ -14,6 +14,7 @@ use App\Models\NOA;
 use App\Models\Office;
 use App\Models\PurchaseOrder;
 use App\Services\SvpMatrixSyncService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -164,7 +165,7 @@ class PurchaseOrderController extends Controller
                     $deliveryDays = $winnerAmount >= 200000 ? 30 : 15;
                     $purposeDate = $this->extractDateFromPurpose($rfq?->purchaseRequest?->purpose);
                     $purposeDateLabel = null;
-                    if ($purposeDate instanceof \Illuminate\Support\Carbon) {
+                    if ($purposeDate instanceof Carbon) {
                         $diffDays = (int) Carbon::parse($suggestedDate)->diffInDays($purposeDate, false);
                         if ($diffDays >= 1 && $diffDays <= 365) {
                             $deliveryDays = $diffDays;
@@ -204,7 +205,7 @@ class PurchaseOrderController extends Controller
         ]);
     }
 
-    public function suggestPoNo(Request $request): \Illuminate\Http\JsonResponse
+    public function suggestPoNo(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'po_date' => ['required', 'date'],
@@ -352,7 +353,7 @@ class PurchaseOrderController extends Controller
         return $redirectResponse;
     }
 
-    public function recentPos(): \Illuminate\Http\JsonResponse
+    public function recentPos(): JsonResponse
     {
         $pos = PurchaseOrder::query()
             ->whereNotNull('po_no')

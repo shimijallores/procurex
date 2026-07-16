@@ -136,7 +136,7 @@ class EmanatingController extends Controller
 
             $categories = collect();
 
-            if ($ppmp instanceof \App\Models\PPMP) {
+            if ($ppmp instanceof PPMP) {
                 $categories = PPMPCategory::query()
                     ->with('account:id,code,name')
                     ->where('ppmp_id', $ppmp->id)
@@ -187,7 +187,7 @@ class EmanatingController extends Controller
                 ->firstOrFail();
             $ppmp = $this->resolvePpmpForFund($fund);
 
-            if (! $ppmp instanceof \App\Models\PPMP) {
+            if (! $ppmp instanceof PPMP) {
                 return back()->withErrors([
                     'fund_id' => 'No PPMP is connected to the selected fund.',
                 ])->withInput();
@@ -557,7 +557,7 @@ class EmanatingController extends Controller
                 }
             }
 
-            if (! $appMatch instanceof \App\Models\APPItem) {
+            if (! $appMatch instanceof APPItem) {
                 $issues[] = 'Missing in APP';
             }
 

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Models\PPMP;
+use App\Models\PPMPCategory;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateEmanatingRequest extends FormRequest
@@ -19,7 +22,7 @@ class UpdateEmanatingRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -42,7 +45,7 @@ class UpdateEmanatingRequest extends FormRequest
             }
 
             if ($this->office_id) {
-                $ppmpBelongsToOffice = \App\Models\PPMP::query()
+                $ppmpBelongsToOffice = PPMP::query()
                     ->where('id', $this->ppmp_id)
                     ->where('office_id', $this->office_id)
                     ->exists();
@@ -52,7 +55,7 @@ class UpdateEmanatingRequest extends FormRequest
                 }
             }
 
-            $categoryBelongsToPpmp = \App\Models\PPMPCategory::query()
+            $categoryBelongsToPpmp = PPMPCategory::query()
                 ->where('id', $this->ppmp_category_id)
                 ->where('ppmp_id', $this->ppmp_id)
                 ->exists();

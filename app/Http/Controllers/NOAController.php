@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Actions\WordDocuments\BuildNoaWordDocument;
 use App\Http\Requests\UpdateNOARequest;
 use App\Models\AOQ;
 use App\Models\BACResolution;
@@ -612,7 +613,7 @@ class NOAController extends Controller
     {
         $tempFile = tempnam(sys_get_temp_dir(), 'docx');
 
-        app(\App\Actions\WordDocuments\BuildNoaWordDocument::class)->handle(
+        app(BuildNoaWordDocument::class)->handle(
             $noa,
             $tempFile,
         );
@@ -691,7 +692,7 @@ class NOAController extends Controller
                     sprintf('noa-%s.docx', $noa->id);
 
                 app(
-                    \App\Actions\WordDocuments\BuildNoaWordDocument::class,
+                    BuildNoaWordDocument::class,
                 )->handle($noa, $docxPath);
 
                 $zipArchive->addFile(
@@ -782,7 +783,7 @@ class NOAController extends Controller
                     sprintf('noa-%s.docx', $noa->id);
 
                 app(
-                    \App\Actions\WordDocuments\BuildNoaWordDocument::class,
+                    BuildNoaWordDocument::class,
                 )->handle($noa, $docxPath);
 
                 $zipArchive->addFile(

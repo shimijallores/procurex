@@ -16,6 +16,7 @@ use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\LaravelPdf\Facades\Pdf;
+use Spatie\LaravelPdf\PdfBuilder;
 
 class AcceptanceInspectionController extends Controller
 {
@@ -134,7 +135,7 @@ class AcceptanceInspectionController extends Controller
             ->with('success', 'Acceptance & Inspection report deleted successfully.');
     }
 
-    public function printPdf(AcceptanceInspection $acceptanceInspection): \Spatie\LaravelPdf\PdfBuilder
+    public function printPdf(AcceptanceInspection $acceptanceInspection): PdfBuilder
     {
         $acceptanceInspection->load([
             'purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest.office',

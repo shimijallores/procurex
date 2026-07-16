@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\CalendarFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Calendar extends Model
 {
-    /** @use HasFactory<\Database\Factories\CalendarFactory> */
+    /** @use HasFactory<CalendarFactory> */
     use HasFactory;
 
     protected $fillable = [

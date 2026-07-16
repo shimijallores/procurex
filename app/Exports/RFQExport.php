@@ -235,7 +235,7 @@ class RFQExport implements FromArray, WithEvents, WithStyles
 
                 // Explicit right border on TOTAL AMOUNT header (G26)
                 $worksheet
-                    ->getStyle('G' . $headerRow)
+                    ->getStyle('G'.$headerRow)
                     ->getBorders()
                     ->getRight()
                     ->setBorderStyle(Border::BORDER_THIN);
@@ -282,16 +282,16 @@ class RFQExport implements FromArray, WithEvents, WithStyles
                 // Find GRAND TOTAL row — merge A to F, put text on right, bold
                 for ($row = $headerRow; $row <= $dataEndRow; ++$row) {
                     if (
-                        $worksheet->getCell('A' . $row)->getValue() ===
+                        $worksheet->getCell('A'.$row)->getValue() ===
                         'GRAND TOTAL:'
                     ) {
                         $worksheet->mergeCells(sprintf('A%d:F%d', $row, $row));
                         $worksheet
-                            ->getStyle('A' . $row)
+                            ->getStyle('A'.$row)
                             ->getFont()
                             ->setBold(true);
                         $worksheet
-                            ->getStyle('A' . $row)
+                            ->getStyle('A'.$row)
                             ->getAlignment()
                             ->setHorizontal(Alignment::HORIZONTAL_RIGHT);
                         break;
@@ -302,7 +302,7 @@ class RFQExport implements FromArray, WithEvents, WithStyles
                 for ($row = $headerRow; $row <= $dataEndRow; ++$row) {
                     if (
                         str_starts_with(
-                            (string) $worksheet->getCell('A' . $row)->getValue(),
+                            (string) $worksheet->getCell('A'.$row)->getValue(),
                             'Total Amount in Words',
                         )
                     ) {
@@ -323,7 +323,7 @@ class RFQExport implements FromArray, WithEvents, WithStyles
                             ->getAllBorders()
                             ->setBorderStyle(Border::BORDER_NONE);
                         $worksheet
-                            ->getStyle('A' . $row)
+                            ->getStyle('A'.$row)
                             ->getAlignment()
                             ->setHorizontal(Alignment::HORIZONTAL_LEFT)
                             ->setVertical(Alignment::VERTICAL_TOP);

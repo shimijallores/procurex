@@ -79,6 +79,7 @@ class AOQExport implements FromArray, WithDrawings, WithEvents, WithStyles
             $headerRow1[] = $supplier['supplier_name'] ?? '';
             $headerRow1[] = '';
         }
+
         $rows[] = $this->pad($headerRow1, $totalCols);
 
         // Row 12: Table Header Row 2
@@ -87,6 +88,7 @@ class AOQExport implements FromArray, WithDrawings, WithEvents, WithStyles
             $headerRow2[] = 'UNIT COST';
             $headerRow2[] = 'TOTAL AMOUNT';
         }
+
         $rows[] = $this->pad($headerRow2, $totalCols);
 
         // --- Data rows ---
@@ -122,9 +124,10 @@ class AOQExport implements FromArray, WithDrawings, WithEvents, WithStyles
         // Blank template rows (pad to at least 13 total table rows)
         $dataRowCount = $rfq?->items?->count() ?? 0;
         $blankRows = max(0, 13 - $dataRowCount);
-        for ($i = 0; $i < $blankRows; $i++) {
+        for ($i = 0; $i < $blankRows; ++$i) {
             $rows[] = $this->emptyRow($totalCols);
         }
+
         // Grand Total row
         $grandTotalRow = $this->emptyRow($totalCols);
         $grandTotalRow[0] = 'GRAND TOTAL - P';
@@ -135,6 +138,7 @@ class AOQExport implements FromArray, WithDrawings, WithEvents, WithStyles
             $grandTotalRow[$col + 1] = '';
             $col += 2;
         }
+
         $rows[] = $grandTotalRow;
 
         // Blank
@@ -169,14 +173,16 @@ class AOQExport implements FromArray, WithDrawings, WithEvents, WithStyles
         foreach (self::BAC_MEMBERS as $i => $name) {
             $bacNamesRow[$memberZones[$i]['start'] - 1] = $name;
         }
+
         $rows[] = $bacNamesRow;
 
         // BAC Member titles
         $bacTitlesRow = $this->emptyRow($totalCols);
-        foreach (self::BAC_MEMBERS as $i => $name) {
+        foreach (array_keys(self::BAC_MEMBERS) as $i) {
             $bacTitlesRow[$memberZones[$i]['start'] - 1] = 'BAC Member';
             // suppress unused variable warning
         }
+
         $rows[] = $bacTitlesRow;
 
         // Blank
@@ -260,22 +266,22 @@ class AOQExport implements FromArray, WithDrawings, WithEvents, WithStyles
     public function registerEvents(): array
     {
         return [
-            AfterSheet::class => function (AfterSheet $e): void {
-                $ws = $e->sheet->getDelegate();
+            AfterSheet::class => function (AfterSheet $afterSheet): void {
+                $worksheet = $afterSheet->sheet->getDelegate();
                 $totalCols = $this->totalCols;
                 $lastCol = Coordinate::stringFromColumnIndex($totalCols);
-                $highestRow = $ws->getHighestRow();
+                $highestRow = $worksheet->getHighestRow();
 
                 $supplierTotals = collect($this->calculation['supplier_totals'] ?? [])->take(3)->values();
                 $supplierCount = $supplierTotals->count();
 
                 // ── Page setup (redundant safety) ──────────────────────
-                $ws->getPageSetup()->setOrientation(PageSetup::ORIENTATION_LANDSCAPE);
-                $ws->getPageSetup()->setPaperSize(PageSetup::PAPERSIZE_LETTER);
-                $ws->getPageMargins()->setTop(0.5);
-                $ws->getPageMargins()->setRight(0.5);
-                $ws->getPageMargins()->setBottom(0.5);
-                $ws->getPageMargins()->setLeft(0.5);
+                $worksheet->getPageSetup()->setOrientation(PageSetup::ORIENTATION_LANDSCAPE);
+                $worksheet->getPageSetup()->setPaperSize(PageSetup::PAPERSIZE_LETTER);
+                $worksheet->getPageMargins()->setTop(0.5);
+                $worksheet->getPageMargins()->setRight(0.5);
+                $worksheet->getPageMargins()->setBottom(0.5);
+                $worksheet->getPageMargins()->setLeft(0.5);
 
                 // ── Column widths (dynamic based on supplier count) ───
                 // Available width ~98 chars (landscape letter, 0.5" margins).
@@ -295,53 +301,53 @@ class AOQExport implements FromArray, WithDrawings, WithEvents, WithStyles
                     $supplierCount <= 2 => 14,
                     default => 13,
                 };
-                $ws->getColumnDimension('A')->setWidth(6);
-                $ws->getColumnDimension('B')->setWidth(8);
-                $ws->getColumnDimension('C')->setWidth($particularsWidth);
-                $ws->getColumnDimension('D')->setWidth($abcWidth);
-                for ($c = 5; $c <= $totalCols; $c++) {
-                    $ws->getColumnDimension(Coordinate::stringFromColumnIndex($c))->setWidth($supplierColWidth);
+                $worksheet->getColumnDimension('A')->setWidth(6);
+                $worksheet->getColumnDimension('B')->setWidth(8);
+                $worksheet->getColumnDimension('C')->setWidth($particularsWidth);
+                $worksheet->getColumnDimension('D')->setWidth($abcWidth);
+                for ($c = 5; $c <= $totalCols; ++$c) {
+                    $worksheet->getColumnDimension(Coordinate::stringFromColumnIndex($c))->setWidth($supplierColWidth);
                 }
 
                 // ── Header block merges (rows 1-6) ────────────────────
-                for ($row = 1; $row <= 6; $row++) {
-                    $ws->mergeCells(sprintf('A%d:%s%d', $row, $lastCol, $row));
+                for ($row = 1; $row <= 6; ++$row) {
+                    $worksheet->mergeCells(sprintf('A%d:%s%d', $row, $lastCol, $row));
                 }
 
                 // ── Project info merges (rows 8-9) ─────────────────────
-                $ws->mergeCells(sprintf('A8:%s8', $lastCol));
-                $ws->mergeCells(sprintf('A9:%s9', $lastCol));
-                $ws->getStyle('A8')->getAlignment()->setWrapText(true);
-                $ws->getRowDimension(8)->setRowHeight(30);
+                $worksheet->mergeCells(sprintf('A8:%s8', $lastCol));
+                $worksheet->mergeCells(sprintf('A9:%s9', $lastCol));
+                $worksheet->getStyle('A8')->getAlignment()->setWrapText(true);
+                $worksheet->getRowDimension(8)->setRowHeight(30);
 
                 // ── Table header merges ────────────────────────────────
                 $hRow1 = 11;
                 $hRow2 = 12;
 
                 // Vertical merges for fixed columns A-D
-                for ($c = 1; $c <= 4; $c++) {
+                for ($c = 1; $c <= 4; ++$c) {
                     $col = Coordinate::stringFromColumnIndex($c);
-                    $ws->mergeCells(sprintf('%s%d:%s%d', $col, $hRow1, $col, $hRow2));
+                    $worksheet->mergeCells(sprintf('%s%d:%s%d', $col, $hRow1, $col, $hRow2));
                 }
 
                 // Horizontal merges for supplier name headers (row 11)
                 $sc = 5;
-                for ($s = 0; $s < $supplierCount; $s++) {
+                for ($s = 0; $s < $supplierCount; ++$s) {
                     $c1 = Coordinate::stringFromColumnIndex($sc);
                     $c2 = Coordinate::stringFromColumnIndex($sc + 1);
-                    $ws->mergeCells(sprintf('%s%d:%s%d', $c1, $hRow1, $c2, $hRow1));
+                    $worksheet->mergeCells(sprintf('%s%d:%s%d', $c1, $hRow1, $c2, $hRow1));
                     $sc += 2;
                 }
 
                 // Header styling
                 $hRange = sprintf('A%d:%s%d', $hRow1, $lastCol, $hRow2);
-                $hStyle = $ws->getStyle($hRange);
+                $hStyle = $worksheet->getStyle($hRange);
                 $hStyle->getFont()->setBold(true);
                 $hStyle->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 $hStyle->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
                 $hStyle->getAlignment()->setWrapText(true);
                 $hStyle->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-                $ws->getRowDimension($hRow1)->setRowHeight(35);
+                $worksheet->getRowDimension($hRow1)->setRowHeight(35);
 
                 // ── Data range ─────────────────────────────────────────
                 $dStart = $hRow2 + 1; // row 13
@@ -349,54 +355,54 @@ class AOQExport implements FromArray, WithDrawings, WithEvents, WithStyles
                 $dRange = sprintf('A%d:%s%d', $dStart, $lastCol, $dEnd);
 
                 // Borders on entire table
-                $ws->getStyle($dRange)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+                $worksheet->getStyle($dRange)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
 
                 // Number format for financial columns (D onwards)
-                for ($c = 4; $c <= $totalCols; $c++) {
+                for ($c = 4; $c <= $totalCols; ++$c) {
                     $col = Coordinate::stringFromColumnIndex($c);
-                    $ws->getStyle(sprintf('%s%d:%s%d', $col, $dStart, $col, $dEnd))
+                    $worksheet->getStyle(sprintf('%s%d:%s%d', $col, $dStart, $col, $dEnd))
                         ->getNumberFormat()
                         ->setFormatCode('#,##0.00');
                 }
 
                 // Cell alignment for data rows
-                for ($row = $dStart; $row <= $dEnd; $row++) {
+                for ($row = $dStart; $row <= $dEnd; ++$row) {
                     // QTY — centered
-                    $ws->getStyle('A'.$row)
+                    $worksheet->getStyle('A'.$row)
                         ->getAlignment()
                         ->setHorizontal(Alignment::HORIZONTAL_CENTER);
                     // UNIT — centered
-                    $ws->getStyle('B'.$row)
+                    $worksheet->getStyle('B'.$row)
                         ->getAlignment()
                         ->setHorizontal(Alignment::HORIZONTAL_CENTER);
                     // Financial columns — right-aligned
-                    for ($c = 4; $c <= $totalCols; $c++) {
-                        $ws->getStyle(Coordinate::stringFromColumnIndex($c).$row)
+                    for ($c = 4; $c <= $totalCols; ++$c) {
+                        $worksheet->getStyle(Coordinate::stringFromColumnIndex($c).$row)
                             ->getAlignment()
                             ->setHorizontal(Alignment::HORIZONTAL_RIGHT);
                     }
                 }
 
                 // ── Grand Total row ────────────────────────────────────
-                $gtRow = $this->findRowStartingWith($ws, $dStart, $dEnd, 'GRAND TOTAL');
+                $gtRow = $this->findRowStartingWith($worksheet, $dStart, $dEnd, 'GRAND TOTAL');
                 if ($gtRow !== null) {
                     // Merge A-C for label
-                    $ws->mergeCells(sprintf('A%d:%s%d', $gtRow, Coordinate::stringFromColumnIndex(3), $gtRow));
-                    $ws->getStyle('A'.$gtRow)
+                    $worksheet->mergeCells(sprintf('A%d:%s%d', $gtRow, Coordinate::stringFromColumnIndex(3), $gtRow));
+                    $worksheet->getStyle('A'.$gtRow)
                         ->getAlignment()
                         ->setHorizontal(Alignment::HORIZONTAL_RIGHT);
 
                     // Bold entire row
-                    $ws->getStyle(sprintf('A%d:%s%d', $gtRow, $lastCol, $gtRow))
+                    $worksheet->getStyle(sprintf('A%d:%s%d', $gtRow, $lastCol, $gtRow))
                         ->getFont()
                         ->setBold(true);
 
                     // Merge each supplier's total across 2 columns
                     $mc = 5;
-                    for ($s = 0; $s < $supplierCount; $s++) {
+                    for ($s = 0; $s < $supplierCount; ++$s) {
                         $c1 = Coordinate::stringFromColumnIndex($mc);
                         $c2 = Coordinate::stringFromColumnIndex($mc + 1);
-                        $ws->mergeCells(sprintf('%s%d:%s%d', $c1, $gtRow, $c2, $gtRow));
+                        $worksheet->mergeCells(sprintf('%s%d:%s%d', $c1, $gtRow, $c2, $gtRow));
                         $mc += 2;
                     }
                 }
@@ -406,57 +412,58 @@ class AOQExport implements FromArray, WithDrawings, WithEvents, WithStyles
                     $borderClearStart = $gtRow + 1;
                     if ($borderClearStart <= $dEnd) {
                         $clearRange = sprintf('A%d:%s%d', $borderClearStart, $lastCol, $dEnd);
-                        $ws->getStyle($clearRange)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_NONE);
+                        $worksheet->getStyle($clearRange)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_NONE);
                     }
                 }
 
                 // ── Recommendation paragraph (RichText) ────────────────
-                $recRow = $this->findRowStartingWith($ws, $dStart, $dEnd, 'After our careful scrutiny');
+                $recRow = $this->findRowStartingWith($worksheet, $dStart, $dEnd, 'After our careful scrutiny');
                 if ($recRow !== null) {
                     $winnerName = $this->aoq->winnerSupplier?->name ?? 'N/A';
                     $modeLabel = ((int) ($this->calculation['calculated_supplier_count'] ?? 0)) >= 2
                         ? 'Lowest Calculated'
                         : 'Single Calculated';
 
-                    $rt = new RichText;
-                    $rt->createText('After our careful scrutiny and deliberation of the submitted quotation of the supplier as reflected in this Abstract of Quotation, we strongly recommend the quotation to be given to ');
+                    $richText = new RichText;
+                    $richText->createText('After our careful scrutiny and deliberation of the submitted quotation of the supplier as reflected in this Abstract of Quotation, we strongly recommend the quotation to be given to ');
 
-                    $bold = $rt->createTextRun($winnerName);
+                    $bold = $richText->createTextRun($winnerName);
                     $bold->getFont()->setBold(true);
 
-                    $rt->createText(' for being the supplier with the ');
+                    $richText->createText(' for being the supplier with the ');
 
-                    $boldUnderline = $rt->createTextRun($modeLabel.' and Responsive Quotation');
+                    $boldUnderline = $richText->createTextRun($modeLabel.' and Responsive Quotation');
                     $boldUnderline->getFont()->setBold(true);
                     $boldUnderline->getFont()->setUnderline(Font::UNDERLINE_SINGLE);
 
-                    $rt->createText(' which is advantageous to the Provincial Government of Batangas.');
+                    $richText->createText(' which is advantageous to the Provincial Government of Batangas.');
 
-                    $ws->mergeCells(sprintf('A%d:%s%d', $recRow, $lastCol, $recRow));
-                    $ws->getCell('A'.$recRow)->setValue($rt);
-                    $ws->getStyle('A'.$recRow)->getAlignment()->setWrapText(true);
-                    $ws->getStyle('A'.$recRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-                    $ws->getStyle('A'.$recRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-                    $ws->getRowDimension($recRow)->setRowHeight(80);
+                    $worksheet->mergeCells(sprintf('A%d:%s%d', $recRow, $lastCol, $recRow));
+                    $worksheet->getCell('A'.$recRow)->setValue($richText);
+                    $worksheet->getStyle('A'.$recRow)->getAlignment()->setWrapText(true);
+                    $worksheet->getStyle('A'.$recRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                    $worksheet->getStyle('A'.$recRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+                    $worksheet->getRowDimension($recRow)->setRowHeight(80);
                 }
+
                 // ── APPROVED: row ──────────────────────────────────────
-                $apRow = $this->findRowExact($ws, $dStart, $dEnd, 'APPROVED:');
+                $apRow = $this->findRowExact($worksheet, $dStart, $dEnd, 'APPROVED:');
                 if ($apRow !== null) {
-                    $ws->mergeCells(sprintf('A%d:%s%d', $apRow, $lastCol, $apRow));
-                    $ws->getStyle('A'.$apRow)->getFont()->setBold(true);
-                    $ws->getStyle('A'.$apRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    $worksheet->mergeCells(sprintf('A%d:%s%d', $apRow, $lastCol, $apRow));
+                    $worksheet->getStyle('A'.$apRow)->getFont()->setBold(true);
+                    $worksheet->getStyle('A'.$apRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 }
 
                 // ── BAC Member signature block ─────────────────────────
                 $memberZones = $this->signatureZones($totalCols, count(self::BAC_MEMBERS));
-                $bacRow = $this->findRowExact($ws, $dStart, $dEnd, self::BAC_MEMBERS[0]);
+                $bacRow = $this->findRowExact($worksheet, $dStart, $dEnd, self::BAC_MEMBERS[0]);
                 if ($bacRow !== null) {
                     // Name row — merge zones, bold + underline, centered
                     foreach ($memberZones as $zone) {
                         $c1 = Coordinate::stringFromColumnIndex($zone['start']);
                         $c2 = Coordinate::stringFromColumnIndex($zone['end']);
-                        $ws->mergeCells(sprintf('%s%d:%s%d', $c1, $bacRow, $c2, $bacRow));
-                        $style = $ws->getStyle($c1.$bacRow);
+                        $worksheet->mergeCells(sprintf('%s%d:%s%d', $c1, $bacRow, $c2, $bacRow));
+                        $style = $worksheet->getStyle($c1.$bacRow);
                         $style->getFont()->setBold(true);
                         $style->getFont()->setUnderline(Font::UNDERLINE_SINGLE);
                         $style->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
@@ -464,35 +471,36 @@ class AOQExport implements FromArray, WithDrawings, WithEvents, WithStyles
 
                     // Title row (next line)
                     $bacTitleRow = $bacRow + 1;
-                    foreach ($memberZones as $zone) {
-                        $c1 = Coordinate::stringFromColumnIndex($zone['start']);
-                        $c2 = Coordinate::stringFromColumnIndex($zone['end']);
-                        $ws->mergeCells(sprintf('%s%d:%s%d', $c1, $bacTitleRow, $c2, $bacTitleRow));
-                        $style = $ws->getStyle($c1.$bacTitleRow);
+                    foreach ($memberZones as $memberZone) {
+                        $c1 = Coordinate::stringFromColumnIndex($memberZone['start']);
+                        $c2 = Coordinate::stringFromColumnIndex($memberZone['end']);
+                        $worksheet->mergeCells(sprintf('%s%d:%s%d', $c1, $bacTitleRow, $c2, $bacTitleRow));
+                        $style = $worksheet->getStyle($c1.$bacTitleRow);
                         $style->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                         $style->getFont()->setSize(9);
                     }
                 }
 
                 // ── BAC Chairperson signature block ────────────────────
-                $chairRow = $this->findRowExact($ws, $dStart, $dEnd, self::BAC_CHAIRPERSON);
+                $chairRow = $this->findRowExact($worksheet, $dStart, $dEnd, self::BAC_CHAIRPERSON);
                 if ($chairRow !== null) {
                     // Name — merge full width, bold + underline, centered
-                    $ws->mergeCells(sprintf('A%d:%s%d', $chairRow, $lastCol, $chairRow));
-                    $style = $ws->getStyle('A'.$chairRow);
+                    $worksheet->mergeCells(sprintf('A%d:%s%d', $chairRow, $lastCol, $chairRow));
+                    $style = $worksheet->getStyle('A'.$chairRow);
                     $style->getFont()->setBold(true);
                     $style->getFont()->setUnderline(Font::UNDERLINE_SINGLE);
                     $style->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
                     // Title (next line)
                     $chairTitleRow = $chairRow + 1;
-                    $ws->mergeCells(sprintf('A%d:%s%d', $chairTitleRow, $lastCol, $chairTitleRow));
-                    $titleStyle = $ws->getStyle('A'.$chairTitleRow);
+                    $worksheet->mergeCells(sprintf('A%d:%s%d', $chairTitleRow, $lastCol, $chairTitleRow));
+                    $titleStyle = $worksheet->getStyle('A'.$chairTitleRow);
                     $titleStyle->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                     $titleStyle->getFont()->setSize(9);
                 }
+
                 // ── Page numbers in footer ─────────────────────────────
-                $ws->getHeaderFooter()->setOddFooter('&R &P of &N');
+                $worksheet->getHeaderFooter()->setOddFooter('&R &P of &N');
             },
         ];
     }
@@ -539,7 +547,7 @@ class AOQExport implements FromArray, WithDrawings, WithEvents, WithStyles
         $remainder = $totalCols % $count;
         $cursor = 1;
 
-        for ($i = 0; $i < $count; $i++) {
+        for ($i = 0; $i < $count; ++$i) {
             // Distribute remainder to FIRST members for better spacing
             $zoneWidth = $per + ($i < $remainder ? 1 : 0);
             $start = $cursor;
@@ -552,10 +560,10 @@ class AOQExport implements FromArray, WithDrawings, WithEvents, WithStyles
     }
 
     /** Find the first row in [$from, $to] whose column-A value starts with $prefix. */
-    private function findRowStartingWith(Worksheet $ws, int $from, int $to, string $prefix): ?int
+    private function findRowStartingWith(Worksheet $worksheet, int $from, int $to, string $prefix): ?int
     {
-        for ($row = $from; $row <= $to; $row++) {
-            $val = $ws->getCell('A'.$row)->getValue();
+        for ($row = $from; $row <= $to; ++$row) {
+            $val = $worksheet->getCell('A'.$row)->getValue();
             if (is_string($val) && str_starts_with($val, $prefix)) {
                 return $row;
             }
@@ -565,10 +573,10 @@ class AOQExport implements FromArray, WithDrawings, WithEvents, WithStyles
     }
 
     /** Find the first row in [$from, $to] whose column-A value exactly equals $value. */
-    private function findRowExact(Worksheet $ws, int $from, int $to, string $value): ?int
+    private function findRowExact(Worksheet $worksheet, int $from, int $to, string $value): ?int
     {
-        for ($row = $from; $row <= $to; $row++) {
-            $val = $ws->getCell('A'.$row)->getValue();
+        for ($row = $from; $row <= $to; ++$row) {
+            $val = $worksheet->getCell('A'.$row)->getValue();
             if (is_string($val) && $val === $value) {
                 return $row;
             }

@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\LaravelPdf\Facades\Pdf;
+use Spatie\LaravelPdf\PdfBuilder;
 
 class COAInspectionController extends Controller
 {
@@ -154,7 +155,7 @@ class COAInspectionController extends Controller
             ->with('success', 'COA Inspection deleted successfully.');
     }
 
-    public function printPdf(COAInspection $coaInspection): \Spatie\LaravelPdf\PdfBuilder
+    public function printPdf(COAInspection $coaInspection): PdfBuilder
     {
         $coaInspection->load([
             'purchaseOrder.noa.bacResolution.aoq.rfq.purchaseRequest.office',
@@ -187,7 +188,7 @@ class COAInspectionController extends Controller
 
     private function buildItemSummary(?PurchaseOrder $purchaseOrder): string
     {
-        if (! $purchaseOrder instanceof \App\Models\PurchaseOrder) {
+        if (! $purchaseOrder instanceof PurchaseOrder) {
             return 'items';
         }
 

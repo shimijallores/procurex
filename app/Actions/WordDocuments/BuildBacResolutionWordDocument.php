@@ -7,8 +7,10 @@ namespace App\Actions\WordDocuments;
 use App\Models\AOQ;
 use App\Models\BACResolution;
 use App\Models\RFQ;
+use Carbon\Carbon;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\PhpWord;
+use PhpOffice\PhpWord\Settings;
 use PhpOffice\PhpWord\SimpleType\Jc;
 
 class BuildBacResolutionWordDocument
@@ -31,7 +33,7 @@ class BuildBacResolutionWordDocument
             optional($bacResolution->resolution_date)->format('Y') ??
             now()->year;
 
-        \PhpOffice\PhpWord\Settings::setOutputEscapingEnabled(true);
+        Settings::setOutputEscapingEnabled(true);
 
         $phpWord = new PhpWord;
         $phpWord->setDefaultFontName('Arial');
@@ -348,7 +350,7 @@ class BuildBacResolutionWordDocument
             $section->addText(
                 'DATE OF RFQ: '.
                     ($abstract['rfq_date']
-                        ? \Carbon\Carbon::parse($abstract['rfq_date'])->format(
+                        ? Carbon::parse($abstract['rfq_date'])->format(
                             'F d, Y',
                         )
                         : '__________'),

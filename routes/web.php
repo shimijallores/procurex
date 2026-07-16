@@ -32,11 +32,12 @@ use App\Http\Controllers\SessionController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SvpMatrixController;
 use App\Http\Controllers\UserController;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Route;
 
 require __DIR__.'/templates.php';
 
-Route::get('/', function (): \Illuminate\Http\RedirectResponse {
+Route::get('/', function (): RedirectResponse {
     return redirect(route('login'));
 });
 

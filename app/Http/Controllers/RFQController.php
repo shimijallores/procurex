@@ -8,6 +8,7 @@ use App\Exports\RFQExport;
 use App\Http\Requests\StoreRFQRequest;
 use App\Http\Requests\UpdateRFQRequest;
 use App\Models\Calendar;
+use App\Models\Office;
 use App\Models\PurchaseRequest;
 use App\Models\RFQ;
 use App\Models\RFQItem;
@@ -57,7 +58,7 @@ class RFQController extends Controller
             'for_aoq' => (clone $query)->whereDoesntHave('aoq')->count(),
         ];
 
-        $offices = \App\Models\Office::orderBy('name')->get(['id', 'name']);
+        $offices = Office::orderBy('name')->get(['id', 'name']);
 
         $currentYear = now()->year;
         $fiscalYears = collect(range($currentYear - 4, $currentYear + 1))

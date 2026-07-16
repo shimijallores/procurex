@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Actions\WordDocuments\BuildBacResolutionWordDocument;
 use App\Http\Requests\StoreBACResolutionRequest;
 use App\Http\Requests\UpdateBACResolutionRequest;
 use App\Models\AOQ;
@@ -433,7 +434,7 @@ class BACResolutionController extends Controller
 
     public function export(BACResolution $bacResolution): BinaryFileResponse
     {
-        $tempFile = app(\App\Actions\WordDocuments\BuildBacResolutionWordDocument::class)->handle($bacResolution);
+        $tempFile = app(BuildBacResolutionWordDocument::class)->handle($bacResolution);
 
         return response()->download($tempFile, 'BAC-Resolution-'.$bacResolution->resolution_no.'.docx')
             ->deleteFileAfterSend(true);
@@ -490,7 +491,7 @@ class BACResolutionController extends Controller
 
         foreach ($resolutions as $resolution) {
             try {
-                $tempPath = app(\App\Actions\WordDocuments\BuildBacResolutionWordDocument::class)->handle($resolution);
+                $tempPath = app(BuildBacResolutionWordDocument::class)->handle($resolution);
                 $tempPaths[] = $tempPath;
 
                 $zipArchive->addFile($tempPath, 'BAC-Resolution-'.$resolution->resolution_no.'.docx');

@@ -89,7 +89,7 @@ class EmanatingImport implements ToCollection
             }
         }
 
-        if (! $this->fund instanceof \App\Models\Fund) {
+        if (! $this->fund instanceof Fund) {
             throw new RuntimeException('No matching Fund found for selected PPMP (office, project code, fiscal year).');
         }
 
@@ -250,12 +250,12 @@ class EmanatingImport implements ToCollection
     private function parseItems(array $rows, Emanating $emanating): array
     {
         $items = [];
-        $ppmpItems = $this->ppmpCategory instanceof \App\Models\PPMPCategory
+        $ppmpItems = $this->ppmpCategory instanceof PPMPCategory
             ? PPMPItem::query()->where('ppmp_category_id', $this->ppmpCategory->id)->get()
             : collect();
 
         $appItems = collect();
-        if ($this->ppmp instanceof \App\Models\PPMP) {
+        if ($this->ppmp instanceof PPMP) {
             $app = APP::query()
                 ->where('office_id', $this->ppmp->office_id)
                 ->where('fiscal_year', $this->ppmp->fiscal_year)

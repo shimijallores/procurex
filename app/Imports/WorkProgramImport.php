@@ -10,6 +10,7 @@ use DOMDocument;
 use DOMXPath;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
+use PhpOffice\PhpWord\IOFactory;
 use ZipArchive;
 
 class WorkProgramImport
@@ -53,7 +54,7 @@ class WorkProgramImport
      */
     private function parseWorkProgramDocxRows(string $absolutePath): array
     {
-        if (class_exists(\PhpOffice\PhpWord\IOFactory::class)) {
+        if (class_exists(IOFactory::class)) {
             $parsedUsingPhpWord = $this->parseWorkProgramWithPhpWord($absolutePath);
 
             if ($parsedUsingPhpWord !== []) {
@@ -69,7 +70,7 @@ class WorkProgramImport
      */
     private function parseWorkProgramWithPhpWord(string $absolutePath): array
     {
-        $ioFactoryClass = \PhpOffice\PhpWord\IOFactory::class;
+        $ioFactoryClass = IOFactory::class;
 
         try {
             $phpWord = $ioFactoryClass::load($absolutePath);

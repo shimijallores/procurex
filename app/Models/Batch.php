@@ -51,7 +51,7 @@ class Batch extends Model
 
         $amountForBracket = 0;
 
-        if ($currentAoq instanceof \App\Models\AOQ) {
+        if ($currentAoq instanceof AOQ) {
             // Find the NOA for this AOQ to get the winner_amount
             $noa = $currentAoq->noa;
             if ($noa) {

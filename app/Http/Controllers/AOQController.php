@@ -12,6 +12,7 @@ use App\Imports\AOQMatrixImport;
 use App\Models\AOQ;
 use App\Models\Batch;
 use App\Models\Calendar;
+use App\Models\Office;
 use App\Models\RFQ;
 use App\Models\RFQSupplier;
 use App\Models\RFQSupplierItem;
@@ -88,7 +89,7 @@ class AOQController extends Controller
             'without_winner' => (clone $query)->whereNull('winner_supplier_id')->count(),
         ];
 
-        $offices = \App\Models\Office::orderBy('name')->get(['id', 'name']);
+        $offices = Office::orderBy('name')->get(['id', 'name']);
         $batches = Batch::withCount('aoqs')
             ->orderByDesc('id')
             ->get(['id', 'batch_no']);

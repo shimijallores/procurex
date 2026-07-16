@@ -6,6 +6,8 @@ namespace App\Http\Requests;
 
 use App\Models\Fund;
 use App\Models\PPMP;
+use App\Models\PPMPCategory;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreEmanatingRequest extends FormRequest
@@ -21,7 +23,7 @@ class StoreEmanatingRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -73,7 +75,7 @@ class StoreEmanatingRequest extends FormRequest
                 return;
             }
 
-            $categoryBelongsToPpmp = \App\Models\PPMPCategory::query()
+            $categoryBelongsToPpmp = PPMPCategory::query()
                 ->where('id', $this->ppmp_category_id)
                 ->where('ppmp_id', $ppmp->id)
                 ->exists();

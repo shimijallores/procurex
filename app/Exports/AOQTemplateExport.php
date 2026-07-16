@@ -87,7 +87,7 @@ class AOQTemplateExport implements FromArray, ShouldAutoSize, WithEvents, WithHe
     }
 
     /**
-     * @return array<int, \Maatwebsite\Excel\Events\AfterSheet>
+     * @return array<int, AfterSheet>
      */
     public function registerEvents(): array
     {

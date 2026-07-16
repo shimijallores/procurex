@@ -2,12 +2,13 @@
 
 namespace Database\Factories;
 
+use App\Models\Fund;
 use App\Models\Office;
 use App\Models\ProjectCode;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Fund>
+ * @extends Factory<Fund>
  */
 class FundFactory extends Factory
 {

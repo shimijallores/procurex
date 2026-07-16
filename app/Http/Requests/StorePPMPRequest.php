@@ -6,8 +6,10 @@ namespace App\Http\Requests;
 
 use App\Models\Fund;
 use App\Models\PPMP;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class StorePPMPRequest extends FormRequest
 {
@@ -22,7 +24,7 @@ class StorePPMPRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -68,7 +70,7 @@ class StorePPMPRequest extends FormRequest
     /**
      * Configure the validator instance.
      *
-     * @param  \Illuminate\Validation\Validator  $validator
+     * @param  Validator  $validator
      */
     public function withValidator($validator): void
     {

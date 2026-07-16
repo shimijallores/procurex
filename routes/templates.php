@@ -1,12 +1,16 @@
 <?php
 
 use App\Exports\AOQTemplateExport;
+use App\Models\PurchaseRequestItem;
 use App\Models\RFQ;
+use App\Models\RFQItem;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Route;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
-Route::get('/templates', function (): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View {
+Route::get('/templates', function (): Factory|View {
     return view('templates', [
         'templates' => [
             ['id' => 1, 'title' => 'APP Template', 'file' => 'standard-template/app-template.xlsx', 'type' => 'XLSX'],
@@ -53,11 +57,11 @@ Route::get('/templates/{template}', function (int $template): BinaryFileResponse
         // If no RFQ exists, create a demo RFQ with sample items
         if (! $rfq) {
             $rfq = new RFQ;
-            $sampleItem = new \App\Models\RFQItem;
+            $sampleItem = new RFQItem;
             $sampleItem->item_name = '[Item Name]';
             $sampleItem->quantity = 1;
             $sampleItem->unit = 'pcs';
-            $samplePrItem = new \App\Models\PurchaseRequestItem;
+            $samplePrItem = new PurchaseRequestItem;
             $samplePrItem->unit_cost = 0;
             $sampleItem->setRelation('purchaseRequestItem', $samplePrItem);
             $rfq->setRelation('items', collect([$sampleItem]));

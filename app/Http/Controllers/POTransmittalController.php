@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Actions\WordDocuments\BuildPoTransmittalWordDocument;
 use App\Http\Requests\StorePOTransmittalRequest;
 use App\Http\Requests\UpdatePOTransmittalRequest;
 use App\Models\Batch;
@@ -19,6 +20,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\PhpWord;
+use PhpOffice\PhpWord\Settings;
 use PhpOffice\PhpWord\SimpleType\Jc;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -242,7 +244,7 @@ class POTransmittalController extends Controller
                 $rfq = $aoq?->rfq;
 
                 $phpWord = new PhpWord;
-                \PhpOffice\PhpWord\Settings::setOutputEscapingEnabled(true);
+                Settings::setOutputEscapingEnabled(true);
                 $section = $phpWord->addSection();
                 $section->addText('PO Transmittal', ['bold' => true, 'size' => 14], ['alignment' => Jc::CENTER]);
                 $section->addTextBreak();
@@ -366,7 +368,7 @@ class POTransmittalController extends Controller
 
     public function export(POTransmittal $poTransmittal): BinaryFileResponse
     {
-        $tempFile = app(\App\Actions\WordDocuments\BuildPoTransmittalWordDocument::class)->handle($poTransmittal);
+        $tempFile = app(BuildPoTransmittalWordDocument::class)->handle($poTransmittal);
 
         return response()->download($tempFile, 'PO-Transmittal-'.($poTransmittal->purchaseOrder?->po_no ?? $poTransmittal->id).'.docx')
             ->deleteFileAfterSend(true);
@@ -429,7 +431,7 @@ class POTransmittalController extends Controller
                 $aoq = $noa?->aoq ?? $noa?->bacResolution?->aoq;
 
                 $phpWord = new PhpWord;
-                \PhpOffice\PhpWord\Settings::setOutputEscapingEnabled(true);
+                Settings::setOutputEscapingEnabled(true);
                 $section = $phpWord->addSection();
                 $section->addText('PO Transmittal', ['bold' => true, 'size' => 14]);
                 $section->addTextBreak();

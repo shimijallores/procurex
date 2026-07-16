@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Emanating extends Model
 {
@@ -125,7 +126,7 @@ class Emanating extends Model
         return $this->hasMany(EmanatingItem::class);
     }
 
-    public function purchaseRequest(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function purchaseRequest(): HasOne
     {
         return $this->hasOne(PurchaseRequest::class);
     }

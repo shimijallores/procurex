@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\LaravelPdf\Facades\Pdf;
+use Spatie\LaravelPdf\PdfBuilder;
 
 class PurchaseRequestController extends Controller
 {
@@ -633,7 +634,7 @@ class PurchaseRequestController extends Controller
     /**
      * Generate and stream the PR as a PDF (inline for browser print dialog).
      */
-    public function printPdf(PurchaseRequest $purchaseRequest): \Spatie\LaravelPdf\PdfBuilder
+    public function printPdf(PurchaseRequest $purchaseRequest): PdfBuilder
     {
         $purchaseRequest->load([
             'office',

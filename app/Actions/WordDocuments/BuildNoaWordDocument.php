@@ -9,6 +9,7 @@ use App\Models\NOA;
 use App\Models\Supplier;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\PhpWord;
+use PhpOffice\PhpWord\Settings;
 use PhpOffice\PhpWord\SimpleType\Jc;
 
 class BuildNoaWordDocument
@@ -130,7 +131,7 @@ class BuildNoaWordDocument
         $amountFmt = number_format($amount, 2);
         $amountWords = NumberToWords::convert($amount, 'centavos');
 
-        \PhpOffice\PhpWord\Settings::setOutputEscapingEnabled(true);
+        Settings::setOutputEscapingEnabled(true);
 
         $phpWord = new PhpWord;
         $phpWord->setDefaultFontName('Arial');

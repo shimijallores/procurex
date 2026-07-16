@@ -7,6 +7,7 @@ namespace App\Actions\WordDocuments;
 use App\Models\POTransmittal;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\PhpWord;
+use PhpOffice\PhpWord\Settings;
 use PhpOffice\PhpWord\SimpleType\Jc;
 
 class BuildPoTransmittalWordDocument
@@ -32,7 +33,7 @@ class BuildPoTransmittalWordDocument
         $aoq = $noa?->aoq ?? $noa?->bacResolution?->aoq;
         $rfq = $aoq?->rfq;
 
-        \PhpOffice\PhpWord\Settings::setOutputEscapingEnabled(true);
+        Settings::setOutputEscapingEnabled(true);
 
         $phpWord = new PhpWord;
         $phpWord->setDefaultFontName('Arial');
@@ -59,7 +60,7 @@ class BuildPoTransmittalWordDocument
             'cellMarginLeft' => 30,
         ];
 
-        $buildHeader = function ($section) use (
+        $buildHeader = function (\PhpOffice\PhpWord\Element\Section $section) use (
             $sealPath,
             $bagongPath,
             $noBorder,

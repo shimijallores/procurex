@@ -8,6 +8,8 @@ use App\Http\Requests\StoreCalendarRequest;
 use App\Http\Requests\UpdateCalendarRequest;
 use App\Http\Resources\CalendarResource;
 use App\Models\Calendar;
+use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -79,13 +81,13 @@ class CalendarController extends Controller
     /**
      * Check if a specific date is available (working day)
      */
-    public function checkDate(Request $request): \Illuminate\Http\JsonResponse
+    public function checkDate(Request $request): JsonResponse
     {
         $request->validate([
             'date' => ['required', 'date'],
         ]);
 
-        $date = \Carbon\Carbon::parse($request->date);
+        $date = Carbon::parse($request->date);
         $calendarEntry = Calendar::whereDate('date', (string) $request->date)->first();
 
         // Check if it's a weekend (Saturday = 6, Sunday = 0)

@@ -4,11 +4,17 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Models\Account;
 use App\Models\Canvas;
 use App\Models\CanvasItem;
 use App\Models\CanvasItemSelection;
+use App\Models\Emanating;
+use App\Models\EmanatingItem;
+use App\Models\Fund;
 use App\Models\MasterListCategory;
 use App\Models\MasterListItem;
+use App\Models\Office;
+use App\Models\ProjectCode;
 use App\Models\PurchaseRequest;
 use App\Models\PurchaseRequestItem;
 use App\Models\RFQ;
@@ -16,6 +22,7 @@ use App\Models\RFQItem;
 use App\Models\RFQSupplier;
 use App\Models\RFQSupplierItem;
 use App\Models\Supplier;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class FullDataSeeder extends Seeder
@@ -35,13 +42,13 @@ class FullDataSeeder extends Seeder
 
         // ── 1. CANVASSES ──────────────────────────────────────────────
         foreach ($data['canvasses'] ?? [] as $canvasData) {
-            $emanating = \App\Models\Emanating::where('emanating_no', $canvasData['emanating_no'])->first();
+            $emanating = Emanating::where('emanating_no', $canvasData['emanating_no'])->first();
 
             if (! $emanating) {
                 continue;
             }
 
-            $user = \App\Models\User::where('email', $canvasData['created_by_email'])->first();
+            $user = User::where('email', $canvasData['created_by_email'])->first();
 
             $canvas = Canvas::create([
                 'emanating_id' => $emanating->id,
@@ -53,7 +60,7 @@ class FullDataSeeder extends Seeder
             ]);
 
             foreach ($canvasData['items'] as $ciData) {
-                $ei = \App\Models\EmanatingItem::where('emanating_id', $emanating->id)
+                $ei = EmanatingItem::where('emanating_id', $emanating->id)
                     ->where('name', $ciData['emanating_item_name'])
                     ->first();
 
@@ -84,19 +91,19 @@ class FullDataSeeder extends Seeder
 
         // ── 2. PURCHASE REQUESTS ──────────────────────────────────────
         foreach ($data['purchase_requests'] ?? [] as $prData) {
-            $emanating = \App\Models\Emanating::where('emanating_no', $prData['emanating_no'])->first();
+            $emanating = Emanating::where('emanating_no', $prData['emanating_no'])->first();
 
             if (! $emanating) {
                 continue;
             }
 
-            $office = \App\Models\Office::where('code', $prData['office_code'])->first();
+            $office = Office::where('code', $prData['office_code'])->first();
             $fund = null;
 
             if ($prData['fund_office_code']) {
-                $off = \App\Models\Office::where('code', $prData['fund_office_code'])->first();
-                $pCode = $prData['fund_project_code'] ? \App\Models\ProjectCode::where('code', $prData['fund_project_code'])->first() : null;
-                $fund = \App\Models\Fund::where('office_id', $off?->id)
+                $off = Office::where('code', $prData['fund_office_code'])->first();
+                $pCode = $prData['fund_project_code'] ? ProjectCode::where('code', $prData['fund_project_code'])->first() : null;
+                $fund = Fund::where('office_id', $off?->id)
                     ->where('project_code_id', $pCode?->id)
                     ->where('name', $prData['fund_name'])
                     ->first();
@@ -119,20 +126,20 @@ class FullDataSeeder extends Seeder
             ]);
 
             foreach ($prData['items'] as $priData) {
-                $ei = \App\Models\EmanatingItem::where('emanating_id', $emanating->id)
+                $ei = EmanatingItem::where('emanating_id', $emanating->id)
                     ->where('name', $priData['emanating_item_name'])
                     ->first();
 
                 $matrixAccount = $priData['matrix_account_code']
-                    ? \App\Models\Account::where('code', $priData['matrix_account_code'])->first()
+                    ? Account::where('code', $priData['matrix_account_code'])->first()
                     : null;
 
                 $matrixPrAdmin = $priData['matrix_pr_admin_user_email']
-                    ? \App\Models\User::where('email', $priData['matrix_pr_admin_user_email'])->first()
+                    ? User::where('email', $priData['matrix_pr_admin_user_email'])->first()
                     : null;
 
                 $matrixBudgetAdmin = $priData['matrix_budgeting_admin_user_email']
-                    ? \App\Models\User::where('email', $priData['matrix_budgeting_admin_user_email'])->first()
+                    ? User::where('email', $priData['matrix_budgeting_admin_user_email'])->first()
                     : null;
 
                 PurchaseRequestItem::create([
@@ -159,7 +166,7 @@ class FullDataSeeder extends Seeder
 
         // ── 3. RFQs ───────────────────────────────────────────────────
         foreach ($data['rfqs'] ?? [] as $rfqData) {
-            $emanating = \App\Models\Emanating::where('emanating_no', $rfqData['pr_emanating_no'])->first();
+            $emanating = Emanating::where('emanating_no', $rfqData['pr_emanating_no'])->first();
 
             if (! $emanating) {
                 continue;
@@ -187,7 +194,7 @@ class FullDataSeeder extends Seeder
                 $prItem = null;
 
                 if ($riData['pr_emanating_no'] && $riData['pr_item_emanating_name']) {
-                    $ei = \App\Models\EmanatingItem::where('emanating_id', $emanating->id)
+                    $ei = EmanatingItem::where('emanating_id', $emanating->id)
                         ->where('name', $riData['pr_item_emanating_name'])
                         ->first();
 

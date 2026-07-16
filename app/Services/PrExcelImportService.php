@@ -547,7 +547,7 @@ class PrExcelImportService
         $department = trim($record['department'] ?? '');
         $office = $this->findOffice($department);
 
-        if (! $office instanceof \App\Models\Office && $department !== '') {
+        if (! $office instanceof Office && $department !== '') {
             $this->warnings[] = sprintf('Sheet "%s", row %d: Office not found for "%s". PR %s will have no office assigned.', $sheetName, $start, $department, $prNo);
         }
 

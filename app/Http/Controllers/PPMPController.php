@@ -105,7 +105,7 @@ class PPMPController extends Controller
                 (int) $validated['office_id']
             );
 
-            if (! $resolvedProjectCode instanceof \App\Models\ProjectCode) {
+            if (! $resolvedProjectCode instanceof ProjectCode) {
                 return back()->withErrors([
                     'xlsx_file' => 'Unable to match the PPMP project code to the selected office project codes.',
                 ]);
@@ -132,7 +132,7 @@ class PPMPController extends Controller
                 ->first();
 
             if ($existingPpmp) {
-                if (! ($storePPMPRequest->hasFile('xlsx_file') && $storePPMPRequest->file('xlsx_file')->isValid())) {
+                if (!$storePPMPRequest->hasFile('xlsx_file') || !$storePPMPRequest->file('xlsx_file')->isValid()) {
                     return back()->withErrors([
                         'xlsx_file' => 'An XLSX file is required to append an addendum to the existing PPMP.',
                     ]);

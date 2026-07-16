@@ -15,6 +15,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
+use PhpOffice\PhpWord\IOFactory;
+use PhpOffice\PhpWord\PhpWord;
+use PhpOffice\PhpWord\Settings;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class MasterListItemController extends Controller
@@ -49,14 +52,14 @@ class MasterListItemController extends Controller
 
             $phpWord = $this->buildMasterListDocument($items, $request);
 
-            $settingsClass = \PhpOffice\PhpWord\Settings::class;
+            $settingsClass = Settings::class;
             $settingsClass::setPdfRendererName($settingsClass::PDF_RENDERER_DOMPDF);
             $settingsClass::setPdfRendererPath(base_path('vendor/dompdf/dompdf'));
 
             $filePath = sys_get_temp_dir().DIRECTORY_SEPARATOR.uniqid('masterlist-pdf-', true).'.pdf';
             $fileName = sprintf('masterlist-%s-%04d.pdf', now()->format('Ymd'), random_int(0, 9999));
 
-            $ioFactoryClass = \PhpOffice\PhpWord\IOFactory::class;
+            $ioFactoryClass = IOFactory::class;
             $ioFactoryClass::createWriter($phpWord, 'PDF')->save($filePath);
 
             return response()->file($filePath, [
@@ -165,7 +168,7 @@ class MasterListItemController extends Controller
 
     private function buildMasterListDocument($items, Request $request)
     {
-        $phpWordClass = \PhpOffice\PhpWord\PhpWord::class;
+        $phpWordClass = PhpWord::class;
         $phpWord = new $phpWordClass;
         $section = $phpWord->addSection([
             'marginTop' => 900,
@@ -269,7 +272,7 @@ class MasterListItemController extends Controller
 
     private function ensurePhpWordInstalled(): void
     {
-        if (! class_exists(\PhpOffice\PhpWord\PhpWord::class)) {
+        if (! class_exists(PhpWord::class)) {
             abort(500, 'PhpWord is required for Master List print export. Please install phpoffice/phpword.');
         }
     }
