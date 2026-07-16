@@ -725,7 +725,7 @@ class AOQController extends Controller
                     \Maatwebsite\Excel\Excel::XLSX
                 );
 
-                $storedPath = storage_path('app/temp/aoq-'.$aoq->id.'.xlsx');
+                $storedPath = \Illuminate\Support\Facades\Storage::disk('local')->path('temp/aoq-'.$aoq->id.'.xlsx');
                 $archivePath = $tempDir.\DIRECTORY_SEPARATOR.sprintf('aoq-%s.xlsx', $aoq->id);
                 if (file_exists($storedPath)) {
                     rename($storedPath, $archivePath);

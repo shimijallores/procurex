@@ -462,13 +462,12 @@ class PurchaseOrderController extends Controller
 
         $zipArchive = new \ZipArchive;
         $zipFileName = 'POs-Batch-'.$batch->batch_no.'-'.now()->format('Y-m-d-His').'.zip';
-        $tempDir = storage_path('app/temp');
-
+        $tempDir = storage_path('app'.DIRECTORY_SEPARATOR.'temp');
         if (! is_dir($tempDir)) {
             mkdir($tempDir, 0755, true);
         }
 
-        $zipPath = $tempDir.\DIRECTORY_SEPARATOR.$zipFileName;
+        $zipPath = $tempDir.DIRECTORY_SEPARATOR.$zipFileName;
 
         if ($zipArchive->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
             return redirect()->back()->with('error', 'Failed to create ZIP archive.');
@@ -488,7 +487,7 @@ class PurchaseOrderController extends Controller
                     \Maatwebsite\Excel\Excel::XLSX
                 );
 
-                $storedPath = storage_path('app/temp/po-'.$po->id.'.xlsx');
+                $storedPath = \Illuminate\Support\Facades\Storage::disk('local')->path('temp/po-'.$po->id.'.xlsx');
                 if (file_exists($storedPath)) {
                     rename($storedPath, $tempPath);
                 }
@@ -610,7 +609,7 @@ class PurchaseOrderController extends Controller
                     \Maatwebsite\Excel\Excel::XLSX
                 );
 
-                $storedPath = storage_path('app/temp/po-'.$po->id.'.xlsx');
+                $storedPath = \Illuminate\Support\Facades\Storage::disk('local')->path('temp/po-'.$po->id.'.xlsx');
                 if (file_exists($storedPath)) {
                     rename($storedPath, $tempPath);
                 }

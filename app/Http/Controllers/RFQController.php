@@ -359,7 +359,7 @@ class RFQController extends Controller
                     \Maatwebsite\Excel\Excel::XLSX
                 );
 
-                $storedPath = storage_path('app/temp/rfq-'.$rfq->id.'.xlsx');
+                $storedPath = \Illuminate\Support\Facades\Storage::disk('local')->path('temp/rfq-'.$rfq->id.'.xlsx');
                 if (file_exists($storedPath)) {
                     rename($storedPath, $xlsxPath);
                 }
