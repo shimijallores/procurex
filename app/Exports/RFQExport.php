@@ -126,7 +126,7 @@ class RFQExport implements FromArray, WithEvents, WithStyles
         }
 
         // Empty rows
-        for ($i = $counter; $i < 15; ++$i) {
+        for ($i = $counter; $i < 18; ++$i) {
             $rows[] = ['', '', '', '', '', '', ''];
         }
 
